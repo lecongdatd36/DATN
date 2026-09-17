@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Không tìm thấy trang · QLNH{% endblock %}
+{% block content %}
+<section class="container px-3 pb-5 pt-4">
+    <div class="project-card form-card p-4 p-md-5 mx-auto">
+        <p class="eyebrow mb-3">LỖI 404</p>
+        <h1 class="h3 mb-3">Không tìm thấy trang</h1>
+        <p class="text-secondary mb-4">Trang bạn đang tìm không tồn tại hoặc đường dẫn đã thay đổi.</p>
+        <a class="btn btn-primary" href="{% url 'home' %}">Về trang chủ</a>
+    </div>
+</section>
+{% endblock %}

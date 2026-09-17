@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="container hero" aria-labelledby="welcome-title">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-8">
+            <span class="status-label"><span class="status-dot" aria-hidden="true"></span> Chào mừng đến với QLNH</span>
+            <h1 id="welcome-title" class="display-4 fw-semibold mt-4 mb-4">Không gian quản lý<br class="d-none d-md-block"> nhà hàng của bạn.</h1>
+            <p class="lead text-secondary mb-4 hero-description">Đăng nhập bằng tài khoản được cấp để truy cập không gian làm việc và quản lý thông tin tài khoản.</p>
+            {% if user.is_authenticated %}
+            <a class="btn btn-primary btn-lg" href="{% url 'accounts:workspace' %}">Vào không gian làm việc <span aria-hidden="true">→</span></a>
+            {% else %}
+            <a class="btn btn-primary btn-lg" href="{% url 'accounts:login' %}">Đăng nhập <span aria-hidden="true">→</span></a>
+            {% endif %}
+        </div>
+        <div class="col-lg-4 d-none d-lg-block" aria-hidden="true">
+            <div class="welcome-mark">QLNH<span>Chu đáo trong từng trải nghiệm.</span></div>
+        </div>
+    </div>
+</section>
+<section id="about" class="container pb-5" aria-labelledby="about-title">
+    <div class="project-card p-4 p-md-5">
+        <p class="eyebrow mb-3">ĐỒ ÁN TỐT NGHIỆP</p>
+        <h2 id="about-title" class="h4 mb-3">Ứng dụng quản lý nhà hàng tích hợp AI</h2>
+        <p class="text-secondary mb-0">Hệ thống đang được phát triển theo từng giai đoạn. Chức năng tài khoản và phân quyền đã sẵn sàng; các nghiệp vụ nhà hàng sẽ được bổ sung ở những giai đoạn tiếp theo.</p>
+    </div>
+</section>
+{% endblock %}

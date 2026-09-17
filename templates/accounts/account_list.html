@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý tài khoản · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">QUẢN LÝ</p>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+        <h1 class="h2 mb-0">Tài khoản</h1>
+        <span class="small text-secondary">{{ paginator.count }} tài khoản</span>
+    </div>
+    <p class="text-secondary mb-4">Tra cứu tài khoản, quản lý trạng thái và đặt lại mật khẩu cho nhân viên.</p>
+    <div class="project-card p-3 p-md-4 mb-4">
+        <form method="get" class="row g-3 align-items-end" role="search" aria-label="Tìm kiếm và lọc tài khoản">
+            {% for field in filter_form %}
+            <div class="{% if field.name == 'q' %}col-lg-6{% else %}col-md-6 col-lg-3{% endif %}">
+                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<div class="invalid-feedback d-block" id="{{ field.auto_id }}_errors" role="alert">{% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+            </div>
+            {% endfor %}
+            <div class="col-md-6 col-lg-3 d-flex gap-2">
+                <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+                <a class="btn btn-outline-secondary" href="{% url 'accounts:account_list' %}">Xóa lọc</a>
+            </div>
+        </form>
+    </div>
+    <div class="project-card overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle account-table mb-0">
+                <caption class="visually-hidden">Danh sách tài khoản theo bộ lọc hiện tại</caption>
+                <thead><tr><th scope="col">Tài khoản</th><th scope="col">Vai trò hệ thống</th><th scope="col">Trạng thái</th><th scope="col">Ngày tạo</th><th scope="col" class="text-end">Thao tác</th></tr></thead>
+                <tbody>
+                    {% for account in page_obj %}
+                    <tr>
+                        <th scope="row" class="fw-normal">
+                            <span class="fw-semibold d-block text-break">{{ account.username }}{% if account.pk == user.pk %} <span class="badge text-bg-light">Bạn</span>{% endif %}</span>
+                            {% if account.get_full_name %}<span class="small d-block text-secondary text-break">{{ account.get_full_name }}</span>{% endif %}
+                            {% if account.email %}<span class="small d-block text-secondary text-break">{{ account.email }}</span>{% endif %}
+                        </th>
+                        <td><span class="badge text-bg-light">{{ account.get_role_display }}</span></td>
+                        <td>{% if account.is_active %}<span class="badge text-bg-success">Đang hoạt động</span>{% else %}<span class="badge text-bg-secondary">Đã khóa</span>{% endif %}</td>
+                        <td class="text-nowrap">{{ account.created_at|date:'d/m/Y' }}</td>
+                        <td class="text-end">
+                            {% if account.can_manage %}
+                            <div class="d-flex flex-wrap justify-content-end gap-2 account-actions">
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:password_reset' account.pk %}" aria-label="Đặt lại mật khẩu cho {{ account.username }}">Đặt lại mật khẩu</a>
+                                {% if account.is_active %}<a class="btn btn-sm btn-outline-danger" href="{% url 'accounts:account_lock' account.pk %}" aria-label="Khóa tài khoản {{ account.username }}">Khóa</a>
+                                {% else %}<a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:account_unlock' account.pk %}" aria-label="Mở khóa tài khoản {{ account.username }}">Mở khóa</a>{% endif %}
+                            </div>
+                            {% else %}<span class="small text-secondary">Chỉ xem</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-5"><h2 class="h6">Không tìm thấy tài khoản</h2><p class="text-secondary small mb-0">Thử đổi từ khóa hoặc xóa bộ lọc để xem lại danh sách.</p></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if is_paginated %}
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 px-3 px-md-4 py-3 border-top">
+            <span class="small text-secondary">Hiển thị {{ page_obj.start_index }}–{{ page_obj.end_index }} / {{ paginator.count }} tài khoản</span>
+            <nav aria-label="Phân trang tài khoản">
+                <ul class="pagination pagination-sm mb-0">
+                    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Trước</a></li>{% else %}<li class="page-item disabled"><span class="page-link">Trước</span></li>{% endif %}
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ page_obj.number }} / {{ paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Sau</a></li>{% else %}<li class="page-item disabled"><span class="page-link">Sau</span></li>{% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% load static %}
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Ứng dụng quản lý nhà hàng tích hợp AI.">
+    <title>{% block title %}QLNH · Quản lý nhà hàng{% endblock %}</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <a class="visually-hidden-focusable skip-link" href="#main-content">Chuyển đến nội dung chính</a>
+    <header class="site-header">
+        <nav class="container-fluid px-3 px-lg-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-3" aria-label="Điều hướng chính">
+            <a class="brand text-decoration-none d-flex align-items-center gap-3" href="{% url 'home' %}">
+                <span class="brand-mark" aria-hidden="true">Q</span>
+                <span><strong class="d-block">QLNH</strong><span class="brand-caption">Quản lý nhà hàng</span></span>
+            </a>
+            {% block navigation %}
+            <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3">
+                {% if user.is_authenticated %}
+                <span class="small d-none d-md-inline text-secondary">{{ user.get_full_name|default:user.username }}</span>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-outline-secondary btn-sm" type="submit">Đăng xuất</button>
+                </form>
+                <button class="btn btn-outline-primary btn-sm d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-navigation" aria-controls="sidebar-navigation" aria-expanded="false">Menu</button>
+                {% else %}
+                <a class="btn btn-primary btn-sm" href="{% url 'accounts:login' %}">Đăng nhập</a>
+                {% endif %}
+            </div>
+            {% endblock %}
+        </nav>
+    </header>
+    <div class="app-shell flex-grow-1 {% if user.is_authenticated %}app-shell-authenticated{% endif %}">
+        {% if user.is_authenticated %}
+        <aside class="app-sidebar collapse d-lg-block" id="sidebar-navigation" aria-label="Menu làm việc">
+            {% include 'includes/sidebar.html' %}
+        </aside>
+        {% endif %}
+        <main id="main-content" class="app-main" tabindex="-1">
+            <div class="container-fluid px-3 px-md-4 pt-4">
+                {% include 'includes/messages.html' %}
+            </div>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <footer class="site-footer">
+        <div class="container-fluid px-3 px-lg-4 py-3 d-flex flex-wrap justify-content-between gap-2">
+            <span>QLNH · Quản lý nhà hàng</span>
+            <span>Đồ án tốt nghiệp · <span data-current-year>{% now 'Y' %}</span></span>
+        </div>
+    </footer>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}" defer></script>
+    <script src="{% static 'js/base.js' %}" defer></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

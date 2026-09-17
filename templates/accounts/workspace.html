@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Tài khoản của tôi · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">KHÔNG GIAN LÀM VIỆC</p>
+    <h1 class="h2 mb-2">Xin chào, {{ user.get_full_name|default:user.username }}.</h1>
+    <p class="text-secondary mb-4">Xem thông tin tài khoản và truy cập các chức năng được cấp quyền.</p>
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <div class="project-card p-4 h-100">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+                    <h2 class="h5 mb-0">Thông tin tài khoản</h2>
+                    <span class="badge text-bg-success">Đang hoạt động</span>
+                </div>
+                <dl class="row account-details mb-0">
+                    <dt class="col-sm-4">Tên đăng nhập</dt><dd class="col-sm-8 text-break">{{ user.username }}</dd>
+                    <dt class="col-sm-4">Họ tên</dt><dd class="col-sm-8 text-break">{{ user.get_full_name|default:'Chưa cập nhật' }}</dd>
+                    <dt class="col-sm-4">Email</dt><dd class="col-sm-8 text-break">{{ user.email|default:'Chưa cập nhật' }}</dd>
+                    <dt class="col-sm-4">Vai trò hệ thống</dt><dd class="col-sm-8"><span class="badge text-bg-light">{{ user.get_role_display }}</span></dd>
+                    <dt class="col-sm-4">Ngày tạo</dt><dd class="col-sm-8">{{ user.created_at|date:'d/m/Y H:i' }}</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="col-xl-5">
+            <div class="project-card p-4 h-100">
+                <h2 class="h5 mb-3">Thao tác nhanh</h2>
+                <p class="text-secondary">Giữ mật khẩu riêng tư và cập nhật khi cần thiết.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-primary" href="{% url 'accounts:password_change' %}">Đổi mật khẩu</a>
+                    {% if access.can_manage_accounts %}<a class="btn btn-outline-primary" href="{% url 'accounts:account_list' %}">Quản lý tài khoản</a>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}{% if action == 'lock' %}Khóa tài khoản{% else %}Mở khóa tài khoản{% endif %} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <a class="back-link d-inline-block mb-4" href="{% url 'accounts:account_list' %}"><span aria-hidden="true">←</span> Danh sách tài khoản</a>
+    <div class="project-card form-card p-4 p-md-5">
+        <p class="eyebrow mb-3">XÁC NHẬN THAO TÁC</p>
+        <h1 class="h3 mb-3">{% if action == 'lock' %}Khóa tài khoản{% else %}Mở khóa tài khoản{% endif %}</h1>
+        <p>Tài khoản: <strong class="text-break">{{ target_user.username }}</strong>{% if target_user.get_full_name %} · {{ target_user.get_full_name }}{% endif %}</p>
+        {% if action == 'lock' %}
+        <div class="alert alert-warning">Nhân viên sẽ không thể đăng nhập và các phiên đăng nhập hiện tại sẽ hết hiệu lực. Thông tin tài khoản vẫn được lưu để có thể mở khóa sau.</div>
+        {% else %}
+        <div class="alert alert-info">Nhân viên sẽ có thể đăng nhập lại bằng mật khẩu hiện tại.</div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {% include 'includes/form_fields.html' %}
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <button class="btn {% if action == 'lock' %}btn-danger{% else %}btn-primary{% endif %}" type="submit">{% if action == 'lock' %}Xác nhận khóa{% else %}Xác nhận mở khóa{% endif %}</button>
+                <a class="btn btn-outline-secondary" href="{% url 'accounts:account_list' %}">Hủy</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

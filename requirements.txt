@@ -1,0 +1,10 @@
+# Python 3.12 - dependencies for the Django application.
+Django==5.2.17
+psycopg[binary]==3.3.5
+python-dotenv==1.2.3
+
+# Pinned transitive dependencies for reproducible installation.
+asgiref==3.12.1
+sqlparse==0.6.0
+typing_extensions==4.16.0
+tzdata==2026.4

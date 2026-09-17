@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Đăng nhập · QLNH{% endblock %}
+{% block content %}
+<section class="container px-3 pb-5 pt-3 pt-md-4">
+    <div class="auth-card project-card p-4 p-md-5 mx-auto">
+        <p class="eyebrow mb-3">QLNH · TÀI KHOẢN</p>
+        <h1 class="h3 mb-2">Đăng nhập</h1>
+        <p class="text-secondary mb-4">Chào mừng trở lại không gian làm việc của bạn.</p>
+        <form method="post" action="{% url 'accounts:login' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {% include 'includes/form_fields.html' %}
+            <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
+        </form>
+        <p class="small text-secondary mt-4 mb-0">Nếu quên mật khẩu hoặc không đăng nhập được, vui lòng liên hệ quản lý nhà hàng.</p>
+    </div>
+</section>
+{% endblock %}

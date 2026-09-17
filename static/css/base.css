@@ -1,0 +1,107 @@
+:root {
+    --qlnh-ink: #173c32;
+    --qlnh-accent: #28614f;
+    --qlnh-background: #f6f7f3;
+    --qlnh-border: #dfe5dc;
+}
+
+body {
+    color: var(--qlnh-ink);
+    background: var(--qlnh-background);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.site-header { border-bottom: 1px solid var(--qlnh-border); background: #fff; }
+.brand, .nav-link { color: var(--qlnh-ink); }
+.nav-link:hover { color: var(--qlnh-accent); text-decoration: underline; }
+.brand-mark {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--qlnh-ink);
+    color: #fff;
+    font-size: 1.65rem;
+    font-weight: 600;
+}
+.brand-caption { font-size: .8rem; color: #63746c; }
+.hero { padding-top: 4rem; padding-bottom: 4.5rem; }
+.hero h1 { line-height: 1.2; letter-spacing: -.035em; }
+.hero-description { max-width: 640px; line-height: 1.8; }
+.status-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem .8rem;
+    border: 1px solid #cddccc;
+    border-radius: 100px;
+    color: #365c3f;
+    font-size: .85rem;
+}
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: #648a4f; }
+.welcome-mark {
+    padding: 3rem 2rem;
+    border-left: 1px solid #cad4c8;
+    color: #59775f;
+    font-size: 3.5rem;
+    font-weight: 300;
+    letter-spacing: -.04em;
+}
+.welcome-mark span { display: block; margin-top: .8rem; font-size: .9rem; letter-spacing: 0; }
+.project-card { background: #fff; border: 1px solid var(--qlnh-border); border-radius: 16px; }
+.project-card p { max-width: 760px; line-height: 1.8; }
+.eyebrow { font-size: .75rem; font-weight: 600; letter-spacing: .14em; color: #657b6b; }
+.site-footer { border-top: 1px solid var(--qlnh-border); color: #64716a; font-size: .85rem; }
+.skip-link:focus { display: block; background: #fff; padding: 1rem; color: var(--qlnh-ink); }
+
+.btn-primary {
+    --bs-btn-bg: var(--qlnh-accent);
+    --bs-btn-border-color: var(--qlnh-accent);
+    --bs-btn-hover-bg: var(--qlnh-ink);
+    --bs-btn-hover-border-color: var(--qlnh-ink);
+    --bs-btn-active-bg: var(--qlnh-ink);
+    --bs-btn-active-border-color: var(--qlnh-ink);
+    --bs-btn-focus-shadow-rgb: 40, 97, 79;
+}
+.btn-outline-primary {
+    --bs-btn-color: var(--qlnh-accent);
+    --bs-btn-border-color: var(--qlnh-accent);
+    --bs-btn-hover-bg: var(--qlnh-accent);
+    --bs-btn-hover-border-color: var(--qlnh-accent);
+    --bs-btn-active-bg: var(--qlnh-ink);
+    --bs-btn-active-border-color: var(--qlnh-ink);
+    --bs-btn-focus-shadow-rgb: 40, 97, 79;
+}
+.app-shell { display: flex; flex-direction: column; }
+.app-main { min-width: 0; width: 100%; }
+.app-sidebar { background: #fff; border-bottom: 1px solid var(--qlnh-border); }
+.sidebar-nav .nav-link { padding: .75rem 1rem; border-radius: .6rem; font-size: .925rem; }
+.sidebar-nav .nav-link.active { color: var(--qlnh-ink); background: #e8efe7; font-weight: 600; }
+.sidebar-nav .nav-link:hover { background: #f2f5f0; text-decoration: none; }
+.auth-card { max-width: 490px; }
+.form-card { max-width: 680px; }
+.form-control:focus, .form-select:focus { border-color: var(--qlnh-accent); box-shadow: 0 0 0 .2rem rgb(40 97 79 / 15%); }
+.form-text ul { margin-bottom: 0; padding-left: 1.2rem; }
+.account-details dt { color: #64716a; font-weight: 400; }
+.account-details dd { margin-bottom: 1.25rem; }
+.account-table { --bs-table-color: var(--qlnh-ink); --bs-table-border-color: var(--qlnh-border); min-width: 780px; }
+.account-table thead th { background: #f1f5ef; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.account-table th, .account-table td { padding: 1rem; }
+.account-table tbody th { min-width: 170px; max-width: 300px; }
+.account-table .badge { font-weight: 500; }
+.account-actions { min-width: 210px; }
+.pagination { --bs-pagination-color: var(--qlnh-accent); --bs-pagination-hover-color: var(--qlnh-ink); --bs-pagination-active-bg: var(--qlnh-accent); --bs-pagination-active-border-color: var(--qlnh-accent); }
+.back-link { color: var(--qlnh-accent); text-decoration: none; }
+.back-link:hover { color: var(--qlnh-ink); text-decoration: underline; }
+
+@media (min-width: 992px) {
+    .app-shell-authenticated { flex-direction: row; }
+    .app-sidebar { flex: 0 0 240px; border-right: 1px solid var(--qlnh-border); border-bottom: 0; }
+}
+
+@media (max-width: 575.98px) {
+    .hero { padding-top: 2rem; padding-bottom: 3rem; }
+    .hero h1 { font-size: 2.35rem; }
+    .hero-description { font-size: 1.05rem; }
+}

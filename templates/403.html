@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Không có quyền truy cập · QLNH{% endblock %}
+{% block content %}
+<section class="container px-3 pb-5 pt-4">
+    <div class="project-card form-card p-4 p-md-5 mx-auto">
+        <p class="eyebrow mb-3">LỖI 403</p>
+        <h1 class="h3 mb-3">Không có quyền truy cập</h1>
+        <p class="text-secondary mb-4">Tài khoản của bạn chưa được cấp quyền sử dụng chức năng này. Vui lòng liên hệ quản lý nếu cần hỗ trợ.</p>
+        {% if user.is_authenticated %}<a class="btn btn-primary" href="{% url 'accounts:workspace' %}">Về tài khoản của tôi</a>{% else %}<a class="btn btn-primary" href="{% url 'accounts:login' %}">Đăng nhập</a>{% endif %}
+    </div>
+</section>
+{% endblock %}
