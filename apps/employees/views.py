@@ -6,14 +6,14 @@ from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView
 
 from core.mixins import ManagerRequiredMixin
 
-from .forms import EmployeeFilterForm, EmployeeForm
-from .models import EmployeeProfile
+from .forms import EmployeeFilterForm, EmployeeForm, EmployeeStatusForm
+from .models import EmployeeActivityLog, EmployeeProfile
 from .selectors import employee_list
-from .services import create_employee, update_employee
+from .services import change_employee_status, create_employee, update_employee
 
 
 class EmployeeListView(ManagerRequiredMixin, ListView):
@@ -24,7 +24,12 @@ class EmployeeListView(ManagerRequiredMixin, ListView):
         self.filter_form = EmployeeFilterForm(self.request.GET)
         if not self.filter_form.is_valid():
             return EmployeeProfile.objects.none()
-        return employee_list(**self.filter_form.cleaned_data)
+        filters = self.filter_form.cleaned_data
+        return employee_list(
+            query=filters["q"],
+            position=filters["position"],
+            status=filters["status"],
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,6 +62,42 @@ class EmployeeDetailView(ManagerRequiredMixin, DetailView):
     model = EmployeeProfile
     template_name = "employees/employee_detail.html"
     context_object_name = "employee"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["activity_logs"] = EmployeeActivityLog.objects.filter(employee=self.object).select_related("performed_by")
+        return context
+
+
+class EmployeeStatusView(ManagerRequiredMixin, FormView):
+    template_name = "employees/employee_status_form.html"
+    form_class = EmployeeStatusForm
+    success_url = reverse_lazy("employees:employee_list")
+
+    def dispatch(self, request, *args, **kwargs):
+        self.employee = get_object_or_404(EmployeeProfile, pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["employee"] = self.employee
+        return context
+
+    def get_initial(self):
+        return {"status": self.employee.employment_status}
+
+    def form_valid(self, form):
+        try:
+            employee = change_employee_status(
+                actor=self.request.user,
+                employee_id=self.employee.pk,
+                status=form.cleaned_data["status"],
+            )
+        except (ValidationError, ValueError) as error:
+            form.add_error("status", error)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Đã cập nhật trạng thái nhân viên {employee.full_name}.")
+        return super().form_valid(form)
 
 
 class EmployeeUpdateView(ManagerRequiredMixin, UpdateView):

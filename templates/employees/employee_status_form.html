@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Cập nhật trạng thái nhân viên · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">NHÂN VIÊN</p>
+    <h1 class="h2 mb-2">Cập nhật trạng thái</h1>
+    <p class="text-secondary mb-4">{{ employee.employee_code }} · {{ employee.full_name }}</p>
+    <div class="project-card p-3 p-md-4" style="max-width: 640px">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold" for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                {{ form.status }}
+                {% for error in form.status.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="alert alert-warning small">Chuyển sang “Đã nghỉ việc” sẽ khóa tài khoản đăng nhập của nhân viên.</div>
+            <button class="btn btn-primary" type="submit">Lưu trạng thái</button>
+            <a class="btn btn-outline-secondary" href="{% url 'employees:employee_detail' employee.pk %}">Hủy</a>
+        </form>
+    </div>
+</section>
+{% endblock %}

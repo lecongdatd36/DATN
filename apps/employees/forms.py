@@ -54,3 +54,7 @@ class EmployeeFilterForm(forms.Form):
     q = forms.CharField(label="Tìm nhân viên", required=False)
     position = forms.ChoiceField(label="Vị trí", required=False, choices=[("", "Tất cả vị trí"), *JobPosition.choices])
     status = forms.ChoiceField(label="Trạng thái", required=False, choices=[("", "Tất cả trạng thái"), *EmploymentStatus.choices])
+
+
+class EmployeeStatusForm(forms.Form):
+    status = forms.ChoiceField(label="Trạng thái mới", choices=EmploymentStatus.choices)
