@@ -13,6 +13,11 @@
                 {{ form.status }}
                 {% for error in form.status.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
             </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold" for="{{ form.resignation_date.id_for_label }}">{{ form.resignation_date.label }}</label>
+                {{ form.resignation_date }}
+                {% for error in form.resignation_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
             <div class="alert alert-warning small">Chuyển sang “Đã nghỉ việc” sẽ khóa tài khoản đăng nhập của nhân viên.</div>
             <button class="btn btn-primary" type="submit">Lưu trạng thái</button>
             <a class="btn btn-outline-secondary" href="{% url 'employees:employee_detail' employee.pk %}">Hủy</a>
