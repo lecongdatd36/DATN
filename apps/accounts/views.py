@@ -15,23 +15,23 @@ from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
-from django.views.generic import CreateView, DetailView, FormView, ListView, TemplateView, UpdateView
+from django.views.generic import DetailView, FormView, ListView, TemplateView, UpdateView
 
 from core.mixins import ManagerRequiredMixin
 
 from .forms import (
+    AccountCreateForm,
     AccountFilterForm,
-    AccountCreationForm,
     AccountUpdateForm,
     EmployeePasswordResetForm,
     LoginForm,
     PasswordChangeForm,
 )
-from .permissions import can_manage_target
+from .permissions import can_manage_target, can_view_account
 from .selectors import account_list
 from .services import (
     change_own_password,
-    create_employee_account,
+    create_account_with_profile,
     reset_employee_password,
     set_account_active,
     update_employee_account,
@@ -94,24 +94,53 @@ class AccountListView(ManagerRequiredMixin, ListView):
         self.filter_form = AccountFilterForm(self.request.GET)
         if not self.filter_form.is_valid():
             return User.objects.none()
-        return account_list(
-            query=self.filter_form.cleaned_data["q"],
-            status=self.filter_form.cleaned_data["status"],
-        )
+        filters = self.filter_form.cleaned_data
+        return account_list(query=filters["q"], status=filters["status"], account_type=filters["account_type"], position=filters["position"])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         for account in context["page_obj"]:
             account.can_manage = can_manage_target(self.request.user, account)
         context["filter_form"] = self.filter_form
-        context["query_string"] = urlencode(
-            {
-                key: value
-                for key, value in self.filter_form.cleaned_data.items()
-                if key in {"q", "status"} and value
-            }
-        )
+        context["query_string"] = urlencode({key: value for key, value in self.filter_form.cleaned_data.items() if value})
         return context
+
+
+@method_decorator(never_cache, name="dispatch")
+class AccountCreateView(ManagerRequiredMixin, FormView):
+    template_name = "accounts/account_create.html"
+    form_class = AccountCreateForm
+    success_url = reverse_lazy("accounts:account_list")
+
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.request.GET.get("type") == "EMPLOYEE":
+            initial["account_type"] = "EMPLOYEE"
+        return initial
+
+    def form_valid(self, form):
+        position = form.cleaned_data["job_position"]
+        try:
+            employee = create_account_with_profile(
+                actor=self.request.user,
+                account_data={
+                    "username": form.cleaned_data["username"],
+                    "email": form.cleaned_data["email"],
+                    "is_staff": position.code == "MANAGER",
+                    "is_superuser": False,
+                },
+                profile_data={
+                    name: form.cleaned_data[name]
+                    for name in ("employee_code", "full_name", "phone", "address", "date_of_birth", "gender", "join_date", "employment_status", "avatar", "note")
+                },
+                password=form.cleaned_data["password1"],
+                position_code=position.code,
+            )
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Đã tạo tài khoản và hồ sơ {employee.full_name}.")
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class EmployeeTargetMixin:
@@ -131,34 +160,21 @@ class EmployeeTargetMixin:
 
 
 @method_decorator(never_cache, name="dispatch")
-class AccountDetailView(ManagerRequiredMixin, EmployeeTargetMixin, DetailView):
+class AccountDetailView(ManagerRequiredMixin, DetailView):
     model = User
     template_name = "accounts/account_detail.html"
     context_object_name = "account"
 
     def get_object(self, queryset=None):
-        return self.target_user
+        target = get_object_or_404(User, pk=self.kwargs["pk"])
+        if not can_view_account(self.request.user, target):
+            raise PermissionDenied("Bạn không được xem tài khoản này.")
+        return target
 
-
-@method_decorator(never_cache, name="dispatch")
-class AccountCreateView(ManagerRequiredMixin, CreateView):
-    template_name = "accounts/account_form.html"
-    form_class = AccountCreationForm
-    success_url = reverse_lazy("accounts:account_list")
-
-    def form_valid(self, form):
-        try:
-            account = create_employee_account(
-                actor=self.request.user,
-                data={name: form.cleaned_data[name] for name in ("username", "email", "first_name", "last_name")},
-                password=form.cleaned_data["password1"],
-            )
-        except ValidationError as error:
-            form.add_error(None, error)
-            return self.form_invalid(form)
-        self.object = account
-        messages.success(self.request, f"Đã tạo tài khoản {account.username}.")
-        return HttpResponseRedirect(self.get_success_url())
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_edit_account"] = can_manage_target(self.request.user, self.object)
+        return context
 
 
 @method_decorator(never_cache, name="dispatch")
@@ -192,7 +208,7 @@ class AccountStatusView(ManagerRequiredMixin, EmployeeTargetMixin, FormView):
     http_method_names = ["get", "post", "head", "options"]
     template_name = "accounts/account_confirm_status.html"
     form_class = forms.Form
-    success_url = reverse_lazy("accounts:account_list")
+    success_url = reverse_lazy("employees:employee_list")
     activate = False
 
     def get_context_data(self, **kwargs):
@@ -220,7 +236,7 @@ class EmployeePasswordResetView(ManagerRequiredMixin, EmployeeTargetMixin, FormV
     http_method_names = ["get", "post", "head", "options"]
     template_name = "accounts/account_password_reset.html"
     form_class = EmployeePasswordResetForm
-    success_url = reverse_lazy("accounts:account_list")
+    success_url = reverse_lazy("employees:employee_list")
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

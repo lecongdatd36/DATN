@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}Xóa nhân viên · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5"><div class="project-card p-4" style="max-width: 640px"><h1 class="h3">Xóa nhân viên</h1><p>Bạn có chắc muốn xóa nhân viên <strong>{{ employee.full_name }}</strong> và tài khoản <strong>{{ employee.user.username }}</strong>? Hành động này không thể hoàn tác.</p>{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}<form method="post">{% csrf_token %}<button class="btn btn-danger" type="submit">Xóa nhân viên</button><a class="btn btn-outline-secondary" href="{% url 'employees:employee_detail' employee.pk %}">Hủy</a></form></div></section>
+{% endblock %}

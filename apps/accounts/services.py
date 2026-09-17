@@ -5,8 +5,10 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.contrib.auth.models import Group
 
 from apps.accounts.models import User
+from apps.employees.models import EmployeeActivityLog, EmployeeProfile, JobPosition
 from apps.accounts.permissions import can_manage_target
 from core.permissions import can_manage_accounts
 
@@ -23,6 +25,21 @@ def _record_account_action(*, actor, target, action_code, description):
     )
 
 
+def _record_employee_activity(*, actor, target, action, description):
+    profile = getattr(target, "employee_profile", None)
+    if profile is None:
+        return
+    EmployeeActivityLog.objects.create(
+        employee=profile,
+        employee_code_snapshot=profile.employee_code,
+        employee_name_snapshot=profile.full_name,
+        action=action,
+        performed_by=actor,
+        performed_by_name_snapshot=actor.get_full_name() or actor.username,
+        description=description,
+    )
+
+
 def _get_managed_target(*, actor, target_id):
     if not can_manage_accounts(actor) or actor.pk is None:
         raise PermissionDenied("Bạn không có quyền quản lý tài khoản.")
@@ -36,25 +53,38 @@ def _get_managed_target(*, actor, target_id):
     return target
 
 
+def _next_employee_code():
+    used = set(EmployeeProfile.objects.values_list("employee_code", flat=True))
+    number = 1
+    while f"NV{number:04d}" in used:
+        number += 1
+    return f"NV{number:04d}"
+
+
 @transaction.atomic
-def create_employee_account(*, actor, data, password):
+def create_account_with_profile(*, actor, account_data, profile_data, password, position_code):
     if not can_manage_accounts(actor):
-        raise PermissionDenied("Bạn không có quyền quản lý tài khoản.")
-    current_actor = User.objects.select_for_update().filter(pk=actor.pk).first()
-    if not can_manage_accounts(current_actor):
-        raise PermissionDenied("Bạn không có quyền quản lý tài khoản.")
-    validate_password(password)
-    user = User(**data, role="EMPLOYEE", is_staff=False, is_superuser=False)
-    user.set_password(password)
-    user.full_clean()
-    user.save()
-    _record_account_action(
-        actor=current_actor,
-        target=user,
-        action_code="CREATE",
-        description="Tạo tài khoản nhân viên.",
+        raise PermissionDenied("Bạn không có quyền tạo tài khoản.")
+    position = JobPosition.objects.select_for_update().get(code=position_code, is_active=True)
+    profile_data = dict(profile_data)
+    profile_data.pop("username", None)
+    profile_data.pop("email", None)
+    profile_data["employee_code"] = profile_data.get("employee_code") or _next_employee_code()
+    user = User.objects.create_user(password=password, **account_data)
+    user.groups.add(position.group)
+    employee = EmployeeProfile(user=user, job_position=position, **profile_data)
+    employee.full_clean()
+    employee.save()
+    EmployeeActivityLog.objects.create(
+        employee=employee,
+        employee_code_snapshot=employee.employee_code,
+        employee_name_snapshot=employee.full_name,
+        action=EmployeeActivityLog.Action.CREATE,
+        performed_by=actor,
+        performed_by_name_snapshot=actor.get_full_name() or actor.username,
+        description=f"Tạo tài khoản và hồ sơ với vị trí {position.name}.",
     )
-    return user
+    return employee
 
 
 @transaction.atomic
@@ -62,11 +92,10 @@ def update_employee_account(*, actor, target_id, data):
     target = _get_managed_target(actor=actor, target_id=target_id)
     for field, value in data.items():
         setattr(target, field, value)
-    target.role = "EMPLOYEE"
     target.is_staff = False
     target.is_superuser = False
     target.full_clean()
-    target.save(update_fields=(*data.keys(), "role", "is_staff", "is_superuser", "updated_at"))
+    target.save(update_fields=(*data.keys(), "is_staff", "is_superuser", "updated_at"))
     _record_account_action(
         actor=actor,
         target=target,
@@ -91,6 +120,12 @@ def set_account_active(*, actor, target_id, is_active):
         action_code="UNLOCK" if is_active else "LOCK",
         description="Mở khóa tài khoản." if is_active else "Khóa tài khoản.",
     )
+    _record_employee_activity(
+        actor=actor,
+        target=target,
+        action=EmployeeActivityLog.Action.LOCK_ACCOUNT if not is_active else EmployeeActivityLog.Action.UNLOCK_ACCOUNT,
+        description="Mở khóa tài khoản." if is_active else "Khóa tài khoản.",
+    )
     return target
 
 
@@ -106,6 +141,12 @@ def reset_employee_password(*, actor, target_id, password):
         actor=actor,
         target=target,
         action_code="RESET_PASSWORD",
+        description="Đặt lại mật khẩu nhân viên.",
+    )
+    _record_employee_activity(
+        actor=actor,
+        target=target,
+        action=EmployeeActivityLog.Action.RESET_PASSWORD,
         description="Đặt lại mật khẩu nhân viên.",
     )
     return target

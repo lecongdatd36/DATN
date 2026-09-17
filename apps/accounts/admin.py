@@ -39,8 +39,8 @@ admin_site = RoleAwareAdminSite(name="admin")
 class CustomUserAdmin(UserAdmin):
     form = UserChangeAdminForm
     add_form = UserCreationAdminForm
-    list_display = ("username", "email", "role", "is_active", "is_staff")
-    list_filter = ("role", "is_active", "is_staff")
+    list_display = ("username", "email", "is_active", "is_staff")
+    list_filter = ("is_active", "is_staff")
     search_fields = ("username", "email", "first_name", "last_name")
     ordering = ("username", "pk")
     readonly_fields = ("last_login", "date_joined", "created_at", "updated_at")
@@ -51,7 +51,7 @@ class CustomUserAdmin(UserAdmin):
             "Vai trò và quyền truy cập",
             {
                 "fields": (
-                    "role", "is_active", "is_staff", "is_superuser",
+                    "is_active", "is_staff", "is_superuser",
                     "groups", "user_permissions",
                 )
             },
@@ -68,7 +68,7 @@ class CustomUserAdmin(UserAdmin):
                 "classes": ("wide",),
                 "fields": (
                     "username", "email", "first_name", "last_name",
-                    "password1", "password2", "role", "is_active", "is_staff",
+                    "password1", "password2", "is_active", "is_staff",
                 ),
             },
         ),
@@ -84,7 +84,7 @@ class CustomUserAdmin(UserAdmin):
         return self._can_write_users(request)
 
     def has_add_permission(self, request):
-        return self._can_write_users(request)
+        return False
 
     def has_change_permission(self, request, obj=None):
         # Quản lý thường dùng UI dịch vụ; không thể cấp thêm quyền qua admin.

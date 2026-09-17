@@ -1,11 +1,12 @@
 from urllib.parse import urlencode
 
+from django import forms
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView
 
 from core.mixins import ManagerRequiredMixin
@@ -13,7 +14,7 @@ from core.mixins import ManagerRequiredMixin
 from .forms import EmployeeFilterForm, EmployeeForm, EmployeeStatusForm
 from .models import EmployeeActivityLog, EmployeeProfile
 from .selectors import employee_list
-from .services import change_employee_status, create_employee, update_employee
+from .services import change_employee_status, create_employee, delete_employee, update_employee
 
 
 class EmployeeListView(ManagerRequiredMixin, ListView):
@@ -29,6 +30,7 @@ class EmployeeListView(ManagerRequiredMixin, ListView):
             query=filters["q"],
             position=filters["position"],
             status=filters["status"],
+            account_status=filters["account_status"],
         )
 
     def get_context_data(self, **kwargs):
@@ -39,6 +41,9 @@ class EmployeeListView(ManagerRequiredMixin, ListView):
 
 
 class EmployeeCreateView(ManagerRequiredMixin, CreateView):
+    def dispatch(self, request, *args, **kwargs):
+        return HttpResponseRedirect(f"{reverse('accounts:account_create')}?type=EMPLOYEE")
+
     template_name = "employees/employee_form.html"
     form_class = EmployeeForm
     success_url = reverse_lazy("employees:employee_list")
@@ -98,6 +103,30 @@ class EmployeeStatusView(ManagerRequiredMixin, FormView):
             form.add_error("status", error)
             return self.form_invalid(form)
         messages.success(self.request, f"Đã cập nhật trạng thái nhân viên {employee.full_name}.")
+        return super().form_valid(form)
+
+
+class EmployeeDeleteView(ManagerRequiredMixin, FormView):
+    template_name = "employees/employee_delete.html"
+    form_class = forms.Form
+    success_url = reverse_lazy("employees:employee_list")
+
+    def dispatch(self, request, *args, **kwargs):
+        self.employee = get_object_or_404(EmployeeProfile, pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["employee"] = self.employee
+        return context
+
+    def form_valid(self, form):
+        try:
+            delete_employee(actor=self.request.user, employee_id=self.employee.pk)
+        except PermissionDenied as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        messages.success(self.request, "Đã xóa nhân viên và tài khoản liên kết.")
         return super().form_valid(form)
 
 

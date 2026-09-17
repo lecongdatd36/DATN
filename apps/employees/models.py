@@ -1,16 +1,25 @@
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
 
 
-class JobPosition(models.TextChoices):
-    MANAGER = "MANAGER", "Quản lý"
-    WAITER = "WAITER", "Phục vụ"
-    CASHIER = "CASHIER", "Thu ngân"
-    KITCHEN = "KITCHEN", "Bếp"
-    INVENTORY = "INVENTORY", "Kho"
+class JobPosition(models.Model):
+    code = models.CharField("mã vị trí", max_length=20, unique=True)
+    name = models.CharField("tên vị trí", max_length=100)
+    description = models.TextField("mô tả", blank=True)
+    group = models.OneToOneField(Group, on_delete=models.PROTECT, related_name="job_position")
+    is_active = models.BooleanField("đang sử dụng", default=True)
+    created_at = models.DateTimeField("ngày tạo", auto_now_add=True)
+    updated_at = models.DateTimeField("cập nhật lần cuối", auto_now=True)
+
+    class Meta:
+        ordering = ("code", "pk")
+
+    def __str__(self):
+        return self.name
 
 
 class EmploymentStatus(models.TextChoices):
@@ -33,7 +42,7 @@ class EmployeeProfile(models.Model):
     address = models.CharField("địa chỉ", max_length=255, blank=True)
     date_of_birth = models.DateField("ngày sinh", null=True, blank=True)
     gender = models.CharField("giới tính", max_length=10, choices=Gender.choices, blank=True)
-    job_position = models.CharField("vị trí", max_length=20, choices=JobPosition.choices)
+    job_position = models.ForeignKey(JobPosition, on_delete=models.PROTECT, related_name="employees", verbose_name="vị trí")
     join_date = models.DateField("ngày vào làm")
     employment_status = models.CharField("trạng thái", max_length=20, choices=EmploymentStatus.choices, default=EmploymentStatus.WORKING)
     resignation_date = models.DateField("ngày nghỉ việc", null=True, blank=True)
@@ -48,8 +57,6 @@ class EmployeeProfile(models.Model):
 
     def clean(self):
         super().clean()
-        if self.user_id and getattr(self.user, "role", None) != "EMPLOYEE":
-            raise ValidationError({"user": "Hồ sơ nhân viên chỉ được liên kết với tài khoản Nhân viên."})
         if self.join_date and self.join_date > timezone.localdate():
             raise ValidationError({"join_date": "Ngày vào làm không được ở tương lai."})
         if self.date_of_birth and self.join_date and self.date_of_birth >= self.join_date:
@@ -67,12 +74,20 @@ class EmployeeActivityLog(models.Model):
     class Action(models.TextChoices):
         CREATE = "CREATE", "Tạo mới"
         UPDATE = "UPDATE", "Cập nhật"
+        CHANGE_POSITION = "CHANGE_POSITION", "Đổi vị trí"
+        RESET_PASSWORD = "RESET_PASSWORD", "Đặt lại mật khẩu"
+        LOCK_ACCOUNT = "LOCK_ACCOUNT", "Khóa tài khoản"
+        UNLOCK_ACCOUNT = "UNLOCK_ACCOUNT", "Mở khóa tài khoản"
         RESIGN = "RESIGN", "Nghỉ việc"
         STATUS = "STATUS", "Đổi trạng thái"
+        DELETE = "DELETE", "Xóa nhân viên"
 
-    employee = models.ForeignKey(EmployeeProfile, on_delete=models.PROTECT, related_name="activity_logs")
+    employee = models.ForeignKey(EmployeeProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name="activity_logs")
+    employee_code_snapshot = models.CharField("mã nhân viên", max_length=20, default="")
+    employee_name_snapshot = models.CharField("tên nhân viên", max_length=150, default="")
     action = models.CharField("hành động", max_length=20, choices=Action.choices)
-    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="employee_activity_logs")
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="employee_activity_logs")
+    performed_by_name_snapshot = models.CharField("người thực hiện", max_length=150, blank=True, default="")
     description = models.TextField("mô tả")
     created_at = models.DateTimeField("thời gian", auto_now_add=True)
 

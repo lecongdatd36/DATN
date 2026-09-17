@@ -1,5 +1,35 @@
 {% extends 'base.html' %}
 {% block title %}Chi tiết nhân viên · QLNH{% endblock %}
 {% block content %}
-<section class="container-fluid px-3 px-md-4 pb-5"><p class="eyebrow mb-2">NHÂN VIÊN</p><div class="d-flex flex-wrap justify-content-between gap-3 mb-4"><h1 class="h2 mb-0">{{ employee.full_name }}</h1><div><a class="btn btn-primary" href="{% url 'employees:employee_update' employee.pk %}">Sửa hồ sơ</a> <a class="btn btn-outline-warning" href="{% url 'employees:employee_status' employee.pk %}">Đổi trạng thái</a> <a class="btn btn-outline-secondary" href="{% url 'employees:employee_list' %}">Quay lại</a></div></div><div class="project-card p-3 p-md-4 mb-4"><dl class="row mb-0"><dt class="col-sm-4">Mã nhân viên</dt><dd class="col-sm-8">{{ employee.employee_code }}</dd><dt class="col-sm-4">Tài khoản</dt><dd class="col-sm-8">{{ employee.user.username }}</dd><dt class="col-sm-4">Điện thoại</dt><dd class="col-sm-8">{{ employee.phone }}</dd><dt class="col-sm-4">Vị trí</dt><dd class="col-sm-8">{{ employee.get_job_position_display }}</dd><dt class="col-sm-4">Ngày vào làm</dt><dd class="col-sm-8">{{ employee.join_date|date:'d/m/Y' }}</dd><dt class="col-sm-4">Trạng thái</dt><dd class="col-sm-8">{{ employee.get_employment_status_display }}</dd><dt class="col-sm-4">Địa chỉ</dt><dd class="col-sm-8">{{ employee.address|default:'Chưa cập nhật' }}</dd><dt class="col-sm-4">Ghi chú</dt><dd class="col-sm-8">{{ employee.note|default:'Không có' }}</dd></dl></div><div class="project-card p-3 p-md-4"><h2 class="h5">Lịch sử thao tác</h2><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Thời gian</th><th>Hành động</th><th>Người thực hiện</th><th>Mô tả</th></tr></thead><tbody>{% for log in activity_logs %}<tr><td class="text-nowrap">{{ log.created_at|date:'d/m/Y H:i' }}</td><td>{{ log.get_action_display }}</td><td>{{ log.performed_by.get_full_name|default:log.performed_by.username }}</td><td>{{ log.description }}</td></tr>{% empty %}<tr><td colspan="4" class="text-secondary">Chưa có lịch sử thao tác.</td></tr>{% endfor %}</tbody></table></div></div></section>
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">NHÂN VIÊN</p>
+    <div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
+        <h1 class="h2 mb-0">{{ employee.full_name }}</h1>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-primary" href="{% url 'employees:employee_update' employee.pk %}">Sửa hồ sơ</a>
+            <a class="btn btn-outline-warning" href="{% url 'employees:employee_status' employee.pk %}">Đổi trạng thái</a>
+            <a class="btn btn-outline-danger" href="{% url 'employees:employee_delete' employee.pk %}">Xóa nhân viên</a>
+            <a class="btn btn-outline-secondary" href="{% url 'employees:employee_list' %}">Quay lại</a>
+        </div>
+    </div>
+    <div class="project-card p-3 p-md-4 mb-4">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Mã nhân viên</dt><dd class="col-sm-8">{{ employee.employee_code }}</dd>
+            <dt class="col-sm-4">Tài khoản</dt><dd class="col-sm-8">{{ employee.user.username }}</dd>
+            <dt class="col-sm-4">Điện thoại</dt><dd class="col-sm-8">{{ employee.phone }}</dd>
+            <dt class="col-sm-4">Vị trí</dt><dd class="col-sm-8">{{ employee.job_position.name }}</dd>
+            <dt class="col-sm-4">Ngày vào làm</dt><dd class="col-sm-8">{{ employee.join_date|date:'d/m/Y' }}</dd>
+            <dt class="col-sm-4">Ngày nghỉ việc</dt><dd class="col-sm-8">{{ employee.resignation_date|date:'d/m/Y'|default:'Chưa nghỉ việc' }}</dd>
+            <dt class="col-sm-4">Trạng thái</dt><dd class="col-sm-8">{{ employee.employment_status }}</dd>
+            <dt class="col-sm-4">Địa chỉ</dt><dd class="col-sm-8">{{ employee.address|default:'Chưa cập nhật' }}</dd>
+            <dt class="col-sm-4">Ghi chú</dt><dd class="col-sm-8">{{ employee.note|default:'Không có' }}</dd>
+        </dl>
+    </div>
+    <div class="project-card p-3 p-md-4">
+        <h2 class="h5">Lịch sử thao tác</h2>
+        <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Thời gian</th><th>Hành động</th><th>Nhân viên</th><th>Người thực hiện</th><th>Mô tả</th></tr></thead><tbody>
+        {% for log in activity_logs %}<tr><td class="text-nowrap">{{ log.created_at|date:'d/m/Y H:i' }}</td><td>{{ log.get_action_display }}</td><td>{{ log.employee_name_snapshot }}</td><td>{{ log.performed_by_name_snapshot }}</td><td>{{ log.description }}</td></tr>{% empty %}<tr><td colspan="5" class="text-secondary">Chưa có lịch sử thao tác.</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+</section>
 {% endblock %}

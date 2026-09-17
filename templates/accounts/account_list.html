@@ -7,7 +7,7 @@
         <h1 class="h2 mb-0">Tài khoản</h1>
         <div class="d-flex align-items-center gap-3">
             <span class="small text-secondary">{{ paginator.count }} tài khoản</span>
-            <a class="btn btn-primary" href="{% url 'accounts:account_create' %}">Tạo tài khoản</a>
+            <a class="btn btn-primary" href="{% url 'accounts:account_create' %}">Thêm tài khoản</a>
         </div>
     </div>
     <p class="text-secondary mb-4">Tra cứu tài khoản, quản lý trạng thái và đặt lại mật khẩu cho nhân viên.</p>
@@ -30,7 +30,7 @@
         <div class="table-responsive">
             <table class="table align-middle account-table mb-0">
                 <caption class="visually-hidden">Danh sách tài khoản theo bộ lọc hiện tại</caption>
-                <thead><tr><th scope="col">Tài khoản</th><th scope="col">Vai trò hệ thống</th><th scope="col">Trạng thái</th><th scope="col">Ngày tạo</th><th scope="col" class="text-end">Thao tác</th></tr></thead>
+                <thead><tr><th scope="col">Tài khoản</th><th scope="col">Loại</th><th scope="col">Vị trí</th><th scope="col">Trạng thái</th><th scope="col">Ngày tạo</th><th scope="col" class="text-end">Thao tác</th></tr></thead>
                 <tbody>
                     {% for account in page_obj %}
                     <tr>
@@ -38,8 +38,10 @@
                             <a class="fw-semibold d-block text-break" href="{% url 'accounts:account_detail' account.pk %}">{{ account.username }}{% if account.pk == user.pk %} <span class="badge text-bg-light">Bạn</span>{% endif %}</a>
                             {% if account.get_full_name %}<span class="small d-block text-secondary text-break">{{ account.get_full_name }}</span>{% endif %}
                             {% if account.email %}<span class="small d-block text-secondary text-break">{{ account.email }}</span>{% endif %}
+                            {% if not account.employee_profile %}<span class="badge text-bg-warning mt-1">Chưa có hồ sơ nhân sự</span>{% endif %}
                         </th>
-                        <td><span class="badge text-bg-light">{{ account.get_role_display }}</span></td>
+                        <td>{% if account.employee_profile.job_position.code == 'MANAGER' %}Quản trị viên / Quản lý{% else %}Nhân viên{% endif %}</td>
+                        <td>{{ account.employee_profile.job_position.name|default:'Chưa gán' }}</td>
                         <td>{% if account.is_active %}<span class="badge text-bg-success">Đang hoạt động</span>{% else %}<span class="badge text-bg-secondary">Đã khóa</span>{% endif %}</td>
                         <td class="text-nowrap">{{ account.created_at|date:'d/m/Y' }}</td>
                         <td class="text-end">
@@ -54,7 +56,7 @@
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="text-center py-5"><h2 class="h6">Không tìm thấy tài khoản</h2><p class="text-secondary small mb-0">Thử đổi từ khóa hoặc xóa bộ lọc để xem lại danh sách.</p></td></tr>
+                    <tr><td colspan="6" class="text-center py-5"><h2 class="h6">Không tìm thấy tài khoản</h2><p class="text-secondary small mb-0">Thử đổi từ khóa hoặc xóa bộ lọc để xem lại danh sách.</p></td></tr>
                     {% endfor %}
                 </tbody>
             </table>

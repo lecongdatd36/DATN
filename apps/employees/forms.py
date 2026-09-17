@@ -58,8 +58,9 @@ class EmployeeForm(forms.ModelForm):
 
 class EmployeeFilterForm(forms.Form):
     q = forms.CharField(label="Tìm nhân viên", required=False)
-    position = forms.ChoiceField(label="Vị trí", required=False, choices=[("", "Tất cả vị trí"), *JobPosition.choices])
+    position = forms.ModelChoiceField(label="Vị trí", required=False, queryset=JobPosition.objects.filter(is_active=True), empty_label="Tất cả vị trí")
     status = forms.ChoiceField(label="Trạng thái", required=False, choices=[("", "Tất cả trạng thái"), *EmploymentStatus.choices])
+    account_status = forms.ChoiceField(label="Tài khoản", required=False, choices=[("", "Tất cả tài khoản"), ("active", "Đang hoạt động"), ("inactive", "Đã khóa")])
 
 
 class EmployeeStatusForm(forms.Form):

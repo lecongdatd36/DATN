@@ -4,7 +4,15 @@ from django.core.exceptions import PermissionDenied
 from apps.accounts.admin import admin_site
 from core.permissions import can_manage_accounts
 
-from .models import EmployeeActivityLog, EmployeeProfile
+from .models import EmployeeActivityLog, EmployeeProfile, JobPosition
+
+
+@admin.register(JobPosition, site=admin_site)
+class JobPositionAdmin(admin.ModelAdmin):
+    list_display = ("code", "name", "group", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("code", "name", "group__name")
+    readonly_fields = ("group", "created_at", "updated_at")
 
 
 @admin.register(EmployeeProfile, site=admin_site)

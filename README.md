@@ -203,7 +203,7 @@ Tạo tài khoản quản trị đầu tiên bằng lệnh tương tác dưới 
 python manage.py createsuperuser
 ```
 
-Đăng nhập `/admin/` bằng tài khoản vừa tạo để thêm tài khoản dùng thử. Chọn vai trò `EMPLOYEE` cho nhân viên, `MANAGER` cho quản lý. Cờ `is_staff` chỉ phục vụ quyền vào Django Admin; nó không thay thế vai trò hệ thống. Nhân viên vẫn bị chặn Django Admin kể cả khi được gắn nhầm cờ này.
+Đăng nhập tại `/tai-khoan/dang-nhap/`. Tạo nhân viên từ màn hình **Nhân viên → Thêm nhân viên**; thao tác này tạo đồng thời tài khoản đăng nhập và hồ sơ nhân viên trong một transaction. Màn hình **Tài khoản** chỉ dùng để khóa/mở khóa, sửa thông tin đăng nhập và đặt lại mật khẩu, không tạo User độc lập. Cờ `is_staff` chỉ phục vụ quyền vào Django Admin; nó không thay thế vai trò hệ thống.
 
 Hiện chưa có command `seed_demo` hoặc dữ liệu demo. Lệnh `python manage.py seed_demo` chỉ sử dụng sau khi command được triển khai ở giai đoạn dữ liệu demo.
 
@@ -216,10 +216,12 @@ Hiện chưa có command `seed_demo` hoặc dữ liệu demo. Lệnh `python man
 | Danh sách, tìm kiếm, lọc và phân trang tài khoản | Có | Không |
 | Khóa/mở khóa tài khoản nhân viên | Có | Không |
 | Đặt lại mật khẩu nhân viên | Có | Không |
+| Tạo nhân viên kèm tài khoản đăng nhập | Có | Không |
 | Truy cập Django Admin | Cần thêm `is_staff` | Không |
-| Tạo/chỉnh sửa tài khoản trong Django Admin | Cần thêm `is_superuser` | Không |
+| Xem/chỉnh sửa hồ sơ nhân viên trong Django Admin | Cần thêm `is_staff` | Không |
+| Tạo/chỉnh sửa User trong Django Admin | Cần thêm `is_superuser` | Không |
 
-Hệ thống chỉ có hai vai trò đăng nhập; Quản trị viên và Quản lý là cùng một actor. Khách hàng không cần tài khoản và sẽ được triển khai ở giai đoạn riêng. `JobPosition` và `EmployeeProfile` thuộc GIAI ĐOẠN 3, chưa được tạo.
+Hệ thống chỉ có hai vai trò đăng nhập; Quản trị viên và Quản lý là cùng một actor. Khách hàng không cần tài khoản và sẽ được triển khai ở giai đoạn riêng. Mỗi nhân viên có đúng một User và một `EmployeeProfile`; không tạo tài khoản nhân viên độc lập từ màn hình Tài khoản.
 
 - `/tai-khoan/dang-nhap/`: đăng nhập bằng username và mật khẩu.
 - `/tai-khoan/`: không gian làm việc sau đăng nhập.

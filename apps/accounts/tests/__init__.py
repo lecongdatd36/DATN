@@ -1,31 +1,27 @@
-"""Dữ liệu kiểm thử riêng, chỉ được tạo trong database test của Django."""
+from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from apps.employees.models import EmployeeProfile, JobPosition
 
-TEST_PASSWORD = "Only-For-Tests!8537"
-NEW_PASSWORD = "Changed-For-Tests!9642"
+PASSWORD = "Only-For-Tests!8537"
 
 
 class AccountTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        super().setUpTestData()
         user_model = get_user_model()
-        cls.manager = user_model.objects.create_user(
-            username="manager_test", password=TEST_PASSWORD, role="MANAGER"
+        cls.manager_position = JobPosition.objects.get(code="MANAGER")
+        cls.waiter_position = JobPosition.objects.get(code="WAITER")
+        cls.manager = user_model.objects.create_user(username="manager_test", password=PASSWORD, is_staff=True)
+        cls.manager_profile = EmployeeProfile.objects.create(
+            user=cls.manager, employee_code="NV0001", full_name="Manager Test", phone="0901000001",
+            job_position=cls.manager_position, join_date=date.today(),
         )
-        cls.employee = user_model.objects.create_user(
-            username="employee_test",
-            email="employee@example.test",
-            password=TEST_PASSWORD,
-        )
-        cls.other_manager = user_model.objects.create_user(
-            username="other_manager_test", password=TEST_PASSWORD, role="MANAGER"
-        )
-        cls.inactive_employee = user_model.objects.create_user(
-            username="inactive_employee_test",
-            password=TEST_PASSWORD,
-            is_active=False,
+        cls.manager.groups.add(cls.manager_position.group)
+        cls.employee = user_model.objects.create_user(username="employee_test", email="employee@example.test", password=PASSWORD)
+        cls.employee_profile = EmployeeProfile.objects.create(
+            user=cls.employee, employee_code="NV0002", full_name="Employee Test", phone="0901000002",
+            job_position=cls.waiter_position, join_date=date.today(),
         )

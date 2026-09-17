@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Thêm tài khoản · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">HỆ THỐNG · TÀI KHOẢN</p>
+    <h1 class="h2 mb-2">Thêm tài khoản</h1>
+    <p class="text-secondary mb-4">Một lần tạo sẽ sinh tài khoản đăng nhập, hồ sơ nhân sự, mã nhân viên và nhóm quyền tương ứng.</p>
+    <div class="project-card p-3 p-md-4" style="max-width: 900px">
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <h2 class="h5 mb-3">Thông tin tài khoản</h2>
+            <div class="row">
+                {% for field in form %}
+                    {% if field.name == 'account_type' or field.name == 'job_position' %}{% if field.name == 'account_type' %}<div class="col-12 mb-3"><label class="form-label fw-semibold">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endif %}{% endif %}
+                {% endfor %}
+                {% for field in form %}
+                    {% if field.name != 'account_type' and field.name != 'job_position' %}<div class="col-md-6 mb-3"><label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endif %}
+                {% endfor %}
+                <div class="col-md-6 mb-3"><label class="form-label fw-semibold" for="{{ form.job_position.id_for_label }}">{{ form.job_position.label }}</label>{{ form.job_position }}{% for error in form.job_position.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            </div>
+            <button class="btn btn-primary" type="submit">Tạo tài khoản</button>
+            <a class="btn btn-outline-secondary" href="{% url 'accounts:account_list' %}">Hủy</a>
+        </form>
+    </div>
+</section>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const typeFields = document.querySelectorAll("input[name='account_type']");
+    const positionField = document.getElementById("{{ form.job_position.id_for_label }}");
+    const positionContainer = positionField ? positionField.closest(".col-md-6") : null;
+    function syncPosition() {
+        const selected = document.querySelector("input[name='account_type']:checked");
+        const isManager = selected && selected.value === "MANAGER";
+        if (positionContainer) positionContainer.hidden = Boolean(isManager);
+        if (isManager && positionField) positionField.value = "";
+    }
+    typeFields.forEach(function (field) { field.addEventListener("change", syncPosition); });
+    syncPosition();
+});
+</script>
+{% endblock %}
