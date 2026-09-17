@@ -15,8 +15,8 @@ class EmployeeForm(forms.ModelForm):
 
     class Meta:
         model = EmployeeProfile
-        fields = ("employee_code", "full_name", "phone", "address", "date_of_birth", "gender", "job_position", "join_date", "employment_status", "avatar", "note")
-        widgets = {"date_of_birth": forms.DateInput(attrs={"type": "date"}), "join_date": forms.DateInput(attrs={"type": "date"})}
+        fields = ("employee_code", "full_name", "phone", "address", "date_of_birth", "gender", "job_position", "join_date", "employment_status", "resignation_date", "avatar", "note")
+        widgets = {"date_of_birth": forms.DateInput(attrs={"type": "date"}), "join_date": forms.DateInput(attrs={"type": "date"}), "resignation_date": forms.DateInput(attrs={"type": "date"})}
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,6 +29,7 @@ class EmployeeForm(forms.ModelForm):
         else:
             self.fields["password1"].required = True
             self.fields["password2"].required = True
+        self.fields["employee_code"].required = False
 
     def clean_username(self):
         username = self.cleaned_data["username"].strip()
@@ -47,7 +48,12 @@ class EmployeeForm(forms.ModelForm):
                 self.add_error("password2", "Hai mật khẩu không khớp.")
             elif password1:
                 validate_password(password1, user=self.user)
+        if cleaned.get("employment_status") == EmploymentStatus.RESIGNED and not cleaned.get("resignation_date"):
+            self.add_error("resignation_date", "Vui lòng nhập ngày nghỉ việc.")
         return cleaned
+
+    def clean_phone(self):
+        return "".join(self.cleaned_data["phone"].split())
 
 
 class EmployeeFilterForm(forms.Form):
@@ -58,3 +64,10 @@ class EmployeeFilterForm(forms.Form):
 
 class EmployeeStatusForm(forms.Form):
     status = forms.ChoiceField(label="Trạng thái mới", choices=EmploymentStatus.choices)
+    resignation_date = forms.DateField(label="Ngày nghỉ việc", required=False, widget=forms.DateInput(attrs={"type": "date"}))
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("status") == EmploymentStatus.RESIGNED and not cleaned.get("resignation_date"):
+            self.add_error("resignation_date", "Vui lòng nhập ngày nghỉ việc.")
+        return cleaned

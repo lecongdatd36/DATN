@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.utils import timezone
 
 from core.permissions import can_manage_accounts
 
@@ -21,10 +22,21 @@ def _log(*, actor, employee, action, description):
     )
 
 
+def _next_employee_code():
+    used_codes = set(EmployeeProfile.objects.values_list("employee_code", flat=True))
+    number = 1
+    while f"NV{number:04d}" in used_codes:
+        number += 1
+    return f"NV{number:04d}"
+
+
 @transaction.atomic
 def create_employee(*, actor, user_data, profile_data, password):
     _check_actor(actor)
     validate_password(password)
+    profile_data = dict(profile_data)
+    profile_data["phone"] = "".join(profile_data["phone"].split())
+    profile_data["employee_code"] = profile_data.get("employee_code") or _next_employee_code()
     user = User.objects.create_user(password=password, role="EMPLOYEE", is_staff=False, is_superuser=False, **user_data)
     employee = EmployeeProfile(user=user, **profile_data)
     employee.full_clean()
@@ -51,6 +63,9 @@ def update_employee(*, actor, employee_id, user_data, profile_data, password=Non
         user_fields = (*user_fields, "password")
     user.save(update_fields=user_fields)
     previous_status = employee.employment_status
+    profile_data = dict(profile_data)
+    profile_data["phone"] = "".join(profile_data["phone"].split())
+    profile_data["employee_code"] = profile_data.get("employee_code") or employee.employee_code
     for field, value in profile_data.items():
         setattr(employee, field, value)
     employee.full_clean()
@@ -79,14 +94,18 @@ def update_employee(*, actor, employee_id, user_data, profile_data, password=Non
 
 
 @transaction.atomic
-def change_employee_status(*, actor, employee_id, status):
+def change_employee_status(*, actor, employee_id, status, resignation_date=None):
     _check_actor(actor)
     employee = EmployeeProfile.objects.select_for_update().select_related("user").get(pk=employee_id)
     if status not in EmploymentStatus.values:
         raise ValueError("Trạng thái nhân viên không hợp lệ.")
     previous_status = employee.employment_status
     employee.employment_status = status
-    employee.save(update_fields=("employment_status", "updated_at"))
+    employee.resignation_date = resignation_date if status == EmploymentStatus.RESIGNED else None
+    if status == EmploymentStatus.RESIGNED and employee.resignation_date is None:
+        employee.resignation_date = timezone.localdate()
+    employee.full_clean()
+    employee.save(update_fields=("employment_status", "resignation_date", "updated_at"))
     if status == "RESIGNED" and previous_status != "RESIGNED":
         employee.user.is_active = False
         employee.user.session_version += 1

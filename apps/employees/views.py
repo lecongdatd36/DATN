@@ -92,6 +92,7 @@ class EmployeeStatusView(ManagerRequiredMixin, FormView):
                 actor=self.request.user,
                 employee_id=self.employee.pk,
                 status=form.cleaned_data["status"],
+                resignation_date=form.cleaned_data.get("resignation_date"),
             )
         except (ValidationError, ValueError) as error:
             form.add_error("status", error)

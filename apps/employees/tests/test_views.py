@@ -65,7 +65,7 @@ class EmployeeViewTests(TestCase):
     def test_resigning_employee_locks_account_and_writes_resign_log(self):
         response = self.client.post(
             reverse("employees:employee_status", kwargs={"pk": self.employee.pk}),
-            {"status": EmploymentStatus.RESIGNED},
+            {"status": EmploymentStatus.RESIGNED, "resignation_date": date.today().isoformat()},
         )
         self.assertRedirects(response, reverse("employees:employee_list"))
         self.employee.refresh_from_db()
@@ -92,3 +92,15 @@ class EmployeeViewTests(TestCase):
         response = self.client.get(reverse("admin:employees_employeeprofile_delete", args=[self.employee.pk]))
         self.assertEqual(response.status_code, 403)
         self.assertTrue(EmployeeProfile.objects.filter(pk=self.employee.pk).exists())
+
+    def test_staff_manager_can_manage_employee_module_in_admin(self):
+        self.manager.is_staff = True
+        self.manager.save(update_fields=("is_staff",))
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("admin:employees_employeeprofile_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.employee.employee_code)
+        self.assertEqual(
+            self.client.get(reverse("admin:employees_employeeprofile_delete", args=[self.employee.pk])).status_code,
+            403,
+        )

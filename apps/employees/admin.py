@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 
 from apps.accounts.admin import admin_site
+from core.permissions import can_manage_accounts
 
 from .models import EmployeeActivityLog, EmployeeProfile
 
@@ -11,6 +12,21 @@ class EmployeeProfileAdmin(admin.ModelAdmin):
     list_display = ("employee_code", "full_name", "job_position", "employment_status", "phone")
     list_filter = ("job_position", "employment_status")
     search_fields = ("employee_code", "full_name", "phone", "user__username")
+
+    def has_module_permission(self, request):
+        return can_manage_accounts(request.user)
+
+    def has_view_permission(self, request, obj=None):
+        return can_manage_accounts(request.user)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return can_manage_accounts(request.user)
+
+    def get_readonly_fields(self, request, obj=None):
+        return ("user", "created_at", "updated_at")
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -24,6 +40,12 @@ class EmployeeActivityLogAdmin(admin.ModelAdmin):
     list_display = ("created_at", "employee", "action", "performed_by")
     list_filter = ("action",)
     readonly_fields = ("employee", "action", "performed_by", "description", "created_at")
+
+    def has_module_permission(self, request):
+        return can_manage_accounts(request.user)
+
+    def has_view_permission(self, request, obj=None):
+        return can_manage_accounts(request.user)
 
     def has_add_permission(self, request):
         return False
