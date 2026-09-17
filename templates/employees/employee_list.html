@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý nhân viên · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">QUẢN LÝ</p>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+        <h1 class="h2 mb-0">Nhân viên</h1>
+        <a class="btn btn-primary" href="{% url 'employees:employee_create' %}">Thêm nhân viên</a>
+    </div>
+    <p class="text-secondary mb-4">Quản lý hồ sơ, vị trí và trạng thái làm việc của nhân viên.</p>
+    <div class="project-card p-3 p-md-4 mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            {% for field in filter_form %}<div class="col-md-4"><label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endfor %}
+            <div class="col-md-4 d-flex gap-2"><button class="btn btn-primary" type="submit">Tìm kiếm</button><a class="btn btn-outline-secondary" href="{% url 'employees:employee_list' %}">Xóa lọc</a></div>
+        </form>
+    </div>
+    <div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Mã</th><th>Nhân viên</th><th>Liên hệ</th><th>Vị trí</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead><tbody>
+        {% for employee in page_obj %}<tr><th scope="row">{{ employee.employee_code }}</th><td><a class="fw-semibold" href="{% url 'employees:employee_detail' employee.pk %}">{{ employee.full_name }}</a><span class="small text-secondary d-block">{{ employee.user.username }}</span></td><td>{{ employee.phone }}</td><td>{{ employee.get_job_position_display }}</td><td>{% if employee.employment_status == 'WORKING' %}<span class="badge text-bg-success">{{ employee.get_employment_status_display }}</span>{% elif employee.employment_status == 'RESIGNED' %}<span class="badge text-bg-secondary">{{ employee.get_employment_status_display }}</span>{% else %}<span class="badge text-bg-warning">{{ employee.get_employment_status_display }}</span>{% endif %}</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'employees:employee_update' employee.pk %}">Sửa</a></td></tr>
+        {% empty %}<tr><td colspan="6" class="text-center py-5">Không tìm thấy nhân viên.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+</section>
+{% endblock %}

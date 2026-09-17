@@ -10,6 +10,7 @@ from apps.accounts.admin import admin_site
 urlpatterns = [
     path("", TemplateView.as_view(template_name="home.html"), name="home"),
     path("tai-khoan/", include("apps.accounts.urls")),
+    path("nhan-vien/", include("apps.employees.urls")),
     path("admin/", admin_site.urls),
 ]
 

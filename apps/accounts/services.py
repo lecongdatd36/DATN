@@ -37,6 +37,46 @@ def _get_managed_target(*, actor, target_id):
 
 
 @transaction.atomic
+def create_employee_account(*, actor, data, password):
+    if not can_manage_accounts(actor):
+        raise PermissionDenied("Bạn không có quyền quản lý tài khoản.")
+    current_actor = User.objects.select_for_update().filter(pk=actor.pk).first()
+    if not can_manage_accounts(current_actor):
+        raise PermissionDenied("Bạn không có quyền quản lý tài khoản.")
+    validate_password(password)
+    user = User(**data, role="EMPLOYEE", is_staff=False, is_superuser=False)
+    user.set_password(password)
+    user.full_clean()
+    user.save()
+    _record_account_action(
+        actor=current_actor,
+        target=user,
+        action_code="CREATE",
+        description="Tạo tài khoản nhân viên.",
+    )
+    return user
+
+
+@transaction.atomic
+def update_employee_account(*, actor, target_id, data):
+    target = _get_managed_target(actor=actor, target_id=target_id)
+    for field, value in data.items():
+        setattr(target, field, value)
+    target.role = "EMPLOYEE"
+    target.is_staff = False
+    target.is_superuser = False
+    target.full_clean()
+    target.save(update_fields=(*data.keys(), "role", "is_staff", "is_superuser", "updated_at"))
+    _record_account_action(
+        actor=actor,
+        target=target,
+        action_code="UPDATE",
+        description="Cập nhật thông tin tài khoản nhân viên.",
+    )
+    return target
+
+
+@transaction.atomic
 def set_account_active(*, actor, target_id, is_active):
     target = _get_managed_target(actor=actor, target_id=target_id)
     if not isinstance(is_active, bool):

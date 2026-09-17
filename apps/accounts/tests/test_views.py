@@ -379,6 +379,50 @@ class AccountManagementViewTests(AccountTestCase):
             self.assertTrue(user.is_active)
             self.assertTrue(user.check_password(TEST_PASSWORD))
 
+    def test_manager_can_create_view_and_update_employee_account(self):
+        create_response = self.client.post(
+            reverse("accounts:account_create"),
+            {
+                "username": "new_waiter",
+                "email": "NEW_WAITER@EXAMPLE.TEST",
+                "first_name": "New",
+                "last_name": "Waiter",
+                "password1": NEW_PASSWORD,
+                "password2": NEW_PASSWORD,
+            },
+        )
+        self.assertRedirects(create_response, reverse("accounts:account_list"))
+        account = get_user_model().objects.get(username="new_waiter")
+        self.assertEqual(account.email, "new_waiter@example.test")
+        self.assertEqual(
+            self.client.get(reverse("accounts:account_detail", kwargs={"pk": account.pk})).status_code,
+            200,
+        )
+        update_response = self.client.post(
+            reverse("accounts:account_update", kwargs={"pk": account.pk}),
+            {
+                "username": "updated_waiter",
+                "email": "updated@example.test",
+                "first_name": "Updated",
+                "last_name": "Waiter",
+                "is_active": "on",
+            },
+        )
+        self.assertRedirects(update_response, reverse("accounts:account_list"))
+        account.refresh_from_db()
+        self.assertEqual(account.username, "updated_waiter")
+        self.assertEqual(account.get_full_name(), "Updated Waiter")
+
+    def test_employee_cannot_use_account_crud_endpoints(self):
+        self.client.force_login(self.employee)
+        for url in (
+            reverse("accounts:account_create"),
+            reverse("accounts:account_detail", kwargs={"pk": self.inactive_employee.pk}),
+            reverse("accounts:account_update", kwargs={"pk": self.inactive_employee.pk}),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 403)
+
 
 class UserAdminViewTests(AccountTestCase):
     @classmethod

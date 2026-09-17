@@ -78,6 +78,24 @@ class EmployeePasswordResetForm(BootstrapFormMixin, SetPasswordForm):
         self.fields["new_password2"].label = "Nhập lại mật khẩu mới"
 
 
+class AccountCreationForm(BootstrapFormMixin, UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = get_user_model()
+        fields = ("username", "email", "first_name", "last_name")
+
+    def clean_email(self):
+        return self.cleaned_data["email"].strip().lower()
+
+
+class AccountUpdateForm(BootstrapFormMixin, UserChangeForm):
+    class Meta(UserChangeForm.Meta):
+        model = get_user_model()
+        fields = ("username", "email", "first_name", "last_name", "is_active")
+
+    def clean_email(self):
+        return self.cleaned_data["email"].strip().lower()
+
+
 class UserCreationAdminForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = get_user_model()

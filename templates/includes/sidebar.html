@@ -5,7 +5,8 @@
         <a class="nav-link {% if request.resolver_match.url_name == 'password_change' or request.resolver_match.url_name == 'password_change_done' %}active{% endif %}" href="{% url 'accounts:password_change' %}" {% if request.resolver_match.url_name == 'password_change' or request.resolver_match.url_name == 'password_change_done' %}aria-current="page"{% endif %}>Đổi mật khẩu</a>
         {% if access.can_manage_accounts %}
         <span class="eyebrow px-3 mt-4 mb-2">QUẢN LÝ</span>
-        <a class="nav-link {% if request.resolver_match.url_name == 'account_list' or request.resolver_match.url_name == 'account_lock' or request.resolver_match.url_name == 'account_unlock' or request.resolver_match.url_name == 'password_reset' %}active{% endif %}" href="{% url 'accounts:account_list' %}">Tài khoản</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'account_list' or request.resolver_match.url_name == 'account_create' or request.resolver_match.url_name == 'account_detail' or request.resolver_match.url_name == 'account_update' or request.resolver_match.url_name == 'account_lock' or request.resolver_match.url_name == 'account_unlock' or request.resolver_match.url_name == 'password_reset' %}active{% endif %}" href="{% url 'accounts:account_list' %}">Tài khoản</a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'employees' %}active{% endif %}" href="{% url 'employees:employee_list' %}">Nhân viên</a>
         {% endif %}
         {% if access.can_access_admin %}
         <span class="eyebrow px-3 mt-4 mb-2">HỆ THỐNG</span>

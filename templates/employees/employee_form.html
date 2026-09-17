@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Sửa nhân viên{% else %}Thêm nhân viên{% endif %} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5"><p class="eyebrow mb-2">QUẢN LÝ NHÂN VIÊN</p><h1 class="h2 mb-4">{% if object %}Sửa hồ sơ nhân viên{% else %}Thêm nhân viên{% endif %}</h1><div class="project-card p-3 p-md-4"><form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}<div class="row">{% for field in form %}<div class="col-md-6 mb-3"><label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endfor %}</div><button class="btn btn-primary" type="submit">Lưu hồ sơ</button> <a class="btn btn-outline-secondary" href="{% url 'employees:employee_list' %}">Hủy</a></form></div></section>
+{% endblock %}

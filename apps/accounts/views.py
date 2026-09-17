@@ -15,19 +15,27 @@ from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
-from django.views.generic import FormView, ListView, TemplateView
+from django.views.generic import CreateView, DetailView, FormView, ListView, TemplateView, UpdateView
 
 from core.mixins import ManagerRequiredMixin
 
 from .forms import (
     AccountFilterForm,
+    AccountCreationForm,
+    AccountUpdateForm,
     EmployeePasswordResetForm,
     LoginForm,
     PasswordChangeForm,
 )
 from .permissions import can_manage_target
 from .selectors import account_list
-from .services import change_own_password, reset_employee_password, set_account_active
+from .services import (
+    change_own_password,
+    create_employee_account,
+    reset_employee_password,
+    set_account_active,
+    update_employee_account,
+)
 
 User = get_user_model()
 
@@ -120,6 +128,63 @@ class EmployeeTargetMixin:
         context = super().get_context_data(**kwargs)
         context["target_user"] = self.target_user
         return context
+
+
+@method_decorator(never_cache, name="dispatch")
+class AccountDetailView(ManagerRequiredMixin, EmployeeTargetMixin, DetailView):
+    model = User
+    template_name = "accounts/account_detail.html"
+    context_object_name = "account"
+
+    def get_object(self, queryset=None):
+        return self.target_user
+
+
+@method_decorator(never_cache, name="dispatch")
+class AccountCreateView(ManagerRequiredMixin, CreateView):
+    template_name = "accounts/account_form.html"
+    form_class = AccountCreationForm
+    success_url = reverse_lazy("accounts:account_list")
+
+    def form_valid(self, form):
+        try:
+            account = create_employee_account(
+                actor=self.request.user,
+                data={name: form.cleaned_data[name] for name in ("username", "email", "first_name", "last_name")},
+                password=form.cleaned_data["password1"],
+            )
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        self.object = account
+        messages.success(self.request, f"Đã tạo tài khoản {account.username}.")
+        return HttpResponseRedirect(self.get_success_url())
+
+
+@method_decorator(never_cache, name="dispatch")
+class AccountUpdateView(ManagerRequiredMixin, EmployeeTargetMixin, UpdateView):
+    template_name = "accounts/account_form.html"
+    form_class = AccountUpdateForm
+    success_url = reverse_lazy("accounts:account_list")
+
+    def get_object(self, queryset=None):
+        return self.target_user
+
+    def form_valid(self, form):
+        try:
+            account = update_employee_account(
+                actor=self.request.user,
+                target_id=self.target_user.pk,
+                data={name: form.cleaned_data[name] for name in ("username", "email", "first_name", "last_name", "is_active")},
+            )
+        except (User.DoesNotExist, PermissionDenied) as error:
+            raise error
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        self.object = account
+        messages.success(self.request, f"Đã cập nhật tài khoản {account.username}.")
+        return HttpResponseRedirect(self.get_success_url())
 
 
 @method_decorator(never_cache, name="dispatch")

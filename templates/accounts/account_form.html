@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Sửa tài khoản{% else %}Tạo tài khoản{% endif %} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">QUẢN LÝ TÀI KHOẢN</p>
+    <h1 class="h2 mb-4">{% if object %}Sửa tài khoản {{ object.username }}{% else %}Tạo tài khoản nhân viên{% endif %}</h1>
+    <div class="project-card p-3 p-md-4" style="max-width: 760px">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            {% endfor %}
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-primary" type="submit">Lưu tài khoản</button>
+                <a class="btn btn-outline-secondary" href="{% url 'accounts:account_list' %}">Hủy</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

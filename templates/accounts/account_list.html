@@ -5,7 +5,10 @@
     <p class="eyebrow mb-2">QUẢN LÝ</p>
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
         <h1 class="h2 mb-0">Tài khoản</h1>
-        <span class="small text-secondary">{{ paginator.count }} tài khoản</span>
+        <div class="d-flex align-items-center gap-3">
+            <span class="small text-secondary">{{ paginator.count }} tài khoản</span>
+            <a class="btn btn-primary" href="{% url 'accounts:account_create' %}">Tạo tài khoản</a>
+        </div>
     </div>
     <p class="text-secondary mb-4">Tra cứu tài khoản, quản lý trạng thái và đặt lại mật khẩu cho nhân viên.</p>
     <div class="project-card p-3 p-md-4 mb-4">
@@ -32,7 +35,7 @@
                     {% for account in page_obj %}
                     <tr>
                         <th scope="row" class="fw-normal">
-                            <span class="fw-semibold d-block text-break">{{ account.username }}{% if account.pk == user.pk %} <span class="badge text-bg-light">Bạn</span>{% endif %}</span>
+                            <a class="fw-semibold d-block text-break" href="{% url 'accounts:account_detail' account.pk %}">{{ account.username }}{% if account.pk == user.pk %} <span class="badge text-bg-light">Bạn</span>{% endif %}</a>
                             {% if account.get_full_name %}<span class="small d-block text-secondary text-break">{{ account.get_full_name }}</span>{% endif %}
                             {% if account.email %}<span class="small d-block text-secondary text-break">{{ account.email }}</span>{% endif %}
                         </th>
@@ -42,6 +45,7 @@
                         <td class="text-end">
                             {% if account.can_manage %}
                             <div class="d-flex flex-wrap justify-content-end gap-2 account-actions">
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:account_update' account.pk %}">Sửa</a>
                                 <a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:password_reset' account.pk %}" aria-label="Đặt lại mật khẩu cho {{ account.username }}">Đặt lại mật khẩu</a>
                                 {% if account.is_active %}<a class="btn btn-sm btn-outline-danger" href="{% url 'accounts:account_lock' account.pk %}" aria-label="Khóa tài khoản {{ account.username }}">Khóa</a>
                                 {% else %}<a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:account_unlock' account.pk %}" aria-label="Mở khóa tài khoản {{ account.username }}">Mở khóa</a>{% endif %}
