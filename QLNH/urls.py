@@ -11,6 +11,9 @@ urlpatterns = [
     path("", TemplateView.as_view(template_name="home.html"), name="home"),
     path("tai-khoan/", include("apps.accounts.urls")),
     path("nhan-vien/", include("apps.employees.urls")),
+    path("khach-hang/", include("apps.customers.urls")),
+    path("ban/", include("apps.seating.urls")),
+    path("dat-ban/", include("apps.bookings.urls")),
     path("admin/", admin_site.urls),
 ]
 

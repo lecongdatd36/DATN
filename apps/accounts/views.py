@@ -1,7 +1,5 @@
 """Xử lý request/response; nghiệp vụ quản lý tài khoản nằm trong services."""
 
-from urllib.parse import urlencode
-
 from django import forms
 from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
@@ -18,6 +16,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.generic import DetailView, FormView, ListView, TemplateView, UpdateView
 
 from core.mixins import ManagerRequiredMixin
+from core.forms import add_service_errors, filter_query_string
 
 from .forms import (
     AccountCreateForm,
@@ -32,6 +31,7 @@ from .selectors import account_list
 from .services import (
     change_own_password,
     create_account_with_profile,
+    delete_account,
     reset_employee_password,
     set_account_active,
     update_employee_account,
@@ -74,7 +74,7 @@ class PasswordChangeView(auth_views.PasswordChangeView):
                 new_password=form.cleaned_data["new_password1"],
             )
         except ValidationError as error:
-            form.add_error(None, error)
+            add_service_errors(form, error)
             return self.form_invalid(form)
         update_session_auth_hash(self.request, user)
         messages.success(self.request, "Đổi mật khẩu thành công.")
@@ -102,11 +102,12 @@ class AccountListView(ManagerRequiredMixin, ListView):
         for account in context["page_obj"]:
             account.can_manage = can_manage_target(self.request.user, account)
         context["filter_form"] = self.filter_form
-        context["query_string"] = urlencode({key: value for key, value in self.filter_form.cleaned_data.items() if value})
+        context["query_string"] = filter_query_string(self.request.GET)
         return context
 
 
 @method_decorator(never_cache, name="dispatch")
+@method_decorator(sensitive_post_parameters("password1", "password2"), name="dispatch")
 class AccountCreateView(ManagerRequiredMixin, FormView):
     template_name = "accounts/account_create.html"
     form_class = AccountCreateForm
@@ -131,13 +132,13 @@ class AccountCreateView(ManagerRequiredMixin, FormView):
                 },
                 profile_data={
                     name: form.cleaned_data[name]
-                    for name in ("employee_code", "full_name", "phone", "address", "date_of_birth", "gender", "join_date", "employment_status", "avatar", "note")
+                    for name in ("employee_code", "full_name", "phone", "address", "date_of_birth", "gender", "join_date", "employment_status", "resignation_date", "avatar", "note")
                 },
                 password=form.cleaned_data["password1"],
                 position_code=position.code,
             )
         except ValidationError as error:
-            form.add_error(None, error)
+            add_service_errors(form, error)
             return self.form_invalid(form)
         messages.success(self.request, f"Đã tạo tài khoản và hồ sơ {employee.full_name}.")
         return HttpResponseRedirect(self.get_success_url())
@@ -178,6 +179,25 @@ class AccountDetailView(ManagerRequiredMixin, DetailView):
 
 
 @method_decorator(never_cache, name="dispatch")
+class AccountDeleteView(ManagerRequiredMixin, EmployeeTargetMixin, FormView):
+    http_method_names = ["get", "post", "head", "options"]
+    template_name = "accounts/account_delete.html"
+    form_class = forms.Form
+    success_url = reverse_lazy("accounts:account_list")
+
+    def form_valid(self, form):
+        try:
+            username = delete_account(actor=self.request.user, target_id=self.target_user.pk)
+        except User.DoesNotExist as error:
+            raise Http404("Tài khoản không còn tồn tại.") from error
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Đã xóa tài khoản {username} và hồ sơ liên kết nếu có.")
+        return super().form_valid(form)
+
+
+@method_decorator(never_cache, name="dispatch")
 class AccountUpdateView(ManagerRequiredMixin, EmployeeTargetMixin, UpdateView):
     template_name = "accounts/account_form.html"
     form_class = AccountUpdateForm
@@ -193,10 +213,10 @@ class AccountUpdateView(ManagerRequiredMixin, EmployeeTargetMixin, UpdateView):
                 target_id=self.target_user.pk,
                 data={name: form.cleaned_data[name] for name in ("username", "email", "first_name", "last_name", "is_active")},
             )
-        except (User.DoesNotExist, PermissionDenied) as error:
-            raise error
+        except User.DoesNotExist as error:
+            raise Http404("Tài khoản không còn tồn tại.") from error
         except ValidationError as error:
-            form.add_error(None, error)
+            add_service_errors(form, error)
             return self.form_invalid(form)
         self.object = account
         messages.success(self.request, f"Đã cập nhật tài khoản {account.username}.")
@@ -208,7 +228,7 @@ class AccountStatusView(ManagerRequiredMixin, EmployeeTargetMixin, FormView):
     http_method_names = ["get", "post", "head", "options"]
     template_name = "accounts/account_confirm_status.html"
     form_class = forms.Form
-    success_url = reverse_lazy("employees:employee_list")
+    success_url = reverse_lazy("accounts:account_list")
     activate = False
 
     def get_context_data(self, **kwargs):
@@ -225,6 +245,9 @@ class AccountStatusView(ManagerRequiredMixin, EmployeeTargetMixin, FormView):
             )
         except User.DoesNotExist as error:
             raise Http404("Tài khoản không còn tồn tại.") from error
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
         verb = "mở khóa" if self.activate else "khóa"
         messages.success(self.request, f"Đã {verb} tài khoản {target.username}.")
         return super().form_valid(form)
@@ -236,7 +259,7 @@ class EmployeePasswordResetView(ManagerRequiredMixin, EmployeeTargetMixin, FormV
     http_method_names = ["get", "post", "head", "options"]
     template_name = "accounts/account_password_reset.html"
     form_class = EmployeePasswordResetForm
-    success_url = reverse_lazy("employees:employee_list")
+    success_url = reverse_lazy("accounts:account_list")
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -253,7 +276,7 @@ class EmployeePasswordResetView(ManagerRequiredMixin, EmployeeTargetMixin, FormV
         except User.DoesNotExist as error:
             raise Http404("Tài khoản không còn tồn tại.") from error
         except ValidationError as error:
-            form.add_error(None, error)
+            add_service_errors(form, error)
             return self.form_invalid(form)
         messages.success(self.request, f"Đã đặt lại mật khẩu cho {target.username}.")
         return super().form_valid(form)

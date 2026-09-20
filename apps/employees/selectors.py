@@ -4,7 +4,7 @@ from .models import EmployeeProfile
 
 
 def employee_list(*, query="", position="", status="", account_status=""):
-    employees = EmployeeProfile.objects.select_related("user")
+    employees = EmployeeProfile.objects.select_related("user", "job_position")
     if query:
         employees = employees.filter(
             Q(employee_code__icontains=query)

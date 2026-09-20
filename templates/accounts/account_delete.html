@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Xóa tài khoản · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <div class="project-card form-card p-4 p-md-5">
+        <p class="eyebrow mb-3">XÁC NHẬN THAO TÁC</p>
+        <h1 class="h3 mb-3">Xóa tài khoản</h1>
+        <p>Bạn muốn xóa tài khoản <strong class="text-break">{{ target_user.username }}</strong>?</p>
+        {% if target_user.employee_profile %}
+        <p>Hồ sơ nhân viên <strong>{{ target_user.employee_profile.employee_code }} — {{ target_user.employee_profile.full_name }}</strong> cũng sẽ bị xóa.</p>
+        {% else %}
+        <p>Tài khoản này chưa có hồ sơ nhân viên liên kết.</p>
+        {% endif %}
+        <div class="alert alert-warning">Thao tác không thể hoàn tác. Nếu chỉ muốn ngừng cho phép đăng nhập, hãy khóa tài khoản. Nhật ký được giữ lại; tài khoản có dữ liệu liên kết cần bảo toàn sẽ không được xóa.</div>
+        <form method="post">
+            {% csrf_token %}
+            {% include 'includes/form_fields.html' %}
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-danger" type="submit">Xác nhận xóa tài khoản</button>
+                <a class="btn btn-outline-secondary" href="{% url 'accounts:account_list' %}">Hủy</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

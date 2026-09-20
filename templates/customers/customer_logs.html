@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Nhật ký khách hàng · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">KHÁCH HÀNG</p>
+    <div class="d-flex flex-wrap justify-content-between gap-3 mb-3"><h1 class="h2 mb-0">Nhật ký khách hàng</h1><a class="btn btn-outline-secondary" href="{% url 'customers:customer_list' %}">Danh sách khách hàng</a></div>
+    <p class="text-secondary mb-4">Lịch sử thêm, sửa và xóa, gồm cả khách hàng đã xóa.</p>
+    <form method="get" class="project-card p-3 p-md-4 mb-4 row g-3 align-items-end mx-0">
+        {% for field in filter_form %}<div class="col-md-4"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endfor %}
+        <div class="col-md-4 d-flex gap-2"><button class="btn btn-primary" type="submit">Tìm kiếm</button><a class="btn btn-outline-secondary" href="{% url 'customers:customer_logs' %}">Xóa lọc</a></div>
+    </form>
+    {% include 'customers/includes/log_table.html' with logs=page_obj %}
+    {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

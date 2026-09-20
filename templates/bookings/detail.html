@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ booking.booking_code }} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">ĐẶT BÀN</p>
+    <div class="d-flex flex-wrap justify-content-between gap-3 mb-4"><h1 class="h2 mb-0">{{ booking.booking_code }} — {{ booking.get_status_display }}</h1><a class="btn btn-outline-secondary" href="{% url 'bookings:list' %}">Danh sách</a></div>
+    {% if overdue %}<div class="alert alert-warning">Khách vẫn đang ngồi và đã quá giờ kết thúc dự kiến. Bàn chưa nhận được lượt khách tiếp theo; hãy hoàn tất khi khách thực sự rời bàn.</div>{% endif %}
+    {% if next_visit %}<div class="alert alert-warning">Lịch kế tiếp <a href="{{ next_visit.get_absolute_url }}">{{ next_visit.booking_code }}</a> lúc {{ next_visit.starts_at|date:'d/m/Y H:i' }} có nguy cơ chậm. Hãy kiểm tra để đổi bàn hoặc trao đổi lại giờ đến.</div>{% endif %}
+    {% if overrunning_visit %}<div class="alert alert-warning">Bàn này đang có lượt <a href="{{ overrunning_visit.get_absolute_url }}">{{ overrunning_visit.booking_code }}</a> phục vụ quá giờ dự kiến. Kiểm tra tình trạng bàn trước khi đón khách; có thể đổi bàn hoặc trao đổi lại giờ đến.</div>{% endif %}
+    <div class="project-card p-3 p-md-4 mb-4">
+        <dl class="row account-details mb-0">
+            <dt class="col-sm-4">Khách hàng</dt><dd class="col-sm-8 text-break">{{ booking.customer_name }}</dd>
+            <dt class="col-sm-4">Số điện thoại khi đặt</dt><dd class="col-sm-8">{{ booking.customer_phone }}</dd>
+            <dt class="col-sm-4">Bàn / khu vực</dt><dd class="col-sm-8">{{ booking.table.code }} / {{ booking.table.area.name }}</dd>
+            <dt class="col-sm-4">Số khách</dt><dd class="col-sm-8">{{ booking.party_size }}</dd>
+            <dt class="col-sm-4">Giờ đến</dt><dd class="col-sm-8">{{ booking.starts_at|date:'d/m/Y H:i' }}</dd>
+            <dt class="col-sm-4">Kết thúc dự kiến</dt><dd class="col-sm-8">{{ booking.ends_at|date:'d/m/Y H:i' }}</dd>
+            <dt class="col-sm-4">Thời lượng dự kiến</dt><dd class="col-sm-8">{{ booking.duration_minutes }} phút</dd>
+        </dl>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            {% if access.can_manage_bookings and booking.can_edit %}<a class="btn btn-outline-primary" href="{% url 'bookings:update' booking.pk %}">Sửa lịch</a>{% endif %}
+            {% for action in actions %}<a class="btn {% if action.target == 'CANCELLED' or action.target == 'NO_SHOW' %}btn-outline-danger{% else %}btn-primary{% endif %}" href="{% url 'bookings:transition' booking.pk action.target %}">{{ action.label }}</a>{% endfor %}
+        </div>
+        <p class="small text-secondary mt-3 mb-0">Nhận khách trong khoảng giờ đã đặt, sau khi xác nhận. Hoàn tất khi khách đã rời bàn; thao tác này chưa thực hiện thanh toán.</p>
+    </div>
+    {% if access.can_view_booking_logs %}
+    <h2 class="h5 mb-3">Nhật ký đặt bàn</h2>
+    <div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Thời gian</th><th>Thao tác</th><th>Người thực hiện</th><th>Nội dung</th></tr></thead><tbody>
+        {% for log in log_page %}<tr><td class="text-nowrap">{{ log.created_at|date:'d/m/Y H:i' }}</td><td>{{ log.action }}</td><td>{{ log.actor_snapshot }}</td><td class="text-break">{{ log.description|linebreaksbr }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center py-4">Chưa có nhật ký.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% include 'includes/pagination.html' with page_obj=log_page %}
+    {% endif %}
+</section>
+{% endblock %}

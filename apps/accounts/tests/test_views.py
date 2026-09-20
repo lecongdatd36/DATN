@@ -42,8 +42,8 @@ class AccountViewTests(TestCase):
     def test_manager_can_view_manager_account_but_cannot_edit_it(self):
         detail = self.client.get(reverse("accounts:account_detail", args=[self.manager.pk]))
         self.assertEqual(detail.status_code, 200)
-        self.assertContains(detail, "Quản trị viên / Quản lý")
-        self.assertContains(detail, "Quản trị viên / Quản lý")
+        self.assertContains(detail, "Quản lí")
+        self.assertNotContains(detail, "Quản trị viên / Quản lý")
         self.assertNotContains(detail, "get_role_display")
         self.assertEqual(
             self.client.get(reverse("accounts:account_update", args=[self.manager.pk])).status_code,

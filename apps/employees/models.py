@@ -5,6 +5,8 @@ from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
 
+from .validators import validate_avatar
+
 
 class JobPosition(models.Model):
     code = models.CharField("mã vị trí", max_length=20, unique=True)
@@ -46,13 +48,14 @@ class EmployeeProfile(models.Model):
     join_date = models.DateField("ngày vào làm")
     employment_status = models.CharField("trạng thái", max_length=20, choices=EmploymentStatus.choices, default=EmploymentStatus.WORKING)
     resignation_date = models.DateField("ngày nghỉ việc", null=True, blank=True)
-    avatar = models.ImageField("ảnh đại diện", upload_to="employees/", blank=True)
+    avatar = models.ImageField("ảnh đại diện", upload_to="employees/", blank=True, validators=[validate_avatar])
     note = models.TextField("ghi chú", blank=True)
     created_at = models.DateTimeField("ngày tạo", auto_now_add=True)
     updated_at = models.DateTimeField("cập nhật lần cuối", auto_now=True)
 
     class Meta:
         ordering = ("employee_code", "pk")
+        permissions = [("manage_staff", "Quản lý tài khoản và nhân viên")]
         indexes = [models.Index(fields=("full_name",)), models.Index(fields=("phone",)), models.Index(fields=("job_position",)), models.Index(fields=("employment_status",))]
 
     def clean(self):
@@ -65,6 +68,10 @@ class EmployeeProfile(models.Model):
             raise ValidationError({"resignation_date": "Nhân viên đã nghỉ việc phải có ngày nghỉ việc."})
         if self.resignation_date and self.join_date and self.resignation_date < self.join_date:
             raise ValidationError({"resignation_date": "Ngày nghỉ việc không được trước ngày vào làm."})
+        if self.resignation_date and self.resignation_date > timezone.localdate():
+            raise ValidationError({"resignation_date": "Ngày nghỉ việc không được ở tương lai."})
+        if self.employment_status != EmploymentStatus.RESIGNED and self.resignation_date:
+            raise ValidationError({"resignation_date": "Chỉ nhập ngày nghỉ việc khi đã nghỉ việc."})
 
     def __str__(self):
         return f"{self.employee_code} - {self.full_name}"

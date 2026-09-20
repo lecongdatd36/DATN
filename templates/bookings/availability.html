@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Tìm bàn phù hợp · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">ĐẶT BÀN</p><h1 class="h2 mb-3">Tìm bàn phù hợp</h1>
+    <p class="text-secondary mb-4">Chọn giờ đến và số khách. Hệ thống dùng thời lượng dự kiến để tìm bàn đủ chỗ, đang sử dụng và chưa trùng lịch; chỉ giữ chỗ khi lưu đặt bàn thành công.</p>
+    <form method="get" class="project-card p-3 p-md-4 mb-4">
+        {% include 'bookings/includes/slot_fields.html' %}
+        <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit">Tìm bàn</button><a class="btn btn-outline-secondary" href="{% url 'bookings:list' %}">Danh sách đặt bàn</a></div>
+    </form>
+    {% if searched %}<p>Dự kiến dùng bàn: {{ planned_start|date:'d/m/Y H:i' }} – {{ planned_end|date:'d/m/Y H:i' }}.</p><div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Bàn</th><th>Khu vực</th><th>Số chỗ</th><th></th></tr></thead><tbody>
+        {% for table in page_obj %}<tr><th scope="row">{{ table.code }}</th><td>{{ table.area.name }}</td><td>{{ table.capacity }}</td><td>{% if access.can_manage_bookings %}<a class="btn btn-sm btn-primary" href="{{ table.booking_url }}">Chọn bàn</a>{% endif %}</td></tr>{% empty %}<tr><td colspan="4" class="text-center py-5">Không có bàn phù hợp. Hãy thử giờ khác hoặc kiểm tra số khách.</td></tr>{% endfor %}
+    </tbody></table></div></div>{% include 'includes/pagination.html' %}{% endif %}
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/booking-duration.js' %}" defer></script>{% endblock %}

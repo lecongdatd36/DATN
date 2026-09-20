@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}{% if customer %}Sửa khách hàng{% else %}Thêm khách hàng{% endif %} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">KHÁCH HÀNG</p>
+    <h1 class="h2 mb-2">{% if customer %}Sửa khách hàng {{ customer.customer_code }}{% else %}Thêm khách hàng{% endif %}</h1>
+    <p class="text-secondary mb-4">Nhập họ tên và số điện thoại. Mỗi số điện thoại tương ứng một hồ sơ khách hàng.</p>
+    <div class="row"><div class="col-lg-8 col-xl-6">
+        <form method="post" class="project-card p-3 p-md-4" novalidate>
+            {% csrf_token %}
+            {% include 'includes/form_fields.html' %}
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-primary" type="submit">{% if customer %}Lưu thay đổi{% else %}Thêm khách hàng{% endif %}</button>
+                <a class="btn btn-outline-secondary" href="{% if customer %}{{ customer.get_absolute_url }}{% else %}{% url 'customers:customer_list' %}{% endif %}">Hủy</a>
+            </div>
+        </form>
+    </div></div>
+</section>
+{% endblock %}

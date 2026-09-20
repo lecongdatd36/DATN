@@ -87,8 +87,7 @@ class CustomUserAdmin(UserAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        # Quản lý thường dùng UI dịch vụ; không thể cấp thêm quyền qua admin.
-        return self._can_write_users(request)
+        return False
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -100,14 +99,7 @@ class CustomUserAdmin(UserAdmin):
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        if not self._can_write_users(request):
-            raise PermissionDenied("Chỉ superuser được chỉnh sửa tài khoản tại đây.")
-        if change:
-            current_user = User.objects.select_for_update().get(pk=obj.pk)
-            obj.session_version = current_user.session_version
-            if not obj.is_active:
-                obj.session_version += 1
-        super().save_model(request, obj, form, change)
+        raise PermissionDenied("Hãy sử dụng màn hình quản lý tài khoản.")
 
     def delete_model(self, request, obj):
         raise PermissionDenied("Tài khoản chỉ được khóa, không được xóa.")

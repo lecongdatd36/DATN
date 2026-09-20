@@ -4,6 +4,10 @@
 </div>
 {% endif %}
 {% for field in form %}
+{% if field.is_hidden %}
+{{ field }}
+{% for error in field.errors %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endfor %}
+{% else %}
 <div class="mb-4">
     <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
     {{ field }}
@@ -14,4 +18,5 @@
     </div>
     {% endif %}
 </div>
+{% endif %}
 {% endfor %}

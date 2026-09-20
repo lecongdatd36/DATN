@@ -1,0 +1,6 @@
+<form method="get" class="project-card p-3 p-md-4 mb-4">
+    <div class="row g-3 align-items-end">
+        {% for field in filter_form %}<div class="col-md-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endfor %}
+        <div class="col-md-3 d-flex gap-2"><button class="btn btn-primary" type="submit">Tìm kiếm</button><a class="btn btn-outline-secondary" href="{{ request.path }}">Xóa lọc</a></div>
+    </div>
+</form>

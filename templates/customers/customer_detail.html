@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ customer.full_name }} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">KHÁCH HÀNG · {{ customer.customer_code }}</p>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <h1 class="h2 mb-0 text-break">{{ customer.full_name }}</h1>
+        <div class="d-flex flex-wrap gap-2">
+            {% if access.can_manage_bookings %}<a class="btn btn-outline-primary" href="{% url 'bookings:create' %}?customer_phone={{ customer.phone|urlencode }}">Đặt bàn</a>{% endif %}
+            {% if access.can_change_customers %}<a class="btn btn-primary" href="{% url 'customers:customer_update' customer.pk %}">Sửa thông tin</a>{% endif %}
+            {% if access.can_delete_customers %}<a class="btn btn-outline-danger" href="{% url 'customers:customer_delete' customer.pk %}">Xóa khách hàng</a>{% endif %}
+            <a class="btn btn-outline-secondary" href="{% url 'customers:customer_list' %}">Danh sách</a>
+        </div>
+    </div>
+    <div class="project-card p-3 p-md-4 mb-4">
+        <h2 class="h5 mb-4">Thông tin khách hàng</h2>
+        <dl class="row account-details mb-0">
+            <dt class="col-sm-4">Họ tên</dt><dd class="col-sm-8 text-break">{{ customer.full_name }}</dd>
+            <dt class="col-sm-4">Số điện thoại</dt><dd class="col-sm-8">{{ customer.phone }}</dd>
+            <dt class="col-sm-4">Ngày tạo</dt><dd class="col-sm-8">{{ customer.created_at|date:'d/m/Y H:i' }}</dd>
+            <dt class="col-sm-4">Cập nhật lần cuối</dt><dd class="col-sm-8">{{ customer.updated_at|date:'d/m/Y H:i' }}</dd>
+        </dl>
+    </div>
+    {% if access.can_view_customer_logs %}
+    <h2 class="h5 mb-3">Lịch sử thao tác</h2>
+    {% include 'customers/includes/log_table.html' with logs=log_page %}
+    {% include 'includes/pagination.html' with page_obj=log_page %}
+    {% endif %}
+</section>
+{% endblock %}

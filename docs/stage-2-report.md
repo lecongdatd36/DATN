@@ -2,6 +2,8 @@
 
 Ngày thực hiện: 17/09/2026. Thư mục: `D:\DOANTOTNGHIEP`.
 
+> Báo cáo lịch sử của phiên bản Giai đoạn 2. Số test, cấu trúc quyền và phạm vi chức năng dưới đây không đại diện cho mã nguồn hiện tại. Xem [báo cáo Giai đoạn 3](stage-3-report.md) và README để biết trạng thái mới nhất.
+
 ## ĐÃ LÀM
 
 - Tạo app `apps.accounts`, tổ chức riêng model, manager, forms, selectors, services, permissions, views, URL, admin, migration và tests.

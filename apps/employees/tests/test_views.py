@@ -19,6 +19,7 @@ class EmployeeViewTests(TestCase):
         cls.manager.groups.add(manager_position.group)
         cls.employee_user = user_model.objects.create_user(username="waiter01", password=PASSWORD)
         cls.employee = EmployeeProfile.objects.create(user=cls.employee_user, employee_code="NV0101", full_name="Nguyen Van A", phone="0903000002", job_position=JobPosition.objects.get(code="WAITER"), join_date=date.today())
+        cls.employee_user.groups.add(cls.employee.job_position.group)
 
     def setUp(self):
         self.client.force_login(self.manager)

@@ -25,3 +25,4 @@ class AccountTestCase(TestCase):
             user=cls.employee, employee_code="NV0002", full_name="Employee Test", phone="0901000002",
             job_position=cls.waiter_position, join_date=date.today(),
         )
+        cls.employee.groups.add(cls.waiter_position.group)

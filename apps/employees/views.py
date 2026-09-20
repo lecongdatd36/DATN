@@ -1,22 +1,25 @@
-from urllib.parse import urlencode
-
 from django import forms
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView
+from django.views.generic import DetailView, FormView, ListView, UpdateView
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_post_parameters
 
 from core.mixins import ManagerRequiredMixin
+from core.forms import add_service_errors, filter_query_string
+from apps.accounts.permissions import can_manage_target
 
 from .forms import EmployeeFilterForm, EmployeeForm, EmployeeStatusForm
 from .models import EmployeeActivityLog, EmployeeProfile
 from .selectors import employee_list
-from .services import change_employee_status, create_employee, delete_employee, update_employee
+from .services import change_employee_status, delete_employee, update_employee
 
 
+@method_decorator(never_cache, name="dispatch")
 class EmployeeListView(ManagerRequiredMixin, ListView):
     template_name = "employees/employee_list.html"
     paginate_by = 20
@@ -36,33 +39,20 @@ class EmployeeListView(ManagerRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter_form"] = self.filter_form
-        context["query_string"] = urlencode({key: value for key, value in self.filter_form.cleaned_data.items() if value})
+        context["query_string"] = filter_query_string(self.request.GET)
+        for employee in context["page_obj"]:
+            employee.can_manage = can_manage_target(self.request.user, employee.user)
         return context
 
 
-class EmployeeCreateView(ManagerRequiredMixin, CreateView):
-    def dispatch(self, request, *args, **kwargs):
+class EmployeeCreateView(ManagerRequiredMixin, FormView):
+    http_method_names = ["get", "head", "options"]
+
+    def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(f"{reverse('accounts:account_create')}?type=EMPLOYEE")
 
-    template_name = "employees/employee_form.html"
-    form_class = EmployeeForm
-    success_url = reverse_lazy("employees:employee_list")
 
-    def form_valid(self, form):
-        try:
-            self.object = create_employee(
-                actor=self.request.user,
-                user_data={"username": form.cleaned_data["username"], "email": form.cleaned_data["email"]},
-                profile_data={name: form.cleaned_data[name] for name in form.Meta.fields},
-                password=form.cleaned_data["password1"],
-            )
-        except ValidationError as error:
-            form.add_error(None, error)
-            return self.form_invalid(form)
-        messages.success(self.request, f"Đã tạo nhân viên {self.object.full_name}.")
-        return HttpResponseRedirect(self.get_success_url())
-
-
+@method_decorator(never_cache, name="dispatch")
 class EmployeeDetailView(ManagerRequiredMixin, DetailView):
     model = EmployeeProfile
     template_name = "employees/employee_detail.html"
@@ -71,17 +61,24 @@ class EmployeeDetailView(ManagerRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["activity_logs"] = EmployeeActivityLog.objects.filter(employee=self.object).select_related("performed_by")
+        context["can_edit_employee"] = can_manage_target(self.request.user, self.object.user)
         return context
 
 
-class EmployeeStatusView(ManagerRequiredMixin, FormView):
+class ManagedEmployeeMixin:
+    """Kiểm tra đối tượng sau xác thực và trước khi hiển thị form."""
+    def dispatch(self, request, *args, **kwargs):
+        self.employee = get_object_or_404(EmployeeProfile.objects.select_related("user", "job_position"), pk=kwargs["pk"])
+        if not can_manage_target(request.user, self.employee.user):
+            raise PermissionDenied("Bạn không được sửa hồ sơ nhân viên này.")
+        return super().dispatch(request, *args, **kwargs)
+
+
+@method_decorator(never_cache, name="dispatch")
+class EmployeeStatusView(ManagerRequiredMixin, ManagedEmployeeMixin, FormView):
     template_name = "employees/employee_status_form.html"
     form_class = EmployeeStatusForm
     success_url = reverse_lazy("employees:employee_list")
-
-    def dispatch(self, request, *args, **kwargs):
-        self.employee = get_object_or_404(EmployeeProfile, pk=kwargs["pk"])
-        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -89,7 +86,7 @@ class EmployeeStatusView(ManagerRequiredMixin, FormView):
         return context
 
     def get_initial(self):
-        return {"status": self.employee.employment_status}
+        return {"status": self.employee.employment_status, "resignation_date": self.employee.resignation_date}
 
     def form_valid(self, form):
         try:
@@ -99,21 +96,20 @@ class EmployeeStatusView(ManagerRequiredMixin, FormView):
                 status=form.cleaned_data["status"],
                 resignation_date=form.cleaned_data.get("resignation_date"),
             )
-        except (ValidationError, ValueError) as error:
-            form.add_error("status", error)
+        except ValidationError as error:
+            add_service_errors(form, error)
             return self.form_invalid(form)
+        except EmployeeProfile.DoesNotExist as error:
+            raise Http404("Nhân viên không còn tồn tại.") from error
         messages.success(self.request, f"Đã cập nhật trạng thái nhân viên {employee.full_name}.")
         return super().form_valid(form)
 
 
-class EmployeeDeleteView(ManagerRequiredMixin, FormView):
+@method_decorator(never_cache, name="dispatch")
+class EmployeeDeleteView(ManagerRequiredMixin, ManagedEmployeeMixin, FormView):
     template_name = "employees/employee_delete.html"
     form_class = forms.Form
     success_url = reverse_lazy("employees:employee_list")
-
-    def dispatch(self, request, *args, **kwargs):
-        self.employee = get_object_or_404(EmployeeProfile, pk=kwargs["pk"])
-        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -123,18 +119,25 @@ class EmployeeDeleteView(ManagerRequiredMixin, FormView):
     def form_valid(self, form):
         try:
             delete_employee(actor=self.request.user, employee_id=self.employee.pk)
-        except PermissionDenied as error:
-            form.add_error(None, error)
+        except ValidationError as error:
+            add_service_errors(form, error)
             return self.form_invalid(form)
+        except EmployeeProfile.DoesNotExist as error:
+            raise Http404("Nhân viên không còn tồn tại.") from error
         messages.success(self.request, "Đã xóa nhân viên và tài khoản liên kết.")
         return super().form_valid(form)
 
 
-class EmployeeUpdateView(ManagerRequiredMixin, UpdateView):
+@method_decorator(never_cache, name="dispatch")
+@method_decorator(sensitive_post_parameters("password1", "password2"), name="dispatch")
+class EmployeeUpdateView(ManagerRequiredMixin, ManagedEmployeeMixin, UpdateView):
     model = EmployeeProfile
     form_class = EmployeeForm
     template_name = "employees/employee_form.html"
     success_url = reverse_lazy("employees:employee_list")
+
+    def get_object(self, queryset=None):
+        return self.employee
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -151,7 +154,9 @@ class EmployeeUpdateView(ManagerRequiredMixin, UpdateView):
                 password=form.cleaned_data.get("password1"),
             )
         except ValidationError as error:
-            form.add_error(None, error)
+            add_service_errors(form, error)
             return self.form_invalid(form)
+        except EmployeeProfile.DoesNotExist as error:
+            raise Http404("Nhân viên không còn tồn tại.") from error
         messages.success(self.request, f"Đã cập nhật nhân viên {self.object.full_name}.")
         return HttpResponseRedirect(self.get_success_url())

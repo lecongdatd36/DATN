@@ -3,7 +3,7 @@
 {% block content %}
 <section class="container-fluid px-3 px-md-4 pb-5">
     <p class="eyebrow mb-2">KHÔNG GIAN LÀM VIỆC</p>
-    <h1 class="h2 mb-2">Xin chào, {{ user.get_full_name|default:user.username }}.</h1>
+    <h1 class="h2 mb-2">Xin chào, {{ user.employee_profile.full_name|default:user.get_full_name|default:user.username }}.</h1>
     <p class="text-secondary mb-4">Xem thông tin tài khoản và truy cập các chức năng được cấp quyền.</p>
     <div class="row g-4">
         <div class="col-xl-7">
@@ -14,9 +14,9 @@
                 </div>
                 <dl class="row account-details mb-0">
                     <dt class="col-sm-4">Tên đăng nhập</dt><dd class="col-sm-8 text-break">{{ user.username }}</dd>
-                    <dt class="col-sm-4">Họ tên</dt><dd class="col-sm-8 text-break">{{ user.get_full_name|default:'Chưa cập nhật' }}</dd>
+                    <dt class="col-sm-4">Họ tên</dt><dd class="col-sm-8 text-break">{{ user.employee_profile.full_name|default:user.get_full_name|default:'Chưa cập nhật' }}</dd>
                     <dt class="col-sm-4">Email</dt><dd class="col-sm-8 text-break">{{ user.email|default:'Chưa cập nhật' }}</dd>
-                    <dt class="col-sm-4">Vai trò hệ thống</dt><dd class="col-sm-8"><span class="badge text-bg-light">{{ user.get_role_display }}</span></dd>
+                    <dt class="col-sm-4">Vị trí công việc</dt><dd class="col-sm-8"><span class="badge text-bg-light">{% if user.is_superuser %}Quản trị hệ thống{% else %}{{ user.employee_profile.job_position.name|default:'Chưa gán' }}{% endif %}</span></dd>
                     <dt class="col-sm-4">Ngày tạo</dt><dd class="col-sm-8">{{ user.created_at|date:'d/m/Y H:i' }}</dd>
                 </dl>
             </div>
@@ -28,6 +28,9 @@
                 <div class="d-flex flex-wrap gap-2">
                     <a class="btn btn-primary" href="{% url 'accounts:password_change' %}">Đổi mật khẩu</a>
                     {% if access.can_manage_accounts %}<a class="btn btn-outline-primary" href="{% url 'accounts:account_list' %}">Quản lý tài khoản</a>{% endif %}
+                    {% if access.can_view_customers %}<a class="btn btn-outline-primary" href="{% url 'customers:customer_list' %}">Khách hàng</a>{% endif %}
+                    {% if access.can_view_tables %}<a class="btn btn-outline-primary" href="{% url 'seating:table_list' %}">Bàn</a>{% endif %}
+                    {% if access.can_view_bookings %}<a class="btn btn-outline-primary" href="{% url 'bookings:list' %}">Đặt bàn</a>{% endif %}
                 </div>
             </div>
         </div>

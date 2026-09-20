@@ -7,6 +7,7 @@
         <h1 class="h2 mb-0">{{ account.username }}</h1>
         <div class="d-flex gap-2">
             {% if can_edit_account %}<a class="btn btn-primary" href="{% url 'accounts:account_update' account.pk %}">Sửa thông tin</a>{% endif %}
+            {% if can_edit_account %}<a class="btn btn-outline-danger" href="{% url 'accounts:account_delete' account.pk %}">Xóa tài khoản</a>{% endif %}
             <a class="btn btn-outline-secondary" href="{% url 'accounts:account_list' %}">Quay lại</a>
         </div>
     </div>
@@ -14,7 +15,7 @@
         <dl class="row mb-0">
             <dt class="col-sm-4">Họ và tên</dt><dd class="col-sm-8">{{ account.employee_profile.full_name|default:account.get_full_name|default:'Chưa cập nhật' }}</dd>
             <dt class="col-sm-4">Email</dt><dd class="col-sm-8">{{ account.email|default:'Chưa cập nhật' }}</dd>
-            <dt class="col-sm-4">Loại tài khoản</dt><dd class="col-sm-8">{% if account.employee_profile.job_position.code == 'MANAGER' %}Quản trị viên / Quản lý{% else %}Nhân viên{% endif %}</dd>
+            <dt class="col-sm-4">Loại tài khoản</dt><dd class="col-sm-8">{% if account.is_superuser %}Quản trị hệ thống{% elif account.employee_profile.job_position.code == 'MANAGER' %}Quản lí{% else %}Nhân viên{% endif %}</dd>
             <dt class="col-sm-4">Vị trí công việc</dt><dd class="col-sm-8">{{ account.employee_profile.job_position.name|default:'Chưa gán' }}</dd>
             <dt class="col-sm-4">Mã nhân viên</dt><dd class="col-sm-8">{{ account.employee_profile.employee_code|default:'Chưa có hồ sơ' }}</dd>
             <dt class="col-sm-4">Trạng thái</dt><dd class="col-sm-8">{% if account.is_active %}Đang hoạt động{% else %}Đã khóa{% endif %}</dd>

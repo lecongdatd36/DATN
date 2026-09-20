@@ -7,8 +7,37 @@ from core.permissions import can_manage_accounts
 from .models import EmployeeActivityLog, EmployeeProfile, JobPosition
 
 
+class ReadOnlyPersonnelAdmin(admin.ModelAdmin):
+    def has_module_permission(self, request):
+        return can_manage_accounts(request.user)
+
+    def has_view_permission(self, request, obj=None):
+        return can_manage_accounts(request.user)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_actions(self, request):
+        return {}
+
+    def get_readonly_fields(self, request, obj=None):
+        return tuple(field.name for field in self.model._meta.fields)
+
+    def save_model(self, request, obj, form, change):
+        raise PermissionDenied("Hãy sử dụng màn hình quản lý nhân viên.")
+
+    def delete_model(self, request, obj):
+        raise PermissionDenied("Hãy sử dụng màn hình quản lý nhân viên.")
+
+
 @admin.register(JobPosition, site=admin_site)
-class JobPositionAdmin(admin.ModelAdmin):
+class JobPositionAdmin(ReadOnlyPersonnelAdmin):
     list_display = ("code", "name", "group", "is_active")
     list_filter = ("is_active",)
     search_fields = ("code", "name", "group__name")
@@ -16,7 +45,7 @@ class JobPositionAdmin(admin.ModelAdmin):
 
 
 @admin.register(EmployeeProfile, site=admin_site)
-class EmployeeProfileAdmin(admin.ModelAdmin):
+class EmployeeProfileAdmin(ReadOnlyPersonnelAdmin):
     list_display = ("employee_code", "full_name", "job_position", "employment_status", "phone")
     list_filter = ("job_position", "employment_status")
     search_fields = ("employee_code", "full_name", "phone", "user__username")
@@ -31,10 +60,10 @@ class EmployeeProfileAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return can_manage_accounts(request.user)
+        return False
 
     def get_readonly_fields(self, request, obj=None):
-        return ("user", "created_at", "updated_at")
+        return super().get_readonly_fields(request, obj)
 
     def has_delete_permission(self, request, obj=None):
         return False

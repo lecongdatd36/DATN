@@ -16,6 +16,7 @@ urlpatterns = [
     path("quan-ly/them-moi/", views.AccountCreateView.as_view(), name="account_create"),
     path("quan-ly/<int:pk>/", views.AccountDetailView.as_view(), name="account_detail"),
     path("quan-ly/<int:pk>/chinh-sua/", views.AccountUpdateView.as_view(), name="account_update"),
+    path("quan-ly/<int:pk>/xoa/", views.AccountDeleteView.as_view(), name="account_delete"),
     path("quan-ly/<int:pk>/khoa/", views.AccountStatusView.as_view(), name="account_lock"),
     path("quan-ly/<int:pk>/mo-khoa/", views.AccountStatusView.as_view(activate=True), name="account_unlock"),
     path("quan-ly/<int:pk>/dat-lai-mat-khau/", views.EmployeePasswordResetView.as_view(), name="password_reset"),

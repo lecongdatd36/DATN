@@ -1,6 +1,9 @@
 """Cung cấp các quyết định quyền truy cập đã tập trung hóa cho template."""
 
 from core.permissions import can_access_admin, can_manage_accounts
+from apps.customers.permissions import has_customer_permission
+from apps.seating.permissions import has_seating_permission
+from apps.bookings.permissions import has_booking_permission
 
 
 def access_policy(request):
@@ -8,5 +11,18 @@ def access_policy(request):
         "access": {
             "can_manage_accounts": can_manage_accounts(request.user),
             "can_access_admin": can_access_admin(request.user),
+            "can_view_customers": has_customer_permission(request.user, "view_customer"),
+            "can_add_customers": has_customer_permission(request.user, "add_customer"),
+            "can_change_customers": has_customer_permission(request.user, "change_customer"),
+            "can_delete_customers": has_customer_permission(request.user, "delete_customer"),
+            "can_view_customer_logs": has_customer_permission(request.user, "view_customeractivitylog"),
+            "can_view_tables": has_seating_permission(request.user, "view_diningtable"),
+            "can_view_areas": has_seating_permission(request.user, "view_area"),
+            "can_manage_seating": has_seating_permission(request.user, "manage_seating"),
+            "can_view_seating_logs": has_seating_permission(request.user, "view_seatingactivitylog"),
+            "can_view_bookings": has_booking_permission(request.user, "view_booking"),
+            "can_manage_bookings": has_booking_permission(request.user, "manage_booking"),
+            "can_view_booking_logs": has_booking_permission(request.user, "view_bookingactivitylog"),
+            "can_configure_bookings": has_booking_permission(request.user, "configure_bookings"),
         }
     }

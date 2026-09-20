@@ -1,14 +1,18 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.db.models import Q
+
+from apps.accounts.forms import BootstrapFormMixin
 
 from .models import EmployeeProfile, EmploymentStatus, JobPosition
 
 User = get_user_model()
 
 
-class EmployeeForm(forms.ModelForm):
-    username = forms.CharField(label="Tên đăng nhập", max_length=150)
+class EmployeeForm(BootstrapFormMixin, forms.ModelForm):
+    username = forms.CharField(label="Tên đăng nhập", max_length=150, validators=[UnicodeUsernameValidator()])
     email = forms.EmailField(label="Email", required=False)
     password1 = forms.CharField(label="Mật khẩu", widget=forms.PasswordInput, required=False)
     password2 = forms.CharField(label="Nhập lại mật khẩu", widget=forms.PasswordInput, required=False)
@@ -30,6 +34,8 @@ class EmployeeForm(forms.ModelForm):
             self.fields["password1"].required = True
             self.fields["password2"].required = True
         self.fields["employee_code"].required = False
+        self.fields["job_position"].queryset = JobPosition.objects.filter(Q(is_active=True) | Q(pk=self.instance.job_position_id))
+        self.fields["avatar"].help_text = "Ảnh tối đa 5 MB."
 
     def clean_username(self):
         username = self.cleaned_data["username"].strip()
@@ -50,20 +56,22 @@ class EmployeeForm(forms.ModelForm):
                 validate_password(password1, user=self.user)
         if cleaned.get("employment_status") == EmploymentStatus.RESIGNED and not cleaned.get("resignation_date"):
             self.add_error("resignation_date", "Vui lòng nhập ngày nghỉ việc.")
+        if cleaned.get("employment_status") != EmploymentStatus.RESIGNED:
+            cleaned["resignation_date"] = None
         return cleaned
 
     def clean_phone(self):
         return "".join(self.cleaned_data["phone"].split())
 
 
-class EmployeeFilterForm(forms.Form):
+class EmployeeFilterForm(BootstrapFormMixin, forms.Form):
     q = forms.CharField(label="Tìm nhân viên", required=False)
     position = forms.ModelChoiceField(label="Vị trí", required=False, queryset=JobPosition.objects.filter(is_active=True), empty_label="Tất cả vị trí")
     status = forms.ChoiceField(label="Trạng thái", required=False, choices=[("", "Tất cả trạng thái"), *EmploymentStatus.choices])
     account_status = forms.ChoiceField(label="Tài khoản", required=False, choices=[("", "Tất cả tài khoản"), ("active", "Đang hoạt động"), ("inactive", "Đã khóa")])
 
 
-class EmployeeStatusForm(forms.Form):
+class EmployeeStatusForm(BootstrapFormMixin, forms.Form):
     status = forms.ChoiceField(label="Trạng thái mới", choices=EmploymentStatus.choices)
     resignation_date = forms.DateField(label="Ngày nghỉ việc", required=False, widget=forms.DateInput(attrs={"type": "date"}))
 
