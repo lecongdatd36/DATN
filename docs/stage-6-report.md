@@ -1,6 +1,6 @@
 # Giai đoạn 6 — Đặt bàn
 
-Ngày cập nhật: 20/09/2026.
+Ngày cập nhật: 21/09/2026.
 
 ## Chức năng
 
@@ -16,13 +16,13 @@ Ngày cập nhật: 20/09/2026.
 | Trạng thái hiện tại | Thao tác được phép |
 | --- | --- |
 | Chờ xác nhận | Sửa, xác nhận, hủy, đánh dấu không đến từ giờ hẹn |
-| Đã xác nhận | Sửa, nhận khách trong giờ hẹn, hủy, đánh dấu không đến từ giờ hẹn |
+| Đã xác nhận | Sửa, nhận khách (có thể sớm trong ngày nếu bàn trống và không vướng lịch khác), hủy, đánh dấu không đến từ giờ hẹn |
 | Đang phục vụ | Hoàn tất khi khách rời bàn |
 | Hoàn tất / Đã hủy / Không đến | Chỉ xem |
 
 Lịch mới chờ xác nhận cũng giữ chỗ. Sửa thông tin lịch đã xác nhận đưa về chờ xác nhận lại; lưu không đổi thông tin không ghi log mới và không thay trạng thái. Khi thông tin khách hiện tại đã đổi, lưu lại sẽ cập nhật snapshot và cần xác nhận lại.
 
-Giờ đến mới phải ở tương lai, kết thúc sau giờ đến. Có thể chỉnh một lịch đang trong giờ hẹn nếu giữ nguyên giờ đến và chưa hết giờ. Nhận khách chỉ từ giờ đến đến trước giờ kết thúc; khách đến sớm cần sửa giờ và xác nhận lại. Không tự chuyển quá hạn sang không đến, không tự hoàn tất khách đang ngồi.
+Giờ đến mới phải ở tương lai, kết thúc sau giờ đến. Có thể chỉnh một lịch đang trong giờ hẹn nếu giữ nguyên giờ đến và chưa hết giờ. Nhận khách trước giờ kết thúc dự kiến; cho phép nhận sớm trong cùng ngày hẹn nếu bàn trống và cả khoảng thời gian phát sinh không trùng lịch khác. Giữ nguyên thời gian dự kiến và ghi riêng thời điểm nhận khách thực tế. Không tự chuyển quá hạn sang không đến, không tự hoàn tất khách đang ngồi.
 
 Hai lịch được nối tiếp đúng mốc kết thúc/bắt đầu. Lịch đã hủy/không đến/hoàn tất giải phóng khung giờ. Nếu khách đã nhận vẫn ngồi quá giờ dự kiến, lượt sau chưa được nhận khách cho đến khi lượt trước hoàn tất. Thông báo quá giờ hiện ở chi tiết lịch; hoàn tất chưa đồng nghĩa thanh toán vì module thanh toán chưa có.
 
@@ -54,7 +54,7 @@ Database có check constraints thời gian, số khách và trạng thái, cùng
 
 ## Kiểm chứng
 
-- **157/157 test đạt** trên PostgreSQL: 118 test module khác và 39 test Đặt bàn. Chạy trên database tên riêng, migrate từ đầu, dọn sau khi xong.
+- **177/177 test đạt** trên PostgreSQL sau bổ sung ngày 21/09/2026. Chạy trên database tên riêng, migrate từ đầu, dọn sau khi xong. Mốc kiểm chứng trước phần đồng bộ trạng thái bàn là 157 test.
 - Kiểm tra quyền ở UI/GET/POST/service, thu hồi quyền, khóa actor, superuser không có hồ sơ, CSRF và Admin chỉ đọc.
 - Kiểm tra các dạng chồng giờ và hai lịch nối tiếp; khác bàn; bàn/khu vực ngừng; sức chứa; giờ sai/quá khứ; khách/bàn không tồn tại.
 - Kiểm tra vòng đời, nhận khách sớm/trễ, không đến trước giờ, khách ngồi quá giờ chặn nhận lượt sau, sửa cần xác nhận lại, trạng thái cuối không sửa, form cũ không ghi đè.
@@ -75,9 +75,21 @@ Database có check constraints thời gian, số khách và trạng thái, cùng
 - Đã đổi sang trạng thái suy ra từ Booking khi truy vấn danh sách: có SEATED luôn là Đang phục vụ, không tự trống khi quá ends_at; lịch PENDING/CONFIRMED đang trong khoảng giờ là Đang giữ chỗ; ngoài ra bàn mở là Trống hiện tại. Bàn/khu vực đóng hiển thị Ngừng sử dụng, nhưng vẫn ưu tiên báo khách đang ngồi nếu có dữ liệu bất thường.
 - Hiển thị lịch tương lai gần nhất riêng, không coi đặt trước cho ngày sau là đang chiếm bàn. Có liên kết xem lượt khách/lịch đặt cho người có quyền xem đặt bàn.
 - Bộ lọc có Trống hiện tại/Đang phục vụ/Đang giữ chỗ/Ngừng sử dụng và Đang mở (mọi trạng thái). Giữ phân trang và bộ lọc khu vực; subquery tránh tải từng lịch bằng truy vấn riêng cho mỗi bàn.
-- Không đổi cờ vận hành, không thêm trạng thái lưu trùng, không sửa dữ liệu lịch thật và không cần migration. Trang hiển thị thời điểm kiểm tra và liên kết cập nhật; tab đang mở chưa tự nhận thay đổi nền.
+- Phần sửa trạng thái không đổi cờ vận hành, không thêm trạng thái lưu trùng, không sửa dữ liệu lịch thật và không cần migration. Trang hiển thị thời điểm kiểm tra và liên kết cập nhật; cơ chế cập nhật nền được bổ sung ngày 21/09 như dưới đây.
 - Thêm 8 kiểm thử hồi quy; **67/67 test Seating + Bookings đạt** sau sửa. Bao phủ nhận khách/hoàn tất qua service, quá giờ, lịch tương lai, giữ chỗ, hết giờ, lịch hủy/không đến/hoàn tất, ưu tiên trạng thái, lọc/phân trang, quyền liên kết và số truy vấn. Trước khi đưa lên GitHub, đã chạy lại toàn bộ dự án: **165/165 test đạt** trên database PostgreSQL kiểm thử riêng.
 - Đối chiếu đọc trực tiếp database ứng dụng: lúc kiểm tra không có lịch SEATED, một bàn trả trạng thái empty; render `/ban/` trả 200 và không còn nhãn “Có thể sử dụng”. Trường hợp đang phục vụ được xác minh bằng kiểm thử trên database riêng. `manage.py check`, kiểm tra model/migration và diff đều đạt.
+
+## Hoàn thiện Đặt bàn ngày 21/09/2026
+
+- Nhận khách sớm trong ngày hẹn theo giờ Việt Nam, chỉ với lịch đã xác nhận. Kiểm tra lại quyền, phiên bản lịch, bàn/khu vực, sức chứa, lịch chồng giờ và khách chưa rời bàn trong cùng transaction có khóa. Chặn nhận khác ngày, lịch hết giờ và gửi lại form cũ.
+- Kiểm tra trùng lịch/tìm bàn tính cả thời gian khách đã đến sớm, tránh tạo lịch chen vào trước giờ hẹn ban đầu. Không tự kéo dài thời lượng hoặc dời lịch kế tiếp.
+- Thêm `seated_at`, `completed_at` và constraint thứ tự giờ thực tế; service ghi khi nhận/hoàn tất, hiển thị trên chi tiết. Lỗi nhật ký rollback cả trạng thái và giờ thực tế. Dữ liệu cũ để trống các mốc chưa biết; lượt đang phục vụ từ trước vẫn hoàn tất được.
+- Đã áp dụng migration `bookings.0006_booking_completed_at_booking_seated_at_and_more` lên database ứng dụng.
+- Trang Bàn lấy lại phần kết quả mỗi 15 giây; giữ URL, bộ lọc và phân trang. Nếu số trang giảm sau khi khách rời bàn, trả trang còn hợp lệ thay vì 404. Tạm dừng khi tab ẩn hoặc đang dùng bộ lọc/liên kết trong bảng; trở lại tab thì cập nhật. Có nút cập nhật thủ công và thời điểm dữ liệu được kiểm tra.
+- Mất mạng/lỗi máy chủ: giữ kết quả cũ, báo dữ liệu chưa cập nhật và thử lại. Yêu cầu quá 10 giây bị hủy; không gửi chồng yêu cầu. Phiên hết hạn hoặc mất quyền thì ngừng cập nhật và yêu cầu tải lại. Mỗi yêu cầu vẫn kiểm tra quyền; phản hồi không lưu cache. Không có JavaScript vẫn xem, lọc và tải lại được.
+- Thêm 12 test Django: 8 cho nhận/hoàn tất và 4 cho phần kết quả cập nhật, phân trang, quyền và trang đầy đủ. **79/79 test Seating + Bookings, 177/177 test toàn hệ thống đạt**. **6/6 test JavaScript đạt** qua `node --test scripts/test_table_live.cjs`: giữ bộ lọc, bảo vệ thao tác đang làm, tab ẩn, hết phiên/mất quyền, lỗi mạng/phản hồi sai và timeout.
+- `manage.py check`, kiểm tra thiếu migration và `git diff --check` đạt. Render trang Bàn, phần kết quả Bàn, danh sách và chi tiết lịch có sẵn đều trả 200 trong transaction chỉ đọc trên database ứng dụng; không tạo lịch thử ở database này.
+- Công cụ Browser tiếp tục lỗi khởi tạo; chưa kiểm chứng bố cục và thao tác trực tiếp trên trình duyệt. Kiểm thử JavaScript dùng môi trường giả lập, kiểm thử Django xác minh template/phân quyền/nghiệp vụ.
 
 ## Phần tiếp theo
 

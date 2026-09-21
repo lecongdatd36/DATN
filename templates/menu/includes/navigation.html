@@ -1,0 +1,5 @@
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a class="btn btn-outline-secondary" href="{% url 'menu:dish_list' %}">Danh sách món</a>
+    {% if access.can_manage_menu %}<a class="btn btn-outline-secondary" href="{% url 'menu:category_list' %}">Nhóm món</a><a class="btn btn-outline-secondary" href="{% url 'menu:unit_list' %}">Đơn vị tính</a>{% endif %}
+    {% if access.can_view_menu_logs %}<a class="btn btn-outline-secondary" href="{% url 'menu:logs' %}">Nhật ký</a>{% endif %}
+</div>

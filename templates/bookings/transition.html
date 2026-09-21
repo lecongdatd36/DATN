@@ -8,6 +8,7 @@
         <p><strong>{{ booking.booking_code }}</strong> — {{ booking.customer_name }}, bàn {{ booking.table.code }}, {{ booking.party_size }} khách.</p>
         <p>{{ booking.starts_at|date:'d/m/Y H:i' }} — {{ booking.ends_at|date:'d/m/Y H:i' }}</p>
         <p>{{ booking.get_status_display }} → <strong>{{ target_label }}</strong></p>
+        {% if early_arrival %}<p class="alert alert-info">Khách đến sớm: hệ thống kiểm tra bàn từ thời điểm nhận khách đến giờ kết thúc dự kiến. Giờ hẹn được giữ nguyên; nếu vướng lịch khác, thao tác sẽ bị từ chối.</p>{% endif %}
         <div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Xác nhận chuyển trạng thái</button><a class="btn btn-outline-secondary" href="{{ booking.get_absolute_url }}">Quay lại</a></div>
     </form></div></div>
 </section>

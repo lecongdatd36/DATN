@@ -51,6 +51,16 @@ class TableListView(AreaListView):
     model = DiningTable
     selector = staticmethod(tables)
 
+    def get_template_names(self):
+        if self.request.headers.get("X-Table-Refresh") == "1":
+            return ["seating/includes/table_results.html"]
+        return [self.template_name]
+
+    def paginate_queryset(self, queryset, page_size):
+        paginator = self.get_paginator(queryset, page_size, allow_empty_first_page=True)
+        page = paginator.get_page(self.request.GET.get("page", 1))
+        return paginator, page, page.object_list, page.has_other_pages()
+
     def get_queryset(self):
         self.status_checked_at = timezone.now()
         self.filter_form = self.filter_class(self.request.GET)

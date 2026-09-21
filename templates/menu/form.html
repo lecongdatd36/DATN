@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Sửa{% else %}Thêm{% endif %} {{ entity_label }} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">THỰC ĐƠN</p>
+    <h1 class="h2 mb-4">{% if object %}Sửa {{ entity_label }}: {{ object }}{% else %}Thêm {{ entity_label }}{% endif %}</h1>
+    <div class="row"><div class="col-lg-8 col-xl-6">
+        {% if entity_label == 'món' %}
+        {% if not form.fields.category.queryset.exists or not form.fields.unit.queryset.exists %}<div class="alert alert-info">Cần có <a href="{% url 'menu:category_create' %}">nhóm món</a> và <a href="{% url 'menu:unit_create' %}">đơn vị tính</a> đang sử dụng trước khi thêm món.</div>{% endif %}
+        {% if object and not object.can_toggle_availability %}<p class="alert alert-warning">Món đang ngừng bán hoặc danh mục đã ngừng sử dụng. Kiểm tra nhóm món, đơn vị tính và trạng thái trước khi mở bán lại.</p>{% endif %}
+        {% endif %}
+        <form method="post" class="project-card p-3 p-md-4" novalidate>{% csrf_token %}{% include 'includes/form_fields.html' %}<div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Lưu {{ entity_label }}</button><a class="btn btn-outline-secondary" href="{{ list_url }}">Hủy</a></div></form>
+    </div></div>
+</section>
+{% endblock %}

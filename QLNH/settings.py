@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.customers.apps.CustomersConfig",
     "apps.seating.apps.SeatingConfig",
     "apps.bookings.apps.BookingsConfig",
+    "apps.menu.apps.MenuConfig",
 ]
 
 MIDDLEWARE = [

@@ -4,6 +4,7 @@ from core.permissions import can_access_admin, can_manage_accounts
 from apps.customers.permissions import has_customer_permission
 from apps.seating.permissions import has_seating_permission
 from apps.bookings.permissions import has_booking_permission
+from apps.menu.permissions import has_menu_permission
 
 
 def access_policy(request):
@@ -24,5 +25,9 @@ def access_policy(request):
             "can_manage_bookings": has_booking_permission(request.user, "manage_booking"),
             "can_view_booking_logs": has_booking_permission(request.user, "view_bookingactivitylog"),
             "can_configure_bookings": has_booking_permission(request.user, "configure_bookings"),
+            "can_view_menu": has_menu_permission(request.user, "view_dish"),
+            "can_manage_menu": has_menu_permission(request.user, "manage_menu"),
+            "can_change_availability": has_menu_permission(request.user, "change_availability"),
+            "can_view_menu_logs": has_menu_permission(request.user, "view_menuactivitylog"),
         }
     }

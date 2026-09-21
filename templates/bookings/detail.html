@@ -16,12 +16,15 @@
             <dt class="col-sm-4">Giờ đến</dt><dd class="col-sm-8">{{ booking.starts_at|date:'d/m/Y H:i' }}</dd>
             <dt class="col-sm-4">Kết thúc dự kiến</dt><dd class="col-sm-8">{{ booking.ends_at|date:'d/m/Y H:i' }}</dd>
             <dt class="col-sm-4">Thời lượng dự kiến</dt><dd class="col-sm-8">{{ booking.duration_minutes }} phút</dd>
+            {% if booking.seated_at %}<dt class="col-sm-4">Nhận khách thực tế</dt><dd class="col-sm-8">{{ booking.seated_at|date:'d/m/Y H:i:s' }}</dd>{% endif %}
+            {% if booking.completed_at %}<dt class="col-sm-4">Khách rời bàn</dt><dd class="col-sm-8">{{ booking.completed_at|date:'d/m/Y H:i:s' }}</dd>{% endif %}
         </dl>
         <div class="d-flex flex-wrap gap-2 mt-3">
             {% if access.can_manage_bookings and booking.can_edit %}<a class="btn btn-outline-primary" href="{% url 'bookings:update' booking.pk %}">Sửa lịch</a>{% endif %}
             {% for action in actions %}<a class="btn {% if action.target == 'CANCELLED' or action.target == 'NO_SHOW' %}btn-outline-danger{% else %}btn-primary{% endif %}" href="{% url 'bookings:transition' booking.pk action.target %}">{{ action.label }}</a>{% endfor %}
         </div>
-        <p class="small text-secondary mt-3 mb-0">Nhận khách trong khoảng giờ đã đặt, sau khi xác nhận. Hoàn tất khi khách đã rời bàn; thao tác này chưa thực hiện thanh toán.</p>
+        {% if early_arrival %}<p class="small text-secondary mt-3">Có thể nhận khách đến sớm trong ngày hẹn nếu bàn trống và không ảnh hưởng lịch khác. Giờ hẹn và giờ kết thúc dự kiến vẫn giữ nguyên.</p>{% endif %}
+        <p class="small text-secondary mt-3 mb-0">Chỉ bấm Nhận khách khi khách thực sự đến. Hoàn tất khi khách đã rời bàn; thao tác này chưa thực hiện thanh toán.</p>
     </div>
     {% if access.can_view_booking_logs %}
     <h2 class="h5 mb-3">Nhật ký đặt bàn</h2>

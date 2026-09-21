@@ -20,6 +20,8 @@ class Booking(models.Model):
     party_size = models.PositiveSmallIntegerField("Số khách", validators=[MinValueValidator(1), MaxValueValidator(100)])
     starts_at = models.DateTimeField("Giờ đến")
     ends_at = models.DateTimeField("Giờ kết thúc dự kiến")
+    seated_at = models.DateTimeField("Giờ nhận khách thực tế", null=True, blank=True, editable=False)
+    completed_at = models.DateTimeField("Giờ khách rời bàn", null=True, blank=True, editable=False)
     status = models.CharField("Trạng thái", max_length=12, choices=Status.choices, default=Status.PENDING)
     revision = models.PositiveIntegerField(default=1, editable=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
@@ -35,6 +37,7 @@ class Booking(models.Model):
             models.CheckConstraint(condition=models.Q(ends_at__gt=models.F("starts_at")), name="booking_time_order"),
             models.CheckConstraint(condition=models.Q(party_size__gte=1, party_size__lte=100), name="booking_party_range"),
             models.CheckConstraint(condition=models.Q(status__in=["PENDING", "CONFIRMED", "SEATED", "COMPLETED", "CANCELLED", "NO_SHOW"]), name="booking_valid_status"),
+            models.CheckConstraint(condition=models.Q(completed_at__isnull=True) | models.Q(seated_at__isnull=True) | models.Q(completed_at__gte=models.F("seated_at")), name="booking_actual_time_order"),
         ]
         indexes = [models.Index(fields=("table", "status", "starts_at", "ends_at"), name="booking_slot_idx")]
 

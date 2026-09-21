@@ -39,13 +39,13 @@ def validate_period(starts_at, ends_at):
         raise ValidationError({"ends_at": "Giờ kết thúc phải sau giờ đến."})
 
 
-def _validate_slot(booking):
+def _validate_slot(booking, *, starts_at=None):
     table = booking.table
     if not table.is_available:
         raise ValidationError({"table": "Bàn hoặc khu vực đã ngừng sử dụng."})
     if booking.party_size > table.capacity:
         raise ValidationError({"party_size": f"Bàn {table.code} chỉ có {table.capacity} chỗ."})
-    if overlapping_bookings(table_id=table.pk, starts_at=booking.starts_at, ends_at=booking.ends_at, exclude_id=booking.pk).exists():
+    if overlapping_bookings(table_id=table.pk, starts_at=starts_at or booking.starts_at, ends_at=booking.ends_at, exclude_id=booking.pk).exists():
         raise ValidationError({"table": "Bàn đã có lịch đặt trong khoảng thời gian này. Hãy đổi giờ hoặc chọn bàn khác."})
 
 
@@ -147,16 +147,23 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
             raise ValidationError("Lịch đã hết giờ, không thể xác nhận.")
         _validate_slot(booking)
     elif target == Booking.Status.SEATED:
-        if not booking.starts_at <= now < booking.ends_at:
-            raise ValidationError("Chỉ nhận khách trong khoảng giờ đã đặt. Nếu đến sớm, hãy sửa giờ đến trước.")
-        _validate_slot(booking)
+        if now >= booking.ends_at:
+            raise ValidationError("Lịch đã hết giờ dự kiến. Hãy điều chỉnh lịch và xác nhận lại trước khi nhận khách.")
+        if now < booking.starts_at and timezone.localdate(now) != timezone.localdate(booking.starts_at):
+            raise ValidationError("Chỉ nhận khách đến sớm trong ngày hẹn. Nếu khách đổi ngày, hãy sửa lịch trước.")
+        _validate_slot(booking, starts_at=min(now, booking.starts_at))
         if Booking.objects.filter(table_id=booking.table_id, status=Booking.Status.SEATED).exclude(pk=booking.pk).exists():
             raise ValidationError("Bàn vẫn đang có khách. Hãy hoàn tất lượt trước hoặc chuyển sang bàn khác.")
+        booking.seated_at = now
+    elif target == Booking.Status.COMPLETED:
+        if booking.seated_at and now < booking.seated_at:
+            raise ValidationError("Giờ hoàn tất không thể trước giờ nhận khách.")
+        booking.completed_at = now
     elif target == Booking.Status.NO_SHOW and now < booking.starts_at:
         raise ValidationError("Chỉ đánh dấu không đến từ giờ hẹn trở đi.")
     before = booking.get_status_display()
     booking.status = target
     booking.revision += 1
-    booking.save(update_fields=("status", "revision", "updated_at"))
+    booking.save(update_fields=("status", "revision", "updated_at", "seated_at", "completed_at"))
     _log(actor, booking, booking.get_status_display(), f"{before} → {booking.get_status_display()}. " + _snapshot(booking))
     return booking

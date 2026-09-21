@@ -1,6 +1,7 @@
 import re
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Case, DateTimeField, F, Q, When
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from apps.seating.models import DiningTable
 from apps.customers.validators import normalize_phone
@@ -26,7 +27,10 @@ def overdue_bookings():
 
 
 def overlapping_bookings(*, starts_at, ends_at, table_id=None, exclude_id=None):
-    result = Booking.objects.filter(status__in=BLOCKING_STATUSES, starts_at__lt=ends_at, ends_at__gt=starts_at)
+    result = Booking.objects.annotate(effective_start=Case(
+        When(status=Booking.Status.SEATED, then=Coalesce("seated_at", "starts_at")),
+        default=F("starts_at"), output_field=DateTimeField(),
+    )).filter(status__in=BLOCKING_STATUSES, effective_start__lt=ends_at, ends_at__gt=starts_at)
     if table_id is not None:
         result = result.filter(table_id=table_id)
     if exclude_id is not None:

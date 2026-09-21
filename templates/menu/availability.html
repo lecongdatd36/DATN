@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Còn / hết món · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">THỰC ĐƠN</p><h1 class="h2 mb-4">Cập nhật còn / hết món</h1>
+    <div class="row"><div class="col-lg-8 col-xl-6"><form method="post" class="project-card p-3 p-md-4" novalidate>
+        <p class="fw-semibold text-break">{{ dish }}</p><p>Hiện tại: {{ dish.availability_label }}.</p>
+        {% if not dish.can_toggle_availability %}<p class="alert alert-warning">Món hoặc danh mục đã ngừng sử dụng. Hãy liên hệ Quản lí để mở lại.</p>{% endif %}
+        {% csrf_token %}{% include 'includes/form_fields.html' %}
+        <div class="d-flex gap-2 mt-4">{% if dish.can_toggle_availability %}<button class="btn btn-primary" type="submit">Lưu trạng thái</button>{% endif %}<a class="btn btn-outline-secondary" href="{{ dish.get_absolute_url }}">Quay lại</a></div>
+    </form></div></div>
+</section>
+{% endblock %}

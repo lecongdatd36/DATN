@@ -65,7 +65,7 @@ class BookingDetailView(BookingPermissionMixin, DetailView):
             for target in TRANSITIONS.get(booking.status, ()):
                 if target == Booking.Status.NO_SHOW and now < booking.starts_at:
                     continue
-                if target == Booking.Status.SEATED and not booking.starts_at <= now < booking.ends_at:
+                if target == Booking.Status.SEATED and (now >= booking.ends_at or (now < booking.starts_at and timezone.localdate(now) != timezone.localdate(booking.starts_at))):
                     continue
                 if target == Booking.Status.CONFIRMED and booking.ends_at <= now:
                     continue
@@ -75,6 +75,7 @@ class BookingDetailView(BookingPermissionMixin, DetailView):
                     Booking.Status.NO_SHOW: "Đánh dấu không đến",
                 }
                 context["actions"].append({"target": target, "label": labels[target]})
+        context["early_arrival"] = booking.status == Booking.Status.CONFIRMED and now < booking.starts_at and timezone.localdate(now) == timezone.localdate(booking.starts_at)
         if has_booking_permission(self.request.user, "view_bookingactivitylog"):
             context["log_page"] = Paginator(booking.activity_logs.all(), 20).get_page(self.request.GET.get("page"))
         return context
@@ -136,7 +137,7 @@ class BookingTransitionView(BookingPermissionMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(booking=self.booking, target_label=self.target.label)
+        context.update(booking=self.booking, target_label=self.target.label, early_arrival=self.target == Booking.Status.SEATED and timezone.now() < self.booking.starts_at)
         return context
 
     def form_valid(self, form):

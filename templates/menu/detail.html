@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load menu_money %}
+{% block title %}{{ dish.name }} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">THỰC ĐƠN · {{ dish.code }}</p>
+    <div class="d-flex flex-wrap justify-content-between gap-3 mb-4"><h1 class="h2 mb-0 text-break">{{ dish.name }}</h1><a class="btn btn-outline-secondary" href="{% url 'menu:dish_list' %}">Danh sách món</a></div>
+    <div class="project-card p-3 p-md-4">
+        <dl class="row mb-0"><dt class="col-sm-4">Nhóm món</dt><dd class="col-sm-8 text-break">{{ dish.category.name }}{% if not dish.category.is_active %} (ngừng sử dụng){% endif %}</dd><dt class="col-sm-4">Đơn vị tính</dt><dd class="col-sm-8">{{ dish.unit.name }}{% if not dish.unit.is_active %} (ngừng sử dụng){% endif %}</dd><dt class="col-sm-4">Giá bán</dt><dd class="col-sm-8 fw-semibold">{{ dish.price|dong }} đ / {{ dish.unit.name }}</dd><dt class="col-sm-4">Trạng thái phục vụ</dt><dd class="col-sm-8">{% include 'menu/includes/status.html' %}</dd><dt class="col-sm-4">Mô tả</dt><dd class="col-sm-8 text-break">{{ dish.description|default:'Chưa có mô tả'|linebreaksbr }}</dd><dt class="col-sm-4">Cập nhật lúc</dt><dd class="col-sm-8">{{ dish.updated_at|date:'d/m/Y H:i' }}</dd></dl>
+        <div class="d-flex flex-wrap gap-2 mt-3">{% if access.can_manage_menu %}<a class="btn btn-primary" href="{% url 'menu:dish_update' dish.pk %}">Sửa món / giá bán</a>{% endif %}{% if access.can_change_availability and dish.can_toggle_availability %}<a class="btn btn-outline-primary" href="{% url 'menu:availability' dish.pk %}">Cập nhật còn / hết món</a>{% endif %}</div>
+    </div>
+</section>
+{% endblock %}
