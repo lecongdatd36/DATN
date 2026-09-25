@@ -13,10 +13,11 @@ class Booking(models.Model):
         CANCELLED = "CANCELLED", "Đã hủy"
         NO_SHOW = "NO_SHOW", "Không đến"
 
-    customer = models.ForeignKey("customers.Customer", on_delete=models.PROTECT, related_name="bookings", verbose_name="Khách hàng")
+    customer = models.ForeignKey("customers.Customer", on_delete=models.PROTECT, related_name="bookings", verbose_name="Khách hàng", null=True, blank=True)
+    is_walk_in = models.BooleanField("Khách không đặt trước", default=False, editable=False)
     table = models.ForeignKey("seating.DiningTable", on_delete=models.PROTECT, related_name="bookings", verbose_name="Bàn")
     customer_name = models.CharField("Tên khách khi đặt", max_length=150)
-    customer_phone = models.CharField("Điện thoại khi đặt", max_length=20)
+    customer_phone = models.CharField("Điện thoại khi đặt", max_length=20, blank=True)
     party_size = models.PositiveSmallIntegerField("Số khách", validators=[MinValueValidator(1), MaxValueValidator(100)])
     starts_at = models.DateTimeField("Giờ đến")
     ends_at = models.DateTimeField("Giờ kết thúc dự kiến")
@@ -34,6 +35,8 @@ class Booking(models.Model):
         ordering = ("-starts_at", "-pk")
         permissions = [("manage_booking", "Tạo và cập nhật đặt bàn")]
         constraints = [
+            models.CheckConstraint(condition=models.Q(is_walk_in=True) | models.Q(customer__isnull=False), name="booking_reserved_customer_required"),
+            models.CheckConstraint(condition=models.Q(is_walk_in=False) | models.Q(status__in=["SEATED", "COMPLETED"]), name="booking_walk_in_status"),
             models.CheckConstraint(condition=models.Q(ends_at__gt=models.F("starts_at")), name="booking_time_order"),
             models.CheckConstraint(condition=models.Q(party_size__gte=1, party_size__lte=100), name="booking_party_range"),
             models.CheckConstraint(condition=models.Q(status__in=["PENDING", "CONFIRMED", "SEATED", "COMPLETED", "CANCELLED", "NO_SHOW"]), name="booking_valid_status"),
@@ -43,7 +46,7 @@ class Booking(models.Model):
 
     @property
     def booking_code(self):
-        return f"DB{self.pk:06d}" if self.pk else ""
+        return f"{'LK' if self.is_walk_in else 'DB'}{self.pk:06d}" if self.pk else ""
 
     @property
     def duration_minutes(self):

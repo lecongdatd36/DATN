@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Bếp · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">NHÀ HÀNG</p>
+    <div class="d-flex flex-wrap justify-content-between gap-3 mb-3"><h1 class="h2 mb-0">Bếp — Món cần xử lý</h1><a class="btn btn-outline-primary" href="{{ request.get_full_path }}">Cập nhật danh sách</a></div>
+    <p class="text-secondary">Ưu tiên theo giờ gửi món. Món đã xong chờ Phục vụ giao cho khách; món đã phục vụ hoặc đã hủy không còn trong danh sách.</p>
+    {% include 'menu/includes/filters.html' %}
+    <p class="small text-secondary">{{ page_obj.paginator.count }} dòng món · Cập nhật lúc {{ checked_at|date:'d/m/Y H:i:s' }}.</p>
+    <div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0">
+        <thead><tr><th>Bàn / đơn</th><th>Món</th><th>Số lượng</th><th>Ghi chú</th><th>Gửi lúc</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+        <tbody>{% for item in page_obj %}<tr><td><strong>{{ item.order.booking.table.code }}</strong><span class="d-block small">{{ item.order.order_code }} · #{{ item.pk }}</span></td><td class="text-break">{{ item.dish_name }}</td><td>{{ item.quantity }} {{ item.unit_name }}</td><td class="text-break fw-semibold">{{ item.note|default:'—'|linebreaksbr }}</td><td class="text-nowrap">{{ item.sent_at|date:'d/m H:i' }}</td><td>{{ item.get_status_display }}</td><td>{% if item.status == 'SENT' %}<a class="btn btn-sm btn-primary" href="{% url 'orders:transition_item' item.order_id item.pk 'COOKING' %}">Bắt đầu làm</a>{% elif item.status == 'COOKING' %}<a class="btn btn-sm btn-primary" href="{% url 'orders:transition_item' item.order_id item.pk 'READY' %}">Đã xong</a>{% else %}<span class="text-secondary small">Chờ giao món</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="text-center py-5">Không có món cần xử lý theo bộ lọc này.</td></tr>{% endfor %}</tbody>
+    </table></div></div>{% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

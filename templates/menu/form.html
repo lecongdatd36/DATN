@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}{% if object %}Sửa{% else %}Thêm{% endif %} {{ entity_label }} · QLNH{% endblock %}
 {% block content %}
 <section class="container-fluid px-3 px-md-4 pb-5">
@@ -9,7 +10,11 @@
         {% if not form.fields.category.queryset.exists or not form.fields.unit.queryset.exists %}<div class="alert alert-info">Cần có <a href="{% url 'menu:category_create' %}">nhóm món</a> và <a href="{% url 'menu:unit_create' %}">đơn vị tính</a> đang sử dụng trước khi thêm món.</div>{% endif %}
         {% if object and not object.can_toggle_availability %}<p class="alert alert-warning">Món đang ngừng bán hoặc danh mục đã ngừng sử dụng. Kiểm tra nhóm món, đơn vị tính và trạng thái trước khi mở bán lại.</p>{% endif %}
         {% endif %}
-        <form method="post" class="project-card p-3 p-md-4" novalidate>{% csrf_token %}{% include 'includes/form_fields.html' %}<div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Lưu {{ entity_label }}</button><a class="btn btn-outline-secondary" href="{{ list_url }}">Hủy</a></div></form>
+        <form method="post" enctype="multipart/form-data" class="project-card p-3 p-md-4" novalidate>
+            {% if entity_label == 'món' %}<div class="mb-4" data-upload-preview data-original-url="{{ saved_image_url }}" data-placeholder-url="{% static 'images/dish-placeholder.svg' %}"><img class="dish-photo dish-photo-preview" src="{% if saved_image_url %}{{ saved_image_url }}{% else %}{% static 'images/dish-placeholder.svg' %}{% endif %}" alt="Ảnh món đang chọn" width="320" height="240" decoding="async"><p class="small text-secondary mt-2 mb-0">Ảnh đại diện của món. Ảnh mới chỉ được lưu khi bạn bấm Lưu món.</p></div>{% endif %}
+            {% csrf_token %}{% include 'includes/form_fields.html' %}<div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Lưu {{ entity_label }}</button><a class="btn btn-outline-secondary" href="{{ list_url }}">Hủy</a></div>
+        </form>
     </div></div>
 </section>
 {% endblock %}
+{% block extra_js %}<script src="{% static 'js/dish-photos.js' %}" defer></script>{% endblock %}

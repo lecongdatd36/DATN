@@ -59,7 +59,7 @@ def booking_list(*, q="", date=None, status="", table=None):
             criteria |= Q(customer_phone=normalize_phone(q))
         except ValidationError:
             pass
-        match = re.fullmatch(r"DB([0-9]{1,18})", q, re.IGNORECASE)
+        match = re.fullmatch(r"(?:DB|LK)([0-9]{1,18})", q, re.IGNORECASE)
         if match:
             criteria |= Q(pk=int(match.group(1)))
         result = result.filter(criteria)

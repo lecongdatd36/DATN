@@ -2,7 +2,7 @@
 
 Đồ án tốt nghiệp xây dựng bằng Django Templates và PostgreSQL tại `D:\DOANTOTNGHIEP`. Project Django chính là `QLNH`; mã nguồn được khởi tạo mới.
 
-**Trạng thái: GIAI ĐOẠN 7 — Thực đơn, cập nhật ngày 21/09/2026.** Có quản lý tài khoản, nhân sự, khách hàng, khu vực, bàn, đặt bàn và thực đơn; giao diện tiếng Việt. Khách hàng chỉ nhập họ tên và số điện thoại. Các nghiệp vụ đơn hàng, kho, thanh toán, báo cáo và AI chưa triển khai. Chi tiết kiểm chứng: [báo cáo Giai đoạn 7](docs/stage-7-report.md).
+**Trạng thái: GIAI ĐOẠN 8 — Gọi món, Đơn hàng và Bếp, cập nhật ngày 23/09/2026.** Có quản lý tài khoản, nhân sự, khách hàng, khu vực, bàn, đặt bàn, thực đơn, gọi món và xử lý món tại Bếp; giao diện tiếng Việt. Đơn tính tiền tạm tính và chuyển chờ thanh toán; chưa có thu tiền, hóa đơn, kho, báo cáo hoặc AI. Chi tiết kiểm chứng: [báo cáo Giai đoạn 8](docs/stage-8-report.md).
 
 ## Công nghệ
 
@@ -41,7 +41,8 @@ D:\DOANTOTNGHIEP/
 │   ├── customers/             # Khách hàng, phân quyền và nhật ký
 │   ├── seating/               # Khu vực, bàn, phân quyền và nhật ký
 │   ├── bookings/              # Lịch đặt, nhận khách và nhật ký
-│   └── menu/                  # Nhóm món, đơn vị tính, món, giá và trạng thái
+│   ├── menu/                  # Nhóm món, đơn vị tính, món, giá và trạng thái
+│   └── orders/                # Gọi món, đơn theo lượt khách, hàng đợi Bếp
 ├── core/
 │   ├── permissions.py
 │   ├── decorators.py
@@ -56,6 +57,7 @@ D:\DOANTOTNGHIEP/
 │   ├── seating/
 │   ├── bookings/
 │   ├── menu/
+│   ├── orders/
 │   └── includes/
 ├── static/
 │   ├── css/
@@ -76,7 +78,7 @@ D:\DOANTOTNGHIEP/
     └── sequence/
 ```
 
-Các app `accounts`, `employees`, `customers`, `seating`, `bookings` và `menu` tách model, form/validation, truy vấn đọc (`selectors.py`), nghiệp vụ thay đổi dữ liệu (`services.py`), quyền và request/response. `core/` cung cấp chính sách quyền, khóa giao dịch bàn/lịch đặt và xử lý lỗi form dùng chung. Các module còn lại được tạo khi tới giai đoạn tương ứng.
+Các app `accounts`, `employees`, `customers`, `seating`, `bookings`, `menu` và `orders` tách model, form/validation, truy vấn đọc (`selectors.py`), nghiệp vụ thay đổi dữ liệu (`services.py`), quyền và request/response. `core/` cung cấp chính sách quyền, khóa giao dịch bàn/lịch đặt, khóa thực đơn và xử lý lỗi form dùng chung. Các module còn lại được tạo khi tới giai đoạn tương ứng.
 
 ## Chuẩn bị Python và môi trường ảo
 
@@ -255,7 +257,7 @@ Tên hiển thị vị trí `MANAGER` là **Quản lí**; superuser hiển thị
 - Các service ghi nhân sự dùng transaction và khóa PostgreSQL dùng chung để tránh cấp trùng mã khi tạo đồng thời. Mã tự sinh không sử dụng lại mã còn trong nhật ký.
 - Nút **Xóa** có trên danh sách và chi tiết tài khoản, dẫn tới trang xác nhận `/tai-khoan/quan-ly/<id>/xoa/`. Chỉ POST có CSRF mới xóa; GET không thay đổi dữ liệu. Xóa được tài khoản thiếu hồ sơ trong phạm vi quyền của superuser.
 - Xóa tài khoản và Xóa nhân viên dùng chung service: xóa User cùng hồ sơ liên kết trong một transaction, ghi nhật ký xóa tài khoản và giữ snapshot lịch sử nhân viên. Từ chối đối tượng được bảo vệ hoặc có liên kết `PROTECT`/`RESTRICT`; rollback nếu ghi nhật ký hoặc xóa thất bại.
-- Nếu tài khoản đã thực hiện thao tác có nhật ký Django (`LogEntry.user`), hệ thống yêu cầu khóa thay vì xóa để tránh Django xóa dây chuyền lịch sử của người đó. Khi thêm đơn hàng/hóa đơn, quan hệ nhân viên phải dùng `PROTECT`; ưu tiên nghỉ việc để giữ lịch sử.
+- Nếu tài khoản đã thực hiện thao tác có nhật ký Django (`LogEntry.user`), hệ thống yêu cầu khóa thay vì xóa để tránh Django xóa dây chuyền lịch sử của người đó. Tài khoản đã mở đơn hàng được bảo vệ bằng `PROTECT`; ưu tiên khóa/nghỉ việc để giữ lịch sử. Quan hệ nhân viên với hóa đơn khi bổ sung cũng cần được bảo vệ.
 
 ## Khách hàng
 
@@ -271,7 +273,7 @@ Vào menu **Khách hàng** hoặc `/khach-hang/`. Form thêm/sửa chỉ gồm *
 - Tìm theo mã khách, họ tên hoặc số điện thoại; 20 kết quả/trang.
 - Chuẩn hóa số điện thoại nhập có dấu cách, dấu chấm, ngoặc, gạch ngang hoặc mã `+84` về dạng bắt đầu bằng `0`, dài 10–11 chữ số. Một số điện thoại chỉ có một hồ sơ; chặn trùng tại form, service và database, kể cả tạo đồng thời.
 - Thêm/sửa/xóa dùng POST có CSRF và kiểm tra quyền lại ở service. Thay đổi dữ liệu và nhật ký nằm trong cùng transaction; lưu lại mà không đổi thông tin không tạo thêm nhật ký.
-- Xóa giữ mã/tên khách và tên đăng nhập người thực hiện trong nhật ký; từ chối nếu có liên kết `PROTECT`/`RESTRICT`. Khách đã có lịch đặt bàn được bảo vệ, kể cả lịch đã hủy. Khi triển khai đơn hàng cũng cần khai báo liên kết bảo vệ.
+- Xóa giữ mã/tên khách và tên đăng nhập người thực hiện trong nhật ký; từ chối nếu có liên kết `PROTECT`/`RESTRICT`. Khách đã có lịch đặt bàn được bảo vệ, kể cả lịch đã hủy. Đơn hàng bảo vệ lượt khách bằng `PROTECT`, giữ liên kết lịch sử này.
 - `/khach-hang/nhat-ky/` tìm theo mã/tên khách/người thực hiện và lọc hành động, xem được cả khách đã xóa. Django Admin chỉ tra cứu; thêm/sửa/xóa qua màn hình Khách hàng.
 - Migration `customers.0002_seed_customer_permissions` cấp quyền cho các nhóm có sẵn, hoạt động cả trên database mới. Quyền nhân sự không thay đổi.
 
@@ -300,7 +302,7 @@ Từ Giai đoạn 6, ngừng khu vực/bàn, chuyển khu vực hoặc giảm s�
 1. Tạo hồ sơ khách (họ tên và số điện thoại) nếu chưa có.
 2. Vào **Đặt bàn → Tìm bàn phù hợp**, nhập giờ đến và số khách. Hệ thống tự dùng thời lượng mặc định (ban đầu 120 phút); chỉ mở **Điều chỉnh thời lượng dự kiến** khi cần thay đổi. Chọn bàn, điền số điện thoại khách rồi lưu. Có thể tạo trực tiếp từ **Thêm đặt bàn** hoặc từ trang chi tiết khách hàng.
 3. Lịch mới ở trạng thái **Chờ xác nhận**, đã giữ chỗ. Sau khi thống nhất với khách, chọn **Xác nhận đặt bàn**.
-4. Chọn **Nhận khách** khi khách thực sự đến, trạng thái chuyển **Đang phục vụ**. Có thể nhận sớm trong ngày hẹn nếu bàn trống và không vướng lịch khác. Chọn **Hoàn tất** khi khách rời bàn; hệ thống lưu giờ nhận/giờ rời thực tế, chưa có thanh toán ở bước này.
+4. Chọn **Nhận khách** khi khách thực sự đến, trạng thái chuyển **Đang phục vụ**. Có thể nhận sớm trong ngày hẹn nếu bàn trống và không vướng lịch khác. Chọn **Mở đơn / gọi món** để phục vụ. **Hoàn tất** chỉ cho phép khi khách rời bàn và không còn đơn đang phục vụ/chờ thanh toán; hệ thống lưu giờ nhận/giờ rời thực tế.
 5. Lịch chưa nhận khách có thể hủy, hoặc đánh dấu **Không đến** từ giờ hẹn trở đi. Hai trạng thái này giải phóng lịch, giữ hồ sơ và nhật ký.
 
 - `/dat-ban/`: tìm theo mã đặt, tên/điện thoại khách, mã bàn; lọc ngày đến, trạng thái, bàn và phân trang.
@@ -330,7 +332,22 @@ Vào **Thực đơn** hoặc `/thuc-don/`.
 - **Còn món** chỉ áp dụng khi cả nhóm và đơn vị đang hoạt động. Ngừng danh mục khiến món hiển thị **Tạm ngừng theo danh mục**; mở lại danh mục giữ nguyên trạng thái riêng của món, không tự chuyển món hết sang còn.
 - Superuser/Quản lí quản lý danh mục, giá và xem nhật ký; Phục vụ/Thu ngân chỉ xem; Bếp xem và đổi còn/hết; Kho chưa có quyền thực đơn. Quyền kiểm tra cả giao diện, GET/POST và service; cờ `is_staff` riêng lẻ không cấp quyền.
 - Form cũ bị từ chối nếu dữ liệu đã thay đổi. Thay đổi giá ghi cả trước/sau; thao tác và nhật ký cùng transaction. Không có thao tác xóa vĩnh viễn; danh mục có món được bảo vệ bằng PROTECT. Admin chỉ xem.
-- Chưa có gọi món, trừ kho, combo, nhiều mức giá, ảnh món hoặc thuế/phí. Trạng thái hết món do nhân viên cập nhật, chưa suy ra từ tồn kho. Khi triển khai đơn hàng phải lưu riêng tên, đơn vị và giá tại thời điểm gọi món.
+- Đơn hàng lưu riêng tên, mã, đơn vị và giá tại lúc thêm món. Chưa có trừ kho, combo, nhiều mức giá, ảnh món hoặc thuế/phí. Trạng thái hết món do nhân viên cập nhật, chưa suy ra từ tồn kho.
+
+## Gọi món, đơn hàng và Bếp
+
+1. Khách đặt trước: nhận khách tại **Đặt bàn**, rồi **Mở đơn / gọi món**. Khách trực tiếp: tại **Bàn → Nhận khách trực tiếp** hoặc **Đơn hàng → Khách không đặt trước**; nhập bàn, số khách và thời lượng dự kiến, tên/số điện thoại không bắt buộc. Hệ thống kiểm tra lịch và nhận khách, mở đơn trong cùng giao dịch.
+2. **Thêm món** còn phục vụ, nhập số lượng 1–100 và ghi chú. Có thể sửa số lượng/ghi chú khi chưa gửi Bếp. Mỗi lần gọi thêm tạo dòng riêng, giữ giá thời điểm gọi, kể cả giá thực đơn thay đổi sau đó.
+3. **Gửi Bếp**: xem lại danh sách món rồi xác nhận gửi tất cả dòng chưa gửi. Kiểm tra lại món/danh mục còn phục vụ; nếu một món không hợp lệ thì chưa gửi cả đợt.
+4. **Bếp** xem hàng đợi theo giờ gửi, bàn, món, số lượng và ghi chú; chọn **Bắt đầu làm → Đã xong**. Phục vụ tại chi tiết đơn chọn **Đã phục vụ** khi giao cho khách. Trang Bếp/đơn có nút cập nhật thủ công.
+5. Sau khi phục vụ xong tất cả món chưa hủy, chuyển đơn **Chờ thanh toán**. Có thể **Tiếp tục gọi món** nếu khách gọi thêm. Giai đoạn này chưa thu tiền, chưa có trạng thái đã thanh toán; bàn tiếp tục được giữ khi đơn chờ thanh toán.
+
+- Quản lí/Superuser có toàn bộ quyền; Phục vụ/Thu ngân mở đơn, gọi/sửa món chưa gửi, gửi Bếp, xác nhận phục vụ; Bếp chỉ xem hàng đợi và cập nhật tiến độ làm món. Bếp không xem thông tin liên hệ khách hoặc chi tiết tiền đơn. Kho chưa có quyền đơn hàng.
+- Hủy món luôn cần lý do. Phục vụ/Thu ngân hủy món chưa gửi hoặc đã gửi nhưng chưa bắt đầu làm; món đang làm/đã xong/đã phục vụ chỉ Quản lí hủy. Món hủy giữ lịch sử và không cộng tiền tạm tính.
+- Chỉ hủy đơn khi không còn món chưa hủy và có lý do; sau hủy đơn mới được hoàn tất lượt khách để giải phóng bàn. Không xóa đơn/món hoặc giả lập thanh toán để bỏ qua bước thu tiền.
+- Mỗi lượt có một đơn duy nhất. Lượt khách trực tiếp dùng mã `LK...`, khách đặt trước dùng `DB...`, đơn dùng `DH...`. Không tạo khách hàng giả cho khách vãng lai; nếu cung cấp số điện thoại trùng khách đã lưu thì liên kết hồ sơ đó.
+- Form có phiên bản chống ghi đè/gửi lặp; quyền kiểm tra ở giao diện và service. Thay đổi và nhật ký cùng transaction. Khóa theo thứ tự bàn/lịch → thực đơn → tài khoản → bản ghi, giúp việc nhận khách/gọi món đồng bộ với bàn và thực đơn.
+- Tên, mã, đơn vị, giá trong dòng món là snapshot; giá sửa sau không đổi món đã gọi. Tổng tạm tính không gồm món hủy, thuế/phí/giảm giá. Chưa có tách/ghép đơn, chuyển bàn, gọi món theo phần nhỏ, thanh toán hoặc trừ kho.
 
 ## Kiểm tra và chạy ứng dụng
 
@@ -344,7 +361,7 @@ python manage.py runserver 127.0.0.1:8000
 
 Mở [http://127.0.0.1:8000/](http://127.0.0.1:8000/) để kiểm tra trang nền tảng. Dừng server bằng `Ctrl+C`.
 
-`check` kiểm tra cấu hình Django. Có 204 test cho Accounts, Employees, Customers, Seating, Bookings và Menu, gồm phân quyền, form, giá bán, trạng thái món/bàn, thời lượng mặc định/tùy chỉnh, cấu hình, nhận khách sớm, mốc giờ thực tế, cập nhật danh sách, cảnh báo quá giờ, phiên đăng nhập, nhật ký, rollback và thao tác đồng thời bằng các kết nối PostgreSQL riêng. Chạy riêng module: `python scripts/run_tests.py apps.menu`. Có thêm 6 kiểm thử logic tự cập nhật bằng Node: `node --test scripts/test_table_live.cjs`; không cần cài thêm thư viện và không thay thế kiểm tra bố cục trên trình duyệt.
+`check` kiểm tra cấu hình Django. Có 239 test cho Accounts, Employees, Customers, Seating, Bookings, Menu và Orders, gồm phân quyền, form, giá bán/snapshot, trạng thái món/bàn, hàng đợi Bếp, khách trực tiếp, cấu hình, nhận khách sớm, mốc giờ thực tế, cập nhật danh sách, cảnh báo quá giờ, phiên đăng nhập, nhật ký, rollback và thao tác đồng thời bằng các kết nối PostgreSQL riêng. Chạy riêng module: `python scripts/run_tests.py apps.orders`. Có thêm 6 kiểm thử logic tự cập nhật bằng Node: `node --test scripts/test_table_live.cjs`; không cần cài thêm thư viện và không thay thế kiểm tra bố cục trên trình duyệt.
 
 `scripts/run_tests.py` tạo database kiểm thử PostgreSQL với tên UUID riêng mỗi lần chạy, chạy toàn bộ migration từ đầu và dọn database khi hoàn tất. Tài khoản PostgreSQL cần quyền tạo database. Lệnh chuẩn `manage.py test` vẫn dùng tên mặc định `test_QLNH_DB`; nếu tên đó tồn tại mà không rõ nguồn gốc, không chấp nhận yêu cầu xóa của test runner.
 
@@ -354,6 +371,6 @@ Thư mục `templates/` chứa template dùng chung; `static/` chứa CSS, JavaS
 
 Repository Git đã có lịch sử commit. `.gitignore` loại trừ `.env`, `.venv/`, `__pycache__/`, `*.pyc`, `media/`, `.idea/` và `.vscode/` cùng các tệp phát sinh cục bộ.
 
-Phạm vi hiện tại là **GIAI ĐOẠN 7 — Thực đơn**. Đề xuất module mới tiếp theo: Gọi món/Đơn hàng gắn với bàn và lượt khách, rồi Bếp/Thanh toán, Kho/Báo cáo và AI. Chưa triển khai các module này.
+Phạm vi hiện tại là **GIAI ĐOẠN 8 — Gọi món, Đơn hàng và Bếp**. Đề xuất tiếp theo: Hóa đơn/Thanh toán để đóng đơn và giải phóng bàn sau khi thu tiền, rồi Kho/Báo cáo và AI. Chưa triển khai các module này.
 
-Lịch sử: [Giai đoạn 1](docs/stage-1-report.md), [Giai đoạn 2](docs/stage-2-report.md), [Giai đoạn 3](docs/stage-3-report.md), [Giai đoạn 4](docs/stage-4-report.md), [Giai đoạn 5](docs/stage-5-report.md), [Giai đoạn 6](docs/stage-6-report.md). Hiện trạng và kiểm chứng mới nhất: [Giai đoạn 7](docs/stage-7-report.md). Chưa hoàn tất kiểm tra bố cục trực quan do công cụ Browser lỗi khởi tạo.
+Lịch sử: [Giai đoạn 1](docs/stage-1-report.md), [Giai đoạn 2](docs/stage-2-report.md), [Giai đoạn 3](docs/stage-3-report.md), [Giai đoạn 4](docs/stage-4-report.md), [Giai đoạn 5](docs/stage-5-report.md), [Giai đoạn 6](docs/stage-6-report.md), [Giai đoạn 7](docs/stage-7-report.md). Hiện trạng và kiểm chứng mới nhất: [Giai đoạn 8](docs/stage-8-report.md). Chưa hoàn tất kiểm tra bố cục trực quan do công cụ Browser lỗi khởi tạo.

@@ -2,6 +2,7 @@ from django import forms
 from django.db.models import Q
 from apps.accounts.forms import BootstrapFormMixin
 from .models import Category, Unit, Dish
+from .images import validate_upload_size
 
 
 class RevisionForm(BootstrapFormMixin, forms.ModelForm):
@@ -36,9 +37,13 @@ class UnitForm(RevisionForm):
 
 
 class DishForm(RevisionForm):
+    image = forms.FileField(label="Ảnh món", required=False, validators=[validate_upload_size],
+        widget=forms.ClearableFileInput(attrs={"accept": "image/jpeg,image/png,image/webp", "data-dish-upload": ""}),
+        help_text="JPEG, PNG hoặc WebP; tối đa 5 MB, 20 triệu điểm ảnh. Ảnh được tự thu nhỏ. Bỏ trống để giữ ảnh hiện tại, chọn Xóa để gỡ ảnh.")
+
     class Meta:
         model = Dish
-        fields = ("code", "name", "category", "unit", "price", "status", "description")
+        fields = ("code", "name", "category", "unit", "price", "status", "description", "image")
         widgets = {"description": forms.Textarea(attrs={"rows": 3}), "price": forms.NumberInput(attrs={"min": 1, "max": 999999999, "step": 1})}
         help_texts = {"price": "Nhập số nguyên đồng, ví dụ 85000. Giá bán lớn hơn 0.", "code": "Mã duy nhất, ví dụ M001. Chữ thường được đổi thành chữ hoa.", "status": "Hết món: tạm hết, có thể mở lại. Ngừng bán: chỉ Quản lí được mở lại."}
 

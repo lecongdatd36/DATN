@@ -9,11 +9,12 @@
                     <span class="badge text-bg-danger">Đang phục vụ</span>
                     {% if table.current_visit_end <= status_checked_at %}<span class="small text-danger d-block mt-1">Đã quá giờ dự kiến, chưa rời bàn</span>{% endif %}
                     {% if access.can_view_bookings %}<a class="small d-block mt-1" href="{% url 'bookings:detail' table.current_visit_id %}">Xem lượt khách</a>{% endif %}
+                    {% if access.can_manage_orders %}<a class="small d-block mt-1" href="{% url 'orders:open' %}?booking={{ table.current_visit_id }}">Mở / xem đơn</a>{% endif %}
                 {% elif table.current_status == 'reserved' %}
                     <span class="badge text-bg-warning">Đang giữ chỗ</span><span class="small text-secondary d-block mt-1">Đã đến giờ hẹn, chưa nhận khách</span>
                     {% if access.can_view_bookings %}<a class="small d-block mt-1" href="{% url 'bookings:detail' table.held_booking_id %}">Xem lịch đang giữ chỗ</a>{% endif %}
                 {% elif table.current_status == 'inactive' %}<span class="badge text-bg-secondary">Ngừng sử dụng</span>
-                {% else %}<span class="badge text-bg-success">Trống hiện tại</span>{% endif %}
+                {% else %}<span class="badge text-bg-success">Trống hiện tại</span>{% if access.can_manage_orders %}<a class="small d-block mt-1" href="{% url 'orders:walk_in' %}?table={{ table.pk }}">Nhận khách trực tiếp</a>{% endif %}{% endif %}
                 {% if not table.is_available %}<span class="small text-secondary d-block mt-1">{% if not table.area.is_active %}Khu vực đã ngừng sử dụng{% else %}Bàn đã ngừng sử dụng{% endif %}</span>{% endif %}
                 {% if table.next_booking_id %}<span class="small d-block mt-2">Có lịch lúc {{ table.next_booking_start|date:'d/m/Y H:i' }}{% if access.can_view_bookings %} · <a href="{% url 'bookings:detail' table.next_booking_id %}">Xem lịch</a>{% endif %}</span>{% endif %}
             </td>

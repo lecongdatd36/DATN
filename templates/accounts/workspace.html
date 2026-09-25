@@ -32,6 +32,8 @@
                     {% if access.can_view_tables %}<a class="btn btn-outline-primary" href="{% url 'seating:table_list' %}">Bàn</a>{% endif %}
                     {% if access.can_view_bookings %}<a class="btn btn-outline-primary" href="{% url 'bookings:list' %}">Đặt bàn</a>{% endif %}
                     {% if access.can_view_menu %}<a class="btn btn-outline-primary" href="{% url 'menu:dish_list' %}">Thực đơn</a>{% endif %}
+                    {% if access.can_view_orders %}<a class="btn btn-outline-primary" href="{% url 'orders:list' %}">Đơn hàng</a>{% endif %}
+                    {% if access.can_work_kitchen %}<a class="btn btn-outline-primary" href="{% url 'orders:kitchen' %}">Bếp</a>{% endif %}
                 </div>
             </div>
         </div>

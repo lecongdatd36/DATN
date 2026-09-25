@@ -115,10 +115,22 @@ class DishFormView(CatalogFormView):
     kind = "dish"
     entity_label = "món"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        self.saved_image_url = self.object.thumbnail.url if self.object and self.object.thumbnail else ""
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["saved_image_url"] = self.saved_image_url
+        return context
+
     def save(self, data):
         data = data.copy()
         data["category_id"] = data.pop("category").pk
         data["unit_id"] = data.pop("unit").pk
+        if data.get("image") is not False and "image" not in self.request.FILES:
+            data["image"] = None
         return save_dish(actor=self.request.user, dish_id=self.object.pk if self.object else None, **data)
 
 

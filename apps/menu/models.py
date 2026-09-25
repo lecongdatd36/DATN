@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator, MaxLeng
 from django.db import models
 from django.db.models.functions import Lower
 from django.urls import reverse
+from .images import validate_upload_size
 
 
 class CatalogEntry(models.Model):
@@ -52,6 +53,8 @@ class Dish(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name="dishes", verbose_name="Đơn vị tính")
     price = models.DecimalField("Giá bán (đồng)", max_digits=9, decimal_places=0, validators=[MinValueValidator(1), MaxValueValidator(999999999)])
     description = models.TextField("Mô tả", blank=True, max_length=2000, validators=[MaxLengthValidator(2000)])
+    image = models.ImageField("Ảnh món", upload_to="dishes/", blank=True, validators=[validate_upload_size])
+    thumbnail = models.ImageField(upload_to="dishes/", blank=True, editable=False)
     status = models.CharField("Trạng thái", max_length=10, choices=Status.choices, default=Status.AVAILABLE)
     revision = models.PositiveIntegerField(default=1, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)

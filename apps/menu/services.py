@@ -1,9 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import connection, transaction
+from django.db import transaction
+from core.menu_lock import lock_menu
 
 from .models import Category, Unit, Dish, MenuActivityLog
 from .permissions import has_menu_permission
+from .images import prepare_dish_image, delete_unreferenced_images
 
 
 CATALOG_MODELS = {"category": Category, "unit": Unit}
@@ -11,8 +13,7 @@ CATALOG_MODELS = {"category": Category, "unit": Unit}
 
 def _lock_actor(actor, permission="manage_menu"):
     # One lock for the catalog: closing a category cannot race adding a dish.
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [81723003])
+    lock_menu()
     if not actor.is_authenticated or not actor.pk:
         raise PermissionDenied("Bạn không có quyền thực hiện thao tác này.")
     actor = get_user_model().objects.select_for_update().filter(pk=actor.pk).first()
@@ -56,16 +57,30 @@ def save_catalog(*, actor, kind, name, is_active, object_id=None, expected_revis
 
 
 def _snapshot(dish):
-    return f"{dish}; nhóm {dish.category.name}; đơn vị {dish.unit.name}; giá {dish.price} đồng; {dish.get_status_display()}; mô tả: {dish.description}"
+    return f"{dish}; nhóm {dish.category.name}; đơn vị {dish.unit.name}; giá {dish.price} đồng; {dish.get_status_display()}; mô tả: {dish.description}; ảnh: {dish.image.name or 'chưa có'}"
 
 
-@transaction.atomic
-def save_dish(*, actor, code, name, category_id, unit_id, price, status, description="", dish_id=None, expected_revision=None):
+def save_dish(*, actor, code, name, category_id, unit_id, price, status, description="", dish_id=None, expected_revision=None, image=None):
+    written = []
+    try:
+        with transaction.atomic():
+            return _save_dish(actor=actor, code=code, name=name, category_id=category_id, unit_id=unit_id, price=price,
+                status=status, description=description, dish_id=dish_id, expected_revision=expected_revision, image=image, written=written)
+    except Exception:
+        # Files do not participate in DB rollback. Remove only this attempt's UUID files.
+        storage = Dish._meta.get_field("image").storage
+        for filename in written:
+            storage.delete(filename)
+        raise
+
+
+def _save_dish(*, actor, code, name, category_id, unit_id, price, status, description, dish_id, expected_revision, image, written):
     actor = _lock_actor(actor)
     dish = Dish.objects.select_for_update().get(pk=dish_id) if dish_id is not None else Dish()
     _check_revision(dish, expected_revision)
     created = dish.pk is None
-    old = None if created else (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.description)
+    old_images = (dish.image.name, dish.thumbnail.name)
+    old = None if created else (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.description, *old_images)
     before = "" if created else _snapshot(dish)
     for field, model, pk in (("category", Category, category_id), ("unit", Unit, unit_id)):
         parent = model.objects.filter(pk=pk).first()
@@ -78,12 +93,22 @@ def save_dish(*, actor, code, name, category_id, unit_id, price, status, descrip
     dish.name, dish.description = _text(name), description.strip() if isinstance(description, str) else ""
     dish.price, dish.status = price, status
     dish.full_clean()
-    new = (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.description)
+    if image is False:
+        dish.image, dish.thumbnail = "", ""
+    elif image is not None:
+        prepared = prepare_dish_image(image)
+        storage = Dish._meta.get_field("image").storage
+        for filename, content in prepared:
+            written.append(storage.save(filename, content))
+        dish.image, dish.thumbnail = written
+    new = (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.description, dish.image.name, dish.thumbnail.name)
     if created or old != new:
         if not created:
             dish.revision += 1
         dish.save()
         _log(actor, dish, "DISH", "Thêm mới" if created else "Cập nhật", (f"Trước: {before}\nSau: " if before else "") + _snapshot(dish))
+        if old_images != (dish.image.name, dish.thumbnail.name):
+            transaction.on_commit(lambda: delete_unreferenced_images(old_images), robust=True)
     return dish
 
 

@@ -54,6 +54,9 @@ class BookingDetailView(BookingPermissionMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         booking = self.object
+        from apps.orders.models import Order
+        context["visit_order"] = Order.objects.filter(booking=booking).first()
+        context["order_blocks_completion"] = context["visit_order"] is not None and context["visit_order"].status != Order.Status.VOID
         now = timezone.now()
         context["overdue"] = booking.status == Booking.Status.SEATED and booking.ends_at <= now
         if context["overdue"]:
@@ -63,6 +66,8 @@ class BookingDetailView(BookingPermissionMixin, DetailView):
         context["actions"] = []
         if has_booking_permission(self.request.user, "manage_booking"):
             for target in TRANSITIONS.get(booking.status, ()):
+                if target == Booking.Status.COMPLETED and context["order_blocks_completion"]:
+                    continue
                 if target == Booking.Status.NO_SHOW and now < booking.starts_at:
                     continue
                 if target == Booking.Status.SEATED and (now >= booking.ends_at or (now < booking.starts_at and timezone.localdate(now) != timezone.localdate(booking.starts_at))):

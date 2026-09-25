@@ -10,7 +10,8 @@
     <div class="project-card p-3 p-md-4 mb-4">
         <dl class="row account-details mb-0">
             <dt class="col-sm-4">Khách hàng</dt><dd class="col-sm-8 text-break">{{ booking.customer_name }}</dd>
-            <dt class="col-sm-4">Số điện thoại khi đặt</dt><dd class="col-sm-8">{{ booking.customer_phone }}</dd>
+            <dt class="col-sm-4">Số điện thoại</dt><dd class="col-sm-8">{{ booking.customer_phone|default:'Không cung cấp' }}</dd>
+            {% if booking.is_walk_in %}<dt class="col-sm-4">Loại lượt khách</dt><dd class="col-sm-8">Khách không đặt trước</dd>{% endif %}
             <dt class="col-sm-4">Bàn / khu vực</dt><dd class="col-sm-8">{{ booking.table.code }} / {{ booking.table.area.name }}</dd>
             <dt class="col-sm-4">Số khách</dt><dd class="col-sm-8">{{ booking.party_size }}</dd>
             <dt class="col-sm-4">Giờ đến</dt><dd class="col-sm-8">{{ booking.starts_at|date:'d/m/Y H:i' }}</dd>
@@ -20,11 +21,12 @@
             {% if booking.completed_at %}<dt class="col-sm-4">Khách rời bàn</dt><dd class="col-sm-8">{{ booking.completed_at|date:'d/m/Y H:i:s' }}</dd>{% endif %}
         </dl>
         <div class="d-flex flex-wrap gap-2 mt-3">
+            {% if visit_order and access.can_view_orders %}<a class="btn btn-primary" href="{{ visit_order.get_absolute_url }}">Đơn {{ visit_order.order_code }}</a>{% elif booking.status == 'SEATED' and access.can_manage_orders %}<a class="btn btn-primary" href="{% url 'orders:open' %}?booking={{ booking.pk }}">Mở đơn / gọi món</a>{% endif %}
             {% if access.can_manage_bookings and booking.can_edit %}<a class="btn btn-outline-primary" href="{% url 'bookings:update' booking.pk %}">Sửa lịch</a>{% endif %}
             {% for action in actions %}<a class="btn {% if action.target == 'CANCELLED' or action.target == 'NO_SHOW' %}btn-outline-danger{% else %}btn-primary{% endif %}" href="{% url 'bookings:transition' booking.pk action.target %}">{{ action.label }}</a>{% endfor %}
         </div>
         {% if early_arrival %}<p class="small text-secondary mt-3">Có thể nhận khách đến sớm trong ngày hẹn nếu bàn trống và không ảnh hưởng lịch khác. Giờ hẹn và giờ kết thúc dự kiến vẫn giữ nguyên.</p>{% endif %}
-        <p class="small text-secondary mt-3 mb-0">Chỉ bấm Nhận khách khi khách thực sự đến. Hoàn tất khi khách đã rời bàn; thao tác này chưa thực hiện thanh toán.</p>
+        {% if order_blocks_completion %}<p class="alert alert-warning mt-3 mb-0">Lượt khách còn đơn đang phục vụ hoặc chờ thanh toán. Cần xử lý đơn trước khi giải phóng bàn.</p>{% else %}<p class="small text-secondary mt-3 mb-0">Chỉ bấm Nhận khách khi khách thực sự đến. Hoàn tất khi khách đã rời bàn.</p>{% endif %}
     </div>
     {% if access.can_view_booking_logs %}
     <h2 class="h5 mb-3">Nhật ký đặt bàn</h2>

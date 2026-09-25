@@ -156,6 +156,9 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
             raise ValidationError("Bàn vẫn đang có khách. Hãy hoàn tất lượt trước hoặc chuyển sang bàn khác.")
         booking.seated_at = now
     elif target == Booking.Status.COMPLETED:
+        from apps.orders.models import Order
+        if Order.objects.filter(booking=booking).exclude(status=Order.Status.VOID).exists():
+            raise ValidationError("Lượt khách còn đơn đang phục vụ hoặc chờ thanh toán. Hãy xử lý đơn trước khi giải phóng bàn.")
         if booking.seated_at and now < booking.seated_at:
             raise ValidationError("Giờ hoàn tất không thể trước giờ nhận khách.")
         booking.completed_at = now
@@ -166,4 +169,28 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
     booking.revision += 1
     booking.save(update_fields=("status", "revision", "updated_at", "seated_at", "completed_at"))
     _log(actor, booking, booking.get_status_display(), f"{before} → {booking.get_status_display()}. " + _snapshot(booking))
+    return booking
+
+
+@transaction.atomic
+def seat_walk_in(*, actor, table_id, party_size, duration_minutes=None, customer_name="", customer_phone=""):
+    """Reuse the visit/occupancy rules without creating a fake customer record."""
+    actor = _lock_actor(actor)
+    table = DiningTable.objects.select_related("area").filter(pk=table_id).first()
+    if table is None:
+        raise ValidationError({"table": "Bàn không còn tồn tại."})
+    if Booking.objects.filter(table=table, status=Booking.Status.SEATED).exists():
+        raise ValidationError({"table": "Bàn vẫn đang có khách, kể cả khi đã quá giờ dự kiến."})
+    now = timezone.now()
+    phone = normalize_phone(customer_phone) if customer_phone else ""
+    customer = Customer.objects.filter(phone=phone).first() if phone else None
+    name = " ".join(customer_name.split()) if isinstance(customer_name, str) else ""
+    booking = Booking(table=table, customer=customer, is_walk_in=True,
+        customer_name=name or (customer.full_name if customer else "Khách vãng lai"), customer_phone=phone,
+        party_size=party_size, starts_at=now, ends_at=planned_end(now, default_duration_minutes() if duration_minutes is None else duration_minutes),
+        seated_at=now, status=Booking.Status.SEATED, created_by=actor)
+    booking.full_clean()
+    _validate_slot(booking)
+    booking.save()
+    _log(actor, booking, "Nhận khách không đặt trước", _snapshot(booking))
     return booking

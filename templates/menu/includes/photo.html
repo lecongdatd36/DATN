@@ -1,0 +1,2 @@
+{% load static %}
+{% if dish.thumbnail %}<img class="dish-photo dish-photo-small" src="{{ dish.thumbnail.url }}" alt="{{ dish.name }}" width="80" height="80" loading="lazy" decoding="async">{% else %}<img class="dish-photo dish-photo-small" src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa có ảnh món" width="80" height="80" loading="lazy" decoding="async">{% endif %}

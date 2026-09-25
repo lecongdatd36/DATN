@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load menu_money %}
+{% block title %}{{ order.order_code }} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">ĐƠN HÀNG · {{ order.get_status_display }}</p>
+    <div class="d-flex flex-wrap justify-content-between gap-3 mb-3"><h1 class="h2 mb-0">{{ order.order_code }} — Bàn {{ order.booking.table.code }}</h1><a class="btn btn-outline-secondary" href="{% url 'orders:list' %}">Danh sách đơn</a></div>
+    <p class="text-secondary text-break">{{ order.booking.customer_name }} · {{ order.booking.party_size }} khách · {% if access.can_view_bookings %}<a href="{{ order.booking.get_absolute_url }}">Lượt {{ order.booking.booking_code }}</a>{% else %}{{ order.booking.booking_code }}{% endif %} · <a href="{{ request.get_full_path }}">Cập nhật trạng thái món</a></p>
+    {% if order.status == 'AWAITING_PAYMENT' %}<p class="alert alert-info">Các món đã được phục vụ. Đơn đang chờ thanh toán, bàn vẫn đang sử dụng.</p>{% endif %}
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        {% if access.can_manage_orders %}
+        {% if order.status == 'OPEN' %}<a class="btn btn-primary" href="{% url 'orders:add_item' order.pk %}">Thêm món</a>{% if has_drafts %}<a class="btn btn-primary" href="{% url 'orders:send' order.pk %}">Gửi Bếp</a>{% endif %}{% if live_items %}<a class="btn btn-outline-primary" href="{% url 'orders:await' order.pk %}">Chờ thanh toán</a>{% else %}<a class="btn btn-outline-danger" href="{% url 'orders:void' order.pk %}">Hủy đơn</a>{% endif %}
+        {% elif order.status == 'AWAITING_PAYMENT' %}<a class="btn btn-outline-primary" href="{% url 'orders:reopen' order.pk %}">Tiếp tục gọi món</a>{% endif %}
+        {% endif %}
+    </div>
+    <div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0">
+        <thead><tr><th>Món / ghi chú</th><th>Số lượng</th><th class="text-end">Đơn giá</th><th class="text-end">Thành tiền</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+        <tbody>{% for item in order.items.all %}<tr class="{% if item.status == 'CANCELLED' %}text-secondary{% endif %}"><td class="text-break"><strong>{{ item.dish_name }}</strong><span class="small text-secondary d-block">{{ item.dish_code }} · Dòng #{{ item.pk }}</span>{% if item.note %}<span class="d-block">{{ item.note|linebreaksbr }}</span>{% endif %}{% if item.cancellation_reason %}<span class="d-block small text-danger">Lý do hủy: {{ item.cancellation_reason }}</span>{% endif %}</td><td>{{ item.quantity }} {{ item.unit_name }}</td><td class="text-end text-nowrap">{{ item.unit_price|dong }} đ</td><td class="text-end text-nowrap">{% if item.status == 'CANCELLED' %}<del>{{ item.subtotal|dong }} đ</del>{% else %}{{ item.subtotal|dong }} đ{% endif %}</td><td>{{ item.get_status_display }}</td><td><div class="d-flex flex-wrap gap-2">
+            {% if order.status == 'OPEN' and access.can_manage_orders %}
+            {% if item.status == 'DRAFT' %}<a class="btn btn-sm btn-outline-primary" href="{% url 'orders:edit_item' order.pk item.pk %}">Sửa</a>{% endif %}
+            {% if item.status == 'READY' %}<a class="btn btn-sm btn-primary" href="{% url 'orders:transition_item' order.pk item.pk 'SERVED' %}">Đã phục vụ</a>{% endif %}
+            {% if item.status != 'CANCELLED' %}{% if item.status == 'DRAFT' or item.status == 'SENT' or access.can_cancel_prepared_items %}<a class="btn btn-sm btn-outline-danger" href="{% url 'orders:transition_item' order.pk item.pk 'CANCELLED' %}">Hủy món</a>{% endif %}{% endif %}
+            {% endif %}
+        </div></td></tr>{% empty %}<tr><td colspan="6" class="text-center py-5">Chưa gọi món. Chọn Thêm món để bắt đầu.</td></tr>{% endfor %}</tbody>
+    </table></div><div class="p-3 text-end"><strong class="h5">Tạm tính: {{ order.total|dong }} đ</strong><p class="small text-secondary mb-0">Không tính món đã hủy. Chưa gồm thuế, phí hoặc giảm giá.</p></div></div>
+    {% if access.can_view_order_logs %}<h2 class="h5 mt-4">Nhật ký đơn</h2><div class="project-card overflow-hidden"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Thời gian</th><th>Thao tác</th><th>Người thực hiện</th><th>Nội dung</th></tr></thead><tbody>{% for log in log_page %}<tr><td class="text-nowrap">{{ log.created_at|date:'d/m/Y H:i:s' }}</td><td>{{ log.action }}</td><td>{{ log.actor_snapshot }}</td><td class="text-break">{{ log.description|linebreaksbr }}</td></tr>{% endfor %}</tbody></table></div></div>{% include 'includes/pagination.html' with page_obj=log_page %}{% endif %}
+</section>
+{% endblock %}
