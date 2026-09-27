@@ -9,6 +9,7 @@ class Order(models.Model):
     class Status(models.TextChoices):
         OPEN = "OPEN", "Đang phục vụ"
         AWAITING_PAYMENT = "AWAITING_PAYMENT", "Chờ thanh toán"
+        PAID = "PAID", "Đã thanh toán"
         VOID = "VOID", "Đã hủy"
 
     booking = models.OneToOneField("bookings.Booking", on_delete=models.PROTECT, related_name="order", verbose_name="Lượt khách")
@@ -22,8 +23,13 @@ class Order(models.Model):
         ordering = ("-created_at", "-pk")
         verbose_name = "đơn hàng"
         verbose_name_plural = "đơn hàng"
-        permissions = [("manage_order", "Mở đơn và gọi món"), ("work_kitchen", "Xử lý món tại Bếp"), ("cancel_prepared_item", "Hủy món đã bắt đầu làm")]
-        constraints = [models.CheckConstraint(condition=models.Q(status__in=["OPEN", "AWAITING_PAYMENT", "VOID"]), name="order_valid_status")]
+        permissions = [
+            ("manage_order", "Mở đơn và gọi món"),
+            ("collect_payment", "Thu tiền đơn hàng"),
+            ("work_kitchen", "Xử lý món tại Bếp"),
+            ("cancel_prepared_item", "Hủy món đã bắt đầu làm"),
+        ]
+        constraints = [models.CheckConstraint(condition=models.Q(status__in=["OPEN", "AWAITING_PAYMENT", "PAID", "VOID"]), name="order_valid_status")]
 
     @property
     def order_code(self):
@@ -84,6 +90,59 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.dish_name} × {self.quantity}"
+
+
+class Invoice(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Chưa thu tiền"
+        PAID = "PAID", "Đã thanh toán"
+        VOID = "VOID", "Hủy hóa đơn"
+
+    order = models.OneToOneField(Order, on_delete=models.PROTECT, related_name="invoice", verbose_name="Đơn hàng")
+    invoice_code = models.CharField("Mã hóa đơn", max_length=20, unique=True)
+    total = models.DecimalField("Tổng tiền", max_digits=12, decimal_places=0, default=0, validators=[MinValueValidator(0), MaxValueValidator(999999999999)])
+    paid_amount = models.DecimalField("Đã thu", max_digits=12, decimal_places=0, default=0, validators=[MinValueValidator(0), MaxValueValidator(999999999999)])
+    status = models.CharField("Trạng thái", max_length=20, choices=Status.choices, default=Status.PENDING)
+    payment_method = models.CharField("Phương thức thanh toán", max_length=20, blank=True, default="CASH")
+    created_at = models.DateTimeField("Thời gian tạo", auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    closed_at = models.DateTimeField("Thời gian chốt", null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        verbose_name = "hóa đơn"
+        verbose_name_plural = "hóa đơn"
+
+    @property
+    def remaining(self):
+        return self.total - self.paid_amount
+
+    def __str__(self):
+        return self.invoice_code
+
+
+class Payment(models.Model):
+    class Method(models.TextChoices):
+        CASH = "CASH", "Tiền mặt"
+        CARD = "CARD", "Thẻ"
+        TRANSFER = "TRANSFER", "Chuyển khoản"
+        OTHER = "OTHER", "Khác"
+
+    invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name="payments")
+    amount = models.DecimalField("Số tiền", max_digits=12, decimal_places=0, validators=[MinValueValidator(1), MaxValueValidator(999999999999)])
+    method = models.CharField("Phương thức", max_length=20, choices=Method.choices, default=Method.CASH)
+    reference = models.CharField("Ghi chú / mã giao dịch", max_length=100, blank=True)
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    actor_snapshot = models.CharField("Người thực hiện", max_length=150, blank=True)
+    created_at = models.DateTimeField("Thời gian thanh toán", auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        verbose_name = "phiếu thu"
+        verbose_name_plural = "phiếu thu"
+
+    def __str__(self):
+        return f"{self.amount} {self.method}"
 
 
 class OrderActivityLog(models.Model):

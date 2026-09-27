@@ -13,7 +13,7 @@ from django.views.generic import DetailView, FormView, ListView
 
 from core.forms import add_service_errors, filter_query_string
 from apps.bookings.models import Booking
-from .forms import OpenOrderForm, WalkInForm, AddItemForm, ItemEditForm, RevisionForm, ReasonForm, OrderFilterForm, KitchenFilterForm
+from .forms import OpenOrderForm, WalkInForm, AddItemForm, ItemEditForm, RevisionForm, ReasonForm, PaymentForm, OrderFilterForm, KitchenFilterForm
 from .models import Order, OrderItem
 from .permissions import has_order_permission
 from .selectors import order_list, kitchen_items
@@ -45,7 +45,8 @@ class OrderListView(OrderPermissionMixin, ListView):
 
 class OrderDetailView(OrderPermissionMixin, DetailView):
     order_permission = "view_order"
-    queryset = Order.objects.select_related("booking__table").prefetch_related(Prefetch("items", queryset=OrderItem.objects.select_related("dish")))
+    queryset = Order.objects.select_related("booking__table", "invoice").prefetch_related(
+        Prefetch("items", queryset=OrderItem.objects.select_related("dish")), "invoice__payments")
     context_object_name = "order"
     template_name = "orders/detail.html"
 
@@ -54,6 +55,12 @@ class OrderDetailView(OrderPermissionMixin, DetailView):
         items = list(self.object.items.all())
         context["has_drafts"] = any(item.status == "DRAFT" for item in items)
         context["live_items"] = any(item.status != "CANCELLED" for item in items)
+        context["invoice"] = getattr(self.object, "invoice", None)
+        if context["invoice"] is not None:
+            context["invoice_remaining"] = context["invoice"].remaining
+        else:
+            context["invoice_remaining"] = self.object.total
+        context["can_reopen_order"] = context["invoice"] is None or context["invoice"].paid_amount == 0
         if has_order_permission(self.request.user, "view_orderactivitylog"):
             context["log_page"] = Paginator(self.object.activity_logs.all(), 20).get_page(self.request.GET.get("page"))
         return context
@@ -143,6 +150,46 @@ class OrderActionView(OrderPermissionMixin, FormView):
         except (Order.DoesNotExist, OrderItem.DoesNotExist) as error:
             raise Http404("Đơn hoặc món không còn tồn tại.") from error
         messages.success(self.request, "Đã cập nhật đơn hàng.")
+        return HttpResponseRedirect(self.order.get_absolute_url())
+
+
+class OrderPaymentView(OrderPermissionMixin, FormView):
+    order_permission = "collect_payment"
+    form_class = PaymentForm
+    template_name = "orders/form.html"
+    title = "Thu tiền"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.order = get_object_or_404(Order.objects.select_related("booking__table", "invoice"), pk=kwargs["pk"])
+        if self.order.status != Order.Status.AWAITING_PAYMENT:
+            raise Http404("Đơn không ở trạng thái chờ thanh toán.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        invoice = getattr(self.order, "invoice", None)
+        remaining = invoice.remaining if invoice else self.order.total
+        kwargs["initial"] = {"expected_revision": self.order.revision, "amount": remaining, "payment_method": "CASH"}
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        invoice = getattr(self.order, "invoice", None)
+        remaining = invoice.remaining if invoice else self.order.total
+        context.update(order=self.order, title=self.title, back_url=self.order.get_absolute_url(), remaining=remaining, action="payment")
+        return context
+
+    def save(self, data):
+        return services.record_payment(actor=self.request.user, order_id=self.order.pk, expected_revision=data["expected_revision"],
+            amount=data["amount"], payment_method=data["payment_method"], reference=data["reference"])
+
+    def form_valid(self, form):
+        try:
+            self.save(form.cleaned_data)
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
+        messages.success(self.request, "Đã ghi nhận thanh toán.")
         return HttpResponseRedirect(self.order.get_absolute_url())
 
 

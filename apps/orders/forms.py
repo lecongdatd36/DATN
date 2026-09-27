@@ -68,6 +68,13 @@ class ReasonForm(RevisionForm):
     reason = forms.CharField(label="Lý do hủy", max_length=500, widget=forms.Textarea(attrs={"rows": 3}))
 
 
+class PaymentForm(RevisionForm):
+    amount = forms.DecimalField(label="Số tiền thu", min_value=1, max_digits=12, decimal_places=0)
+    payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=[("CASH", "Tiền mặt"), ("CARD", "Thẻ"), ("TRANSFER", "Chuyển khoản"), ("OTHER", "Khác")])
+    reference = forms.CharField(label="Ghi chú / mã giao dịch", max_length=100, required=False)
+    field_order = ("amount", "payment_method", "reference", "expected_revision")
+
+
 class OrderFilterForm(BootstrapFormMixin, forms.Form):
     q = forms.CharField(label="Mã đơn / bàn / tên khách", required=False, max_length=150)
     status = forms.ChoiceField(label="Trạng thái", required=False, choices=[("", "Đơn chưa kết thúc"), *Order.Status.choices, ("all", "Tất cả")])

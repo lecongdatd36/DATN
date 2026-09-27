@@ -12,7 +12,7 @@ def order_list(*, q="", status=""):
             criteria |= Q(pk=int(match.group(1)))
         result = result.filter(criteria)
     if not status:
-        result = result.exclude(status=Order.Status.VOID)
+        result = result.exclude(status__in=(Order.Status.PAID, Order.Status.VOID))
     elif status != "all":
         result = result.filter(status=status)
     return result

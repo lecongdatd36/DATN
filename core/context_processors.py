@@ -32,6 +32,7 @@ def access_policy(request):
             "can_view_menu_logs": has_menu_permission(request.user, "view_menuactivitylog"),
             "can_view_orders": has_order_permission(request.user, "view_order"),
             "can_manage_orders": has_order_permission(request.user, "manage_order"),
+            "can_collect_payments": has_order_permission(request.user, "collect_payment"),
             "can_work_kitchen": has_order_permission(request.user, "work_kitchen"),
             "can_cancel_prepared_items": has_order_permission(request.user, "cancel_prepared_item"),
             "can_view_order_logs": has_order_permission(request.user, "view_orderactivitylog"),

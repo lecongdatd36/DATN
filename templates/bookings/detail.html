@@ -26,7 +26,7 @@
             {% for action in actions %}<a class="btn {% if action.target == 'CANCELLED' or action.target == 'NO_SHOW' %}btn-outline-danger{% else %}btn-primary{% endif %}" href="{% url 'bookings:transition' booking.pk action.target %}">{{ action.label }}</a>{% endfor %}
         </div>
         {% if early_arrival %}<p class="small text-secondary mt-3">Có thể nhận khách đến sớm trong ngày hẹn nếu bàn trống và không ảnh hưởng lịch khác. Giờ hẹn và giờ kết thúc dự kiến vẫn giữ nguyên.</p>{% endif %}
-        {% if order_blocks_completion %}<p class="alert alert-warning mt-3 mb-0">Lượt khách còn đơn đang phục vụ hoặc chờ thanh toán. Cần xử lý đơn trước khi giải phóng bàn.</p>{% else %}<p class="small text-secondary mt-3 mb-0">Chỉ bấm Nhận khách khi khách thực sự đến. Hoàn tất khi khách đã rời bàn.</p>{% endif %}
+        {% if order_blocks_completion %}<p class="alert alert-warning mt-3 mb-0">Lượt khách còn đơn đang phục vụ hoặc chờ thanh toán. Cần xử lý đơn trước khi giải phóng bàn.</p>{% else %}<p class="small text-secondary mt-3 mb-0">Chỉ bấm Nhận khách khi khách thực sự đến. Hoàn tất sau khi đơn đã thanh toán và khách đã rời bàn.</p>{% endif %}
     </div>
     {% if access.can_view_booking_logs %}
     <h2 class="h5 mb-3">Nhật ký đặt bàn</h2>

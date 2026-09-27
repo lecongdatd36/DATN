@@ -156,8 +156,10 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
             raise ValidationError("Bàn vẫn đang có khách. Hãy hoàn tất lượt trước hoặc chuyển sang bàn khác.")
         booking.seated_at = now
     elif target == Booking.Status.COMPLETED:
-        from apps.orders.models import Order
-        if Order.objects.filter(booking=booking).exclude(status=Order.Status.VOID).exists():
+        from apps.orders.models import Invoice, Order
+        blocking_orders = Order.objects.filter(booking=booking).exclude(status=Order.Status.VOID).exclude(
+            status=Order.Status.PAID, invoice__status=Invoice.Status.PAID)
+        if blocking_orders.exists():
             raise ValidationError("Lượt khách còn đơn đang phục vụ hoặc chờ thanh toán. Hãy xử lý đơn trước khi giải phóng bàn.")
         if booking.seated_at and now < booking.seated_at:
             raise ValidationError("Giờ hoàn tất không thể trước giờ nhận khách.")

@@ -6,12 +6,22 @@
     <p class="eyebrow mb-2">ĐƠN HÀNG · {{ order.get_status_display }}</p>
     <div class="d-flex flex-wrap justify-content-between gap-3 mb-3"><h1 class="h2 mb-0">{{ order.order_code }} — Bàn {{ order.booking.table.code }}</h1><a class="btn btn-outline-secondary" href="{% url 'orders:list' %}">Danh sách đơn</a></div>
     <p class="text-secondary text-break">{{ order.booking.customer_name }} · {{ order.booking.party_size }} khách · {% if access.can_view_bookings %}<a href="{{ order.booking.get_absolute_url }}">Lượt {{ order.booking.booking_code }}</a>{% else %}{{ order.booking.booking_code }}{% endif %} · <a href="{{ request.get_full_path }}">Cập nhật trạng thái món</a></p>
-    {% if order.status == 'AWAITING_PAYMENT' %}<p class="alert alert-info">Các món đã được phục vụ. Đơn đang chờ thanh toán, bàn vẫn đang sử dụng.</p>{% endif %}
+    {% if order.status == 'AWAITING_PAYMENT' %}<p class="alert alert-info">Các món đã được phục vụ. Đơn đang chờ thanh toán, bàn vẫn đang sử dụng.</p>{% elif order.status == 'PAID' %}<p class="alert alert-success">Đơn đã thanh toán đủ. Có thể hoàn tất lượt khách khi khách rời bàn.</p>{% endif %}
+    {% if invoice or order.status == 'AWAITING_PAYMENT' %}
+    <div class="project-card p-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><h2 class="h5 mb-0">Hóa đơn{% if invoice %} {{ invoice.invoice_code }}{% endif %}</h2>{% if invoice %}<span class="badge {% if invoice.status == 'PAID' %}text-bg-success{% else %}text-bg-warning{% endif %}">{{ invoice.get_status_display }}</span>{% endif %}</div>
+        <div class="row g-3">
+            <div class="col-md-4"><div class="small text-secondary">Tổng hóa đơn</div><strong>{% if invoice %}{{ invoice.total|dong }}{% else %}{{ order.total|dong }}{% endif %} đ</strong></div>
+            <div class="col-md-4"><div class="small text-secondary">Đã thu</div><strong>{% if invoice %}{{ invoice.paid_amount|dong }} đ{% else %}0 đ{% endif %}</strong></div>
+            <div class="col-md-4"><div class="small text-secondary">Còn lại</div><strong>{{ invoice_remaining|dong }} đ</strong></div>
+        </div>
+        {% if invoice.payments.all %}<div class="table-responsive mt-3"><table class="table table-sm mb-0"><thead><tr><th>Thời gian</th><th>Phương thức</th><th>Người thu</th><th>Ghi chú / mã giao dịch</th><th class="text-end">Số tiền</th></tr></thead><tbody>{% for payment in invoice.payments.all %}<tr><td class="text-nowrap">{{ payment.created_at|date:'d/m/Y H:i:s' }}</td><td>{{ payment.get_method_display }}</td><td>{{ payment.actor_snapshot }}</td><td class="text-break">{{ payment.reference|default:'—' }}</td><td class="text-end text-nowrap">{{ payment.amount|dong }} đ</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+    </div>
+    {% endif %}
     <div class="d-flex flex-wrap gap-2 mb-4">
-        {% if access.can_manage_orders %}
-        {% if order.status == 'OPEN' %}<a class="btn btn-primary" href="{% url 'orders:add_item' order.pk %}">Thêm món</a>{% if has_drafts %}<a class="btn btn-primary" href="{% url 'orders:send' order.pk %}">Gửi Bếp</a>{% endif %}{% if live_items %}<a class="btn btn-outline-primary" href="{% url 'orders:await' order.pk %}">Chờ thanh toán</a>{% else %}<a class="btn btn-outline-danger" href="{% url 'orders:void' order.pk %}">Hủy đơn</a>{% endif %}
-        {% elif order.status == 'AWAITING_PAYMENT' %}<a class="btn btn-outline-primary" href="{% url 'orders:reopen' order.pk %}">Tiếp tục gọi món</a>{% endif %}
-        {% endif %}
+        {% if order.status == 'OPEN' and access.can_manage_orders %}<a class="btn btn-primary" href="{% url 'orders:add_item' order.pk %}">Thêm món</a>{% if has_drafts %}<a class="btn btn-primary" href="{% url 'orders:send' order.pk %}">Gửi Bếp</a>{% endif %}{% if live_items %}<a class="btn btn-outline-primary" href="{% url 'orders:await' order.pk %}">Chờ thanh toán</a>{% else %}<a class="btn btn-outline-danger" href="{% url 'orders:void' order.pk %}">Hủy đơn</a>{% endif %}
+        {% elif order.status == 'AWAITING_PAYMENT' %}{% if access.can_collect_payments %}<a class="btn btn-primary" href="{% url 'orders:payment' order.pk %}">Thu tiền</a>{% endif %}{% if access.can_manage_orders and can_reopen_order %}<a class="btn btn-outline-primary" href="{% url 'orders:reopen' order.pk %}">Tiếp tục gọi món</a>{% endif %}
+        {% elif order.status == 'PAID' and access.can_manage_bookings %}<a class="btn btn-success" href="{{ order.booking.get_absolute_url }}">Hoàn tất lượt khách</a>{% endif %}
     </div>
     <div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0">
         <thead><tr><th>Món / ghi chú</th><th>Số lượng</th><th class="text-end">Đơn giá</th><th class="text-end">Thành tiền</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>

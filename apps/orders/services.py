@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -8,7 +10,7 @@ from core.menu_lock import lock_menu
 from apps.bookings.models import Booking
 from apps.bookings.services import seat_walk_in
 from apps.menu.models import Dish
-from .models import Order, OrderItem, OrderActivityLog
+from .models import Invoice, Order, OrderItem, OrderActivityLog, Payment
 from .permissions import has_order_permission
 
 
@@ -32,6 +34,12 @@ def _save(actor, order, action, description):
     order.revision += 1
     order.save(update_fields=("status", "revision", "updated_at"))
     _log(actor, order, action, description)
+
+
+def _invoice_code_for(order):
+    # Mỗi lượt chỉ có một đơn và mỗi đơn chỉ có một hóa đơn, nên mã dựa trên
+    # khóa chính của đơn vừa ổn định vừa không tranh chấp khi thu tiền đồng thời.
+    return f"HD{order.pk:06d}"
 
 
 def _order(order_id, expected_revision, *, require_open=True):
@@ -166,7 +174,9 @@ def change_order_status(*, actor, order_id, expected_revision, target, reason=""
         if not live.exists() or live.exclude(status=OrderItem.Status.SERVED).exists():
             raise ValidationError("Cần phục vụ xong tất cả món chưa hủy trước khi chuyển chờ thanh toán.")
     elif target == Order.Status.OPEN and order.status == Order.Status.AWAITING_PAYMENT:
-        pass
+        invoice = Invoice.objects.select_for_update().filter(order=order).first()
+        if invoice is not None and invoice.paid_amount > 0:
+            raise ValidationError("Đơn đã thu một phần nên không thể gọi thêm món. Hãy thu đủ số tiền còn lại.")
     elif target == Order.Status.VOID and order.status == Order.Status.OPEN:
         if live.exists():
             raise ValidationError("Hãy hủy từng món và ghi lý do trước khi hủy đơn.")
@@ -178,3 +188,71 @@ def change_order_status(*, actor, order_id, expected_revision, target, reason=""
     order.status = target
     _save(actor, order, order.get_status_display(), reason if target == Order.Status.VOID else "Cập nhật trạng thái đơn; chưa ghi nhận thanh toán.")
     return order
+
+
+@transaction.atomic
+def record_payment(*, actor, order_id, expected_revision, amount, payment_method="CASH", reference=""):
+    actor = _lock_actor(actor, "collect_payment")
+    order = _order(order_id, expected_revision, require_open=False)
+    if order.status != Order.Status.AWAITING_PAYMENT:
+        raise ValidationError("Chỉ thanh toán cho đơn đang ở trạng thái chờ thanh toán.")
+
+    try:
+        amount_decimal = Decimal(str(amount))
+    except Exception as exc:  # pragma: no cover - defensive conversion
+        raise ValidationError({"amount": "Số tiền thanh toán không hợp lệ."}) from exc
+
+    if not amount_decimal.is_finite() or amount_decimal != amount_decimal.to_integral_value() or amount_decimal <= 0:
+        raise ValidationError({"amount": "Số tiền thanh toán phải là số nguyên lớn hơn 0."})
+
+    if payment_method not in Payment.Method.values:
+        raise ValidationError({"payment_method": "Phương thức thanh toán không hợp lệ."})
+    reference = reference.strip() if isinstance(reference, str) else ""
+    if len(reference) > 100:
+        raise ValidationError({"reference": "Ghi chú / mã giao dịch không được dài quá 100 ký tự."})
+
+    total = order.total
+    if total <= 0:
+        raise ValidationError("Đơn hiện không có giá trị thanh toán.")
+
+    invoice = Invoice.objects.select_for_update().filter(order=order).first()
+    if invoice is None:
+        invoice = Invoice.objects.create(
+            order=order,
+            invoice_code=_invoice_code_for(order),
+            total=total,
+            status=Invoice.Status.PENDING,
+            payment_method=payment_method,
+        )
+
+    if invoice.status == Invoice.Status.VOID:
+        raise ValidationError("Hóa đơn đã bị hủy, không thể thu thêm tiền.")
+
+    remaining = invoice.total - invoice.paid_amount
+    if amount_decimal > remaining:
+        raise ValidationError({"amount": f"Số tiền thanh toán vượt quá số tiền còn lại ({remaining})."})
+
+    payment = Payment.objects.create(
+        invoice=invoice,
+        amount=amount_decimal,
+        method=payment_method,
+        reference=reference,
+        performed_by=actor,
+        actor_snapshot=actor.username,
+    )
+
+    invoice.paid_amount += amount_decimal
+    invoice.payment_method = payment_method
+    invoice.status = Invoice.Status.PAID if invoice.paid_amount >= invoice.total else Invoice.Status.PENDING
+    order.revision += 1
+    if invoice.status == Invoice.Status.PAID:
+        invoice.closed_at = timezone.now()
+        order.status = Order.Status.PAID
+    order.save(update_fields=("status", "revision", "updated_at"))
+    if invoice.status == Invoice.Status.PAID:
+        _log(actor, order, "Đã thanh toán", f"Đơn đã thanh toán đủ, đóng hóa đơn {invoice.invoice_code} và có thể hoàn tất lượt khách.")
+    invoice.save(update_fields=("total", "paid_amount", "status", "payment_method", "updated_at", "closed_at"))
+
+    description = f"Thu {amount_decimal} đồng bằng {payment.get_method_display()}. Hóa đơn còn lại {invoice.total - invoice.paid_amount} đồng."
+    _log(actor, order, "Thanh toán", description)
+    return invoice

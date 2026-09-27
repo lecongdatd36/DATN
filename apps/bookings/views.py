@@ -54,9 +54,14 @@ class BookingDetailView(BookingPermissionMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         booking = self.object
-        from apps.orders.models import Order
-        context["visit_order"] = Order.objects.filter(booking=booking).first()
-        context["order_blocks_completion"] = context["visit_order"] is not None and context["visit_order"].status != Order.Status.VOID
+        from apps.orders.models import Invoice, Order
+        context["visit_order"] = Order.objects.select_related("invoice").filter(booking=booking).first()
+        visit_order = context["visit_order"]
+        order_finished = visit_order is None or visit_order.status == Order.Status.VOID
+        if visit_order is not None and visit_order.status == Order.Status.PAID:
+            invoice = getattr(visit_order, "invoice", None)
+            order_finished = invoice is not None and invoice.status == Invoice.Status.PAID
+        context["order_blocks_completion"] = not order_finished
         now = timezone.now()
         context["overdue"] = booking.status == Booking.Status.SEATED and booking.ends_at <= now
         if context["overdue"]:

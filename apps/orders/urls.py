@@ -13,6 +13,7 @@ urlpatterns = [
     path("<int:pk>/mon/<int:item_id>/<str:target>/", views.ItemTransitionView.as_view(), name="transition_item"),
     path("<int:pk>/gui-bep/", views.OrderActionView.as_view(action="send"), name="send"),
     path("<int:pk>/cho-thanh-toan/", views.OrderActionView.as_view(action="await"), name="await"),
+    path("<int:pk>/thu-tien/", views.OrderPaymentView.as_view(), name="payment"),
     path("<int:pk>/goi-them/", views.OrderActionView.as_view(action="reopen"), name="reopen"),
     path("<int:pk>/huy/", views.OrderActionView.as_view(action="void"), name="void"),
 ]

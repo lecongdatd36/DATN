@@ -177,6 +177,66 @@ class OrderTests(TestCase):
         self.assertEqual(second.status, "DRAFT")
         self.assertEqual(self.order.total, 350000)
 
+    def test_invoice_is_created_and_payment_marks_order_paid(self):
+        item = self.add(quantity=2)
+        self.send()
+        for state in ("COOKING", "READY", "SERVED"):
+            self.transition(item, state)
+        item.refresh_from_db()
+        self.assertEqual(item.status, "SERVED")
+        services.change_order_status(actor=self.waiter, order_id=self.order.pk, expected_revision=self.revision(), target="AWAITING_PAYMENT")
+
+        invoice = services.record_payment(actor=self.users["CASHIER"], order_id=self.order.pk, expected_revision=self.revision(), amount=Decimal("170000"), payment_method="CASH")
+
+        self.assertEqual(invoice.status, "PAID")
+        self.assertEqual(invoice.total, Decimal("170000"))
+        self.assertTrue(invoice.invoice_code.startswith("HD"))
+        self.assertEqual(invoice.payments.count(), 1)
+        self.assertEqual(invoice.payments.first().amount, Decimal("170000"))
+        self.assertEqual(invoice.payments.first().method, "CASH")
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, "PAID")
+
+    def test_paid_invoice_closes_order_and_allows_visit_completion(self):
+        item = self.add(quantity=2)
+        self.send()
+        for state in ("COOKING", "READY", "SERVED"):
+            self.transition(item, state)
+        services.change_order_status(actor=self.waiter, order_id=self.order.pk, expected_revision=self.revision(), target="AWAITING_PAYMENT")
+        services.record_payment(actor=self.users["CASHIER"], order_id=self.order.pk, expected_revision=self.revision(), amount=Decimal("170000"), payment_method="CASH")
+
+        self.order.refresh_from_db()
+        self.visit.refresh_from_db()
+        self.assertEqual(self.order.status, "PAID")
+        self.assertEqual(self.order.invoice.status, "PAID")
+        self.complete_visit()
+        self.visit.refresh_from_db()
+        self.assertEqual(self.visit.status, "COMPLETED")
+
+    def test_payment_form_renders_and_records_payment(self):
+        item = self.add(quantity=2)
+        self.send()
+        for state in ("COOKING", "READY", "SERVED"):
+            self.transition(item, state)
+        services.change_order_status(actor=self.waiter, order_id=self.order.pk, expected_revision=self.revision(), target="AWAITING_PAYMENT")
+        self.client.force_login(self.users["CASHIER"])
+
+        response = self.client.get(self.url("payment", self.order.pk))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Thu tiền")
+
+        response = self.client.post(self.url("payment", self.order.pk), {
+            "expected_revision": self.revision(),
+            "amount": "170000",
+            "payment_method": "CASH",
+            "reference": "Mã test",
+        })
+        self.assertRedirects(response, self.order.get_absolute_url())
+        self.order.refresh_from_db()
+        self.assertIsNotNone(self.order.invoice)
+        self.assertEqual(self.order.invoice.status, "PAID")
+        self.assertEqual(self.order.invoice.payments.first().amount, Decimal("170000"))
+
     def test_full_workflow_and_payment_boundary(self):
         item = self.add()
         self.send()

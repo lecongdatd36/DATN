@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load menu_money %}
 {% load static %}
 {% block title %}{{ title }} · QLNH{% endblock %}
 {% block content %}
@@ -12,6 +13,7 @@
             {% if item %}<p class="text-break"><strong>{{ item.dish_name }}</strong> · {{ item.quantity }} {{ item.unit_name }} · {{ item.get_status_display }}</p>{% if item.note %}<p class="text-break">{{ item.note|linebreaksbr }}</p>{% endif %}{% endif %}
             {% if action == 'send' and not item %}<p>Gửi tất cả món chưa gửi trong đơn xuống Bếp. Kiểm tra món và ghi chú trước khi xác nhận.</p><ul>{% for draft in draft_items %}<li class="text-break"><strong>{{ draft.dish_name }} × {{ draft.quantity }} {{ draft.unit_name }}</strong>{% if draft.note %} — {{ draft.note }}{% endif %}</li>{% empty %}<li>Không có món chưa gửi Bếp.</li>{% endfor %}</ul>{% endif %}
             {% if action == 'await' %}<p>Chỉ chuyển khi tất cả món chưa hủy đã phục vụ xong. Thao tác này chưa ghi nhận đã thu tiền.</p>{% endif %}
+            {% if action == 'payment' %}<div class="alert alert-light border mb-3"><div class="d-flex justify-content-between align-items-center gap-3 flex-wrap"><span>Khách cần thanh toán</span><strong class="h5 mb-0">{{ remaining|default:0|dong }} đ</strong></div></div>{% endif %}
             {% csrf_token %}{% include 'includes/form_fields.html' %}
             <div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Xác nhận</button><a class="btn btn-outline-secondary" href="{{ back_url }}">Quay lại</a></div>
         </form>
