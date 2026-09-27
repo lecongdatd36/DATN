@@ -10,7 +10,7 @@ from core.seating_lock import lock_seating_schedule
 from .models import Booking, BookingActivityLog, BookingSettings, BookingSettingsLog
 from .duration import planned_end
 from .permissions import has_booking_permission
-from .selectors import overlapping_bookings, default_duration_minutes
+from .selectors import available_transfer_tables, overlapping_bookings, default_duration_minutes
 
 
 TRANSITIONS = {
@@ -134,13 +134,16 @@ def update_booking_settings(*, actor, default_duration_minutes, expected_revisio
 
 
 @transaction.atomic
-def transition_booking(*, actor, booking_id, target, expected_status, expected_revision):
+def transition_booking(*, actor, booking_id, target, expected_status, expected_revision, reason=""):
     actor = _lock_actor(actor)
     booking = Booking.objects.select_for_update().get(pk=booking_id)
     if booking.status != expected_status or booking.revision != expected_revision:
         raise ValidationError("Lịch hoặc trạng thái đã thay đổi. Hãy tải lại trang trước khi thao tác.")
     if target not in TRANSITIONS.get(booking.status, ()):
         raise ValidationError("Không thể chuyển sang trạng thái này.")
+    reason = reason.strip() if isinstance(reason, str) else ""
+    if target in (Booking.Status.CANCELLED, Booking.Status.NO_SHOW) and not reason:
+        raise ValidationError({"reason": "Vui lòng nhập lý do để lưu vào nhật ký."})
     now = timezone.now()
     if target == Booking.Status.CONFIRMED:
         if booking.ends_at <= now:
@@ -170,8 +173,42 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
     booking.status = target
     booking.revision += 1
     booking.save(update_fields=("status", "revision", "updated_at", "seated_at", "completed_at"))
-    _log(actor, booking, booking.get_status_display(), f"{before} → {booking.get_status_display()}. " + _snapshot(booking))
+    reason_note = f" Lý do: {reason}." if reason else ""
+    _log(actor, booking, booking.get_status_display(), f"{before} → {booking.get_status_display()}.{reason_note} " + _snapshot(booking))
     return booking
+
+
+@transaction.atomic
+def transfer_table(*, actor, booking_id, table_id, expected_revision):
+    actor = _lock_actor(actor)
+    booking = Booking.objects.select_for_update().select_related("table", "table__area").get(pk=booking_id)
+    if booking.status != Booking.Status.SEATED:
+        raise ValidationError("Chỉ chuyển bàn cho lượt khách đang phục vụ.")
+    if booking.revision != expected_revision:
+        raise ValidationError("Lượt khách đã thay đổi. Hãy tải lại trang trước khi chuyển bàn.")
+    from apps.orders.models import Order
+    if Order.objects.filter(booking=booking, status=Order.Status.PAID).exists():
+        raise ValidationError("Đơn đã thanh toán nên không thể chuyển bàn. Hãy trả bàn để hoàn tất lượt khách.")
+
+    target = DiningTable.objects.select_related("area").filter(pk=table_id).first()
+    if target is None:
+        raise ValidationError({"table": "Bàn mới không còn tồn tại."})
+    if target.pk == booking.table_id:
+        raise ValidationError({"table": "Khách đang ngồi tại bàn này."})
+    if not available_transfer_tables(booking).filter(pk=target.pk).exists():
+        raise ValidationError({"table": "Bàn mới đang có khách, không đủ chỗ, đã ngừng sử dụng hoặc vướng lịch đặt."})
+
+    old_table = booking.table
+    booking.table = target
+    booking.revision += 1
+    booking.save(update_fields=("table", "revision", "updated_at"))
+    _log(
+        actor,
+        booking,
+        "Chuyển bàn",
+        f"Bàn {old_table.code} / {old_table.area.name} → bàn {target.code} / {target.area.name}; giữ nguyên đơn hàng, món và hóa đơn.",
+    )
+    return booking, old_table
 
 
 @transaction.atomic

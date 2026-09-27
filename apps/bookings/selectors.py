@@ -1,4 +1,5 @@
 import re
+from datetime import timedelta
 from django.core.exceptions import ValidationError
 from django.db.models import Case, DateTimeField, F, Q, When
 from django.db.models.functions import Coalesce
@@ -51,8 +52,31 @@ def available_tables(*, starts_at, ends_at, party_size):
     return result
 
 
-def booking_list(*, q="", date=None, status="", table=None):
+def available_transfer_tables(booking, *, at=None):
+    now = at or timezone.now()
+    # Khi lượt đã quá giờ dự kiến, giữ một khoảng an toàn ngắn để không chuyển
+    # khách vào bàn sắp có lịch ngay lập tức.
+    occupancy_end = booking.ends_at if booking.ends_at > now else now + timedelta(minutes=30)
+    busy = overlapping_bookings(
+        starts_at=now,
+        ends_at=occupancy_end,
+        exclude_id=booking.pk,
+    ).values("table_id")
+    occupied = Booking.objects.filter(status=Booking.Status.SEATED).exclude(pk=booking.pk).values("table_id")
+    return (
+        DiningTable.objects.select_related("area")
+        .filter(is_active=True, area__is_active=True, capacity__gte=booking.party_size)
+        .exclude(pk=booking.table_id)
+        .exclude(pk__in=busy)
+        .exclude(pk__in=occupied)
+        .order_by("area__name", "code", "pk")
+    )
+
+
+def booking_list(*, q="", visit_type="", date=None, status="", table=None):
     result = Booking.objects.select_related("table", "table__area")
+    if visit_type != "all":
+        result = result.filter(is_walk_in=visit_type == "walk_in")
     if q:
         criteria = Q(customer_name__icontains=q) | Q(customer_phone__icontains=q) | Q(table__code__icontains=q)
         try:

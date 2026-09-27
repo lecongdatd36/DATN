@@ -1,21 +1,37 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Bàn · QLNH{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/seating.css' %}">{% endblock %}
 {% block content %}
 <section class="container-fluid px-3 px-md-4 pb-5" data-table-live>
-    <p class="eyebrow mb-2">NHÀ HÀNG</p>
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-2">
-        <h1 class="h2 mb-0">Bàn</h1>
+    <div class="table-page-heading">
+        <div><p class="eyebrow mb-2">SƠ ĐỒ PHỤC VỤ</p><h1 class="h2 mb-1">Bàn ăn</h1><p class="text-secondary mb-0">Chạm vào từng bàn để nhận khách, mở đơn hoặc xem lượt đang phục vụ.</p></div>
         <div class="d-flex flex-wrap align-items-center gap-2">
+            {% if access.can_collect_payments %}<a class="btn btn-success" href="{% url 'orders:table_payment' %}"><svg class="app-icon me-1" aria-hidden="true"><use href="#icon-wallet"></use></svg> Thanh toán bàn</a>{% endif %}
             {% if access.can_view_areas %}<a class="btn btn-outline-secondary" href="{% url 'seating:area_list' %}">Khu vực</a>{% endif %}
             {% if access.can_view_seating_logs %}<a class="btn btn-outline-secondary" href="{% url 'seating:logs' %}">Nhật ký</a>{% endif %}
             {% if access.can_manage_seating %}<a class="btn btn-primary" href="{% url 'seating:table_create' %}">Thêm bàn</a>{% endif %}
         </div>
     </div>
-    <p class="text-secondary mb-2">Theo dõi bàn trống, bàn đang giữ chỗ và bàn đang phục vụ. Bàn có lịch vào giờ sau vẫn trống hiện tại; hãy kiểm tra lịch trước khi nhận thêm khách.</p>
-    <p class="small text-secondary mb-3"><span data-live-message aria-live="polite">Tải lại trang để xem trạng thái mới.</span> <a data-live-refresh href="{{ request.get_full_path }}">Cập nhật ngay</a></p>
-    <div data-table-filters>{% include 'seating/includes/filters.html' %}</div>
-    {% include 'seating/includes/table_results.html' %}
+    <div class="table-pos-workspace">
+        <aside class="table-area-rail" aria-label="Chọn khu vực">
+            <div class="area-rail-title"><span>Khu vực</span><small>Chọn nhanh</small></div>
+            <nav class="area-rail-list">
+                <a class="area-rail-item {% if not selected_area_id %}is-active{% endif %}" href="{% url 'seating:table_list' %}"><span class="area-dot"></span><span>Tất cả</span><strong>{{ status_counts.all }}</strong></a>
+                {% for area in service_areas %}
+                <a class="area-rail-item {% if selected_area_id == area.pk|stringformat:'s' %}is-active{% endif %}" href="{% url 'seating:table_list' %}?area={{ area.pk }}"><span class="area-dot"></span><span>{{ area.name }}</span></a>
+                {% endfor %}
+            </nav>
+        </aside>
+        <div class="table-pos-main">
+            <div class="live-status-bar"><span class="live-indicator" aria-hidden="true"></span><span data-live-message aria-live="polite">Trạng thái bàn được tự động cập nhật.</span><a class="ms-auto" data-live-refresh href="{{ request.get_full_path }}">Cập nhật ngay</a></div>
+            <details class="table-filter-drawer" data-table-filters>
+                <summary><svg class="app-icon" aria-hidden="true"><use href="#icon-search"></use></svg> Tìm và lọc bàn</summary>
+                {% include 'seating/includes/filters.html' %}
+            </details>
+            {% include 'seating/includes/table_results.html' %}
+        </div>
+    </div>
 </section>
 {% endblock %}
 {% block extra_js %}<script src="{% static 'js/table-live.js' %}" defer></script>{% endblock %}

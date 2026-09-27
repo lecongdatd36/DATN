@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load menu_money %}
+{% block title %}Hủy bàn {{ booking.table.code }} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">PHỤC VỤ TẠI BÀN</p>
+    <h1 class="h2 mb-2">Hủy nhận bàn {{ booking.table.code }}</h1>
+    <p class="text-secondary mb-4">{{ booking.customer_name }} · {{ booking.party_size }} khách · {{ booking.table.area.name }}</p>
+    <div class="row"><div class="col-lg-7 col-xl-5">
+        <form method="post" class="project-card p-3 p-md-4" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            {{ form.expected_revision }}
+            {% if visit_order %}<div class="alert alert-warning"><strong>Đơn {{ visit_order.order_code }}</strong> · {{ visit_order.get_status_display }} · {{ visit_order.total|dong }} đ. Món chưa hủy và hóa đơn chưa thu sẽ được hủy cùng lượt khách.</div>{% endif %}
+            <div class="mb-3"><label class="form-label" for="{{ form.reason.id_for_label }}">{{ form.reason.label }}</label>{{ form.reason }}{% for error in form.reason.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <p class="small text-secondary">Nếu đã thu tiền, hệ thống sẽ không cho hủy. Món đã bắt đầu làm hoặc đã phục vụ chỉ Quản lý được phép hủy.</p>
+            <div class="d-flex gap-2"><button class="btn btn-danger" type="submit">Hủy bàn &amp; giải phóng</button><a class="btn btn-outline-secondary" href="{% url 'seating:table_list' %}">Quay lại</a></div>
+        </form>
+    </div></div>
+</section>
+{% endblock %}

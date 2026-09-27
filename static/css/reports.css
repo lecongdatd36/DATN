@@ -1,0 +1,52 @@
+.report-page { padding-top: 1.5rem; }
+.report-filter { box-shadow: none; }
+.report-period { color: var(--app-muted); font-size: .82rem; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.metric-card { display: flex; min-width: 0; align-items: flex-start; gap: .9rem; padding: 1.15rem; border: 1px solid var(--app-border); border-radius: 1rem; background: var(--app-surface); box-shadow: var(--app-shadow); }
+.metric-icon { display: grid; width: 42px; height: 42px; flex: 0 0 42px; place-items: center; border-radius: .75rem; color: var(--app-primary); background: var(--app-primary-soft); }
+.metric-card > div { min-width: 0; }
+.metric-card span:not(.metric-icon), .operation-card span { display: block; color: var(--app-muted); font-size: .76rem; font-weight: 650; }
+.metric-card strong { display: block; overflow: hidden; margin-top: .28rem; font-size: clamp(1.1rem, 1.7vw, 1.45rem); letter-spacing: -.025em; text-overflow: ellipsis; white-space: nowrap; }
+.metric-card small, .operation-card small { display: block; margin-top: .3rem; color: var(--app-muted); font-size: .7rem; line-height: 1.4; }
+.metric-success .metric-icon { color: #15803d; background: rgba(34, 197, 94, .13); }
+.metric-warning .metric-icon { color: #b45309; background: rgba(245, 158, 11, .14); }
+.report-card-header { display: flex; min-height: 76px; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; border-bottom: 1px solid var(--app-border); }
+.report-card-header a { font-size: .82rem; font-weight: 650; text-decoration: none; white-space: nowrap; }
+.daily-chart { display: flex; min-height: 250px; flex-direction: column; gap: .9rem; padding: 1.25rem; }
+.chart-row { display: grid; grid-template-columns: 44px minmax(80px, 1fr) minmax(110px, auto) 42px; align-items: center; gap: .75rem; font-size: .78rem; }
+.chart-row time, .chart-row small { color: var(--app-muted); }
+.chart-row strong { text-align: right; white-space: nowrap; }
+.chart-track, .method-track { height: 9px; overflow: hidden; border-radius: 999px; background: var(--app-surface-soft); }
+.chart-track span, .method-track span { display: block; height: 100%; min-width: 3px; border-radius: inherit; background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+.method-list { display: flex; min-height: 250px; flex-direction: column; gap: 1rem; padding: 1.25rem; }
+.method-item { display: grid; gap: .55rem; font-size: .78rem; }
+.method-item strong { white-space: nowrap; }
+.method-track span { background: linear-gradient(90deg, #14b8a6, #22c55e); }
+.operation-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; }
+.operation-card { padding: 1rem 1.1rem; border: 1px solid var(--app-border); border-radius: .9rem; background: var(--app-surface); }
+.operation-card strong { display: block; margin-top: .3rem; font-size: 1.55rem; }
+.report-table th:first-child { padding-left: 1.15rem; }
+.report-table td:last-child, .report-table th:last-child { padding-right: 1.15rem; }
+.report-empty { display: grid; min-height: 150px; place-items: center; padding: 2rem; color: var(--app-muted); text-align: center; }
+
+@media (max-width: 1199.98px) {
+    .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .operation-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767.98px) {
+    .report-page { padding-top: 1rem; }
+    .metric-grid { grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .metric-card { min-height: 142px; flex-direction: column; padding: .9rem; }
+    .metric-card strong { font-size: 1.05rem; }
+    .operation-grid { grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .chart-row { grid-template-columns: 38px minmax(50px, 1fr); gap: .45rem .65rem; }
+    .chart-row strong { text-align: left; }
+    .chart-row small { text-align: right; }
+    .report-card-header { align-items: flex-start; }
+}
+
+@media (max-width: 399.98px) {
+    .metric-grid, .operation-grid { grid-template-columns: 1fr; }
+    .metric-card { min-height: auto; flex-direction: row; }
+}

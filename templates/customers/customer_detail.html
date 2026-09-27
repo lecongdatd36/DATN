@@ -8,7 +8,7 @@
         <div class="d-flex flex-wrap gap-2">
             {% if access.can_manage_bookings %}<a class="btn btn-outline-primary" href="{% url 'bookings:create' %}?customer_phone={{ customer.phone|urlencode }}">Đặt bàn</a>{% endif %}
             {% if access.can_change_customers %}<a class="btn btn-primary" href="{% url 'customers:customer_update' customer.pk %}">Sửa thông tin</a>{% endif %}
-            {% if access.can_delete_customers %}<a class="btn btn-outline-danger" href="{% url 'customers:customer_delete' customer.pk %}">Xóa khách hàng</a>{% endif %}
+            {% if access.can_delete_customers %}<a class="btn btn-outline-danger" href="{% url 'customers:customer_delete' customer.pk %}" data-confirm-action data-confirm-tone="danger" data-confirm-title="Xóa khách hàng {{ customer.full_name }}?" data-confirm-message="Chỉ xóa được khi hồ sơ không có dữ liệu cần bảo toàn. Thao tác này không thể hoàn tác." data-confirm-label="Xóa khách hàng">Xóa khách hàng</a>{% endif %}
             <a class="btn btn-outline-secondary" href="{% url 'customers:customer_list' %}">Danh sách</a>
         </div>
     </div>

@@ -6,6 +6,7 @@ from apps.seating.permissions import has_seating_permission
 from apps.bookings.permissions import has_booking_permission
 from apps.menu.permissions import has_menu_permission
 from apps.orders.permissions import has_order_permission
+from apps.reports.permissions import has_report_permission
 
 
 def access_policy(request):
@@ -36,5 +37,6 @@ def access_policy(request):
             "can_work_kitchen": has_order_permission(request.user, "work_kitchen"),
             "can_cancel_prepared_items": has_order_permission(request.user, "cancel_prepared_item"),
             "can_view_order_logs": has_order_permission(request.user, "view_orderactivitylog"),
+            "can_view_reports": has_report_permission(request.user),
         }
     }

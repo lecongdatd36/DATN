@@ -36,7 +36,7 @@ class Booking(models.Model):
         permissions = [("manage_booking", "Tạo và cập nhật đặt bàn")]
         constraints = [
             models.CheckConstraint(condition=models.Q(is_walk_in=True) | models.Q(customer__isnull=False), name="booking_reserved_customer_required"),
-            models.CheckConstraint(condition=models.Q(is_walk_in=False) | models.Q(status__in=["SEATED", "COMPLETED"]), name="booking_walk_in_status"),
+            models.CheckConstraint(condition=models.Q(is_walk_in=False) | models.Q(status__in=["SEATED", "COMPLETED", "CANCELLED"]), name="booking_walk_in_status"),
             models.CheckConstraint(condition=models.Q(ends_at__gt=models.F("starts_at")), name="booking_time_order"),
             models.CheckConstraint(condition=models.Q(party_size__gte=1, party_size__lte=100), name="booking_party_range"),
             models.CheckConstraint(condition=models.Q(status__in=["PENDING", "CONFIRMED", "SEATED", "COMPLETED", "CANCELLED", "NO_SHOW"]), name="booking_valid_status"),

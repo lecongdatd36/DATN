@@ -5,7 +5,7 @@ from apps.customers.validators import normalize_phone
 from apps.seating.models import DiningTable
 from .models import Booking
 from .duration import planned_end, MAX_DURATION_MINUTES
-from .selectors import default_duration_minutes
+from .selectors import available_transfer_tables, default_duration_minutes
 
 
 class TableChoiceField(forms.ModelChoiceField):
@@ -65,10 +65,33 @@ class BookingForm(SlotForm):
 class TransitionForm(BootstrapFormMixin, forms.Form):
     expected_status = forms.ChoiceField(choices=Booking.Status.choices, widget=forms.HiddenInput)
     expected_revision = forms.IntegerField(widget=forms.HiddenInput)
+    reason = forms.CharField(label="Lý do", required=False, max_length=500, widget=forms.Textarea(attrs={"rows": 3}))
+
+
+class TransferTableForm(BootstrapFormMixin, forms.Form):
+    table = TableChoiceField(label="Chuyển sang bàn", queryset=DiningTable.objects.none(), empty_label="Chọn bàn trống phù hợp")
+    expected_revision = forms.IntegerField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, booking=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["table"].queryset = available_transfer_tables(booking) if booking else DiningTable.objects.none()
+        self.fields["table"].help_text = "Chỉ hiện bàn đang hoạt động, đủ chỗ, không có khách và không vướng lịch trong thời gian còn lại."
+
+
+class CancelSeatedVisitForm(BootstrapFormMixin, forms.Form):
+    reason = forms.CharField(
+        label="Lý do hủy bàn",
+        max_length=500,
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Ví dụ: khách đổi ý và rời nhà hàng"}),
+    )
+    expected_revision = forms.IntegerField(widget=forms.HiddenInput)
 
 
 class BookingFilterForm(BootstrapFormMixin, forms.Form):
     q = forms.CharField(label="Mã đặt / tên / điện thoại / bàn", required=False, max_length=150)
+    visit_type = forms.ChoiceField(label="Loại lượt", required=False, choices=[
+        ("", "Khách đặt trước"), ("walk_in", "Khách trực tiếp"), ("all", "Tất cả"),
+    ])
     date = forms.DateField(label="Ngày đến", required=False, widget=forms.DateInput(attrs={"type": "date"}))
     status = forms.ChoiceField(label="Trạng thái", required=False, choices=[("", "Tất cả"), *Booking.Status.choices])
     table = TableChoiceField(label="Bàn", queryset=DiningTable.objects.select_related("area"), required=False, empty_label="Tất cả bàn")

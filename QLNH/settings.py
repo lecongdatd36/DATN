@@ -44,10 +44,12 @@ INSTALLED_APPS = [
     "apps.bookings.apps.BookingsConfig",
     "apps.menu.apps.MenuConfig",
     "apps.orders.apps.OrdersConfig",
+    "apps.reports.apps.ReportsConfig",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.gzip.GZipMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -56,7 +58,14 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-SESSION_ENGINE = "django.contrib.sessions.backends.db"
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "qlnh-runtime-cache",
+    }
+}
+# Giữ bản bền vững trong DB nhưng đọc phiên lặp lại từ RAM để thao tác webapp nhanh hơn.
+SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 MESSAGE_STORAGE = "django.contrib.messages.storage.fallback.FallbackStorage"
 MESSAGE_TAGS = {message_constants.ERROR: "danger"}
 
@@ -87,6 +96,8 @@ DATABASES = {
         "PASSWORD": required_env("DB_PASSWORD"),
         "HOST": required_env("DB_HOST"),
         "PORT": required_env("DB_PORT"),
+        "CONN_MAX_AGE": 60,
+        "CONN_HEALTH_CHECKS": True,
         "OPTIONS": {"connect_timeout": 5},
     }
 }

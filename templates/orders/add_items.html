@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static menu_money %}
+{% block title %}Chọn món · {{ order.order_code }} · QLNH{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/order-menu.css' %}">{% endblock %}
+{% block content %}
+<section class="container-fluid px-2 px-md-3 pb-4 order-menu-page" data-order-menu>
+    <div class="pos-order-heading">
+        <div><p class="eyebrow mb-1">BÁN HÀNG TẠI BÀN</p><h1>Bàn {{ order.booking.table.code }}</h1><span>{{ order.order_code }} · {{ order.booking.party_size }} khách</span></div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ order.get_absolute_url }}">Xem đơn</a>
+    </div>
+
+    <form method="post" novalidate class="pos-order-workspace" data-existing-total="{{ existing_order_total }}">
+        {% csrf_token %}{{ form.expected_revision }}
+        <input type="hidden" name="reason" value="Hủy nhanh tại màn gọi món">
+        {% if form.non_field_errors %}<div class="alert alert-danger pos-form-error">{{ form.non_field_errors }}</div>{% endif %}
+        {% if form.dishes.errors %}<div class="alert alert-danger pos-form-error">{{ form.dishes.errors }}</div>{% endif %}
+
+        <aside class="pos-category-rail">
+            <div class="pos-pane-title"><strong>Nhóm món</strong><small>{{ menu_categories|length }} nhóm</small></div>
+            <nav class="pos-category-list" aria-label="Nhóm món">
+                <button class="pos-category-button is-active" type="button" data-category-button=""><span>Tất cả món</span><strong>{{ menu_dishes|length }}</strong></button>
+                {% for category in menu_categories %}<button class="pos-category-button" type="button" data-category-button="{{ category.pk }}"><span>{{ category.name }}</span></button>{% endfor %}
+            </nav>
+        </aside>
+
+        <main class="pos-menu-pane">
+            <div class="pos-menu-toolbar">
+                <div class="menu-search-box"><svg class="app-icon" aria-hidden="true"><use href="#icon-search"></use></svg><input class="form-control" type="search" placeholder="Tìm món, mã món..." aria-label="Tìm món" data-menu-search autocomplete="off"></div>
+                <select class="form-select" data-menu-category aria-label="Lọc nhóm món"><option value="">Tất cả nhóm món</option>{% for category in menu_categories %}<option value="{{ category.pk }}">{{ category.name }}</option>{% endfor %}</select>
+                <div class="menu-result-meta"><strong data-visible-count>{{ menu_dishes|length }}</strong> món</div>
+            </div>
+            <div class="order-dish-grid">
+                {% for dish in menu_dishes %}
+                <article class="order-dish-card" data-dish-card data-category="{{ dish.category_id }}" data-search-text="{{ dish.code }} {{ dish.name }} {{ dish.category.name }}" data-name="{{ dish.name }}" data-price="{{ dish.price }}" data-unit="{{ dish.unit.name }}">
+                    <input class="dish-check" type="checkbox" name="dishes" value="{{ dish.pk }}" id="dish-{{ dish.pk }}" data-dish-check {% if dish.order_selected %}checked{% endif %}>
+                    <label class="dish-card-select" for="dish-{{ dish.pk }}">
+                        <span class="dish-card-image">{% if dish.thumbnail %}<img src="{{ dish.thumbnail.url }}" alt="{{ dish.name }}" width="240" height="180" loading="lazy" decoding="async">{% else %}<img src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa có ảnh {{ dish.name }}" width="240" height="180" loading="lazy" decoding="async">{% endif %}<span class="dish-selected-mark"><svg class="app-icon" aria-hidden="true"><use href="#icon-check"></use></svg></span></span>
+                        <span class="dish-card-copy"><small>{{ dish.category.name }} · {{ dish.code }}</small><strong>{{ dish.name }}</strong><span>{{ dish.price|dong }} đ / {{ dish.unit.name }}</span></span>
+                    </label>
+                    <div class="dish-card-controls">
+                        <div class="quantity-stepper"><button type="button" data-quantity-minus aria-label="Giảm {{ dish.name }}">−</button><input type="number" name="quantity_{{ dish.pk }}" value="{{ dish.order_quantity }}" min="1" max="100" inputmode="numeric" aria-label="Số lượng {{ dish.name }}" data-quantity><button type="button" data-quantity-plus aria-label="Tăng {{ dish.name }}">+</button></div>
+                        <input class="form-control form-control-sm" type="text" name="note_{{ dish.pk }}" value="{{ dish.order_note }}" maxlength="500" placeholder="Ghi chú cho bếp..." aria-label="Ghi chú {{ dish.name }}" data-dish-note>
+                    </div>
+                </article>
+                {% empty %}<div class="project-card menu-empty">Chưa có món nào đang phục vụ.</div>{% endfor %}
+            </div>
+        </main>
+
+        <aside class="pos-bill-pane">
+            <div class="pos-bill-head"><div><strong>Hóa đơn bàn {{ order.booking.table.code }}</strong><span>{{ order.order_code }}</span></div><span class="pos-order-state">Đang phục vụ</span></div>
+            <div class="pos-bill-scroll">
+                {% if existing_items %}
+                <section class="bill-section"><h2>Món đã gọi <span>{{ existing_items|length }}</span></h2>
+                    {% for item in existing_items %}<div class="bill-line"><div><strong>{{ item.dish_name }}</strong><small>{{ item.quantity }} × {{ item.unit_price|dong }} đ · {{ item.get_status_display }}</small></div><div class="bill-line-actions"><b>{{ item.subtotal|dong }} đ</b>{% if item.status == 'DRAFT' or item.status == 'SENT' or item.status == 'COOKING' and access.can_cancel_prepared_items or item.status == 'READY' and access.can_cancel_prepared_items %}<button class="bill-remove" type="button" data-confirm-action data-action-url="{% url 'orders:transition_item' order.pk item.pk 'CANCELLED' %}?next=add" data-revision="{{ order.revision }}" data-confirm-reason="true" data-confirm-tone="danger" data-confirm-title="Hủy món {{ item.dish_name }}?" data-confirm-message="Món sẽ bị loại khỏi đơn và thao tác được lưu vào nhật ký." data-confirm-label="Hủy món" aria-label="Hủy {{ item.dish_name }}">×</button>{% endif %}</div></div>{% endfor %}
+                </section>
+                {% endif %}
+                <section class="bill-section bill-new-items"><h2>Món đang chọn <span data-selected-count>0</span></h2><div class="bill-empty" data-selected-empty>Chạm vào món để thêm nhanh</div><div data-selected-summary></div></section>
+            </div>
+            <div class="pos-bill-total">
+                <div><span>Đơn hiện tại</span><strong>{{ existing_order_total|dong }} đ</strong></div>
+                <div><span>Món vừa chọn</span><strong data-selected-total>0 đ</strong></div>
+                <div class="grand-total"><span>Tạm tính</span><strong data-grand-total>{{ existing_order_total|dong }} đ</strong></div>
+                <button class="btn btn-primary" type="submit" data-add-selected disabled>Thêm <span data-checkout-count>0</span> món vào đơn</button>
+            </div>
+        </aside>
+    </form>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/order-menu.js' %}" defer></script>{% endblock %}

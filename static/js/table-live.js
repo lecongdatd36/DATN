@@ -9,12 +9,14 @@
     let timer;
     let controller;
     let stopped = false;
-    const normalMessage = "Tự cập nhật mỗi 15 giây khi đang xem trang.";
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const refreshDelay = connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || "") ? 60000 : 30000;
+    const normalMessage = "Tự cập nhật khi trạng thái bàn thay đổi.";
     message.textContent = normalMessage;
 
     function schedule() {
         clearTimeout(timer);
-        if (!stopped && !document.hidden) timer = setTimeout(refresh, 15000);
+        if (!stopped && !document.hidden) timer = setTimeout(refresh, refreshDelay);
     }
 
     async function refresh() {
@@ -42,7 +44,7 @@
             const replacement = parsed.querySelector("#table-live-results");
             if (!replacement) throw new Error("Missing table results");
             if (!document.hidden && !stopped && !current.contains(document.activeElement)) {
-                current.replaceWith(replacement);
+                if (current.dataset.stateSignature !== replacement.dataset.stateSignature) current.replaceWith(replacement);
                 message.textContent = normalMessage;
             }
         } catch (_) {

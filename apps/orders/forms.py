@@ -6,7 +6,7 @@ from apps.bookings.selectors import default_duration_minutes
 from apps.customers.validators import normalize_phone
 from apps.menu.models import Dish
 from apps.seating.models import DiningTable
-from .models import Order
+from .models import Order, Payment
 
 
 class VisitChoiceField(forms.ModelChoiceField):
@@ -64,6 +64,50 @@ class AddItemForm(ItemEditForm):
     field_order = ("dish", "quantity", "note", "expected_revision")
 
 
+class BulkAddItemsForm(forms.Form):
+    dishes = forms.ModelMultipleChoiceField(
+        label="Món đã chọn",
+        queryset=Dish.objects.none(),
+        error_messages={
+            "required": "Hãy chọn ít nhất một món.",
+            "invalid_choice": "Một món đã hết hoặc ngừng phục vụ. Hãy tải lại thực đơn.",
+        },
+    )
+    expected_revision = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+
+    def __init__(self, *args, dishes_queryset=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["dishes"].queryset = dishes_queryset if dishes_queryset is not None else Dish.objects.none()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        selected = cleaned_data.get("dishes")
+        if not selected:
+            return cleaned_data
+        if selected.count() > 50:
+            self.add_error("dishes", "Mỗi lần chỉ thêm tối đa 50 món.")
+            return cleaned_data
+
+        items = []
+        for dish in selected:
+            raw_quantity = self.data.get(f"quantity_{dish.pk}", "1")
+            try:
+                quantity = int(raw_quantity)
+            except (TypeError, ValueError):
+                self.add_error(None, f"Số lượng của {dish.name} không hợp lệ.")
+                continue
+            if not 1 <= quantity <= 100:
+                self.add_error(None, f"Số lượng của {dish.name} phải từ 1 đến 100.")
+                continue
+            note = self.data.get(f"note_{dish.pk}", "").strip()
+            if len(note) > 500:
+                self.add_error(None, f"Ghi chú của {dish.name} không được dài quá 500 ký tự.")
+                continue
+            items.append({"dish_id": dish.pk, "quantity": quantity, "note": note})
+        cleaned_data["items"] = items
+        return cleaned_data
+
+
 class ReasonForm(RevisionForm):
     reason = forms.CharField(label="Lý do hủy", max_length=500, widget=forms.Textarea(attrs={"rows": 3}))
 
@@ -73,6 +117,25 @@ class PaymentForm(RevisionForm):
     payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=[("CASH", "Tiền mặt"), ("CARD", "Thẻ"), ("TRANSFER", "Chuyển khoản"), ("OTHER", "Khác")])
     reference = forms.CharField(label="Ghi chú / mã giao dịch", max_length=100, required=False)
     field_order = ("amount", "payment_method", "reference", "expected_revision")
+
+
+class TablePaymentForm(BootstrapFormMixin, forms.Form):
+    orders = forms.ModelMultipleChoiceField(
+        label="Bàn thanh toán",
+        queryset=Order.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        error_messages={
+            "required": "Hãy chọn ít nhất một bàn cần thanh toán.",
+            "invalid_choice": "Một bàn đã thay đổi trạng thái. Hãy tải lại danh sách.",
+        },
+    )
+    payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=Payment.Method.choices)
+    reference = forms.CharField(label="Ghi chú / mã giao dịch", max_length=100, required=False)
+
+    def __init__(self, *args, order_queryset=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["orders"].queryset = order_queryset if order_queryset is not None else Order.objects.none()
+        self.fields["orders"].widget.attrs["class"] = "form-check-input"
 
 
 class OrderFilterForm(BootstrapFormMixin, forms.Form):

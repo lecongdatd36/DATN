@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static menu_money %}
+{% block title %}Báo cáo nhà hàng · QLNH{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/reports.css' %}">{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5 report-page">
+    <div class="dashboard-heading">
+        <div>
+            <p class="eyebrow mb-2">PHÂN TÍCH VẬN HÀNH</p>
+            <h1 class="h2">Báo cáo nhà hàng</h1>
+            <p class="text-secondary mb-0">Theo dõi doanh thu, dòng tiền, món bán chạy, bàn và tình hình phục vụ.</p>
+        </div>
+        {% if report_ready %}<a class="btn btn-outline-primary" href="{% url 'reports:export_revenue' %}?date_from={{ date_from|date:'Y-m-d' }}&amp;date_to={{ date_to|date:'Y-m-d' }}"><svg class="app-icon me-1" aria-hidden="true"><use href="#icon-download"></use></svg> Xuất CSV</a>{% endif %}
+    </div>
+
+    <form class="project-card report-filter p-3 p-md-4 mb-4" method="get">
+        {% if filter_form.non_field_errors %}<div class="alert alert-danger py-2">{{ filter_form.non_field_errors }}</div>{% endif %}
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-sm-5 col-xl-3"><label class="form-label" for="{{ filter_form.date_from.id_for_label }}">{{ filter_form.date_from.label }}</label>{{ filter_form.date_from }}{% for error in filter_form.date_from.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-12 col-sm-5 col-xl-3"><label class="form-label" for="{{ filter_form.date_to.id_for_label }}">{{ filter_form.date_to.label }}</label>{{ filter_form.date_to }}{% for error in filter_form.date_to.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-12 col-sm-2 col-xl-auto"><button class="btn btn-primary w-100" type="submit">Xem báo cáo</button></div>
+        </div>
+    </form>
+
+    {% if report_ready %}
+    <div class="report-period mb-3">Số liệu từ <strong>{{ date_from|date:'d/m/Y' }}</strong> đến <strong>{{ date_to|date:'d/m/Y' }}</strong></div>
+    <div class="metric-grid mb-4">
+        <article class="metric-card metric-primary"><span class="metric-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-chart"></use></svg></span><div><span>Doanh thu đã chốt</span><strong>{{ revenue|dong }} đ</strong><small>{{ invoice_count }} hóa đơn đã thanh toán</small></div></article>
+        <article class="metric-card metric-success"><span class="metric-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-wallet"></use></svg></span><div><span>Tiền thực thu</span><strong>{{ collected|dong }} đ</strong><small>Theo thời điểm ghi nhận phiếu thu</small></div></article>
+        <article class="metric-card"><span class="metric-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-receipt"></use></svg></span><div><span>Giá trị trung bình</span><strong>{{ average_bill|dong }} đ</strong><small>Trung bình mỗi hóa đơn đã chốt</small></div></article>
+        <article class="metric-card metric-warning"><span class="metric-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-clock"></use></svg></span><div><span>Đang chờ thu</span><strong>{{ outstanding.total|dong }} đ</strong><small>{{ outstanding.count }} hóa đơn chưa thu đủ hiện tại</small></div></article>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-xl-8">
+            <section class="project-card h-100 overflow-hidden">
+                <div class="report-card-header"><div><h2 class="h5 mb-1">Doanh thu theo ngày</h2><p class="small text-secondary mb-0">Tính theo ngày hóa đơn được thanh toán đủ.</p></div></div>
+                <div class="daily-chart">
+                    {% for row in revenue_by_day %}
+                    <div class="chart-row"><time datetime="{{ row.day|date:'Y-m-d' }}">{{ row.day|date:'d/m' }}</time><div class="chart-track"><span style="width: {{ row.percent|stringformat:'.2f' }}%"></span></div><strong>{{ row.total|dong }} đ</strong><small>{{ row.invoice_count }} HĐ</small></div>
+                    {% empty %}<div class="report-empty">Chưa có hóa đơn đã thanh toán trong khoảng thời gian này.</div>{% endfor %}
+                </div>
+            </section>
+        </div>
+        <div class="col-12 col-xl-4">
+            <section class="project-card h-100 overflow-hidden">
+                <div class="report-card-header"><div><h2 class="h5 mb-1">Phương thức thanh toán</h2><p class="small text-secondary mb-0">Cơ cấu tiền thực thu trong kỳ.</p></div></div>
+                <div class="method-list">
+                    {% for method in payment_methods %}
+                    <div class="method-item"><div class="d-flex justify-content-between gap-3"><span>{{ method.label }} <small class="text-secondary">({{ method.payment_count }} lượt)</small></span><strong>{{ method.total|dong }} đ</strong></div><div class="method-track"><span style="width: {{ method.percent|stringformat:'.2f' }}%"></span></div></div>
+                    {% empty %}<div class="report-empty">Chưa có phiếu thu trong kỳ.</div>{% endfor %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="operation-grid mb-4">
+        <article class="operation-card"><span>Đặt bàn / lượt khách</span><strong>{{ booking_summary.total }}</strong><small>{{ booking_summary.guests }} khách dự kiến</small></article>
+        <article class="operation-card"><span>Đã tiếp nhận phục vụ</span><strong>{{ booking_summary.served }}</strong><small>{{ booking_summary.completed }} lượt đã hoàn tất</small></article>
+        <article class="operation-card"><span>Hủy / không đến</span><strong>{{ booking_summary.cancelled }}</strong><small>Theo lịch bắt đầu trong kỳ</small></article>
+        <article class="operation-card"><span>Khách trực tiếp</span><strong>{{ booking_summary.walk_ins }}</strong><small>Không đặt bàn trước</small></article>
+        <article class="operation-card"><span>Khách hàng mới</span><strong>{{ new_customers }}</strong><small>Hồ sơ được tạo trong kỳ</small></article>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-xl-7">
+            <section class="project-card overflow-hidden">
+                <div class="report-card-header"><div><h2 class="h5 mb-1">Top món bán chạy</h2><p class="small text-secondary mb-0">Không tính món đã hủy.</p></div></div>
+                <div class="table-responsive mobile-card-wrapper"><table class="table report-table"><thead><tr><th>Món</th><th class="text-end">Số lượng</th><th class="text-end">Số đơn</th><th class="text-end">Doanh thu</th></tr></thead><tbody>{% for dish in top_dishes %}<tr><th><span class="d-block text-break">{{ dish.dish_name }}</span><small class="text-secondary">{{ dish.dish_code }} · {{ dish.unit_name }}</small></th><td class="text-end">{{ dish.sold_quantity }}</td><td class="text-end">{{ dish.order_count }}</td><td class="text-end text-nowrap fw-semibold">{{ dish.revenue|dong }} đ</td></tr>{% empty %}<tr class="mobile-empty-row"><td colspan="4" class="text-center py-5">Chưa có dữ liệu món bán.</td></tr>{% endfor %}</tbody></table></div>
+            </section>
+        </div>
+        <div class="col-12 col-xl-5">
+            <section class="project-card overflow-hidden">
+                <div class="report-card-header"><div><h2 class="h5 mb-1">Bàn tạo doanh thu</h2><p class="small text-secondary mb-0">Xếp hạng theo hóa đơn đã chốt.</p></div></div>
+                <div class="table-responsive mobile-card-wrapper"><table class="table report-table"><thead><tr><th>Bàn</th><th class="text-end">Hóa đơn</th><th class="text-end">Doanh thu</th></tr></thead><tbody>{% for table in top_tables %}<tr><th>{{ table.order__booking__table__code }}<small class="d-block text-secondary">{{ table.order__booking__table__area__name }}</small></th><td class="text-end">{{ table.invoice_count }}</td><td class="text-end text-nowrap fw-semibold">{{ table.revenue|dong }} đ</td></tr>{% empty %}<tr class="mobile-empty-row"><td colspan="3" class="text-center py-5">Chưa có dữ liệu bàn.</td></tr>{% endfor %}</tbody></table></div>
+            </section>
+        </div>
+    </div>
+
+    <section class="project-card overflow-hidden">
+        <div class="report-card-header"><div><h2 class="h5 mb-1">Hóa đơn gần nhất</h2><p class="small text-secondary mb-0">10 hóa đơn thanh toán gần nhất trong kỳ.</p></div><a href="{% url 'orders:list' %}?status=PAID">Xem đơn hàng</a></div>
+        <div class="table-responsive mobile-card-wrapper"><table class="table report-table"><thead><tr><th>Hóa đơn</th><th>Bàn / khu vực</th><th>Khách hàng</th><th>Thanh toán</th><th>Chốt lúc</th><th class="text-end">Tổng tiền</th></tr></thead><tbody>{% for invoice in recent_invoices %}<tr><th><a href="{{ invoice.order.get_absolute_url }}">{{ invoice.invoice_code }}</a><small class="d-block text-secondary">{{ invoice.order.order_code }}</small></th><td>{{ invoice.order.booking.table.code }}<small class="d-block text-secondary">{{ invoice.order.booking.table.area.name }}</small></td><td class="text-break">{{ invoice.order.booking.customer_name }}</td><td>{% for payment in invoice.payments.all %}{% if not forloop.first %}, {% endif %}{{ payment.get_method_display }}{% if payment.batch_id %}<small class="d-block text-secondary">{{ payment.batch.batch_code }}</small>{% endif %}{% empty %}—{% endfor %}</td><td class="text-nowrap">{{ invoice.closed_at|date:'d/m/Y H:i' }}</td><td class="text-end text-nowrap fw-semibold">{{ invoice.total|dong }} đ</td></tr>{% empty %}<tr class="mobile-empty-row"><td colspan="6" class="text-center py-5">Chưa có hóa đơn đã thanh toán.</td></tr>{% endfor %}</tbody></table></div>
+    </section>
+    {% else %}
+    <div class="project-card report-empty">Hãy sửa khoảng ngày không hợp lệ rồi xem lại báo cáo.</div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -4,56 +4,98 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Ứng dụng quản lý nhà hàng tích hợp AI.">
+    <meta name="description" content="Ứng dụng quản lý nhà hàng QLNH.">
     <title>{% block title %}QLNH · Quản lý nhà hàng{% endblock %}</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body class="{% if user.is_authenticated %}staff-layout{% else %}public-layout d-flex flex-column min-vh-100{% endif %}">
+    {% include 'includes/icon_sprite.html' %}
     <a class="visually-hidden-focusable skip-link" href="#main-content">Chuyển đến nội dung chính</a>
-    <header class="site-header">
-        <nav class="container-fluid px-3 px-lg-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-3" aria-label="Điều hướng chính">
-            <a class="brand text-decoration-none d-flex align-items-center gap-3" href="{% url 'home' %}">
-                <span class="brand-mark" aria-hidden="true">Q</span>
-                <span><strong class="d-block">QLNH</strong><span class="brand-caption">Quản lý nhà hàng</span></span>
-            </a>
-            {% block navigation %}
-            <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3">
-                {% if user.is_authenticated %}
-                <span class="small d-none d-md-inline text-secondary">{{ user.get_full_name|default:user.username }}</span>
-                <form method="post" action="{% url 'accounts:logout' %}">
-                    {% csrf_token %}
-                    <button class="btn btn-outline-secondary btn-sm" type="submit">Đăng xuất</button>
-                </form>
-                <button class="btn btn-outline-primary btn-sm d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-navigation" aria-controls="sidebar-navigation" aria-expanded="false">Menu</button>
-                {% else %}
-                <a class="btn btn-primary btn-sm" href="{% url 'accounts:login' %}">Đăng nhập</a>
-                {% endif %}
+
+    {% if user.is_authenticated %}
+    <div class="admin-shell">
+        <button class="sidebar-backdrop" type="button" data-sidebar-close aria-label="Đóng menu"></button>
+        <aside class="admin-sidebar" id="admin-sidebar" aria-label="Menu quản lý">
+            <div class="sidebar-header">
+                <a class="admin-brand" href="{% url 'accounts:workspace' %}" aria-label="Trang quản lý QLNH">
+                    <span class="admin-brand-mark" aria-hidden="true">Q</span>
+                    <span class="admin-brand-copy"><strong>QLNH</strong><small>Quản lý nhà hàng</small></span>
+                </a>
             </div>
-            {% endblock %}
+            <div class="sidebar-scroll">{% include 'includes/sidebar.html' %}</div>
+            <div class="sidebar-account">
+                <span class="user-avatar" aria-hidden="true">{{ user.username|first|upper }}</span>
+                <span class="sidebar-account-copy"><strong>{{ user.employee_profile.full_name|default:user.get_full_name|default:user.username }}</strong><small>{% if user.is_superuser %}Quản trị hệ thống{% else %}{{ user.employee_profile.job_position.name|default:'Nhân viên' }}{% endif %}</small></span>
+            </div>
+            <div class="sidebar-status"><span class="status-dot" aria-hidden="true"></span><span class="sidebar-status-copy">Hệ thống đang hoạt động</span></div>
+        </aside>
+
+        <div class="admin-main">
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="icon-button sidebar-toggle" type="button" data-sidebar-toggle aria-controls="admin-sidebar" aria-expanded="true" aria-label="Thu gọn menu"><svg class="app-icon" aria-hidden="true"><use href="#icon-menu"></use></svg></button>
+                    <div class="topbar-title"><strong>Không gian quản lý</strong><small>Vận hành nhà hàng tập trung</small></div>
+                </div>
+                <div class="topbar-actions">
+                    <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Đổi giao diện sáng tối" title="Đổi giao diện sáng tối"><svg class="app-icon theme-icon-moon" aria-hidden="true"><use href="#icon-moon"></use></svg><svg class="app-icon theme-icon-sun" aria-hidden="true"><use href="#icon-sun"></use></svg></button>
+                    <div class="dropdown">
+                        <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="user-avatar user-avatar-sm" aria-hidden="true">{{ user.username|first|upper }}</span><span class="profile-copy d-none d-sm-flex"><strong>{{ user.employee_profile.full_name|default:user.get_full_name|default:user.username }}</strong><small>{{ user.username }}</small></span></button>
+                        <ul class="dropdown-menu dropdown-menu-end profile-menu">
+                            <li><a class="dropdown-item" href="{% url 'accounts:workspace' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-user"></use></svg> Tài khoản của tôi</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-lock"></use></svg> Đổi mật khẩu</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="dropdown-item text-danger" type="submit"><svg class="app-icon" aria-hidden="true"><use href="#icon-logout"></use></svg> Đăng xuất</button></form></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+    {% else %}
+    <header class="public-header">
+        <nav class="container py-3 d-flex align-items-center justify-content-between gap-3" aria-label="Điều hướng chính">
+            <a class="public-brand" href="{% url 'home' %}"><span class="admin-brand-mark" aria-hidden="true">Q</span><span><strong>QLNH</strong><small>Quản lý nhà hàng</small></span></a>
+            <a class="btn btn-primary btn-sm" href="{% url 'accounts:login' %}">Đăng nhập</a>
         </nav>
     </header>
-    <div class="app-shell flex-grow-1 {% if user.is_authenticated %}app-shell-authenticated{% endif %}">
-        {% if user.is_authenticated %}
-        <aside class="app-sidebar collapse d-lg-block" id="sidebar-navigation" aria-label="Menu làm việc">
-            {% include 'includes/sidebar.html' %}
-        </aside>
-        {% endif %}
-        <main id="main-content" class="app-main" tabindex="-1">
-            <div class="container-fluid px-3 px-md-4 pt-4">
-                {% include 'includes/messages.html' %}
-            </div>
-            {% block content %}{% endblock %}
-        </main>
-    </div>
-    <footer class="site-footer">
-        <div class="container-fluid px-3 px-lg-4 py-3 d-flex flex-wrap justify-content-between gap-2">
-            <span>QLNH · Quản lý nhà hàng</span>
-            <span>Đồ án tốt nghiệp · <span data-current-year>{% now 'Y' %}</span></span>
+    {% endif %}
+
+    <main id="main-content" class="{% if user.is_authenticated %}admin-content{% else %}flex-grow-1{% endif %}" tabindex="-1">
+        <div class="{% if user.is_authenticated %}container-fluid px-3 px-md-4{% else %}container{% endif %} pt-4 message-stack">{% include 'includes/messages.html' %}</div>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if user.is_authenticated %}
+            <footer class="admin-footer"><span>QLNH · Quản lý nhà hàng</span><span>© {% now 'Y' %}</span></footer>
         </div>
-    </footer>
+        {% include 'includes/mobile_nav.html' %}
+    </div>
+    {% else %}
+    <footer class="public-footer"><div class="container py-3 d-flex flex-wrap justify-content-between gap-2"><span>QLNH · Quản lý nhà hàng</span><span>Đồ án tốt nghiệp · {% now 'Y' %}</span></div></footer>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <dialog class="action-dialog" data-action-dialog aria-labelledby="action-dialog-title">
+        <form method="dialog" class="action-dialog-card">
+            {% csrf_token %}
+            <div class="action-dialog-icon" data-dialog-icon>!</div>
+            <div class="action-dialog-copy">
+                <h2 id="action-dialog-title" data-dialog-title>Xác nhận thao tác</h2>
+                <p data-dialog-message>Vui lòng kiểm tra trước khi tiếp tục.</p>
+            </div>
+            <label class="action-dialog-reason" data-dialog-reason-wrap hidden>Lý do <span aria-hidden="true">*</span>
+                <textarea class="form-control" rows="3" maxlength="500" data-dialog-reason placeholder="Nhập lý do để lưu vào nhật ký"></textarea>
+                <small data-dialog-reason-error hidden>Vui lòng nhập lý do.</small>
+            </label>
+            <div class="action-dialog-actions">
+                <button class="btn btn-outline-secondary" type="button" data-dialog-cancel>Quay lại</button>
+                <button class="btn btn-primary" type="button" data-dialog-confirm>Tiếp tục</button>
+            </div>
+        </form>
+    </dialog>
+    {% endif %}
+
     <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}" defer></script>
     <script src="{% static 'js/base.js' %}" defer></script>
     {% block extra_js %}{% endblock %}

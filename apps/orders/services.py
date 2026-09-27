@@ -7,10 +7,11 @@ from django.utils import timezone
 
 from core.seating_lock import lock_seating_schedule
 from core.menu_lock import lock_menu
-from apps.bookings.models import Booking
+from apps.bookings.models import Booking, BookingActivityLog
+from apps.bookings.permissions import has_booking_permission
 from apps.bookings.services import seat_walk_in
 from apps.menu.models import Dish
-from .models import Invoice, Order, OrderItem, OrderActivityLog, Payment
+from .models import Invoice, Order, OrderItem, OrderActivityLog, Payment, PaymentBatch
 from .permissions import has_order_permission
 
 
@@ -104,6 +105,56 @@ def add_item(*, actor, order_id, expected_revision, dish_id, quantity, note=""):
 
 
 @transaction.atomic
+def add_items(*, actor, order_id, expected_revision, items):
+    actor = _lock_actor(actor)
+    order = _order(order_id, expected_revision)
+    if not isinstance(items, list) or not items or len(items) > 50:
+        raise ValidationError("Hãy chọn từ 1 đến 50 món trong mỗi lần thêm.")
+
+    dish_ids = [item.get("dish_id") for item in items if isinstance(item, dict)]
+    if len(dish_ids) != len(items) or len(set(dish_ids)) != len(dish_ids):
+        raise ValidationError("Danh sách món đã chọn không hợp lệ.")
+    dishes = {
+        dish.pk: dish
+        for dish in Dish.objects.select_related("category", "unit").filter(pk__in=dish_ids)
+    }
+    if len(dishes) != len(dish_ids):
+        raise ValidationError("Một món không còn tồn tại. Hãy tải lại thực đơn.")
+
+    created = []
+    for data in items:
+        dish = dishes[data["dish_id"]]
+        if not dish.is_orderable:
+            raise ValidationError(f"{dish.name} đã hết hoặc ngừng phục vụ. Hãy chọn món khác.")
+        quantity = data.get("quantity")
+        _validate_quantity(quantity)
+        note = data.get("note", "").strip() if isinstance(data.get("note", ""), str) else ""
+        if len(note) > 500:
+            raise ValidationError(f"Ghi chú của {dish.name} không được dài quá 500 ký tự.")
+        item = OrderItem(
+            order=order,
+            dish=dish,
+            dish_code=dish.code,
+            dish_name=dish.name,
+            unit_name=dish.unit.name,
+            unit_price=dish.price,
+            quantity=quantity,
+            note=note,
+        )
+        item.full_clean()
+        item.save()
+        created.append(item)
+
+    description = "; ".join(
+        f"#{item.pk} {item.dish_name} × {item.quantity} {item.unit_name}"
+        + (f" ({item.note})" if item.note else "")
+        for item in created
+    )
+    _save(actor, order, f"Thêm {len(created)} món", description)
+    return created
+
+
+@transaction.atomic
 def edit_item(*, actor, order_id, item_id, expected_revision, quantity, note=""):
     actor = _lock_actor(actor)
     _validate_quantity(quantity)
@@ -146,8 +197,10 @@ def transition_item(*, actor, order_id, item_id, expected_revision, target, reas
     if target == OrderItem.Status.CANCELLED:
         if item.status == OrderItem.Status.CANCELLED:
             raise ValidationError("Món đã được hủy.")
-        if item.status in (OrderItem.Status.COOKING, OrderItem.Status.READY, OrderItem.Status.SERVED) and not has_order_permission(actor, "cancel_prepared_item"):
-            raise PermissionDenied("Chỉ Quản lí được hủy món đã bắt đầu làm hoặc đã phục vụ.")
+        if item.status == OrderItem.Status.SERVED:
+            raise ValidationError("Món đã phục vụ không thể hủy. Hãy xử lý điều chỉnh hóa đơn theo quy trình quản lý.")
+        if item.status in (OrderItem.Status.COOKING, OrderItem.Status.READY) and not has_order_permission(actor, "cancel_prepared_item"):
+            raise PermissionDenied("Chỉ Quản lí được hủy món đã bắt đầu làm hoặc đã làm xong.")
         reason = reason.strip() if isinstance(reason, str) else ""
         if not reason:
             raise ValidationError({"reason": "Vui lòng ghi lý do hủy món."})
@@ -256,3 +309,180 @@ def record_payment(*, actor, order_id, expected_revision, amount, payment_method
     description = f"Thu {amount_decimal} đồng bằng {payment.get_method_display()}. Hóa đơn còn lại {invoice.total - invoice.paid_amount} đồng."
     _log(actor, order, "Thanh toán", description)
     return invoice
+
+
+@transaction.atomic
+def pay_tables(*, actor, order_ids, payment_method="CASH", reference=""):
+    actor = _lock_actor(actor, "collect_payment")
+    try:
+        order_ids = sorted({int(order_id) for order_id in order_ids})
+    except (TypeError, ValueError) as exc:
+        raise ValidationError({"orders": "Danh sách bàn thanh toán không hợp lệ."}) from exc
+    if not order_ids:
+        raise ValidationError({"orders": "Hãy chọn ít nhất một bàn cần thanh toán."})
+    if len(order_ids) > 50:
+        raise ValidationError({"orders": "Mỗi lần chỉ thanh toán tối đa 50 bàn."})
+    if payment_method not in Payment.Method.values:
+        raise ValidationError({"payment_method": "Phương thức thanh toán không hợp lệ."})
+    reference = reference.strip() if isinstance(reference, str) else ""
+    if len(reference) > 100:
+        raise ValidationError({"reference": "Ghi chú / mã giao dịch không được dài quá 100 ký tự."})
+
+    booking_ids = list(Order.objects.filter(pk__in=order_ids).values_list("booking_id", flat=True))
+    if len(booking_ids) != len(order_ids):
+        raise ValidationError({"orders": "Một đơn hàng không còn tồn tại. Hãy tải lại danh sách."})
+    bookings = {
+        booking.pk: booking
+        for booking in Booking.objects.select_for_update().select_related("table").filter(pk__in=booking_ids).order_by("pk")
+    }
+    orders = list(
+        Order.objects.select_for_update()
+        .filter(pk__in=order_ids)
+        .select_related("booking__table")
+        .prefetch_related("items")
+        .order_by("pk")
+    )
+    invoices = {
+        invoice.order_id: invoice
+        for invoice in Invoice.objects.select_for_update().filter(order_id__in=order_ids).order_by("pk")
+    }
+
+    payable = []
+    grand_total = Decimal("0")
+    for order in orders:
+        booking = bookings[order.booking_id]
+        if booking.status != Booking.Status.SEATED:
+            raise ValidationError({"orders": f"Bàn {booking.table.code} không còn khách đang phục vụ."})
+        if order.status not in (Order.Status.OPEN, Order.Status.AWAITING_PAYMENT):
+            raise ValidationError({"orders": f"Đơn của bàn {booking.table.code} không còn chờ thanh toán."})
+        live_items = [item for item in order.items.all() if item.status != OrderItem.Status.CANCELLED]
+        if not live_items:
+            raise ValidationError({"orders": f"Bàn {booking.table.code} chưa có món để thanh toán."})
+        if any(item.status != OrderItem.Status.SERVED for item in live_items):
+            raise ValidationError({"orders": f"Bàn {booking.table.code} còn món chưa phục vụ xong."})
+
+        invoice = invoices.get(order.pk)
+        if invoice and invoice.status != Invoice.Status.PENDING:
+            raise ValidationError({"orders": f"Hóa đơn bàn {booking.table.code} không còn chờ thu."})
+        total = invoice.total if invoice else order.total
+        paid_amount = invoice.paid_amount if invoice else Decimal("0")
+        remaining = total - paid_amount
+        if remaining <= 0:
+            raise ValidationError({"orders": f"Bàn {booking.table.code} không còn tiền cần thu."})
+        payable.append((order, booking, invoice, total, remaining))
+        grand_total += remaining
+
+    batch = PaymentBatch.objects.create(
+        total=grand_total,
+        method=payment_method,
+        reference=reference,
+        performed_by=actor,
+        actor_snapshot=actor.username,
+    )
+    now = timezone.now()
+    table_codes = []
+    for order, booking, invoice, total, remaining in payable:
+        if invoice is None:
+            invoice = Invoice.objects.create(
+                order=order,
+                invoice_code=_invoice_code_for(order),
+                total=total,
+                status=Invoice.Status.PENDING,
+                payment_method=payment_method,
+            )
+        Payment.objects.create(
+            invoice=invoice,
+            batch=batch,
+            amount=remaining,
+            method=payment_method,
+            reference=reference,
+            performed_by=actor,
+            actor_snapshot=actor.username,
+        )
+        invoice.paid_amount += remaining
+        invoice.status = Invoice.Status.PAID
+        invoice.payment_method = payment_method
+        invoice.closed_at = now
+        invoice.save(update_fields=("paid_amount", "status", "payment_method", "updated_at", "closed_at"))
+
+        order.status = Order.Status.PAID
+        order.revision += 1
+        order.save(update_fields=("status", "revision", "updated_at"))
+        _log(actor, order, "Thanh toán & trả bàn", f"{batch.batch_code}; hóa đơn {invoice.invoice_code}; thu {remaining} đồng bằng {batch.get_method_display()}.")
+
+        booking.status = Booking.Status.COMPLETED
+        booking.completed_at = now
+        booking.revision += 1
+        booking.save(update_fields=("status", "completed_at", "revision", "updated_at"))
+        BookingActivityLog.objects.create(
+            booking=booking,
+            action="Thanh toán & trả bàn",
+            description=f"{batch.batch_code}; hóa đơn {invoice.invoice_code}; bàn {booking.table.code} đã được giải phóng.",
+            performed_by=actor,
+            actor_snapshot=actor.username,
+        )
+        table_codes.append(booking.table.code)
+
+    return batch, table_codes
+
+
+@transaction.atomic
+def cancel_table_visit(*, actor, booking_id, expected_revision, reason):
+    actor = _lock_actor(actor, "manage_order")
+    if not has_booking_permission(actor, "manage_booking"):
+        raise PermissionDenied("Bạn không có quyền hủy lượt khách đang phục vụ.")
+    reason = reason.strip() if isinstance(reason, str) else ""
+    if not reason or len(reason) > 500:
+        raise ValidationError({"reason": "Lý do hủy bàn phải có từ 1 đến 500 ký tự."})
+
+    booking = Booking.objects.select_for_update().select_related("table").get(pk=booking_id)
+    if booking.status != Booking.Status.SEATED:
+        raise ValidationError("Bàn không còn ở trạng thái đang phục vụ.")
+    if booking.revision != expected_revision:
+        raise ValidationError("Lượt khách đã thay đổi. Hãy tải lại trang trước khi hủy bàn.")
+
+    order = Order.objects.select_for_update().filter(booking=booking).first()
+    now = timezone.now()
+    if order is not None:
+        if order.status == Order.Status.PAID:
+            raise ValidationError("Đơn đã thanh toán. Hãy dùng Hoàn tất để trả bàn, không thể hủy bàn.")
+        if order.status == Order.Status.VOID:
+            raise ValidationError("Đơn đã được hủy trước đó.")
+        invoice = Invoice.objects.select_for_update().filter(order=order).first()
+        if invoice is not None and invoice.paid_amount > 0:
+            raise ValidationError("Đơn đã thu một phần. Cần xử lý hoàn tiền trước khi hủy bàn.")
+
+        items = list(order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED))
+        if any(item.status == OrderItem.Status.SERVED for item in items):
+            raise ValidationError("Bàn đã có món được phục vụ nên không thể hủy. Hãy chuyển đơn sang thanh toán.")
+        has_prepared_items = any(item.status in (OrderItem.Status.COOKING, OrderItem.Status.READY) for item in items)
+        if has_prepared_items and not has_order_permission(actor, "cancel_prepared_item"):
+            raise PermissionDenied("Món đã bắt đầu làm hoặc đã làm xong; chỉ Quản lý được hủy bàn này.")
+        if items:
+            order.items.filter(pk__in=[item.pk for item in items]).update(
+                status=OrderItem.Status.CANCELLED,
+                cancellation_reason=reason,
+                cancelled_at=now,
+            )
+        if invoice is not None:
+            invoice.status = Invoice.Status.VOID
+            invoice.closed_at = now
+            invoice.save(update_fields=("status", "closed_at", "updated_at"))
+        order.status = Order.Status.VOID
+        order.revision += 1
+        order.save(update_fields=("status", "revision", "updated_at"))
+        _log(actor, order, "Hủy bàn", f"Hủy đơn và giải phóng bàn {booking.table.code}. Lý do: {reason}")
+
+    table_code = booking.table.code
+    booking.status = Booking.Status.CANCELLED
+    booking.completed_at = now
+    booking.revision += 1
+    booking.save(update_fields=("status", "completed_at", "revision", "updated_at"))
+    BookingActivityLog.objects.create(
+        booking=booking,
+        action="Hủy bàn",
+        description=f"Khách không tiếp tục sử dụng bàn {table_code}. Lý do: {reason}",
+        performed_by=actor,
+        actor_snapshot=actor.username,
+    )
+    return booking, table_code

@@ -13,7 +13,7 @@ from core.forms import add_service_errors, filter_query_string
 from .forms import AreaFilterForm, AreaForm, DiningTableForm, TableFilterForm
 from .models import Area, DiningTable, SeatingActivityLog
 from .permissions import has_seating_permission
-from .selectors import areas, tables
+from .selectors import areas, table_status_counts, tables
 from .services import save_area, save_table
 
 
@@ -67,7 +67,17 @@ class TableListView(AreaListView):
         return tables(at=self.status_checked_at, **self.filter_form.cleaned_data) if self.filter_form.is_valid() else self.model.objects.none()
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(status_checked_at=self.status_checked_at, **kwargs)
+        context = super().get_context_data(status_checked_at=self.status_checked_at, **kwargs)
+        context["service_areas"] = Area.objects.filter(is_active=True).order_by("name", "pk")
+        context["selected_area_id"] = self.request.GET.get("area", "")
+        context["status_counts"] = table_status_counts(at=self.status_checked_at)
+        page = context.get("page_obj")
+        rows = page.object_list if page is not None else context.get("object_list", [])
+        context["table_state_signature"] = "|".join(
+            f"{table.pk}:{table.current_status}:{table.current_visit_id or 0}:{table.current_visit_revision or 0}:{table.held_booking_revision or 0}:{table.current_order_id or 0}:{table.current_order_status or '-'}:{table.current_order_total}"
+            for table in rows
+        )
+        return context
 
 
 class AreaFormView(SeatingPermissionMixin, FormView):

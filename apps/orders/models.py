@@ -121,6 +121,29 @@ class Invoice(models.Model):
         return self.invoice_code
 
 
+class PaymentBatch(models.Model):
+    total = models.DecimalField("Tổng tiền", max_digits=14, decimal_places=0, validators=[MinValueValidator(1)])
+    method = models.CharField("Phương thức", max_length=20, choices=[
+        ("CASH", "Tiền mặt"), ("CARD", "Thẻ"), ("TRANSFER", "Chuyển khoản"), ("OTHER", "Khác"),
+    ], default="CASH")
+    reference = models.CharField("Ghi chú / mã giao dịch", max_length=100, blank=True)
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    actor_snapshot = models.CharField("Người thực hiện", max_length=150, blank=True)
+    created_at = models.DateTimeField("Thời gian thanh toán", auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        verbose_name = "lần thanh toán nhiều bàn"
+        verbose_name_plural = "các lần thanh toán nhiều bàn"
+
+    @property
+    def batch_code(self):
+        return f"TT{self.pk:06d}" if self.pk else ""
+
+    def __str__(self):
+        return self.batch_code
+
+
 class Payment(models.Model):
     class Method(models.TextChoices):
         CASH = "CASH", "Tiền mặt"
@@ -129,6 +152,7 @@ class Payment(models.Model):
         OTHER = "OTHER", "Khác"
 
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name="payments")
+    batch = models.ForeignKey(PaymentBatch, on_delete=models.PROTECT, related_name="payments", null=True, blank=True)
     amount = models.DecimalField("Số tiền", max_digits=12, decimal_places=0, validators=[MinValueValidator(1), MaxValueValidator(999999999999)])
     method = models.CharField("Phương thức", max_length=20, choices=Method.choices, default=Method.CASH)
     reference = models.CharField("Ghi chú / mã giao dịch", max_length=100, blank=True)

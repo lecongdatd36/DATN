@@ -12,11 +12,12 @@ from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, FormView, ListView
 
 from core.forms import add_service_errors, filter_query_string
-from .forms import BookingFilterForm, BookingForm, SlotForm, TransitionForm, BookingSettingsForm
+from apps.orders.permissions import has_order_permission
+from .forms import BookingFilterForm, BookingForm, SlotForm, TransitionForm, TransferTableForm, CancelSeatedVisitForm, BookingSettingsForm
 from .models import Booking, BookingSettings, BookingSettingsLog
 from .permissions import has_booking_permission
 from .selectors import available_tables, booking_list, overdue_bookings, next_booking
-from .services import TRANSITIONS, save_booking, transition_booking, update_booking_settings
+from .services import TRANSITIONS, save_booking, transfer_table, transition_booking, update_booking_settings
 
 
 @method_decorator(never_cache, name="dispatch")
@@ -84,6 +85,8 @@ class BookingDetailView(BookingPermissionMixin, DetailView):
                     Booking.Status.COMPLETED: "Hoàn tất", Booking.Status.CANCELLED: "Hủy lịch",
                     Booking.Status.NO_SHOW: "Đánh dấu không đến",
                 }
+                if target == Booking.Status.SEATED and has_order_permission(self.request.user, "manage_order"):
+                    labels[target] = "Nhận khách & gọi món"
                 context["actions"].append({"target": target, "label": labels[target]})
         context["early_arrival"] = booking.status == Booking.Status.CONFIRMED and now < booking.starts_at and timezone.localdate(now) == timezone.localdate(booking.starts_at)
         if has_booking_permission(self.request.user, "view_bookingactivitylog"):
@@ -147,7 +150,14 @@ class BookingTransitionView(BookingPermissionMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(booking=self.booking, target_label=self.target.label, early_arrival=self.target == Booking.Status.SEATED and timezone.now() < self.booking.starts_at)
+        opens_order = self.target == Booking.Status.SEATED and has_order_permission(self.request.user, "manage_order")
+        context.update(
+            booking=self.booking,
+            target_label="Nhận khách & gọi món" if opens_order else self.target.label,
+            submit_label="Nhận khách & bắt đầu gọi món" if opens_order else "Xác nhận chuyển trạng thái",
+            opens_order=opens_order,
+            early_arrival=self.target == Booking.Status.SEATED and timezone.now() < self.booking.starts_at,
+        )
         return context
 
     def form_valid(self, form):
@@ -158,8 +168,91 @@ class BookingTransitionView(BookingPermissionMixin, FormView):
             return self.form_invalid(form)
         except Booking.DoesNotExist as error:
             raise Http404("Lịch đặt không còn tồn tại.") from error
+        if self.target == Booking.Status.SEATED and has_order_permission(self.request.user, "manage_order"):
+            from apps.orders import services as order_services
+            try:
+                order = order_services.open_order(actor=self.request.user, booking_id=booking.pk)
+            except ValidationError as error:
+                messages.warning(self.request, f"Đã nhận khách nhưng chưa mở được đơn: {'; '.join(error.messages)}")
+                return HttpResponseRedirect(booking.get_absolute_url())
+            messages.success(self.request, f"Đã nhận khách vào bàn {booking.table.code}. Hãy chọn món cho đơn {order.order_code}.")
+            return HttpResponseRedirect(reverse("orders:add_item", args=[order.pk]))
         messages.success(self.request, f"{booking.booking_code}: {booking.get_status_display()}.")
         return HttpResponseRedirect(booking.get_absolute_url())
+
+
+class TransferTableView(BookingPermissionMixin, FormView):
+    booking_permission = "manage_booking"
+    form_class = TransferTableForm
+    template_name = "bookings/transfer_table.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.booking = get_object_or_404(
+            Booking.objects.select_related("table__area").prefetch_related("order__items"),
+            pk=kwargs["pk"],
+        )
+        if self.booking.status != Booking.Status.SEATED:
+            raise Http404("Lượt khách không còn ở trạng thái đang phục vụ.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["booking"] = self.booking
+        kwargs["initial"] = {"expected_revision": self.booking.revision}
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(booking=self.booking, **kwargs)
+
+    def form_valid(self, form):
+        try:
+            booking, old_table = transfer_table(
+                actor=self.request.user,
+                booking_id=self.booking.pk,
+                table_id=form.cleaned_data["table"].pk,
+                expected_revision=form.cleaned_data["expected_revision"],
+            )
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Đã chuyển {booking.booking_code} từ bàn {old_table.code} sang bàn {booking.table.code}.")
+        return HttpResponseRedirect(reverse("seating:table_list"))
+
+
+class CancelSeatedVisitView(BookingPermissionMixin, FormView):
+    booking_permission = "manage_booking"
+    form_class = CancelSeatedVisitForm
+    template_name = "bookings/cancel_seated.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.booking = get_object_or_404(
+            Booking.objects.select_related("table__area").prefetch_related("order__items"),
+            pk=kwargs["pk"],
+        )
+        if self.booking.status != Booking.Status.SEATED:
+            raise Http404("Bàn không còn ở trạng thái đang phục vụ.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        return {"expected_revision": self.booking.revision}
+
+    def get_context_data(self, **kwargs):
+        order = getattr(self.booking, "order", None)
+        return super().get_context_data(booking=self.booking, visit_order=order, **kwargs)
+
+    def form_valid(self, form):
+        from apps.orders.services import cancel_table_visit
+        try:
+            booking, table_code = cancel_table_visit(
+                actor=self.request.user,
+                booking_id=self.booking.pk,
+                **form.cleaned_data,
+            )
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Đã hủy lượt khách {booking.booking_code} và giải phóng bàn {table_code}.")
+        return HttpResponseRedirect(reverse("seating:table_list"))
 
 
 class AvailabilityView(BookingPermissionMixin, FormView):

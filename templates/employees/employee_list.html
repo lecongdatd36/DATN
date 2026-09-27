@@ -27,8 +27,8 @@
                 <div class="d-flex flex-wrap justify-content-end gap-1">
                     <a class="btn btn-sm btn-outline-primary" href="{% url 'employees:employee_update' employee.pk %}">Sửa hồ sơ</a>
                     <a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:password_reset' employee.user.pk %}">Đặt lại mật khẩu</a>
-                    {% if employee.user.is_active %}<a class="btn btn-sm btn-outline-danger" href="{% url 'accounts:account_lock' employee.user.pk %}">Khóa tài khoản</a>
-                    {% elif employee.employment_status != 'RESIGNED' %}<a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:account_unlock' employee.user.pk %}">Mở khóa tài khoản</a>{% endif %}
+                    {% if employee.user.is_active %}<a class="btn btn-sm btn-outline-danger" href="{% url 'accounts:account_lock' employee.user.pk %}" data-confirm-action data-confirm-tone="danger" data-confirm-title="Khóa tài khoản {{ employee.user.username }}?" data-confirm-message="Nhân viên sẽ bị đăng xuất và không thể đăng nhập cho đến khi được mở khóa." data-confirm-label="Khóa tài khoản">Khóa tài khoản</a>
+                    {% elif employee.employment_status != 'RESIGNED' %}<a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:account_unlock' employee.user.pk %}" data-confirm-action data-confirm-title="Mở khóa tài khoản {{ employee.user.username }}?" data-confirm-message="Nhân viên sẽ có thể đăng nhập lại bằng mật khẩu hiện tại." data-confirm-label="Mở khóa">Mở khóa tài khoản</a>{% endif %}
                 </div>
                 {% else %}<span class="small text-secondary">Chỉ xem</span>{% endif %}
             </td>

@@ -13,10 +13,11 @@ from django.views.generic import DetailView, FormView, ListView
 
 from core.forms import add_service_errors, filter_query_string
 from apps.bookings.models import Booking
-from .forms import OpenOrderForm, WalkInForm, AddItemForm, ItemEditForm, RevisionForm, ReasonForm, PaymentForm, OrderFilterForm, KitchenFilterForm
-from .models import Order, OrderItem
+from apps.menu.models import Dish
+from .forms import OpenOrderForm, WalkInForm, AddItemForm, BulkAddItemsForm, ItemEditForm, RevisionForm, ReasonForm, PaymentForm, TablePaymentForm, OrderFilterForm, KitchenFilterForm
+from .models import Order, OrderItem, Payment
 from .permissions import has_order_permission
-from .selectors import order_list, kitchen_items
+from .selectors import order_list, kitchen_items, payable_table_orders, payment_areas
 from . import services
 
 
@@ -46,7 +47,9 @@ class OrderListView(OrderPermissionMixin, ListView):
 class OrderDetailView(OrderPermissionMixin, DetailView):
     order_permission = "view_order"
     queryset = Order.objects.select_related("booking__table", "invoice").prefetch_related(
-        Prefetch("items", queryset=OrderItem.objects.select_related("dish")), "invoice__payments")
+        Prefetch("items", queryset=OrderItem.objects.select_related("dish")),
+        Prefetch("invoice__payments", queryset=Payment.objects.select_related("batch")),
+    )
     context_object_name = "order"
     template_name = "orders/detail.html"
 
@@ -75,7 +78,7 @@ class OpenOrderView(OrderPermissionMixin, FormView):
         return {"booking": self.request.GET.get("booking")}
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(title=self.title, back_url=reverse("orders:list"), **kwargs)
+        return super().get_context_data(title=self.title, back_url=reverse("orders:list"), submit_label="Mở đơn & chọn món", **kwargs)
 
     def save(self, data):
         return services.open_order(actor=self.request.user, booking_id=data["booking"].pk)
@@ -88,6 +91,8 @@ class OpenOrderView(OrderPermissionMixin, FormView):
             return self.form_invalid(form)
         except Booking.DoesNotExist as error:
             raise Http404("Lượt khách không còn tồn tại.") from error
+        if order.status == Order.Status.OPEN:
+            return HttpResponseRedirect(reverse("orders:add_item", args=[order.pk]))
         return HttpResponseRedirect(order.get_absolute_url())
 
 
@@ -97,6 +102,11 @@ class WalkInView(OpenOrderView):
 
     def get_initial(self):
         return {"table": self.request.GET.get("table"), "party_size": 1}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["submit_label"] = "Nhận khách & chọn món"
+        return context
 
     def save(self, data):
         data = data.copy()
@@ -112,19 +122,47 @@ class OrderActionView(OrderPermissionMixin, FormView):
               "await": "Chuyển đơn sang chờ thanh toán", "reopen": "Tiếp tục gọi món", "void": "Hủy đơn"}
 
     def get_form_class(self):
-        return {"add": AddItemForm, "edit": ItemEditForm, "void": ReasonForm}.get(self.action, RevisionForm)
+        return {"add": BulkAddItemsForm, "edit": ItemEditForm, "void": ReasonForm}.get(self.action, RevisionForm)
+
+    def get_template_names(self):
+        return ["orders/add_items.html"] if self.action == "add" else [self.template_name]
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        self.order = get_object_or_404(Order.objects.select_related("booking__table"), pk=self.kwargs["pk"])
+        self.order = get_object_or_404(
+            Order.objects.select_related("booking__table").prefetch_related("items"),
+            pk=self.kwargs["pk"],
+        )
         self.item = get_object_or_404(OrderItem.objects.select_related("dish"), pk=self.kwargs["item_id"], order=self.order) if "item_id" in self.kwargs else None
         kwargs["initial"] = {"expected_revision": self.order.revision, "quantity": self.item.quantity if self.item else 1,
                              "note": self.item.note if self.item else ""}
+        if self.action == "add":
+            self.menu_dishes = list(
+                Dish.objects.filter(
+                    status=Dish.Status.AVAILABLE,
+                    category__is_active=True,
+                    unit__is_active=True,
+                ).select_related("category", "unit").order_by("category__name", "name", "pk")
+            )
+            kwargs["dishes_queryset"] = Dish.objects.filter(pk__in=[dish.pk for dish in self.menu_dishes])
         return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(order=self.order, item=self.item, title=self.titles[self.action], back_url=self.order.get_absolute_url(), action=self.action)
+        if self.action == "add":
+            selected_ids = set(self.request.POST.getlist("dishes"))
+            for dish in self.menu_dishes:
+                dish.order_selected = str(dish.pk) in selected_ids
+                dish.order_quantity = self.request.POST.get(f"quantity_{dish.pk}", "1")
+                dish.order_note = self.request.POST.get(f"note_{dish.pk}", "")
+            context["menu_dishes"] = self.menu_dishes
+            context["menu_categories"] = list(dict.fromkeys(dish.category for dish in self.menu_dishes))
+            context["existing_items"] = [
+                item for item in self.order.items.all()
+                if item.status != OrderItem.Status.CANCELLED
+            ]
+            context["existing_order_total"] = self.order.total
         if self.action == "send" and self.item is None:
             context["draft_items"] = self.order.items.filter(status=OrderItem.Status.DRAFT)
         return context
@@ -132,8 +170,8 @@ class OrderActionView(OrderPermissionMixin, FormView):
     def save(self, data):
         base = dict(actor=self.request.user, order_id=self.order.pk, **data)
         if self.action == "add":
-            base["dish_id"] = base.pop("dish").pk
-            services.add_item(**base)
+            base.pop("dishes", None)
+            services.add_items(**base)
         elif self.action == "edit":
             services.edit_item(item_id=self.item.pk, **base)
         elif self.action == "send":
@@ -193,6 +231,54 @@ class OrderPaymentView(OrderPermissionMixin, FormView):
         return HttpResponseRedirect(self.order.get_absolute_url())
 
 
+class TablePaymentView(OrderPermissionMixin, FormView):
+    order_permission = "collect_payment"
+    form_class = TablePaymentForm
+    template_name = "orders/table_payment.html"
+
+    def get_area_id(self):
+        return self.request.POST.get("area") or self.request.GET.get("area") or ""
+
+    def get_ready_orders(self):
+        if not hasattr(self, "ready_orders"):
+            self.ready_orders = payable_table_orders(area_id=self.get_area_id() or None)
+        return self.ready_orders
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        ready_orders = self.get_ready_orders()
+        kwargs["order_queryset"] = Order.objects.filter(pk__in=[order.pk for order in ready_orders])
+        if self.request.method == "GET":
+            kwargs["initial"] = {"payment_method": "CASH"}
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            ready_orders=self.get_ready_orders(),
+            areas=payment_areas(),
+            selected_area=self.get_area_id(),
+            selected_order_ids=self.request.POST.getlist("orders"),
+        )
+        return context
+
+    def form_valid(self, form):
+        try:
+            batch, table_codes = services.pay_tables(
+                actor=self.request.user,
+                order_ids=form.cleaned_data["orders"].values_list("pk", flat=True),
+                payment_method=form.cleaned_data["payment_method"],
+                reference=form.cleaned_data["reference"],
+            )
+        except ValidationError as error:
+            add_service_errors(form, error)
+            if hasattr(self, "ready_orders"):
+                del self.ready_orders
+            return self.form_invalid(form)
+        messages.success(self.request, f"{batch.batch_code}: đã thanh toán và trả {len(table_codes)} bàn ({', '.join(table_codes)}).")
+        return HttpResponseRedirect(reverse("seating:table_list"))
+
+
 class ItemTransitionView(OrderActionView):
     targets = {"COOKING": "Bắt đầu làm món", "READY": "Món đã làm xong", "SERVED": "Xác nhận đã phục vụ", "CANCELLED": "Hủy món"}
 
@@ -210,6 +296,8 @@ class ItemTransitionView(OrderActionView):
         kwargs = super().get_form_kwargs()
         if self.order_permission == "work_kitchen" and self.item.status in (OrderItem.Status.DRAFT, OrderItem.Status.CANCELLED):
             raise Http404("Món chưa gửi Bếp hoặc đã hủy.")
+        if self.target == OrderItem.Status.CANCELLED and self.item.status == OrderItem.Status.SERVED:
+            raise Http404("Món đã phục vụ không thể hủy.")
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -226,6 +314,12 @@ class ItemTransitionView(OrderActionView):
         response = super().form_valid(form)
         if isinstance(response, HttpResponseRedirect) and self.order_permission == "work_kitchen":
             return HttpResponseRedirect(reverse("orders:kitchen"))
+        if (
+            isinstance(response, HttpResponseRedirect)
+            and self.target == OrderItem.Status.CANCELLED
+            and self.request.GET.get("next") == "add"
+        ):
+            return HttpResponseRedirect(reverse("orders:add_item", args=[self.order.pk]))
         return response
 
 

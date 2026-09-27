@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Chuyển bàn {{ booking.booking_code }} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">PHỤC VỤ TẠI BÀN</p>
+    <h1 class="h2 mb-2">Chuyển bàn {{ booking.table.code }}</h1>
+    <p class="text-secondary mb-4">{{ booking.customer_name }} · {{ booking.party_size }} khách. Đơn hàng, món đã gọi và hóa đơn được giữ nguyên.</p>
+    <div class="row"><div class="col-lg-7 col-xl-5">
+        <form method="post" class="project-card p-3 p-md-4" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            {{ form.expected_revision }}
+            <div class="mb-3"><label class="form-label" for="{{ form.table.id_for_label }}">{{ form.table.label }}</label>{{ form.table }}{% if form.table.help_text %}<div class="form-text">{{ form.table.help_text }}</div>{% endif %}{% for error in form.table.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="alert alert-light border small">Sau khi xác nhận, bàn {{ booking.table.code }} được giải phóng ngay và bàn mới chuyển sang trạng thái có khách.</div>
+            <div class="d-flex gap-2"><button class="btn btn-primary" type="submit">Xác nhận chuyển bàn</button><a class="btn btn-outline-secondary" href="{% url 'seating:table_list' %}">Hủy</a></div>
+        </form>
+    </div></div>
+</section>
+{% endblock %}

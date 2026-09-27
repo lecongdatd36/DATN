@@ -17,6 +17,8 @@
 
 Phiên bản dependency cụ thể được cố định trong `requirements.txt`. `tzdata` 2026.4 cung cấp dữ liệu múi giờ cho môi trường Windows. Các thư viện xử lý dữ liệu và Machine Learning sẽ được bổ sung ở giai đoạn AI.
 
+Giao diện quản lý dùng bộ layout tự xây trên Bootstrap: sidebar theo quyền có thể thu gọn, topbar tài khoản, chế độ sáng/tối, menu mobile và dashboard thao tác nhanh. Thiết kế tham khảo phong cách admin dashboard hiện đại nhưng không sao chép hoặc phụ thuộc tài nguyên của template bên ngoài; toàn bộ CSS, JavaScript và SVG icon nằm trong mã nguồn dự án để dễ bảo trì.
+
 ## Cấu trúc hiện tại
 
 ```text
@@ -290,7 +292,7 @@ Vào menu **Khách hàng** hoặc `/khach-hang/`. Form thêm/sửa chỉ gồm *
 - Tên khu vực không trùng khi khác chữ hoa/thường; mã bàn tự chuyển thành chữ hoa và duy nhất toàn nhà hàng.
 - Ngừng khu vực khiến mọi bàn bên trong không sử dụng được; trạng thái riêng của từng bàn vẫn giữ. Mở lại khu vực cho phép dùng các bàn đang bật, không tự bật bàn vốn đã ngừng.
 - Không thêm/chuyển bàn vào khu vực đã ngừng. Bàn hiện có trong khu vực đã ngừng vẫn sửa thông tin, tắt hoặc chuyển ra được; không thể bật lại bàn đã tắt trước khi mở khu vực.
-- Trang Bàn hiển thị **Đang phục vụ** nếu có lượt khách đã nhận, kể cả quá giờ dự kiến; **Đang giữ chỗ** nếu lịch chờ/đã xác nhận đang trong giờ hẹn; **Trống hiện tại** khi không có hai trường hợp trên; **Ngừng sử dụng** khi bàn/khu vực đóng. Nếu dữ liệu bất thường vừa đóng vừa có khách, vẫn hiển thị Đang phục vụ kèm cảnh báo đóng để không che mất khách đang ngồi.
+- Trang Bàn dùng lưới thẻ kiểu web app, tối ưu thao tác cảm ứng trên điện thoại: bàn có khách phát sáng và hiện thông tin lượt khách, bàn trống có icon bàn cùng nhãn **Đang trống**, bàn giữ chỗ màu vàng và bàn ngừng dùng được làm mờ. Trạng thái nghiệp vụ vẫn ưu tiên **Đang phục vụ** nếu có lượt khách đã nhận, kể cả quá giờ dự kiến; **Đang giữ chỗ** nếu lịch chờ/đã xác nhận đang trong giờ hẹn; **Ngừng sử dụng** khi bàn/khu vực đóng. Nếu dữ liệu bất thường vừa đóng vừa có khách, trạng thái có khách vẫn được ưu tiên để không che mất khách đang ngồi.
 - Lịch trong tương lai không làm bàn bị chiếm ngay; hiển thị riêng giờ của lịch kế tiếp và liên kết chi tiết theo quyền. Trang Bàn tự lấy trạng thái mới mỗi 15 giây khi đang xem, giữ bộ lọc và có nút **Cập nhật ngay**. Tạm dừng khi tab bị ẩn hoặc đang thao tác bộ lọc/liên kết trong bảng. Nếu mất kết nối, giữ dữ liệu cũ và thông báo; hết phiên hoặc mất quyền thì yêu cầu tải lại trang. Tắt JavaScript vẫn có liên kết tải lại.
 - Nhật ký và thay đổi dữ liệu cùng transaction; quyền được kiểm tra ở view/service, POST có CSRF. Django Admin chỉ xem.
 - Migration `seating.0002_seed_seating_permissions` cấp quyền riêng cho các nhóm hiện có, không sửa quyền nhân sự/khách hàng.
@@ -302,10 +304,11 @@ Từ Giai đoạn 6, ngừng khu vực/bàn, chuyển khu vực hoặc giảm s�
 1. Tạo hồ sơ khách (họ tên và số điện thoại) nếu chưa có.
 2. Vào **Đặt bàn → Tìm bàn phù hợp**, nhập giờ đến và số khách. Hệ thống tự dùng thời lượng mặc định (ban đầu 120 phút); chỉ mở **Điều chỉnh thời lượng dự kiến** khi cần thay đổi. Chọn bàn, điền số điện thoại khách rồi lưu. Có thể tạo trực tiếp từ **Thêm đặt bàn** hoặc từ trang chi tiết khách hàng.
 3. Lịch mới ở trạng thái **Chờ xác nhận**, đã giữ chỗ. Sau khi thống nhất với khách, chọn **Xác nhận đặt bàn**.
-4. Chọn **Nhận khách** khi khách thực sự đến, trạng thái chuyển **Đang phục vụ**. Có thể nhận sớm trong ngày hẹn nếu bàn trống và không vướng lịch khác. Chọn **Mở đơn / gọi món** để phục vụ. **Hoàn tất** chỉ cho phép khi khách rời bàn và không còn đơn đang phục vụ/chờ thanh toán; hệ thống lưu giờ nhận/giờ rời thực tế.
+4. Chọn **Nhận khách & gọi món** khi khách thực sự đến. Hệ thống chuyển lượt sang **Đang phục vụ**, tự mở đơn và đưa nhân viên thẳng tới màn hình chọn món; không cần xác nhận/mở đơn thêm lần nữa. Có thể nhận sớm trong ngày hẹn nếu bàn trống và không vướng lịch khác. **Hoàn tất** chỉ cho phép khi khách rời bàn và không còn đơn đang phục vụ/chờ thanh toán; hệ thống lưu giờ nhận/giờ rời thực tế.
 5. Lịch chưa nhận khách có thể hủy, hoặc đánh dấu **Không đến** từ giờ hẹn trở đi. Hai trạng thái này giải phóng lịch, giữ hồ sơ và nhật ký.
 
 - `/dat-ban/`: tìm theo mã đặt, tên/điện thoại khách, mã bàn; lọc ngày đến, trạng thái, bàn và phân trang.
+- Trang **Đặt bàn** mặc định chỉ hiện khách đặt trước (`DB...`). Chọn bộ lọc **Khách trực tiếp** hoặc **Tất cả** khi cần tra cứu lượt `LK...`; trong ca phục vụ, lượt trực tiếp được thao tác chủ yếu tại màn hình **Bàn**.
 - `/dat-ban/ban-phu-hop/`: tìm bàn đang sử dụng, đủ chỗ và không trùng lịch. Kết quả tra cứu chưa giữ bàn; hệ thống kiểm tra lại khi lưu.
 - `/dat-ban/cau-hinh/`: Quản lí/Superuser cấu hình thời lượng mặc định, từ 1 đến 1440 phút, có lịch sử thay đổi. Chỉ áp dụng cho lịch mới; lịch đã lưu giữ nguyên thời gian dự kiến và thời lượng riêng khi mở form sửa.
 - Form không nhập giờ kết thúc. Máy chủ tính giờ đến + thời lượng; JavaScript chỉ giúp xem trước khoảng giờ (kể cả qua nửa đêm). Tắt JavaScript vẫn lưu và kiểm tra lịch bình thường. Nhân viên được chỉnh thời lượng từng lịch mà không được đổi cấu hình chung.
@@ -318,6 +321,12 @@ Từ Giai đoạn 6, ngừng khu vực/bàn, chuyển khu vực hoặc giảm s�
 - Danh sách cảnh báo tối đa 10 lượt đang phục vụ quá giờ, kèm liên kết tới lịch kế tiếp cùng bàn nếu có; chi tiết lịch cũng cảnh báo để nhân viên đổi bàn hoặc trao đổi lại giờ đến. Cảnh báo không tự đổi lịch hay hoàn tất lượt khách.
 - Không xóa lịch; lưu tên/điện thoại lúc đặt và nhật ký. Khách/bàn có lịch được bảo vệ khỏi xóa vĩnh viễn. Django Admin chỉ tra cứu.
 - Chống trùng lịch dùng transaction và khóa PostgreSQL chung với thay đổi danh mục bàn; mọi thao tác ghi phải qua service. Chưa có constraint chống chồng khoảng thời gian cho lệnh SQL ghi trực tiếp ngoài ứng dụng.
+
+### Chuyển bàn đang phục vụ
+
+Tại thẻ bàn có khách, chi tiết lượt khách hoặc chi tiết đơn, chọn **Chuyển bàn**. Hệ thống chỉ hiển thị bàn đang hoạt động, đủ số chỗ, không có khách và không vướng lịch trong thời gian phục vụ còn lại; lượt quá giờ dùng thêm khoảng an toàn 30 phút để tránh chiếm bàn sắp có khách. Khi xác nhận, bàn cũ được giải phóng, bàn mới sáng trạng thái có khách, còn đơn hàng, món, hóa đơn và thanh toán giữ nguyên. Nhật ký lưu rõ bàn cũ, bàn mới, thời gian và nhân viên thực hiện.
+
+Nếu khách đã nhận bàn nhưng đổi ý, chọn **Hủy bàn**, nhập lý do và xác nhận. Hệ thống hủy các món/đơn chưa thanh toán, chuyển lượt khách sang **Đã hủy** và giải phóng bàn trong một thao tác. Không cho hủy khi đã thu một phần hoặc toàn bộ; món đã bắt đầu làm, đã xong hay đã phục vụ chỉ Quản lí được hủy. Nhật ký đơn và lượt khách đều lưu lý do; Báo cáo tính lượt này vào nhóm hủy thay vì hoàn tất.
 
 ## Thực đơn
 
@@ -336,8 +345,8 @@ Vào **Thực đơn** hoặc `/thuc-don/`.
 
 ## Gọi món, đơn hàng và Bếp
 
-1. Khách đặt trước: nhận khách tại **Đặt bàn**, rồi **Mở đơn / gọi món**. Khách trực tiếp: tại **Bàn → Nhận khách trực tiếp** hoặc **Đơn hàng → Khách không đặt trước**; nhập bàn, số khách và thời lượng dự kiến, tên/số điện thoại không bắt buộc. Hệ thống kiểm tra lịch và nhận khách, mở đơn trong cùng giao dịch.
-2. **Thêm món** còn phục vụ, nhập số lượng 1–100 và ghi chú. Có thể sửa số lượng/ghi chú khi chưa gửi Bếp. Mỗi lần gọi thêm tạo dòng riêng, giữ giá thời điểm gọi, kể cả giá thực đơn thay đổi sau đó.
+1. Khách đặt trước: chọn **Nhận khách & gọi món**, hệ thống tự nhận bàn, mở đơn và chuyển thẳng tới chọn món. Khách trực tiếp: tại **Bàn → Nhận khách & gọi món** hoặc **Đơn hàng → Khách không đặt trước**; nhập bàn, số khách và thời lượng dự kiến, tên/số điện thoại không bắt buộc. Hệ thống kiểm tra lịch, nhận khách và mở đơn trong cùng luồng.
+2. **Thêm món** mở giao diện POS dạng lưới ảnh: tìm tức thời theo tên/mã món, lọc nhóm món, chạm để tích nhiều món, chỉnh số lượng bằng `+ / −` và nhập ghi chú riêng cho từng món. Một lần xác nhận thêm toàn bộ món đã chọn vào đơn. Có thể sửa số lượng/ghi chú khi chưa gửi Bếp; mỗi lần gọi thêm vẫn tạo dòng riêng và giữ giá tại thời điểm gọi, kể cả giá thực đơn thay đổi sau đó.
 3. **Gửi Bếp**: xem lại danh sách món rồi xác nhận gửi tất cả dòng chưa gửi. Kiểm tra lại món/danh mục còn phục vụ; nếu một món không hợp lệ thì chưa gửi cả đợt.
 4. **Bếp** xem hàng đợi theo giờ gửi, bàn, món, số lượng và ghi chú; chọn **Bắt đầu làm → Đã xong**. Phục vụ tại chi tiết đơn chọn **Đã phục vụ** khi giao cho khách. Trang Bếp/đơn có nút cập nhật thủ công.
 5. Sau khi phục vụ xong tất cả món chưa hủy, chuyển đơn **Chờ thanh toán**. Nếu chưa thu khoản nào có thể **Tiếp tục gọi món**; sau khi đã thu một phần, đơn bị khóa gọi thêm để giữ nguyên tổng hóa đơn.
@@ -350,6 +359,21 @@ Vào **Thực đơn** hoặc `/thuc-don/`.
 - Mỗi lượt có một đơn duy nhất. Lượt khách trực tiếp dùng mã `LK...`, khách đặt trước dùng `DB...`, đơn dùng `DH...`. Không tạo khách hàng giả cho khách vãng lai; nếu cung cấp số điện thoại trùng khách đã lưu thì liên kết hồ sơ đó.
 - Form có phiên bản chống ghi đè/gửi lặp; quyền kiểm tra ở giao diện và service. Thay đổi và nhật ký cùng transaction. Khóa theo thứ tự bàn/lịch → thực đơn → tài khoản → bản ghi, giúp việc nhận khách/gọi món đồng bộ với bàn và thực đơn.
 - Tên, mã, đơn vị, giá trong dòng món là snapshot; giá sửa sau không đổi món đã gọi. Hóa đơn chốt tổng tại lần thu đầu tiên, không gồm món hủy, thuế/phí/giảm giá. Mã hóa đơn dựa trên mã bản ghi đơn nên không tranh chấp khi nhiều quầy thu đồng thời. Chưa có tách/ghép đơn, chuyển bàn, gọi món theo phần nhỏ, hoàn/hủy phiếu thu hoặc trừ kho.
+
+## Báo cáo quản trị
+
+Vào **Báo cáo** hoặc `/bao-cao/`. Chỉ Superuser và nhóm Quản lí được truy cập.
+
+- Chọn khoảng ngày tối đa 367 ngày; mặc định là từ đầu tháng hiện tại đến hôm nay.
+- Tổng quan gồm doanh thu hóa đơn đã thanh toán, tiền thực thu theo phiếu thu, giá trị hóa đơn trung bình và công nợ đang chờ thu.
+- Báo cáo vận hành gồm doanh thu từng ngày, cơ cấu phương thức thanh toán, lượt đặt bàn, số khách, lượt khách trực tiếp, hủy/không đến và khách hàng mới.
+- Bảng xếp hạng hiển thị 10 món bán chạy, 10 bàn tạo doanh thu và 10 hóa đơn gần nhất. Món đã hủy không được tính vào doanh thu món.
+- **Xuất CSV** tải danh sách hóa đơn đã chốt trong đúng khoảng ngày đang xem, gồm bàn, khu vực, khách hàng, tổng tiền và phương thức thanh toán.
+- “Doanh thu đã chốt” tính theo ngày hóa đơn được thanh toán đủ; “tiền thực thu” tính theo thời điểm từng phiếu thu nên hai số có thể khác nhau nếu một hóa đơn được thu qua nhiều kỳ.
+
+### Thanh toán nhiều bàn
+
+Từ **Bàn → Thanh toán bàn**, Thu ngân hoặc Quản lí có thể lọc theo khu vực, chọn một hay nhiều bàn rồi bấm **Thanh toán & trả bàn**. Hệ thống chỉ cho chọn bàn có đơn còn tiền cần thu và toàn bộ món chưa hủy đã phục vụ xong. Một thao tác sẽ tạo mã thanh toán chung `TT...`, chốt hóa đơn riêng của từng bàn, ghi phiếu thu, hoàn tất lượt khách, giải phóng bàn và cập nhật Báo cáo. Hóa đơn từng bàn vẫn được giữ riêng để không mất lịch sử món, khách và hiệu suất bàn; mã `TT...` liên kết các hóa đơn đã thu cùng lúc. Thanh toán một phần vẫn thực hiện tại chi tiết đơn như trước.
 
 ## Kiểm tra và chạy ứng dụng
 
@@ -373,6 +397,6 @@ Thư mục `templates/` chứa template dùng chung; `static/` chứa CSS, JavaS
 
 Repository Git đã có lịch sử commit. `.gitignore` loại trừ `.env`, `.venv/`, `__pycache__/`, `*.pyc`, `media/`, `.idea/` và `.vscode/` cùng các tệp phát sinh cục bộ.
 
-Phạm vi hiện tại là **GIAI ĐOẠN 9 — Hóa đơn và Thanh toán**. Đề xuất tiếp theo: áp dụng migration và kiểm tra vận hành thủ công khi được yêu cầu, sau đó triển khai Kho/Báo cáo và AI.
+Phạm vi hiện tại đã gồm **Hóa đơn, Thanh toán và Báo cáo quản trị**. Báo cáo chỉ dùng dữ liệu nghiệp vụ đã được ghi nhận; chưa hiển thị giá vốn, chi phí hay lợi nhuận vì hệ thống chưa có phân hệ Kho/Chi phí. Đề xuất tiếp theo là triển khai Kho, nhập/xuất tồn và chi phí để bổ sung báo cáo lãi gộp.
 
 Lịch sử: [Giai đoạn 1](docs/stage-1-report.md), [Giai đoạn 2](docs/stage-2-report.md), [Giai đoạn 3](docs/stage-3-report.md), [Giai đoạn 4](docs/stage-4-report.md), [Giai đoạn 5](docs/stage-5-report.md), [Giai đoạn 6](docs/stage-6-report.md), [Giai đoạn 7](docs/stage-7-report.md), [Giai đoạn 8](docs/stage-8-report.md). Hiện trạng mới nhất: [Giai đoạn 9](docs/stage-9-report.md). Chưa chạy kiểm tra tự động hoặc kiểm tra bố cục trực quan cho thay đổi Giai đoạn 9.

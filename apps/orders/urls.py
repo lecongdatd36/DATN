@@ -6,6 +6,7 @@ urlpatterns = [
     path("", views.OrderListView.as_view(), name="list"),
     path("mo/", views.OpenOrderView.as_view(), name="open"),
     path("khach-truc-tiep/", views.WalkInView.as_view(), name="walk_in"),
+    path("thanh-toan-ban/", views.TablePaymentView.as_view(), name="table_payment"),
     path("bep/", views.KitchenView.as_view(), name="kitchen"),
     path("<int:pk>/", views.OrderDetailView.as_view(), name="detail"),
     path("<int:pk>/them-mon/", views.OrderActionView.as_view(action="add"), name="add_item"),

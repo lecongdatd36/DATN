@@ -7,7 +7,7 @@
         <h1 class="h2 mb-0">{{ account.username }}</h1>
         <div class="d-flex gap-2">
             {% if can_edit_account %}<a class="btn btn-primary" href="{% url 'accounts:account_update' account.pk %}">Sửa thông tin</a>{% endif %}
-            {% if can_edit_account %}<a class="btn btn-outline-danger" href="{% url 'accounts:account_delete' account.pk %}">Xóa tài khoản</a>{% endif %}
+            {% if can_edit_account %}<a class="btn btn-outline-danger" href="{% url 'accounts:account_delete' account.pk %}" data-confirm-action data-confirm-tone="danger" data-confirm-title="Xóa tài khoản {{ account.username }}?" data-confirm-message="Tài khoản và hồ sơ nhân viên liên kết sẽ bị xóa nếu không có dữ liệu cần bảo toàn." data-confirm-label="Xóa tài khoản">Xóa tài khoản</a>{% endif %}
             <a class="btn btn-outline-secondary" href="{% url 'accounts:account_list' %}">Quay lại</a>
         </div>
     </div>
