@@ -18,7 +18,7 @@
         <dl class="row account-details mb-0">
             <dt class="col-sm-4">Họ tên</dt><dd class="col-sm-8 text-break">{{ customer.full_name }}</dd>
             <dt class="col-sm-4">Số điện thoại</dt><dd class="col-sm-8">{{ customer.phone }}</dd>
-            <dt class="col-sm-4">Hạng thành viên</dt><dd class="col-sm-8">{% if customer.membership_tier %}<span class="badge text-bg-primary">{{ customer.membership_tier.name }}</span> · giảm {{ customer.membership_tier.discount_percent }}%{% else %}Chưa có hạng{% endif %}</dd>
+            <dt class="col-sm-4">Hạng khách hàng</dt><dd class="col-sm-8">{% if customer.membership_tier %}<span class="badge text-bg-primary">{{ customer.membership_tier.name }}</span> · giảm {{ customer.membership_tier.discount_percent }}%{% else %}Chưa có hạng{% endif %}</dd>
             <dt class="col-sm-4">Tổng chi tiêu</dt><dd class="col-sm-8 fw-semibold">{{ customer.total_spending|dong }} đ</dd>
             <dt class="col-sm-4">Ngày tạo</dt><dd class="col-sm-8">{{ customer.created_at|date:'d/m/Y H:i' }}</dd>
             <dt class="col-sm-4">Cập nhật lần cuối</dt><dd class="col-sm-8">{{ customer.updated_at|date:'d/m/Y H:i' }}</dd>

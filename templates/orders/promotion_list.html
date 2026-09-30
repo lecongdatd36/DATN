@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load menu_money %}
+{% block title %}Mã giảm giá · QLNH{% endblock %}
+{% block content %}
+<div class="container-fluid px-3 px-md-4 pb-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"><div><p class="eyebrow mb-1">ƯU ĐÃI</p><h1 class="h2 mb-0">Mã giảm giá</h1></div>{% if perms.orders.add_promotioncode %}<a class="btn btn-primary" href="{% url 'sales:promotion_create' %}">Thêm mã giảm giá</a>{% endif %}</div>
+  <div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Mã</th><th>Chương trình</th><th>Mức giảm</th><th>Đơn tối thiểu</th><th>Thời hạn</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+  {% for item in promotions %}<tr><th><code>{{ item.code }}</code></th><td>{{ item.name }}</td><td>{% if item.discount_type == 'PERCENT' %}{{ item.value }}%{% else %}{{ item.value|dong }} đ{% endif %}{% if item.maximum_discount %}<small class="d-block text-secondary">Tối đa {{ item.maximum_discount|dong }} đ</small>{% endif %}</td><td>{{ item.minimum_order|dong }} đ</td><td>{{ item.starts_at|date:'d/m/Y H:i' }}<small class="d-block text-secondary">đến {{ item.ends_at|date:'d/m/Y H:i' }}</small></td><td>{% if item.is_active %}<span class="badge text-bg-success">Đang bật</span>{% else %}<span class="badge text-bg-secondary">Đã tắt</span>{% endif %}</td><td>{% if perms.orders.change_promotioncode %}<a class="btn btn-sm btn-outline-primary" href="{% url 'sales:promotion_update' item.pk %}">Sửa</a>{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="text-center py-5 text-secondary">Chưa có mã giảm giá.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

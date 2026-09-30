@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from apps.accounts.admin import admin_site
-from .models import Invoice, Order, OrderItem, OrderActivityLog, Payment, PaymentBatch, PaymentRequest
+from .models import Invoice, OnlinePayment, Order, OrderItem, OrderActivityLog, Payment, PaymentBatch, PaymentRequest, PromotionCode
 from .permissions import has_order_permission
 
 
@@ -79,3 +79,16 @@ class PaymentBatchAdmin(ReadOnlyOrderAdmin):
 class PaymentRequestAdmin(ReadOnlyOrderAdmin):
     list_display = ("order", "status", "requested_by", "requested_at", "processed_at")
     list_filter = ("status",)
+
+
+@admin.register(OnlinePayment, site=admin_site)
+class OnlinePaymentAdmin(ReadOnlyOrderAdmin):
+    list_display = ("txn_ref", "order", "amount", "status", "bank_code", "provider_transaction_no", "created_at")
+    list_select_related = ("order",)
+    list_filter = ("status", "bank_code")
+
+
+@admin.register(PromotionCode, site=admin_site)
+class PromotionCodeAdmin(ReadOnlyOrderAdmin):
+    list_display = ("code", "name", "discount_type", "value", "starts_at", "ends_at", "is_active")
+    list_filter = ("discount_type", "is_active")

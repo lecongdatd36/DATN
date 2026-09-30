@@ -44,15 +44,6 @@ def tables(*, q="", status="", area=None, at=None):
     upcoming = waiting.filter(starts_at__gt=now).order_by("starts_at", "pk")
     current_order = Order.objects.filter(table_id=OuterRef("pk")).exclude(status__in=(Order.Status.COMPLETED, Order.Status.CANCELLED)).order_by("-pk")
     line_total = ExpressionWrapper(F("unit_price") * F("quantity"), output_field=DecimalField(max_digits=14, decimal_places=0))
-    order_items = (
-        OrderItem.objects.filter(
-            order__table_id=OuterRef("pk"),
-        )
-        .exclude(status=OrderItem.Status.CANCELLED)
-        .values("order__table_id")
-    )
-    order_total = order_items.annotate(value=Sum(line_total)).values("value")[:1]
-    order_quantity = order_items.annotate(value=Sum("quantity")).values("value")[:1]
     result = DiningTable.objects.select_related("area").annotate(
         current_visit_id=Subquery(seated.values("pk")[:1]),
         current_visit_revision=Subquery(seated.values("revision")[:1]),
@@ -67,6 +58,13 @@ def tables(*, q="", status="", area=None, at=None):
         next_booking_start=Subquery(upcoming.values("starts_at")[:1]),
         current_order_id=Subquery(current_order.values("pk")[:1]),
         current_order_status=Subquery(current_order.values("status")[:1]),
+    )
+    current_items = OrderItem.objects.filter(order_id=OuterRef("current_order_id")).exclude(
+        status=OrderItem.Status.CANCELLED
+    ).values("order_id")
+    order_total = current_items.annotate(value=Sum(line_total)).values("value")[:1]
+    order_quantity = current_items.annotate(value=Sum("quantity")).values("value")[:1]
+    result = result.annotate(
         current_order_total=Coalesce(Subquery(order_total), Value(0), output_field=DecimalField(max_digits=14, decimal_places=0)),
         current_order_quantity=Coalesce(Subquery(order_quantity), Value(0), output_field=IntegerField()),
     ).annotate(current_status=Case(

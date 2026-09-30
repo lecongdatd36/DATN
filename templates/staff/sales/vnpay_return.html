@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load menu_money %}
+{% block title %}Kết quả VNPAY · QLNH{% endblock %}
+{% block content %}
+<main class="container py-5" style="max-width:720px">
+  <section class="project-card p-4 p-md-5 text-center">
+    {% if not signature_valid %}
+      <h1 class="h3 text-danger">Kết quả không hợp lệ</h1>
+      <p class="text-secondary">Chữ ký phản hồi từ cổng thanh toán không hợp lệ. Hóa đơn chưa được cập nhật.</p>
+    {% elif not payment %}
+      <h1 class="h3 text-danger">Không tìm thấy giao dịch</h1>
+      <p class="text-secondary">Mã giao dịch không thuộc hệ thống này.</p>
+    {% elif gateway_success %}
+      <h1 class="h3 text-success">VNPAY đã ghi nhận thanh toán</h1>
+      <p class="text-secondary">Hệ thống đang đối chiếu thông báo IPN từ máy chủ VNPAY.</p>
+    {% else %}
+      <h1 class="h3 text-warning">Thanh toán chưa thành công</h1>
+      <p class="text-secondary">Giao dịch bị hủy hoặc chưa được ngân hàng chấp nhận.</p>
+    {% endif %}
+    {% if payment %}<div class="my-4"><strong>{{ payment.txn_ref }}</strong><div>{{ payment.amount|dong }} đ · {{ payment.get_status_display }}</div></div>{% endif %}
+    <a class="btn btn-primary" href="{% url 'sales:workspace' %}{% if payment and payment.order.status != 'COMPLETED' %}?order={{ payment.order_id }}#sales-order{% endif %}">Quay lại Bán hàng</a>
+  </section>
+</main>
+{% endblock %}

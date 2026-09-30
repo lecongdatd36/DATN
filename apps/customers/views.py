@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
@@ -16,7 +17,7 @@ from .forms import CustomerFilterForm, CustomerForm, CustomerLogFilterForm, Memb
 from .models import Customer, CustomerActivityLog, MembershipTier
 from .permissions import has_customer_permission
 from .selectors import customer_list, customer_logs
-from .services import create_customer, delete_customer, update_customer
+from .services import create_customer, delete_customer, recalculate_membership_tiers, update_customer
 
 
 @method_decorator(never_cache, name="dispatch")
@@ -157,8 +158,11 @@ class MembershipTierCreateView(CustomerPermissionMixin, CreateView):
     success_url = reverse_lazy("customers:membership_tier_list")
 
     def form_valid(self, form):
-        messages.success(self.request, "Đã thêm hạng thành viên.")
-        return super().form_valid(form)
+        with transaction.atomic():
+            response = super().form_valid(form)
+            recalculate_membership_tiers()
+        messages.success(self.request, "Đã thêm hạng thành viên và cập nhật hạng khách hàng.")
+        return response
 
 
 class MembershipTierUpdateView(CustomerPermissionMixin, UpdateView):
@@ -169,5 +173,8 @@ class MembershipTierUpdateView(CustomerPermissionMixin, UpdateView):
     success_url = reverse_lazy("customers:membership_tier_list")
 
     def form_valid(self, form):
-        messages.success(self.request, "Đã cập nhật hạng thành viên.")
-        return super().form_valid(form)
+        with transaction.atomic():
+            response = super().form_valid(form)
+            recalculate_membership_tiers()
+        messages.success(self.request, "Đã cập nhật quy tắc và tính lại hạng khách hàng.")
+        return response

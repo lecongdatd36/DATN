@@ -6,7 +6,34 @@ from apps.bookings.selectors import default_duration_minutes
 from apps.customers.validators import normalize_phone
 from apps.menu.models import Dish
 from apps.seating.models import DiningTable
-from .models import Order, Payment
+from .models import Order, Payment, PromotionCode
+
+
+class PromotionCodeForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = PromotionCode
+        fields = ("code", "name", "discount_type", "value", "minimum_order", "maximum_discount", "starts_at", "ends_at", "is_active")
+        widgets = {
+            "code": forms.TextInput(attrs={"placeholder": "Ví dụ: KHAITRUONG10"}),
+            "starts_at": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+            "ends_at": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["starts_at"].input_formats = ["%Y-%m-%dT%H:%M"]
+        self.fields["ends_at"].input_formats = ["%Y-%m-%dT%H:%M"]
+
+    def clean_code(self):
+        return self.cleaned_data["code"].strip().upper()
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("starts_at") and cleaned.get("ends_at") and cleaned["ends_at"] <= cleaned["starts_at"]:
+            self.add_error("ends_at", "Thời gian kết thúc phải sau thời gian bắt đầu.")
+        if cleaned.get("discount_type") == PromotionCode.DiscountType.PERCENT and cleaned.get("value", 0) > 100:
+            self.add_error("value", "Mức giảm phần trăm không được vượt quá 100%.")
+        return cleaned
 
 
 class VisitChoiceField(forms.ModelChoiceField):
@@ -137,7 +164,11 @@ class TablePaymentForm(BootstrapFormMixin, forms.Form):
             "invalid_choice": "Một bàn đã thay đổi trạng thái. Hãy tải lại danh sách.",
         },
     )
-    payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=Payment.Method.choices)
+    payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=[
+        (Payment.Method.CASH, "Tiền mặt"),
+        (Payment.Method.BANK_TRANSFER, "Chuyển khoản"),
+    ])
+    promotion_code = forms.CharField(label="Mã giảm giá dùng chung", max_length=30, required=False)
     reference = forms.CharField(label="Ghi chú / mã giao dịch", max_length=100, required=False)
 
     def __init__(self, *args, order_queryset=None, **kwargs):

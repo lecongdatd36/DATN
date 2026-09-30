@@ -2,10 +2,35 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError, RestrictedError
+from django.utils import timezone
 
 from .models import Customer, CustomerActivityLog, MembershipTier
 from .permissions import has_customer_permission
 from .validators import normalize_phone
+
+
+def tier_for_spending(total_spending):
+    return MembershipTier.objects.filter(
+        is_active=True, minimum_spending__lte=total_spending
+    ).order_by("-minimum_spending", "-pk").first()
+
+
+@transaction.atomic
+def recalculate_membership_tiers():
+    """Refresh the cached tier on every customer after tier rules change."""
+    tiers = list(MembershipTier.objects.filter(is_active=True).order_by("-minimum_spending", "-pk"))
+    changed = []
+    now = timezone.now()
+    for customer in Customer.objects.select_for_update().all():
+        tier = next((item for item in tiers if item.minimum_spending <= customer.total_spending), None)
+        tier_id = tier.pk if tier else None
+        if customer.membership_tier_id != tier_id:
+            customer.membership_tier_id = tier_id
+            customer.updated_at = now
+            changed.append(customer)
+    if changed:
+        Customer.objects.bulk_update(changed, ("membership_tier", "updated_at"))
+    return len(changed)
 
 
 def _lock_actor(actor, permission):
@@ -52,9 +77,7 @@ def _log(actor, customer, action, description):
 @transaction.atomic
 def create_customer(*, actor, full_name, phone):
     actor = _lock_actor(actor, "add_customer")
-    base_tier = MembershipTier.objects.filter(
-        is_active=True, minimum_spending__lte=0
-    ).order_by("-minimum_spending", "-pk").first()
+    base_tier = tier_for_spending(0)
     customer = Customer(membership_tier=base_tier)
     _set_data(customer, full_name, phone)
     _save(customer)

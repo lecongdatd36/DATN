@@ -10,6 +10,8 @@ from django.views.decorators.cache import never_cache
 from django.views.generic import FormView, ListView
 
 from core.forms import add_service_errors, filter_query_string
+from apps.orders.models import Order
+from apps.orders import services as order_services
 from .forms import AreaFilterForm, AreaForm, DiningTableForm, TableFilterForm
 from .models import Area, DiningTable, SeatingActivityLog
 from .permissions import has_seating_permission
@@ -73,6 +75,19 @@ class TableListView(AreaListView):
         context["status_counts"] = table_status_counts(at=self.status_checked_at)
         page = context.get("page_obj")
         rows = page.object_list if page is not None else context.get("object_list", [])
+        order_ids = [table.current_order_id for table in rows if table.current_order_id]
+        current_orders = {
+            order.pk: order
+            for order in Order.objects.filter(pk__in=order_ids).select_related("customer").prefetch_related("items")
+        }
+        for table in rows:
+            order = current_orders.get(table.current_order_id)
+            if order:
+                preview = order_services.payment_preview(order)
+                table.current_order_subtotal = preview["subtotal"]
+                table.current_order_total = preview["due"]
+                table.current_order_discount = preview["discount"]
+                table.current_order_promotion = preview["promotion_code"]
         context["table_state_signature"] = "|".join(
             f"{table.pk}:{table.current_status}:{table.current_visit_id or 0}:{table.current_visit_revision or 0}:{table.held_booking_revision or 0}:{table.current_order_id or 0}:{table.current_order_status or '-'}:{table.current_order_total}"
             for table in rows

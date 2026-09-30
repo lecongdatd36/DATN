@@ -112,5 +112,5 @@ class OrderConcurrencyTests(TransactionTestCase):
         results = self.race(action)
         self.assertEqual(results[0], "sold_out")
         item.refresh_from_db()
-        self.assertEqual(item.status, "DRAFT" if results[1] == "blocked" else "SENT")
+        self.assertEqual(item.status, "DRAFT" if results[1] == "blocked" else "PENDING")
         self.assertEqual(OrderActivityLog.objects.filter(action="Gửi Bếp").count(), 0 if results[1] == "blocked" else 1)

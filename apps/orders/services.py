@@ -1,5 +1,8 @@
+from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
+from uuid import uuid4
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -11,10 +14,12 @@ from apps.bookings.models import Booking, BookingActivityLog
 from apps.bookings.permissions import has_booking_permission
 from apps.bookings.services import seat_walk_in
 from apps.menu.models import Dish
-from apps.customers.models import Customer, MembershipTier
+from apps.customers.models import Customer
+from apps.customers.services import tier_for_spending
 from apps.seating.models import DiningTable
-from .models import Invoice, Order, OrderItem, OrderActivityLog, Payment, PaymentBatch, PaymentRequest
+from .models import Invoice, OnlinePayment, Order, OrderItem, OrderActivityLog, Payment, PaymentBatch, PaymentRequest, PromotionCode
 from .permissions import has_order_permission
+from .vnpay import payment_url
 
 
 def _lock_actor(actor, permission="manage_order"):
@@ -29,8 +34,14 @@ def _lock_actor(actor, permission="manage_order"):
     return actor
 
 
-def _log(actor, order, action, description):
-    OrderActivityLog.objects.create(order=order, action=action, description=description, performed_by=actor, actor_snapshot=actor.username)
+def _log(actor, order, action, description, actor_snapshot=""):
+    OrderActivityLog.objects.create(
+        order=order,
+        action=action,
+        description=description,
+        performed_by=actor,
+        actor_snapshot=actor_snapshot or (actor.username if actor else "Hệ thống"),
+    )
 
 
 def _save(actor, order, action, description):
@@ -45,27 +56,76 @@ def _invoice_code_for(order):
     return f"HD{order.pk:06d}"
 
 
-def payment_preview(order):
-    """Return the authoritative loyalty discount preview for an order."""
+def payment_preview(order, promotion_code=None):
+    """Return the authoritative member and promotion discount preview."""
     subtotal = order.total
     customer = order.customer
     tier = None
     if customer:
-        tier = MembershipTier.objects.filter(
-            is_active=True,
-            minimum_spending__lte=customer.total_spending,
-        ).order_by("-minimum_spending", "-pk").first()
+        tier = tier_for_spending(customer.total_spending)
     discount_percent = tier.discount_percent if tier else Decimal("0")
-    discount = (subtotal * discount_percent / Decimal("100")).quantize(
+    membership_discount = (subtotal * discount_percent / Decimal("100")).quantize(
         Decimal("1"), rounding=ROUND_HALF_UP
     )
+    promotion = None
+    promotion_snapshot = order.promotion_code_snapshot
+    promotion_discount = order.promotion_discount_amount
+    if promotion_code is not None:
+        promotion_snapshot = (promotion_code or "").strip().upper()
+        promotion_discount = Decimal("0")
+        if promotion_snapshot:
+            promotion = PromotionCode.objects.filter(code__iexact=promotion_snapshot).first()
+            now = timezone.now()
+            if promotion is None or not promotion.is_active:
+                raise ValidationError({"promotion_code": "Mã giảm giá không tồn tại hoặc đã ngừng áp dụng."})
+            if not promotion.starts_at <= now < promotion.ends_at:
+                raise ValidationError({"promotion_code": "Mã giảm giá chưa đến thời gian áp dụng hoặc đã hết hạn."})
+            if subtotal < promotion.minimum_order:
+                raise ValidationError({"promotion_code": f"Đơn hàng phải từ {promotion.minimum_order:.0f} đồng để dùng mã này."})
+            eligible = max(Decimal("0"), subtotal - membership_discount)
+            if promotion.discount_type == PromotionCode.DiscountType.PERCENT:
+                if promotion.value > 100:
+                    raise ValidationError({"promotion_code": "Mức giảm phần trăm của mã không hợp lệ."})
+                promotion_discount = (eligible * promotion.value / Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+            else:
+                promotion_discount = promotion.value.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+            if promotion.maximum_discount:
+                promotion_discount = min(promotion_discount, promotion.maximum_discount)
+            promotion_discount = min(promotion_discount, eligible)
+    total_discount = membership_discount + promotion_discount
     return {
         "subtotal": subtotal,
         "tier": tier,
         "discount_percent": discount_percent,
-        "discount": discount,
-        "due": subtotal - discount,
+        "membership_discount": membership_discount,
+        "promotion": promotion,
+        "promotion_code": promotion_snapshot,
+        "promotion_discount": promotion_discount,
+        "discount": total_discount,
+        "due": max(Decimal("0"), subtotal - total_discount),
     }
+
+
+def _store_promotion(order, preview):
+    order.promotion_code_snapshot = preview["promotion_code"]
+    order.promotion_discount_amount = preview["promotion_discount"]
+    order.discount_amount = preview["discount"]
+    order.total_amount = preview["due"]
+
+
+@transaction.atomic
+def apply_promotion(*, actor, order_id, promotion_code):
+    actor = _lock_actor(actor, "collect_payment")
+    order = Order.objects.select_for_update().get(pk=order_id)
+    if order.status != Order.Status.PAYMENT_REQUESTED:
+        raise ValidationError("Chỉ áp dụng mã khi đơn đang chờ thanh toán.")
+    preview = payment_preview(order, promotion_code=promotion_code)
+    _store_promotion(order, preview)
+    order.revision += 1
+    order.save(update_fields=("promotion_code_snapshot", "promotion_discount_amount", "discount_amount", "total_amount", "revision", "updated_at"))
+    action = "Áp mã giảm giá" if preview["promotion_code"] else "Bỏ mã giảm giá"
+    _log(actor, order, action, f"{preview['promotion_code'] or 'Không dùng mã'}; giảm {preview['promotion_discount']:.0f} đồng.")
+    return preview
 
 
 def _order(order_id, expected_revision, *, require_open=True):
@@ -307,7 +367,32 @@ def request_payment(*, actor, order_id, expected_revision, note=""):
 
 
 @transaction.atomic
-def process_payment(*, actor, order_id, payment_method, transaction_code=""):
+def prepare_quick_payment(*, actor, order_id):
+    """Move a fully served table to payment from the table overview."""
+    actor = _lock_actor(actor, "collect_payment")
+    order = Order.objects.select_for_update().get(pk=order_id)
+    if order.status == Order.Status.PAYMENT_REQUESTED:
+        return order
+    if order.status not in (Order.Status.OPEN, Order.Status.IN_PROGRESS):
+        raise ValidationError("Đơn không còn ở trạng thái có thể thanh toán.")
+    items = list(order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED))
+    if not items:
+        raise ValidationError("Bàn chưa có món để thanh toán.")
+    if any(item.status != OrderItem.Status.SERVED for item in items):
+        raise ValidationError("Cần phục vụ xong tất cả món trước khi thanh toán nhanh.")
+    PaymentRequest.objects.select_for_update().get_or_create(
+        order=order,
+        status=PaymentRequest.Status.WAITING,
+        defaults={"requested_by": actor, "note": "Thanh toán nhanh từ sơ đồ bàn"},
+    )
+    order.status = Order.Status.PAYMENT_REQUESTED
+    _recalculate_order(order)
+    _save(actor, order, "Yêu cầu thanh toán nhanh", f"{actor.username} mở thanh toán nhanh cho bàn {order.table.code}.")
+    return order
+
+
+@transaction.atomic
+def process_payment(*, actor, order_id, payment_method, transaction_code="", promotion_code=None):
     actor = _lock_actor(actor, "collect_payment")
     if payment_method not in (Payment.Method.CASH, Payment.Method.BANK_TRANSFER):
         raise ValidationError({"payment_method": "Chỉ hỗ trợ tiền mặt hoặc chuyển khoản."})
@@ -317,16 +402,37 @@ def process_payment(*, actor, order_id, payment_method, transaction_code=""):
     order = Order.objects.select_for_update().get(pk=order_id)
     if order.status != Order.Status.PAYMENT_REQUESTED:
         raise ValidationError("Đơn chưa ở trạng thái yêu cầu thanh toán.")
-    table = DiningTable.objects.select_for_update().get(pk=order.table_id)
-    customer = Customer.objects.select_for_update().filter(pk=order.customer_id).first()
     items = list(order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED))
     if not items:
         raise ValidationError("Đơn không có món để thanh toán.")
-    preview = payment_preview(order)
+    preview = payment_preview(order, promotion_code=promotion_code)
+    _store_promotion(order, preview)
     subtotal = preview["subtotal"]
     discount_percent = preview["discount_percent"]
     discount_amount = preview["discount"]
     total = preview["due"]
+    return _complete_payment(
+        order=order,
+        subtotal=subtotal,
+        discount_percent=discount_percent,
+        discount_amount=discount_amount,
+        membership_discount_amount=preview["membership_discount"],
+        promotion_code=preview["promotion_code"],
+        promotion_discount_amount=preview["promotion_discount"],
+        total=total,
+        payment_method=payment_method,
+        reference=transaction_code,
+        actor=actor,
+        actor_snapshot=actor.username,
+    )
+
+
+def _complete_payment(*, order, subtotal, discount_percent, discount_amount, total,
+                      membership_discount_amount=Decimal("0"), promotion_code="", promotion_discount_amount=Decimal("0"),
+                      payment_method, reference, actor=None, actor_snapshot=""):
+    """Finalize an already locked order exactly once inside the caller's transaction."""
+    table = DiningTable.objects.select_for_update().get(pk=order.table_id)
+    customer = Customer.objects.select_for_update().filter(pk=order.customer_id).first()
     invoice, _ = Invoice.objects.select_for_update().get_or_create(
         order=order,
         defaults={"invoice_code": _invoice_code_for(order)},
@@ -338,6 +444,9 @@ def process_payment(*, actor, order_id, payment_method, transaction_code=""):
     invoice.subtotal = subtotal
     invoice.discount_percent = discount_percent
     invoice.discount_amount = discount_amount
+    invoice.membership_discount_amount = membership_discount_amount
+    invoice.promotion_code = promotion_code
+    invoice.promotion_discount_amount = promotion_discount_amount
     invoice.total_amount = total
     invoice.total = total
     invoice.paid_amount = total
@@ -345,19 +454,22 @@ def process_payment(*, actor, order_id, payment_method, transaction_code=""):
     invoice.status = Invoice.Status.PAID
     invoice.closed_at = now
     invoice.save()
-    Payment.objects.create(
-        invoice=invoice,
-        amount=total,
-        method=payment_method,
-        reference=transaction_code,
-        performed_by=actor,
-        actor_snapshot=actor.username,
-    )
+    if total > 0:
+        Payment.objects.create(
+            invoice=invoice,
+            amount=total,
+            method=payment_method,
+            reference=reference,
+            performed_by=actor,
+            actor_snapshot=actor_snapshot,
+        )
     PaymentRequest.objects.select_for_update().filter(
         order=order, status__in=(PaymentRequest.Status.WAITING, PaymentRequest.Status.PROCESSING),
     ).update(status=PaymentRequest.Status.COMPLETED, processed_at=now)
     order.subtotal = subtotal
     order.discount_amount = discount_amount
+    order.promotion_code_snapshot = promotion_code
+    order.promotion_discount_amount = promotion_discount_amount
     order.total_amount = total
     order.status = Order.Status.COMPLETED
     order.closed_at = now
@@ -373,11 +485,120 @@ def process_payment(*, actor, order_id, payment_method, transaction_code=""):
         booking.save(update_fields=("status", "completed_at", "revision", "updated_at"))
     if customer:
         customer.total_spending += total
-        tier = MembershipTier.objects.filter(is_active=True, minimum_spending__lte=customer.total_spending).order_by("-minimum_spending", "-pk").first()
+        tier = tier_for_spending(customer.total_spending)
         customer.membership_tier = tier
         customer.save(update_fields=("total_spending", "membership_tier", "updated_at"))
-    _log(actor, order, "Thanh toán", f"{actor.username} thanh toán hóa đơn {invoice.invoice_code}; bàn {table.code} chuyển sang cần dọn.")
+    _log(
+        actor,
+        order,
+        "Thanh toán",
+        f"{actor_snapshot} thanh toán hóa đơn {invoice.invoice_code}; bàn {table.code} chuyển sang cần dọn.",
+        actor_snapshot=actor_snapshot,
+    )
     return invoice
+
+
+@transaction.atomic
+def create_vnpay_payment(*, actor, order_id, return_url, ip_address, promotion_code=None):
+    actor = _lock_actor(actor, "collect_payment")
+    order = Order.objects.select_for_update().get(pk=order_id)
+    if order.status != Order.Status.PAYMENT_REQUESTED:
+        raise ValidationError("Đơn chưa ở trạng thái yêu cầu thanh toán.")
+    if not order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED).exists():
+        raise ValidationError("Đơn không có món để thanh toán.")
+    preview = payment_preview(order, promotion_code=promotion_code)
+    _store_promotion(order, preview)
+    order.save(update_fields=("promotion_code_snapshot", "promotion_discount_amount", "discount_amount", "total_amount", "updated_at"))
+    if preview["due"] <= 0:
+        raise ValidationError("Hóa đơn 0 đồng không thể gửi sang cổng thanh toán.")
+
+    now = timezone.now()
+    txn_ref = f"VNP{order.pk}-{now:%Y%m%d%H%M%S}-{uuid4().hex[:8]}"
+    online_payment = OnlinePayment.objects.create(
+        order=order,
+        txn_ref=txn_ref,
+        amount=preview["due"],
+        subtotal=preview["subtotal"],
+        discount_percent=preview["discount_percent"],
+        discount_amount=preview["discount"],
+        membership_discount_amount=preview["membership_discount"],
+        promotion_code=preview["promotion_code"],
+        promotion_discount_amount=preview["promotion_discount"],
+    )
+    local_now = timezone.localtime(now)
+    params = {
+        "vnp_Version": "2.1.0",
+        "vnp_Command": "pay",
+        "vnp_Amount": str(int(online_payment.amount * 100)),
+        "vnp_CurrCode": "VND",
+        "vnp_TxnRef": txn_ref,
+        "vnp_OrderInfo": f"Thanh toan hoa don {order.order_code}",
+        "vnp_OrderType": "other",
+        "vnp_Locale": "vn",
+        "vnp_ReturnUrl": settings.VNPAY_RETURN_URL or return_url,
+        "vnp_IpAddr": ip_address or "127.0.0.1",
+        "vnp_CreateDate": local_now.strftime("%Y%m%d%H%M%S"),
+        "vnp_ExpireDate": (local_now + timedelta(minutes=15)).strftime("%Y%m%d%H%M%S"),
+    }
+    return online_payment, payment_url(params)
+
+
+@transaction.atomic
+def process_vnpay_ipn(*, params):
+    """Apply a verified VNPAY IPN and return its protocol response code/message."""
+    txn_ref = str(params.get("vnp_TxnRef", ""))
+    online_payment = OnlinePayment.objects.select_for_update().select_related("order").filter(txn_ref=txn_ref).first()
+    if online_payment is None:
+        return "01", "Order not found"
+    if online_payment.status == OnlinePayment.Status.PAID:
+        return "02", "Order already confirmed"
+    try:
+        callback_amount = Decimal(str(params.get("vnp_Amount", ""))) / Decimal("100")
+    except Exception:
+        return "04", "Invalid amount"
+    if callback_amount != online_payment.amount:
+        return "04", "Invalid amount"
+
+    online_payment.response_code = str(params.get("vnp_ResponseCode", ""))[:10]
+    online_payment.provider_transaction_no = str(params.get("vnp_TransactionNo", ""))[:30]
+    online_payment.bank_code = str(params.get("vnp_BankCode", ""))[:30]
+    online_payment.raw_response = dict(params)
+    successful = (
+        online_payment.response_code == "00"
+        and str(params.get("vnp_TransactionStatus", "")) == "00"
+    )
+    if not successful:
+        online_payment.status = OnlinePayment.Status.FAILED
+        online_payment.save()
+        return "00", "Confirm success"
+
+    order = Order.objects.select_for_update().get(pk=online_payment.order_id)
+    if order.status != Order.Status.PAYMENT_REQUESTED:
+        if Invoice.objects.filter(order=order, status=Invoice.Status.PAID).exists():
+            return "02", "Order already confirmed"
+        return "99", "Invalid order status"
+    _complete_payment(
+        order=order,
+        subtotal=online_payment.subtotal,
+        discount_percent=online_payment.discount_percent,
+        discount_amount=online_payment.discount_amount,
+        membership_discount_amount=online_payment.membership_discount_amount,
+        promotion_code=online_payment.promotion_code,
+        promotion_discount_amount=online_payment.promotion_discount_amount,
+        total=online_payment.amount,
+        payment_method=Payment.Method.VNPAY,
+        reference=online_payment.provider_transaction_no or online_payment.txn_ref,
+        actor=None,
+        actor_snapshot="VNPAY",
+    )
+    now = timezone.now()
+    online_payment.status = OnlinePayment.Status.PAID
+    online_payment.paid_at = now
+    online_payment.save()
+    OnlinePayment.objects.filter(
+        order=order, status=OnlinePayment.Status.PENDING
+    ).exclude(pk=online_payment.pk).update(status=OnlinePayment.Status.CANCELLED, updated_at=now)
+    return "00", "Confirm success"
 
 
 @transaction.atomic
@@ -558,13 +779,8 @@ def record_payment(*, actor, order_id, expected_revision, amount, payment_method
 
 
 @transaction.atomic
-def pay_tables(*, actor, order_ids, payment_method="CASH", reference=""):
-    """Backward-compatible batch wrapper around the canonical payment flow.
-
-    The standalone batch checkout UI is retired, but this service can still be
-    called safely by old integrations. Each order must already have a payment
-    request and every order is settled through ``process_payment``.
-    """
+def pay_tables(*, actor, order_ids, payment_method="CASH", reference="", promotion_code=None):
+    """Settle several ready tables atomically and link their receipts in one batch."""
     try:
         order_ids = sorted({int(order_id) for order_id in order_ids})
     except (TypeError, ValueError) as exc:
@@ -590,17 +806,20 @@ def pay_tables(*, actor, order_ids, payment_method="CASH", reference=""):
     table_codes = []
     grand_total = Decimal("0")
     for order_id in order_ids:
+        prepare_quick_payment(actor=actor, order_id=order_id)
         invoice = process_payment(
             actor=actor,
             order_id=order_id,
             payment_method=payment_method,
             transaction_code=reference,
+            promotion_code=promotion_code,
         )
         payment = invoice.payments.order_by("-pk").first()
         invoices.append(invoice)
-        payments.append(payment)
+        if payment:
+            payments.append(payment)
         table_codes.append(invoice.order.table.code)
-        grand_total += payment.amount
+        grand_total += invoice.total_amount
 
     batch = PaymentBatch.objects.create(
         total=grand_total,
@@ -609,7 +828,8 @@ def pay_tables(*, actor, order_ids, payment_method="CASH", reference=""):
         performed_by=actor,
         actor_snapshot=actor.username,
     )
-    Payment.objects.filter(pk__in=[payment.pk for payment in payments]).update(batch=batch)
+    if payments:
+        Payment.objects.filter(pk__in=[payment.pk for payment in payments]).update(batch=batch)
 
     return batch, table_codes
 

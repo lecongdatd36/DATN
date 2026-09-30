@@ -35,17 +35,18 @@ def kitchen_items(*, q="", status=""):
 
 
 def payable_table_orders(*, area_id=None):
+    from .services import payment_preview
+
     queryset = (
         Order.objects.filter(
-            booking__status="SEATED",
             status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS, Order.Status.PAYMENT_REQUESTED),
         )
-        .select_related("booking__table__area", "invoice")
+        .select_related("table__area", "customer", "invoice")
         .prefetch_related("items")
-        .order_by("booking__table__area__name", "booking__table__code", "pk")
+        .order_by("table__area__name", "table__code", "pk")
     )
     if area_id:
-        queryset = queryset.filter(booking__table__area_id=area_id)
+        queryset = queryset.filter(table__area_id=area_id)
 
     ready = []
     for order in queryset:
@@ -55,10 +56,12 @@ def payable_table_orders(*, area_id=None):
         invoice = getattr(order, "invoice", None)
         if invoice and invoice.status != Invoice.Status.UNPAID:
             continue
-        remaining = invoice.remaining if invoice else order.total
+        preview = payment_preview(order)
+        remaining = preview["due"]
         if remaining <= Decimal("0"):
             continue
         order.payable_amount = remaining
+        order.discount_amount_preview = preview["discount"]
         ready.append(order)
     return ready
 

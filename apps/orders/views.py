@@ -9,15 +9,15 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
-from django.views.generic import DetailView, FormView, ListView, RedirectView
+from django.views.generic import DetailView, FormView, ListView
 
 from core.forms import add_service_errors, filter_query_string
 from apps.bookings.models import Booking
 from apps.menu.models import Dish
-from .forms import OpenOrderForm, WalkInForm, AddItemForm, BulkAddItemsForm, ItemEditForm, RevisionForm, ReasonForm, PaymentForm, OrderFilterForm, KitchenFilterForm
+from .forms import OpenOrderForm, WalkInForm, AddItemForm, BulkAddItemsForm, ItemEditForm, RevisionForm, ReasonForm, PaymentForm, TablePaymentForm, OrderFilterForm, KitchenFilterForm
 from .models import Invoice, Order, OrderActivityLog, OrderItem, Payment
 from .permissions import has_order_permission
-from .selectors import order_list, kitchen_items
+from .selectors import order_list, kitchen_items, payable_table_orders, payment_areas
 from . import services
 
 
@@ -310,12 +310,53 @@ class OrderPaymentView(OrderPermissionMixin, FormView):
         return HttpResponseRedirect(self.order.get_absolute_url())
 
 
-class TablePaymentView(OrderPermissionMixin, RedirectView):
-    """Send old cashier bookmarks to the integrated sales workspace."""
-
+class TablePaymentView(OrderPermissionMixin, FormView):
     order_permission = "collect_payment"
-    permanent = False
-    pattern_name = "sales:workspace"
+    form_class = TablePaymentForm
+    template_name = "orders/table_payment.html"
+
+    def get_area_id(self):
+        return self.request.POST.get("area") or self.request.GET.get("area") or ""
+
+    def get_ready_orders(self):
+        if not hasattr(self, "ready_orders"):
+            self.ready_orders = payable_table_orders(area_id=self.get_area_id() or None)
+        return self.ready_orders
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        ready_orders = self.get_ready_orders()
+        kwargs["order_queryset"] = Order.objects.filter(pk__in=[order.pk for order in ready_orders])
+        if self.request.method == "GET":
+            kwargs["initial"] = {"payment_method": "CASH"}
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            ready_orders=self.get_ready_orders(),
+            areas=payment_areas(),
+            selected_area=self.get_area_id(),
+            selected_order_ids=self.request.POST.getlist("orders"),
+        )
+        return context
+
+    def form_valid(self, form):
+        try:
+            batch, table_codes = services.pay_tables(
+                actor=self.request.user,
+                order_ids=form.cleaned_data["orders"].values_list("pk", flat=True),
+                payment_method=form.cleaned_data["payment_method"],
+                promotion_code=form.cleaned_data["promotion_code"] or None,
+                reference=form.cleaned_data["reference"],
+            )
+        except ValidationError as error:
+            add_service_errors(form, error)
+            if hasattr(self, "ready_orders"):
+                del self.ready_orders
+            return self.form_invalid(form)
+        messages.success(self.request, f"{batch.batch_code}: đã thanh toán gộp {len(table_codes)} bàn ({', '.join(table_codes)}).")
+        return HttpResponseRedirect(reverse("seating:table_list"))
 
 
 class ItemTransitionView(OrderActionView):

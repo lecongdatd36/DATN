@@ -127,4 +127,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Cổng thanh toán VNPAY. Để trống hai mã định danh khi chỉ dùng tiền mặt/chuyển khoản tại quầy.
+VNPAY_PAYMENT_URL = os.environ.get(
+    "VNPAY_PAYMENT_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+).strip()
+VNPAY_TMN_CODE = os.environ.get("VNPAY_TMN_CODE", "").strip()
+VNPAY_HASH_SECRET = os.environ.get("VNPAY_HASH_SECRET", "").strip()
+VNPAY_RETURN_URL = os.environ.get("VNPAY_RETURN_URL", "").strip()
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

@@ -1,16 +1,19 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.customers.models import Customer, MembershipTier
 from apps.employees.models import EmployeeProfile, JobPosition
 from apps.menu.models import Category, Dish, Unit
 from apps.seating.models import Area, DiningTable
-from apps.orders.models import Invoice, Order, OrderItem, PaymentRequest
+from apps.orders.models import Invoice, OnlinePayment, Order, OrderItem, Payment, PaymentRequest, PromotionCode
 from apps.orders import services
+from apps.orders.vnpay import sign
 
 
 class IntegratedRestaurantFlowTests(TestCase):
@@ -32,12 +35,50 @@ class IntegratedRestaurantFlowTests(TestCase):
         cls.category = Category.objects.create(name="Món chính tích hợp")
         cls.unit = Unit.objects.create(name="Phần tích hợp")
         cls.dish = Dish.objects.create(code="ITD01", name="Cơm gà", category=cls.category, unit=cls.unit, price=Decimal("50000"))
-        cls.tier = MembershipTier.objects.create(name="Vàng", minimum_spending=0, discount_percent=Decimal("5"))
+        cls.tier, _ = MembershipTier.objects.update_or_create(
+            name="Vàng", defaults={"minimum_spending": 0, "discount_percent": Decimal("5"), "is_active": True}
+        )
         cls.customer = Customer.objects.create(full_name="Nguyễn Văn A", phone="0912345678", membership_tier=cls.tier)
 
     def revision(self, order):
         order.refresh_from_db()
         return order.revision
+
+    def ready_order_for_payment(self, request_payment=True):
+        order = services.open_table(
+            actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2, customer_id=self.customer.pk
+        )
+        item = services.add_item(
+            actor=self.users["WAITER"], order_id=order.pk, expected_revision=self.revision(order),
+            dish_id=self.dish.pk, quantity=2,
+        )
+        services.send_to_kitchen(actor=self.users["WAITER"], order_id=order.pk, expected_revision=self.revision(order))
+        for target, actor in (
+            (OrderItem.Status.COOKING, self.users["KITCHEN"]),
+            (OrderItem.Status.READY, self.users["KITCHEN"]),
+            (OrderItem.Status.SERVED, self.users["WAITER"]),
+        ):
+            services.transition_item(
+                actor=actor, order_id=order.pk, item_id=item.pk,
+                expected_revision=self.revision(order), target=target,
+            )
+        if request_payment:
+            services.request_payment(
+                actor=self.users["WAITER"], order_id=order.pk, expected_revision=self.revision(order)
+            )
+        return order
+
+    def active_promotion(self, code="GIAM10"):
+        now = timezone.now()
+        return PromotionCode.objects.create(
+            code=code,
+            name="Giảm 10 phần trăm",
+            discount_type=PromotionCode.DiscountType.PERCENT,
+            value=Decimal("10"),
+            minimum_order=Decimal("50000"),
+            starts_at=now - timedelta(days=1),
+            ends_at=now + timedelta(days=1),
+        )
 
     def test_complete_pos_kitchen_payment_cleaning_flow(self):
         order = services.open_table(actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2, customer_id=self.customer.pk)
@@ -84,6 +125,26 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.assertEqual(self.client.get(reverse("kitchen:workspace")).status_code, 200)
         self.assertEqual(self.client.get(reverse("sales:workspace")).status_code, 403)
 
+    def test_kitchen_ticket_prominently_shows_item_and_table_notes(self):
+        order = services.open_table(
+            actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2,
+            customer_id=self.customer.pk, note="Khách dị ứng đậu phộng",
+        )
+        services.add_item(
+            actor=self.users["WAITER"], order_id=order.pk, expected_revision=self.revision(order),
+            dish_id=self.dish.pk, quantity=1, note="Không hành\nÍt cay",
+        )
+        services.send_to_kitchen(
+            actor=self.users["WAITER"], order_id=order.pk, expected_revision=self.revision(order)
+        )
+        self.client.force_login(self.users["KITCHEN"])
+        response = self.client.get(reverse("kitchen:workspace"))
+        self.assertContains(response, "GHI CHÚ MÓN")
+        self.assertContains(response, "Không hành")
+        self.assertContains(response, "Ít cay")
+        self.assertContains(response, "GHI CHÚ BÀN")
+        self.assertContains(response, "Khách dị ứng đậu phộng")
+
     def test_manager_operational_pages_render(self):
         self.client.force_login(self.users["MANAGER"])
         for route in (
@@ -93,6 +154,73 @@ class IntegratedRestaurantFlowTests(TestCase):
         ):
             with self.subTest(route=route):
                 self.assertEqual(self.client.get(route).status_code, 200)
+
+    def test_changing_tier_rules_recalculates_existing_customers(self):
+        self.client.force_login(self.users["MANAGER"])
+        response = self.client.post(reverse("customers:membership_tier_update", args=[self.tier.pk]), {
+            "name": self.tier.name,
+            "minimum_spending": "200000",
+            "discount_percent": "5",
+            "is_active": "on",
+        })
+        self.assertRedirects(response, reverse("customers:membership_tier_list"))
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.membership_tier.name, "Đồng")
+
+        self.customer.total_spending = Decimal("250000")
+        self.customer.save(update_fields=("total_spending", "updated_at"))
+        response = self.client.post(reverse("customers:membership_tier_update", args=[self.tier.pk]), {
+            "name": self.tier.name,
+            "minimum_spending": "200000",
+            "discount_percent": "7.5",
+            "is_active": "on",
+        })
+        self.assertEqual(response.status_code, 302)
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.membership_tier_id, self.tier.pk)
+
+    def test_promotion_stacks_after_membership_and_is_snapshotted(self):
+        self.active_promotion()
+        order = self.ready_order_for_payment()
+        preview = services.apply_promotion(
+            actor=self.users["CASHIER"], order_id=order.pk, promotion_code="giam10"
+        )
+        self.assertEqual(preview["membership_discount"], Decimal("5000"))
+        self.assertEqual(preview["promotion_discount"], Decimal("9500"))
+        self.assertEqual(preview["due"], Decimal("85500"))
+
+        invoice = services.process_payment(
+            actor=self.users["CASHIER"], order_id=order.pk, payment_method="CASH"
+        )
+        self.assertEqual(invoice.membership_discount_amount, Decimal("5000"))
+        self.assertEqual(invoice.promotion_code, "GIAM10")
+        self.assertEqual(invoice.promotion_discount_amount, Decimal("9500"))
+        self.assertEqual(invoice.total_amount, Decimal("85500"))
+
+    def test_table_page_has_quick_payment_and_can_settle_by_table(self):
+        self.active_promotion()
+        order = self.ready_order_for_payment(request_payment=False)
+        self.client.force_login(self.users["CASHIER"])
+        table_page = self.client.get(reverse("seating:table_list"))
+        self.assertContains(table_page, f"Thanh toán nhanh bàn {self.table.code}")
+
+        response = self.client.post(reverse("sales:payment"), {
+            "order_id": order.pk,
+            "quick_payment": "1",
+            "promotion_code": "GIAM10",
+            "payment_method": "CASH",
+            "next": reverse("seating:table_list"),
+        })
+        self.assertRedirects(response, reverse("seating:table_list"))
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.COMPLETED)
+        self.assertEqual(order.invoice.total_amount, Decimal("85500"))
+
+    def test_manager_can_open_visible_promotion_management(self):
+        self.client.force_login(self.users["MANAGER"])
+        response = self.client.get(reverse("sales:promotion_list"))
+        self.assertContains(response, "Mã giảm giá")
+        self.assertContains(response, reverse("sales:promotion_create"))
 
     def test_phone_lookup_and_automatic_customer_creation_when_opening_table(self):
         self.client.force_login(self.users["WAITER"])
@@ -159,19 +287,47 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.assertNotContains(response, f'{reverse("orders:walk_in")}?table={empty_table.pk}')
         self.assertNotContains(response, "/dat-ban/None/")
 
-    def test_old_table_payment_url_redirects_to_integrated_sales(self):
+    def test_grouped_table_payment_page_is_visible(self):
+        order = self.ready_order_for_payment(request_payment=False)
         self.client.force_login(self.users["CASHIER"])
-        target = reverse("sales:workspace")
-        self.assertRedirects(
-            self.client.get(reverse("orders:table_payment")),
-            target,
-            fetch_redirect_response=False,
+        response = self.client.get(reverse("orders:table_payment"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Thanh toán theo bàn")
+        self.assertContains(response, "Chọn một hoặc nhiều bàn")
+        self.assertContains(response, f'value="{order.pk}"')
+
+        response = self.client.post(reverse("orders:table_payment"), {
+            "orders": [order.pk],
+            "payment_method": "CASH",
+            "promotion_code": "",
+            "reference": "GOP-BAN-TEST",
+        })
+        self.assertRedirects(response, reverse("seating:table_list"))
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.COMPLETED)
+        self.assertIsNotNone(order.invoice.payments.get().batch_id)
+
+    def test_table_card_amount_uses_only_current_order_and_all_discounts(self):
+        self.active_promotion()
+        first = self.ready_order_for_payment()
+        services.process_payment(
+            actor=self.users["CASHIER"], order_id=first.pk,
+            payment_method="CASH", promotion_code="GIAM10",
         )
-        self.assertRedirects(
-            self.client.post(reverse("orders:table_payment"), {"orders": ["999"]}),
-            target,
-            fetch_redirect_response=False,
+        services.finish_cleaning(actor=self.users["WAITER"], table_id=self.table.pk)
+
+        second = services.open_table(
+            actor=self.users["WAITER"], table_id=self.table.pk, guest_count=1, customer_id=self.customer.pk
         )
+        services.add_item(
+            actor=self.users["WAITER"], order_id=second.pk, expected_revision=self.revision(second),
+            dish_id=self.dish.pk, quantity=1,
+        )
+        self.client.force_login(self.users["CASHIER"])
+        response = self.client.get(reverse("seating:table_list"))
+        table_row = next(row for row in response.context["page_obj"] if row.pk == self.table.pk)
+        self.assertEqual(table_row.current_order_subtotal, Decimal("50000"))
+        self.assertEqual(table_row.current_order_total, Decimal("47500"))
 
     def test_pos_http_payment_applies_tier_and_opens_printable_invoice(self):
         order = services.open_table(
@@ -223,3 +379,71 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.assertEqual(table_codes, [self.table.code])
         self.assertEqual(batch.total, Decimal("50000"))
         self.assertEqual(batch.payments.get().invoice.order_id, order.pk)
+
+    @override_settings(
+        VNPAY_TMN_CODE="TESTTMN",
+        VNPAY_HASH_SECRET="test-secret",
+        VNPAY_PAYMENT_URL="https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+        VNPAY_RETURN_URL="https://merchant.example/sales/payment/vnpay/return/",
+    )
+    def test_vnpay_ipn_settles_once_and_updates_membership(self):
+        order = self.ready_order_for_payment()
+        online_payment, gateway_url = services.create_vnpay_payment(
+            actor=self.users["CASHIER"], order_id=order.pk,
+            return_url="https://ignored.example/return", ip_address="127.0.0.1",
+        )
+        self.assertIn("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?", gateway_url)
+        self.assertIn("vnp_SecureHash=", gateway_url)
+        params = {
+            "vnp_TmnCode": "TESTTMN",
+            "vnp_TxnRef": online_payment.txn_ref,
+            "vnp_Amount": "9500000",
+            "vnp_ResponseCode": "00",
+            "vnp_TransactionStatus": "00",
+            "vnp_TransactionNo": "14567890",
+            "vnp_BankCode": "NCB",
+        }
+        params["vnp_SecureHash"] = sign(params)
+
+        response = self.client.get(reverse("sales:vnpay_ipn"), params)
+        self.assertEqual(response.json()["RspCode"], "00")
+        order.refresh_from_db()
+        self.customer.refresh_from_db()
+        online_payment.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.COMPLETED)
+        self.assertEqual(online_payment.status, OnlinePayment.Status.PAID)
+        self.assertEqual(self.customer.total_spending, Decimal("95000"))
+        self.assertEqual(order.invoice.payments.get().method, Payment.Method.VNPAY)
+
+        repeated = self.client.get(reverse("sales:vnpay_ipn"), params)
+        self.customer.refresh_from_db()
+        self.assertEqual(repeated.json()["RspCode"], "02")
+        self.assertEqual(self.customer.total_spending, Decimal("95000"))
+
+    @override_settings(VNPAY_TMN_CODE="TESTTMN", VNPAY_HASH_SECRET="test-secret")
+    def test_vnpay_ipn_rejects_bad_signature_and_wrong_amount(self):
+        order = self.ready_order_for_payment()
+        online_payment, _ = services.create_vnpay_payment(
+            actor=self.users["CASHIER"], order_id=order.pk,
+            return_url="https://merchant.example/return", ip_address="127.0.0.1",
+        )
+        bad_signature = self.client.get(reverse("sales:vnpay_ipn"), {
+            "vnp_TmnCode": "TESTTMN", "vnp_TxnRef": online_payment.txn_ref,
+            "vnp_Amount": "9500000", "vnp_SecureHash": "not-valid",
+        })
+        self.assertEqual(bad_signature.json()["RspCode"], "97")
+
+        wrong_amount = {
+            "vnp_TmnCode": "TESTTMN",
+            "vnp_TxnRef": online_payment.txn_ref,
+            "vnp_Amount": "10000",
+            "vnp_ResponseCode": "00",
+            "vnp_TransactionStatus": "00",
+        }
+        wrong_amount["vnp_SecureHash"] = sign(wrong_amount)
+        response = self.client.get(reverse("sales:vnpay_ipn"), wrong_amount)
+        self.assertEqual(response.json()["RspCode"], "04")
+        order.refresh_from_db()
+        online_payment.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAYMENT_REQUESTED)
+        self.assertEqual(online_payment.status, OnlinePayment.Status.PENDING)

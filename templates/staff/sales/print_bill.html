@@ -27,8 +27,8 @@
     </table>
 
     <section class="totals">
-      {% if invoice %}<div><span>Tạm tính</span><strong>{{ invoice.subtotal|dong }}đ</strong></div><div><span>Ưu đãi thành viên ({{ invoice.discount_percent }}%)</span><strong>-{{ invoice.discount_amount|dong }}đ</strong></div><div class="grand"><span>ĐÃ THANH TOÁN</span><strong>{{ invoice.total_amount|dong }}đ</strong></div>
-      {% else %}<div><span>Tạm tính</span><strong>{{ preview.subtotal|dong }}đ</strong></div><div><span>Ưu đãi{% if preview.tier %} hạng {{ preview.tier.name }}{% endif %} ({{ preview.discount_percent }}%)</span><strong>-{{ preview.discount|dong }}đ</strong></div><div class="grand"><span>DỰ KIẾN THANH TOÁN</span><strong>{{ preview.due|dong }}đ</strong></div>{% endif %}
+      {% if invoice %}<div><span>Tạm tính</span><strong>{{ invoice.subtotal|dong }}đ</strong></div><div><span>Ưu đãi hạng khách ({{ invoice.discount_percent }}%)</span><strong>-{{ invoice.membership_discount_amount|dong }}đ</strong></div>{% if invoice.promotion_code %}<div><span>Mã {{ invoice.promotion_code }}</span><strong>-{{ invoice.promotion_discount_amount|dong }}đ</strong></div>{% endif %}<div class="grand"><span>ĐÃ THANH TOÁN</span><strong>{{ invoice.total_amount|dong }}đ</strong></div>
+      {% else %}<div><span>Tạm tính</span><strong>{{ preview.subtotal|dong }}đ</strong></div><div><span>Ưu đãi{% if preview.tier %} hạng {{ preview.tier.name }}{% endif %} ({{ preview.discount_percent }}%)</span><strong>-{{ preview.membership_discount|dong }}đ</strong></div>{% if preview.promotion_code %}<div><span>Mã {{ preview.promotion_code }}</span><strong>-{{ preview.promotion_discount|dong }}đ</strong></div>{% endif %}<div class="grand"><span>DỰ KIẾN THANH TOÁN</span><strong>{{ preview.due|dong }}đ</strong></div>{% endif %}
     </section>
 
     <footer><p>{% if document_type == 'invoice' %}Cảm ơn quý khách và hẹn gặp lại!{% else %}Vui lòng kiểm tra món trước khi thanh toán.{% endif %}</p><small>{{ order.order_code }} · In lúc {% now 'H:i d/m/Y' %}</small></footer>

@@ -40,6 +40,7 @@ def access_policy(request):
             "can_cancel_prepared_items": has_order_permission(request.user, "cancel_prepared_item"),
             "can_view_order_logs": has_order_permission(request.user, "view_orderactivitylog"),
             "can_view_invoices": has_order_permission(request.user, "view_invoice"),
+            "can_view_promotions": has_order_permission(request.user, "view_promotioncode"),
             "can_view_reports": has_report_permission(request.user),
             "can_view_inventory": has_inventory_permission(request.user, "view_ingredient"),
             "can_manage_inventory": has_inventory_permission(request.user, "manage_inventory"),

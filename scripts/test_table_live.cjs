@@ -8,9 +8,10 @@ const source = readFileSync(require("node:path").join(__dirname, "../static/js/t
 function page() {
     const timers = new Map(), events = {}, requests = [];
     let sequence = 0, replacements = 0;
-    const message = {}, filterInput = {}, tableLink = {}, replacement = {};
+    const message = {}, filterInput = {}, tableLink = {}, replacement = { dataset: { stateSignature: "new" } };
     const document = { hidden: false, activeElement: null, addEventListener: (name, fn) => { events[name] = fn; } };
     const current = {
+        dataset: { stateSignature: "old" },
         contains: (element) => element === tableLink,
         replaceWith: (element) => { assert.equal(element, replacement); replacements++; },
     };
@@ -24,6 +25,7 @@ function page() {
     let respond = async () => ({ ok: true, status: 200, text: async () => "results" });
     runInNewContext(source, {
         document,
+        navigator: {},
         window: { location: { href: "http://localhost/ban/?current_status=occupied&page=2" }, addEventListener: document.addEventListener },
         AbortController,
         setTimeout: (fn, delay) => { timers.set(++sequence, { fn, delay }); return sequence; },
@@ -36,7 +38,7 @@ function page() {
         get replacements() { return replacements; },
         set respond(fn) { respond = fn; },
         hasTimer(delay) { return [...timers.values()].some((timer) => timer.delay === delay); },
-        async tick(delay = 15000) {
+        async tick(delay = 30000) {
             const entry = [...timers].find(([, timer]) => timer.delay === delay);
             assert.ok(entry, `Missing timer ${delay}`);
             timers.delete(entry[0]);
@@ -52,7 +54,7 @@ test("refresh preserves the current URL filters and only replaces results", asyn
     assert.equal(p.requests[0].options.headers["X-Table-Refresh"], "1");
     assert.equal(p.requests[0].options.cache, "no-store");
     assert.equal(p.replacements, 1);
-    assert.ok(p.hasTimer(15000));
+    assert.ok(p.hasTimer(30000));
 });
 
 test("typing and focused table links defer refresh", async () => {
@@ -61,7 +63,7 @@ test("typing and focused table links defer refresh", async () => {
         p.document.activeElement = element;
         await p.tick();
         assert.equal(p.requests.length, 0);
-        assert.ok(p.hasTimer(15000));
+        assert.ok(p.hasTimer(30000));
     }
 });
 
@@ -69,7 +71,7 @@ test("hidden tabs pause and returning to the tab refreshes", async () => {
     const p = page();
     p.document.hidden = true;
     p.events.visibilitychange();
-    assert.equal(p.hasTimer(15000), false);
+    assert.equal(p.hasTimer(30000), false);
     assert.equal(p.requests.length, 0);
     p.document.hidden = false;
     p.events.visibilitychange();
@@ -83,7 +85,7 @@ test("expired login or revoked access stops refresh and preserves navigation fal
         p.respond = async () => response;
         await p.tick();
         assert.equal(p.replacements, 0);
-        assert.equal(p.hasTimer(15000), false);
+        assert.equal(p.hasTimer(30000), false);
         assert.match(p.message.textContent, /tải lại trang/);
         p.events.click({ preventDefault: () => assert.fail("Reload link must remain usable") });
     }
@@ -100,7 +102,7 @@ test("network failure and invalid responses retain old results and retry", async
         await p.tick();
         assert.equal(p.replacements, 0);
         assert.match(p.message.textContent, /dữ liệu lần trước/);
-        assert.ok(p.hasTimer(15000));
+        assert.ok(p.hasTimer(30000));
     }
 });
 
@@ -115,5 +117,5 @@ test("slow requests time out and never overlap", async () => {
     await p.tick(10000);
     await pending;
     assert.ok(p.requests[0].options.signal.aborted);
-    assert.ok(p.hasTimer(15000));
+    assert.ok(p.hasTimer(30000));
 });

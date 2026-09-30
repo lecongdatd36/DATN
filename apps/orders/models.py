@@ -5,6 +5,40 @@ from django.db import models
 from django.urls import reverse
 
 
+class PromotionCode(models.Model):
+    class DiscountType(models.TextChoices):
+        PERCENT = "PERCENT", "Phần trăm"
+        FIXED = "FIXED", "Số tiền cố định"
+
+    code = models.CharField("Mã giảm giá", max_length=30, unique=True)
+    name = models.CharField("Tên chương trình", max_length=150)
+    discount_type = models.CharField("Loại giảm", max_length=10, choices=DiscountType.choices)
+    value = models.DecimalField("Giá trị", max_digits=12, decimal_places=2, validators=[MinValueValidator(0.01)])
+    minimum_order = models.DecimalField("Đơn tối thiểu", max_digits=12, decimal_places=0, default=0, validators=[MinValueValidator(0)])
+    maximum_discount = models.DecimalField("Giảm tối đa", max_digits=12, decimal_places=0, null=True, blank=True, validators=[MinValueValidator(1)])
+    starts_at = models.DateTimeField("Bắt đầu")
+    ends_at = models.DateTimeField("Kết thúc")
+    is_active = models.BooleanField("Đang áp dụng", default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        verbose_name = "mã giảm giá"
+        verbose_name_plural = "mã giảm giá"
+        constraints = [
+            models.CheckConstraint(condition=models.Q(value__gt=0), name="promotion_value_positive"),
+            models.CheckConstraint(condition=models.Q(ends_at__gt=models.F("starts_at")), name="promotion_valid_period"),
+        ]
+
+    def save(self, *args, **kwargs):
+        self.code = self.code.strip().upper()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code
+
+
 class Order(models.Model):
     class Status(models.TextChoices):
         OPEN = "OPEN", "Đang mở"
@@ -22,6 +56,8 @@ class Order(models.Model):
     status = models.CharField("Trạng thái", max_length=20, choices=Status.choices, default=Status.OPEN)
     subtotal = models.DecimalField("Tạm tính", max_digits=14, decimal_places=0, default=0)
     discount_amount = models.DecimalField("Giảm giá", max_digits=14, decimal_places=0, default=0)
+    promotion_code_snapshot = models.CharField("Mã giảm giá", max_length=30, blank=True)
+    promotion_discount_amount = models.DecimalField("Giảm theo mã", max_digits=14, decimal_places=0, default=0)
     total_amount = models.DecimalField("Tổng thanh toán", max_digits=14, decimal_places=0, default=0)
     note = models.TextField("Ghi chú", blank=True, max_length=1000)
     revision = models.PositiveIntegerField(default=1, editable=False)
@@ -133,6 +169,9 @@ class Invoice(models.Model):
     subtotal = models.DecimalField("Tạm tính", max_digits=12, decimal_places=0, default=0)
     discount_percent = models.DecimalField("Phần trăm giảm", max_digits=5, decimal_places=2, default=0)
     discount_amount = models.DecimalField("Tiền giảm", max_digits=12, decimal_places=0, default=0)
+    membership_discount_amount = models.DecimalField("Ưu đãi hạng", max_digits=12, decimal_places=0, default=0)
+    promotion_code = models.CharField("Mã giảm giá", max_length=30, blank=True)
+    promotion_discount_amount = models.DecimalField("Giảm theo mã", max_digits=12, decimal_places=0, default=0)
     total_amount = models.DecimalField("Cần thanh toán", max_digits=12, decimal_places=0, default=0)
     total = models.DecimalField("Tổng tiền", max_digits=12, decimal_places=0, default=0, validators=[MinValueValidator(0), MaxValueValidator(999999999999)])
     paid_amount = models.DecimalField("Đã thu", max_digits=12, decimal_places=0, default=0, validators=[MinValueValidator(0), MaxValueValidator(999999999999)])
@@ -187,6 +226,7 @@ class Payment(models.Model):
         CASH = "CASH", "Tiền mặt"
         CARD = "CARD", "Thẻ"
         BANK_TRANSFER = "BANK_TRANSFER", "Chuyển khoản"
+        VNPAY = "VNPAY", "VNPAY"
         OTHER = "OTHER", "Khác"
 
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name="payments")
@@ -217,6 +257,40 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.amount} {self.method}"
+
+
+class OnlinePayment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Đang chờ"
+        PAID = "PAID", "Thành công"
+        FAILED = "FAILED", "Thất bại"
+        CANCELLED = "CANCELLED", "Đã hủy"
+
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="online_payments")
+    txn_ref = models.CharField("Mã tham chiếu", max_length=100, unique=True)
+    amount = models.DecimalField("Số tiền", max_digits=12, decimal_places=0, validators=[MinValueValidator(1)])
+    subtotal = models.DecimalField("Tạm tính", max_digits=12, decimal_places=0)
+    discount_percent = models.DecimalField("Phần trăm giảm", max_digits=5, decimal_places=2, default=0)
+    discount_amount = models.DecimalField("Tiền giảm", max_digits=12, decimal_places=0, default=0)
+    membership_discount_amount = models.DecimalField("Ưu đãi hạng", max_digits=12, decimal_places=0, default=0)
+    promotion_code = models.CharField("Mã giảm giá", max_length=30, blank=True)
+    promotion_discount_amount = models.DecimalField("Giảm theo mã", max_digits=12, decimal_places=0, default=0)
+    status = models.CharField("Trạng thái", max_length=12, choices=Status.choices, default=Status.PENDING, db_index=True)
+    provider_transaction_no = models.CharField("Mã giao dịch VNPAY", max_length=30, blank=True)
+    bank_code = models.CharField("Ngân hàng", max_length=30, blank=True)
+    response_code = models.CharField("Mã phản hồi", max_length=10, blank=True)
+    raw_response = models.JSONField("Phản hồi cổng thanh toán", default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        verbose_name = "giao dịch trực tuyến"
+        verbose_name_plural = "giao dịch trực tuyến"
+
+    def __str__(self):
+        return f"{self.txn_ref} — {self.get_status_display()}"
 
 
 class OrderActivityLog(models.Model):

@@ -2,7 +2,7 @@
 
 Đồ án tốt nghiệp xây dựng bằng Django Templates và PostgreSQL tại `D:\DOANTOTNGHIEP`. Project Django chính là `QLNH`; mã nguồn được khởi tạo mới.
 
-**Trạng thái: GIAI ĐOẠN 9 — Hóa đơn và Thanh toán, cập nhật ngày 27/09/2026.** Có quản lý tài khoản, nhân sự, khách hàng, khu vực, bàn, đặt bàn, thực đơn, gọi món, Bếp, hóa đơn và thu tiền; giao diện tiếng Việt. Chưa có kho, báo cáo hoặc AI. Chi tiết: [báo cáo Giai đoạn 9](docs/stage-9-report.md).
+**Trạng thái: VẬN HÀNH TÍCH HỢP, cập nhật ngày 30/09/2026.** Có quản lý tài khoản, nhân sự, khách hàng, hạng thành viên, khu vực, bàn, đặt bàn, thực đơn, gọi món, Bếp, kho, hóa đơn, thanh toán VNPAY sandbox và báo cáo; giao diện tiếng Việt. [Báo cáo Giai đoạn 9](docs/stage-9-report.md) được giữ làm tài liệu lịch sử của luồng hóa đơn ban đầu.
 
 ## Công nghệ
 
@@ -278,6 +278,9 @@ Vào menu **Khách hàng** hoặc `/khach-hang/`. Form thêm/sửa chỉ gồm *
 - Xóa giữ mã/tên khách và tên đăng nhập người thực hiện trong nhật ký; từ chối nếu có liên kết `PROTECT`/`RESTRICT`. Khách đã có lịch đặt bàn được bảo vệ, kể cả lịch đã hủy. Đơn hàng bảo vệ lượt khách bằng `PROTECT`, giữ liên kết lịch sử này.
 - `/khach-hang/nhat-ky/` tìm theo mã/tên khách/người thực hiện và lọc hành động, xem được cả khách đã xóa. Django Admin chỉ tra cứu; thêm/sửa/xóa qua màn hình Khách hàng.
 - Migration `customers.0002_seed_customer_permissions` cấp quyền cho các nhóm có sẵn, hoạt động cả trên database mới. Quyền nhân sự không thay đổi.
+- Quản lí cấu hình **Hạng thành viên** bằng mức chi tiêu tối thiểu, phần trăm giảm và trạng thái áp dụng. Khi lập phiếu tạm tính, hệ thống chọn hạng đang hoạt động cao nhất theo tổng chi tiêu đã chốt; mức giảm được snapshot vào hóa đơn khi thanh toán.
+- Sau thanh toán thành công, số tiền thực trả được cộng đúng một lần vào `total_spending` và hạng khách được tính lại. Lịch sử hóa đơn đã thanh toán hiển thị tại chi tiết khách hàng.
+- Database mới có sẵn bốn hạng **Đồng, Bạc, Vàng, Kim cương**; Quản lí có thể sửa ngưỡng và phần trăm tại menu **Hạng khách hàng**. Phục vụ và Thu ngân được xem bảng hạng nhưng không được sửa.
 
 ## Khu vực và bàn
 
@@ -350,15 +353,21 @@ Vào **Thực đơn** hoặc `/thuc-don/`.
 3. **Gửi Bếp**: xem lại danh sách món rồi xác nhận gửi tất cả dòng chưa gửi. Kiểm tra lại món/danh mục còn phục vụ; nếu một món không hợp lệ thì chưa gửi cả đợt.
 4. **Bếp** xem hàng đợi theo giờ gửi, bàn, món, số lượng và ghi chú; chọn **Bắt đầu làm → Đã xong**. Phục vụ tại chi tiết đơn chọn **Đã phục vụ** khi giao cho khách. Trang Bếp/đơn có nút cập nhật thủ công.
 5. Sau khi phục vụ xong tất cả món chưa hủy, chuyển đơn **Chờ thanh toán**. Nếu chưa thu khoản nào có thể **Tiếp tục gọi món**; sau khi đã thu một phần, đơn bị khóa gọi thêm để giữ nguyên tổng hóa đơn.
-6. Thu ngân hoặc Quản lí thu một phần hay toàn bộ bằng tiền mặt, thẻ, chuyển khoản hoặc phương thức khác. Mỗi lần thu lưu số tiền, người thực hiện, thời gian và mã giao dịch/ghi chú. Thu đủ chuyển đơn sang **Đã thanh toán**; `Đã hủy` chỉ dùng cho đơn thực sự bị hủy.
+6. Thu ngân hoặc Quản lí thu tiền mặt/chuyển khoản xác nhận tại quầy, hoặc chuyển khách sang cổng VNPAY. Với VNPAY, trình duyệt quay về chỉ hiển thị kết quả; hệ thống chỉ chốt hóa đơn khi nhận IPN có terminal, chữ ký HMAC-SHA512 và số tiền hợp lệ. IPN lặp không cộng doanh thu hay tích lũy lần hai.
 7. Chỉ hoàn tất lượt khách và giải phóng bàn khi đơn đã hủy hợp lệ hoặc đơn cùng hóa đơn đều ở trạng thái **Đã thanh toán**.
+
+Tại trang **Bàn**, mỗi bàn có đơn đang hoạt động hiển thị nút **Thanh toán nhanh bàn ...** cho Thu ngân/Quản lí. Hộp thoại cho nhập mã giảm giá, chọn tiền mặt/chuyển khoản và chốt theo đúng bàn; hệ thống từ chối nếu còn món chưa phục vụ. Quản lí tạo mã tại menu **Mã giảm giá**, gồm giảm theo phần trăm hoặc số tiền, đơn tối thiểu, mức giảm tối đa và thời hạn. Ưu đãi hạng được tính trước, mã giảm giá tính trên phần tiền còn lại và cả hai được snapshot riêng trên hóa đơn.
 
 - Quản lí/Superuser có toàn bộ quyền; Phục vụ/Thu ngân mở đơn, gọi/sửa món chưa gửi, gửi Bếp và xác nhận phục vụ. Chỉ Thu ngân/Quản lí có quyền thu tiền. Bếp chỉ xem hàng đợi và cập nhật tiến độ làm món; Kho chưa có quyền đơn hàng.
 - Hủy món luôn cần lý do. Phục vụ/Thu ngân hủy món chưa gửi hoặc đã gửi nhưng chưa bắt đầu làm; món đang làm/đã xong/đã phục vụ chỉ Quản lí hủy. Món hủy giữ lịch sử và không cộng tiền tạm tính.
 - Chỉ hủy đơn khi không còn món chưa hủy và có lý do; sau hủy đơn mới được hoàn tất lượt khách để giải phóng bàn. Không xóa đơn/món hoặc giả lập thanh toán để bỏ qua bước thu tiền.
 - Mỗi lượt có một đơn duy nhất. Lượt khách trực tiếp dùng mã `LK...`, khách đặt trước dùng `DB...`, đơn dùng `DH...`. Không tạo khách hàng giả cho khách vãng lai; nếu cung cấp số điện thoại trùng khách đã lưu thì liên kết hồ sơ đó.
 - Form có phiên bản chống ghi đè/gửi lặp; quyền kiểm tra ở giao diện và service. Thay đổi và nhật ký cùng transaction. Khóa theo thứ tự bàn/lịch → thực đơn → tài khoản → bản ghi, giúp việc nhận khách/gọi món đồng bộ với bàn và thực đơn.
-- Tên, mã, đơn vị, giá trong dòng món là snapshot; giá sửa sau không đổi món đã gọi. Hóa đơn chốt tổng tại lần thu đầu tiên, không gồm món hủy, thuế/phí/giảm giá. Mã hóa đơn dựa trên mã bản ghi đơn nên không tranh chấp khi nhiều quầy thu đồng thời. Chưa có tách/ghép đơn, chuyển bàn, gọi món theo phần nhỏ, hoàn/hủy phiếu thu hoặc trừ kho.
+- Tên, mã, đơn vị, giá trong dòng món là snapshot; giá sửa sau không đổi món đã gọi. Hóa đơn không gồm món hủy và snapshot cả phần trăm lẫn số tiền ưu đãi thành viên. Mã hóa đơn dựa trên mã bản ghi đơn nên không tranh chấp khi nhiều quầy thu đồng thời. Chưa có tách/ghép đơn, gọi món theo phần nhỏ hoặc hoàn/hủy giao dịch qua giao diện.
+
+### Cấu hình VNPAY
+
+Đăng ký tài khoản thử nghiệm tại cổng VNPAY sandbox, sau đó điền `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` và `VNPAY_RETURN_URL` trong `.env`. URL IPN khai báo với VNPAY là `https://<ten-mien>/sales/payment/vnpay/ipn/`; cả Return URL và IPN phải là HTTPS công khai khi kiểm thử từ hệ thống VNPAY. Nếu chưa điền mã terminal/secret, lựa chọn VNPAY được ẩn và thanh toán tại quầy vẫn hoạt động bình thường.
 
 ## Báo cáo quản trị
 
@@ -387,7 +396,7 @@ python manage.py runserver 127.0.0.1:8000
 
 Mở [http://127.0.0.1:8000/](http://127.0.0.1:8000/) để kiểm tra trang nền tảng. Dừng server bằng `Ctrl+C`.
 
-`check` kiểm tra cấu hình Django. Mốc Giai đoạn 8 có 239 test cho Accounts, Employees, Customers, Seating, Bookings, Menu và Orders. Phần thanh toán Giai đoạn 9 chưa chạy lại test theo yêu cầu hiện tại của chủ dự án. Chạy riêng module khi cần: `python scripts/run_tests.py apps.orders`. Có thêm 6 kiểm thử logic tự cập nhật bằng Node: `node --test scripts/test_table_live.cjs`; không cần cài thêm thư viện và không thay thế kiểm tra bố cục trên trình duyệt.
+`check` kiểm tra cấu hình Django. Chạy riêng phần khách hàng và thanh toán bằng `python scripts/run_tests.py apps.customers apps.orders`. Bộ kiểm thử này bao gồm giảm giá theo hạng, thanh toán tại quầy, chữ ký/số tiền IPN VNPAY và chống xử lý trùng. Có thêm 6 kiểm thử logic tự cập nhật bằng Node: `node --test scripts/test_table_live.cjs`; không cần cài thêm thư viện và không thay thế kiểm tra bố cục trên trình duyệt.
 
 `scripts/run_tests.py` tạo database kiểm thử PostgreSQL với tên UUID riêng mỗi lần chạy, chạy toàn bộ migration từ đầu và dọn database khi hoàn tất. Tài khoản PostgreSQL cần quyền tạo database. Lệnh chuẩn `manage.py test` vẫn dùng tên mặc định `test_QLNH_DB`; nếu tên đó tồn tại mà không rõ nguồn gốc, không chấp nhận yêu cầu xóa của test runner.
 
@@ -399,4 +408,4 @@ Repository Git đã có lịch sử commit. `.gitignore` loại trừ `.env`, `.
 
 Phạm vi hiện tại đã gồm **Hóa đơn, Thanh toán và Báo cáo quản trị**. Báo cáo chỉ dùng dữ liệu nghiệp vụ đã được ghi nhận; chưa hiển thị giá vốn, chi phí hay lợi nhuận vì hệ thống chưa có phân hệ Kho/Chi phí. Đề xuất tiếp theo là triển khai Kho, nhập/xuất tồn và chi phí để bổ sung báo cáo lãi gộp.
 
-Lịch sử: [Giai đoạn 1](docs/stage-1-report.md), [Giai đoạn 2](docs/stage-2-report.md), [Giai đoạn 3](docs/stage-3-report.md), [Giai đoạn 4](docs/stage-4-report.md), [Giai đoạn 5](docs/stage-5-report.md), [Giai đoạn 6](docs/stage-6-report.md), [Giai đoạn 7](docs/stage-7-report.md), [Giai đoạn 8](docs/stage-8-report.md). Hiện trạng mới nhất: [Giai đoạn 9](docs/stage-9-report.md). Chưa chạy kiểm tra tự động hoặc kiểm tra bố cục trực quan cho thay đổi Giai đoạn 9.
+Lịch sử: [Giai đoạn 1](docs/stage-1-report.md), [Giai đoạn 2](docs/stage-2-report.md), [Giai đoạn 3](docs/stage-3-report.md), [Giai đoạn 4](docs/stage-4-report.md), [Giai đoạn 5](docs/stage-5-report.md), [Giai đoạn 6](docs/stage-6-report.md), [Giai đoạn 7](docs/stage-7-report.md), [Giai đoạn 8](docs/stage-8-report.md), [Giai đoạn 9](docs/stage-9-report.md). Hiện trạng vận hành mới nhất được mô tả trực tiếp trong README này.

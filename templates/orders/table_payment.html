@@ -31,7 +31,7 @@
             {% if ready_orders %}<button class="btn btn-sm btn-outline-primary" type="button" data-select-all>Chọn tất cả</button>{% endif %}
         </div>
 
-        {% regroup ready_orders by booking.table.area as area_groups %}
+        {% regroup ready_orders by table.area as area_groups %}
         {% for area_group in area_groups %}
         <section class="payment-area-section mb-4">
             <h2 class="h6 payment-area-title">{{ area_group.grouper.name }}</h2>
@@ -40,8 +40,8 @@
                 <label class="payment-table-card">
                     <input class="form-check-input" type="checkbox" name="orders" value="{{ order.pk }}" data-payment-order data-amount="{{ order.payable_amount }}" {% if order.pk|stringformat:'s' in selected_order_ids %}checked{% endif %}>
                     <span class="payment-check"><svg class="app-icon" aria-hidden="true"><use href="#icon-check"></use></svg></span>
-                    <span class="payment-table-main"><small>{{ order.booking.table.area.name }}</small><strong>Bàn {{ order.booking.table.code }}</strong><span>{{ order.booking.customer_name }} · {{ order.booking.party_size }} khách</span></span>
-                    <span class="payment-table-meta"><small>{{ order.order_code }} · {{ order.get_status_display }}</small><strong>{{ order.payable_amount|dong }} đ</strong>{% if order.invoice.paid_amount %}<span>Đã thu {{ order.invoice.paid_amount|dong }} đ</span>{% endif %}</span>
+                    <span class="payment-table-main"><small>{{ order.table.area.name }}</small><strong>Bàn {{ order.table.code }}</strong><span>{% if order.customer %}{{ order.customer.full_name }}{% elif order.booking %}{{ order.booking.customer_name }}{% else %}Khách vãng lai{% endif %} · {{ order.guest_count }} khách</span></span>
+                    <span class="payment-table-meta"><small>{{ order.order_code }} · {{ order.get_status_display }}</small><strong>{{ order.payable_amount|dong }} đ</strong>{% if order.discount_amount_preview %}<span>Đã giảm {{ order.discount_amount_preview|dong }} đ</span>{% endif %}</span>
                 </label>
                 {% endfor %}
             </div>
@@ -54,6 +54,7 @@
         <div class="payment-checkout project-card">
             <div class="payment-total"><span>Tổng cần thu</span><strong data-payment-total>0 đ</strong><small>Một mã thanh toán chung, hóa đơn từng bàn vẫn được giữ riêng trong Báo cáo.</small></div>
             <div><label class="form-label" for="{{ form.payment_method.id_for_label }}">{{ form.payment_method.label }}</label>{{ form.payment_method }}{% for error in form.payment_method.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div><label class="form-label" for="{{ form.promotion_code.id_for_label }}">{{ form.promotion_code.label }}</label>{{ form.promotion_code }}<small class="d-block text-secondary">Nếu nhập, mã được kiểm tra riêng trên từng bàn.</small>{% for error in form.promotion_code.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
             <div><label class="form-label" for="{{ form.reference.id_for_label }}">{{ form.reference.label }}</label>{{ form.reference }}{% for error in form.reference.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
             <button class="btn btn-primary payment-submit" type="submit" data-payment-submit disabled><svg class="app-icon me-1" aria-hidden="true"><use href="#icon-wallet"></use></svg> Thanh toán &amp; trả bàn</button>
         </div>
