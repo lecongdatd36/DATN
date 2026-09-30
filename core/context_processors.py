@@ -7,6 +7,7 @@ from apps.bookings.permissions import has_booking_permission
 from apps.menu.permissions import has_menu_permission
 from apps.orders.permissions import has_order_permission
 from apps.reports.permissions import has_report_permission
+from apps.inventory.permissions import has_inventory_permission
 
 
 def access_policy(request):
@@ -19,6 +20,7 @@ def access_policy(request):
             "can_change_customers": has_customer_permission(request.user, "change_customer"),
             "can_delete_customers": has_customer_permission(request.user, "delete_customer"),
             "can_view_customer_logs": has_customer_permission(request.user, "view_customeractivitylog"),
+            "can_view_membership_tiers": has_customer_permission(request.user, "view_membershiptier"),
             "can_view_tables": has_seating_permission(request.user, "view_diningtable"),
             "can_view_areas": has_seating_permission(request.user, "view_area"),
             "can_manage_seating": has_seating_permission(request.user, "manage_seating"),
@@ -37,6 +39,9 @@ def access_policy(request):
             "can_work_kitchen": has_order_permission(request.user, "work_kitchen"),
             "can_cancel_prepared_items": has_order_permission(request.user, "cancel_prepared_item"),
             "can_view_order_logs": has_order_permission(request.user, "view_orderactivitylog"),
+            "can_view_invoices": has_order_permission(request.user, "view_invoice"),
             "can_view_reports": has_report_permission(request.user),
+            "can_view_inventory": has_inventory_permission(request.user, "view_ingredient"),
+            "can_manage_inventory": has_inventory_permission(request.user, "manage_inventory"),
         }
     }

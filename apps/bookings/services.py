@@ -4,6 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.customers.models import Customer
+from apps.seating.models import DiningTable
 from apps.customers.validators import normalize_phone
 from apps.seating.models import DiningTable
 from core.seating_lock import lock_seating_schedule
@@ -89,7 +90,7 @@ def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends
     customer = Customer.objects.select_for_update().filter(phone=phone).first()
     if customer is None:
         raise ValidationError({"customer_phone": "Chưa có khách hàng với số điện thoại này. Hãy thêm khách hàng trước."})
-    table = DiningTable.objects.select_related("area").filter(pk=table_id).first()
+    table = DiningTable.objects.select_for_update().select_related("area").filter(pk=table_id).first()
     if table is None:
         raise ValidationError({"table": "Bàn không còn tồn tại."})
     before = _snapshot(booking) if not created else ""
@@ -112,6 +113,9 @@ def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends
         if not created:
             booking.revision += 1
         booking.save()
+        if table.status == DiningTable.Status.AVAILABLE:
+            table.status = DiningTable.Status.RESERVED
+            table.save(update_fields=("status", "updated_at"))
         _log(actor, booking, "Tạo đặt bàn" if created else "Sửa đặt bàn", (f"Trước: {before}\nSau: " if before else "") + _snapshot(booking))
     return booking
 
@@ -143,7 +147,7 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
         raise ValidationError("Không thể chuyển sang trạng thái này.")
     reason = reason.strip() if isinstance(reason, str) else ""
     if target in (Booking.Status.CANCELLED, Booking.Status.NO_SHOW) and not reason:
-        raise ValidationError({"reason": "Vui lòng nhập lý do để lưu vào nhật ký."})
+        reason = "Không cung cấp lý do"
     now = timezone.now()
     if target == Booking.Status.CONFIRMED:
         if booking.ends_at <= now:
@@ -160,8 +164,8 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
         booking.seated_at = now
     elif target == Booking.Status.COMPLETED:
         from apps.orders.models import Invoice, Order
-        blocking_orders = Order.objects.filter(booking=booking).exclude(status=Order.Status.VOID).exclude(
-            status=Order.Status.PAID, invoice__status=Invoice.Status.PAID)
+        blocking_orders = Order.objects.filter(booking=booking).exclude(status=Order.Status.CANCELLED).exclude(
+            status=Order.Status.COMPLETED, invoice__status=Invoice.Status.PAID)
         if blocking_orders.exists():
             raise ValidationError("Lượt khách còn đơn đang phục vụ hoặc chờ thanh toán. Hãy xử lý đơn trước khi giải phóng bàn.")
         if booking.seated_at and now < booking.seated_at:
@@ -173,6 +177,16 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
     booking.status = target
     booking.revision += 1
     booking.save(update_fields=("status", "revision", "updated_at", "seated_at", "completed_at"))
+    table = DiningTable.objects.select_for_update().get(pk=booking.table_id)
+    if target == Booking.Status.SEATED:
+        table.status = DiningTable.Status.OCCUPIED
+    elif target == Booking.Status.COMPLETED:
+        table.status = DiningTable.Status.CLEANING
+    elif target in (Booking.Status.CANCELLED, Booking.Status.NO_SHOW) and table.status == DiningTable.Status.RESERVED:
+        table.status = DiningTable.Status.AVAILABLE
+    elif target == Booking.Status.CONFIRMED and table.status == DiningTable.Status.AVAILABLE:
+        table.status = DiningTable.Status.RESERVED
+    table.save(update_fields=("status", "updated_at"))
     reason_note = f" Lý do: {reason}." if reason else ""
     _log(actor, booking, booking.get_status_display(), f"{before} → {booking.get_status_display()}.{reason_note} " + _snapshot(booking))
     return booking
@@ -187,7 +201,7 @@ def transfer_table(*, actor, booking_id, table_id, expected_revision):
     if booking.revision != expected_revision:
         raise ValidationError("Lượt khách đã thay đổi. Hãy tải lại trang trước khi chuyển bàn.")
     from apps.orders.models import Order
-    if Order.objects.filter(booking=booking, status=Order.Status.PAID).exists():
+    if Order.objects.filter(booking=booking, status=Order.Status.COMPLETED).exists():
         raise ValidationError("Đơn đã thanh toán nên không thể chuyển bàn. Hãy trả bàn để hoàn tất lượt khách.")
 
     target = DiningTable.objects.select_related("area").filter(pk=table_id).first()
@@ -202,6 +216,10 @@ def transfer_table(*, actor, booking_id, table_id, expected_revision):
     booking.table = target
     booking.revision += 1
     booking.save(update_fields=("table", "revision", "updated_at"))
+    old_table.status = DiningTable.Status.CLEANING
+    old_table.save(update_fields=("status", "updated_at"))
+    target.status = DiningTable.Status.OCCUPIED
+    target.save(update_fields=("status", "updated_at"))
     _log(
         actor,
         booking,
@@ -232,4 +250,6 @@ def seat_walk_in(*, actor, table_id, party_size, duration_minutes=None, customer
     _validate_slot(booking)
     booking.save()
     _log(actor, booking, "Nhận khách không đặt trước", _snapshot(booking))
+    table.status = DiningTable.Status.OCCUPIED
+    table.save(update_fields=("status", "updated_at"))
     return booking

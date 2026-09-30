@@ -24,13 +24,21 @@ class Area(models.Model):
 
 
 class DiningTable(models.Model):
+    class Status(models.TextChoices):
+        AVAILABLE = "AVAILABLE", "Trống"
+        RESERVED = "RESERVED", "Đã đặt"
+        OCCUPIED = "OCCUPIED", "Đang phục vụ"
+        CLEANING = "CLEANING", "Cần dọn"
+
     code = models.CharField(
         "Mã bàn", max_length=20, unique=True,
         validators=[RegexValidator(r"\A[A-Z0-9][A-Z0-9_-]{0,19}\Z", "Mã bàn chỉ gồm chữ A–Z, số, dấu gạch ngang hoặc gạch dưới; bắt đầu bằng chữ hoặc số.")],
         error_messages={"unique": "Mã bàn đã tồn tại."},
     )
     area = models.ForeignKey(Area, on_delete=models.PROTECT, related_name="tables", verbose_name="Khu vực")
+    name = models.CharField("Tên bàn", max_length=100, blank=True)
     capacity = models.PositiveSmallIntegerField("Số chỗ ngồi", validators=[MinValueValidator(1), MaxValueValidator(100)])
+    status = models.CharField("Trạng thái", max_length=12, choices=Status.choices, default=Status.AVAILABLE, db_index=True)
     is_active = models.BooleanField("Đang sử dụng", default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -43,11 +51,16 @@ class DiningTable(models.Model):
         constraints = [
             models.CheckConstraint(condition=models.Q(capacity__gte=1, capacity__lte=100), name="seating_capacity_range"),
             models.CheckConstraint(condition=models.Q(code__regex=r"^[A-Z0-9][A-Z0-9_-]{0,19}$"), name="seating_code_canonical"),
+            models.CheckConstraint(condition=models.Q(status__in=["AVAILABLE", "RESERVED", "OCCUPIED", "CLEANING"]), name="seating_table_valid_status"),
         ]
 
     @property
+    def table_code(self):
+        return self.code
+
+    @property
     def is_available(self):
-        """Catalog availability only; booking/occupancy will be a separate concern."""
+        """Bàn còn được cấu hình sử dụng; trạng thái vận hành kiểm tra riêng."""
         return self.is_active and self.area.is_active
 
     def __str__(self):

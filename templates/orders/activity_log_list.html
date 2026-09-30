@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Lịch sử hoạt động · QLNH{% endblock %}
+{% block content %}
+<div class="container-fluid px-3 px-md-4 pb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"><div><p class="eyebrow mb-1">VẬN HÀNH</p><h1 class="h2 mb-0">Lịch sử hoạt động</h1></div><a class="btn btn-outline-secondary" href="{% url 'orders:list' %}">Đơn hàng</a></div>
+    <form class="project-card p-3 mb-3" method="get"><div class="input-group"><input class="form-control" name="q" value="{{ query }}" placeholder="Tìm theo đơn, bàn, thao tác hoặc nhân viên"><button class="btn btn-primary" type="submit">Tìm</button></div></form>
+    <div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0">
+        <thead><tr><th>Thời gian</th><th>Đơn / Bàn</th><th>Thao tác</th><th>Người thực hiện</th><th>Nội dung</th></tr></thead>
+        <tbody>{% for log in logs %}<tr><td class="text-nowrap">{{ log.created_at|date:'d/m/Y H:i:s' }}</td><td><a href="{{ log.order.get_absolute_url }}">{{ log.order.order_code }}</a><small class="d-block text-secondary">Bàn {% if log.order.table %}{{ log.order.table.code }}{% elif log.order.booking %}{{ log.order.booking.table.code }}{% else %}—{% endif %}</small></td><td>{{ log.action }}</td><td>{{ log.actor_snapshot }}</td><td>{{ log.description|linebreaksbr }}</td></tr>{% empty %}<tr><td class="text-center py-5 text-secondary" colspan="5">Chưa có hoạt động phù hợp.</td></tr>{% endfor %}</tbody>
+    </table></div></div>
+    {% include 'includes/pagination.html' %}
+</div>
+{% endblock %}

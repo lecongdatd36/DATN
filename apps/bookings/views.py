@@ -58,8 +58,8 @@ class BookingDetailView(BookingPermissionMixin, DetailView):
         from apps.orders.models import Invoice, Order
         context["visit_order"] = Order.objects.select_related("invoice").filter(booking=booking).first()
         visit_order = context["visit_order"]
-        order_finished = visit_order is None or visit_order.status == Order.Status.VOID
-        if visit_order is not None and visit_order.status == Order.Status.PAID:
+        order_finished = visit_order is None or visit_order.status == Order.Status.CANCELLED
+        if visit_order is not None and visit_order.status == Order.Status.COMPLETED:
             invoice = getattr(visit_order, "invoice", None)
             order_finished = invoice is not None and invoice.status == Invoice.Status.PAID
         context["order_blocks_completion"] = not order_finished

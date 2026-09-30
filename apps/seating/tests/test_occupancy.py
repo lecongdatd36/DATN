@@ -63,7 +63,7 @@ class TableOccupancyTests(TestCase):
         self.assertEqual(self.listing().context["page_obj"][0].current_status, "occupied")
         with patch("apps.bookings.services.timezone.now", return_value=self.now + timedelta(minutes=1)):
             booking = transition_booking(actor=self.waiter, booking_id=booking.pk, target="COMPLETED", expected_status=booking.status, expected_revision=booking.revision)
-        self.assertEqual(self.listing().context["page_obj"][0].current_status, "empty")
+        self.assertEqual(self.listing().context["page_obj"][0].current_status, "cleaning")
 
     def test_current_reservations_hold_table_and_future_reservation_does_not(self):
         future = self.booking("CONFIRMED", start=self.now + timedelta(hours=1), end=self.now + timedelta(hours=2))

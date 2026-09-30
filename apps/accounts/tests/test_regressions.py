@@ -292,7 +292,7 @@ class PersonnelRegressionTests(AccountTestCase):
         self.assertEqual(self.client.post(url, data).status_code, 200)
         self.employee.is_active = True
         self.employee.save(update_fields=["is_active"])
-        self.assertRedirects(self.client.post(url, data), reverse("accounts:workspace"))
+        self.assertRedirects(self.client.post(url, data), reverse("sales:workspace"))
 
     def test_update_employee_form_valid_and_invalid_submissions(self):
         data = {

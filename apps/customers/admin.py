@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 
 from apps.accounts.admin import admin_site
-from .models import Customer, CustomerActivityLog
+from .models import Customer, CustomerActivityLog, MembershipTier
 from .permissions import has_customer_permission
 
 
@@ -50,3 +50,10 @@ class CustomerActivityLogAdmin(ReadOnlyCustomerAdmin):
     search_fields = ("customer_code_snapshot", "customer_name_snapshot", "performed_by_name_snapshot")
     readonly_fields = ("created_at", "customer_code_snapshot", "customer_name_snapshot", "action", "performed_by_name_snapshot", "description")
     fields = readonly_fields
+
+
+@admin.register(MembershipTier, site=admin_site)
+class MembershipTierAdmin(admin.ModelAdmin):
+    list_display = ("name", "minimum_spending", "discount_percent", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("name",)

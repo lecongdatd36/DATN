@@ -1,7 +1,7 @@
 from django import forms
 
 from apps.accounts.forms import BootstrapFormMixin
-from .models import Customer, CustomerActivityLog
+from .models import Customer, CustomerActivityLog, MembershipTier
 from .validators import normalize_phone
 
 
@@ -43,3 +43,17 @@ class CustomerLogFilterForm(CustomerFilterForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["q"].widget.attrs["placeholder"] = "Mã khách, tên khách hoặc người thực hiện"
+
+
+class MembershipTierForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = MembershipTier
+        fields = ("name", "minimum_spending", "discount_percent", "is_active")
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "Ví dụ: Vàng"}),
+            "minimum_spending": forms.NumberInput(attrs={"min": 0, "step": 1000}),
+            "discount_percent": forms.NumberInput(attrs={"min": 0, "max": 100, "step": "0.01"}),
+        }
+
+    def clean_name(self):
+        return " ".join(self.cleaned_data["name"].split())

@@ -70,15 +70,16 @@ class RevenueExportView(ReportPermissionMixin, View):
         writer.writerow(["Mã hóa đơn", "Mã thanh toán chung", "Mã đơn", "Bàn", "Khu vực", "Khách hàng", "Thời gian chốt", "Tổng tiền", "Phương thức thanh toán"])
         for invoice in paid_invoices_for_export(start_at, end_at):
             booking = invoice.order.booking
+            table = invoice.order.table or (booking.table if booking else None)
             methods = ", ".join(dict.fromkeys(payment.get_method_display() for payment in invoice.payments.all()))
             batch_codes = ", ".join(dict.fromkeys(payment.batch.batch_code for payment in invoice.payments.all() if payment.batch_id))
             writer.writerow([
                 invoice.invoice_code,
                 batch_codes,
                 invoice.order.order_code,
-                booking.table.code,
-                booking.table.area.name,
-                booking.customer_name,
+                table.code if table else "",
+                table.area.name if table else "",
+                invoice.customer.full_name if invoice.customer_id else (booking.customer_name if booking else "Khách vãng lai"),
                 timezone.localtime(invoice.closed_at).strftime("%d/%m/%Y %H:%M"),
                 invoice.total,
                 methods or invoice.payment_method,

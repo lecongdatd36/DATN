@@ -32,7 +32,7 @@ def report_data(start_at, end_at):
     collected = payments.aggregate(total=_money_sum("amount"))["total"]
 
     remaining_expression = ExpressionWrapper(F("total") - F("paid_amount"), output_field=MONEY_FIELD)
-    outstanding = Invoice.objects.filter(status=Invoice.Status.PENDING).aggregate(
+    outstanding = Invoice.objects.filter(status=Invoice.Status.UNPAID).aggregate(
         total=Coalesce(Sum(remaining_expression), Decimal("0"), output_field=MONEY_FIELD),
         count=Count("pk"),
     )
@@ -83,13 +83,13 @@ def report_data(start_at, end_at):
     )
 
     top_tables = list(
-        paid_invoices.values("order__booking__table__code", "order__booking__table__area__name")
+        paid_invoices.values("order__table__code", "order__table__area__name")
         .annotate(revenue=_money_sum("total"), invoice_count=Count("pk"))
-        .order_by("-revenue", "order__booking__table__code")[:10]
+        .order_by("-revenue", "order__table__code")[:10]
     )
 
     recent_invoices = paid_invoices.select_related(
-        "order__booking__table__area",
+        "order__table__area", "order__booking__table__area",
     ).prefetch_related(Prefetch("payments", queryset=Payment.objects.select_related("batch"))).order_by("-closed_at", "-pk")[:10]
 
     return {
@@ -113,7 +113,7 @@ def paid_invoices_for_export(start_at, end_at):
             closed_at__gte=start_at,
             closed_at__lt=end_at,
         )
-        .select_related("order__booking__table__area")
+        .select_related("customer", "order__table__area", "order__booking__table__area")
         .prefetch_related(Prefetch("payments", queryset=Payment.objects.select_related("batch")))
         .order_by("closed_at", "pk")
     )

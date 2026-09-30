@@ -1,0 +1,10 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+{% block staff_title %}Bếp · QLNH{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/staff-workspaces.css' %}">{% endblock %}
+{% block staff_content %}<section class="container-fluid px-3 pb-4" data-live-workspace data-state-url="{% url 'kitchen:state' %}"><div class="d-flex justify-content-between mb-3"><div><p class="eyebrow mb-1">BẾP</p><h1 class="h3">Phiếu chế biến</h1></div><span class="badge text-bg-success align-self-center">Tự cập nhật 7 giây</span></div><div class="kitchen-board">
+<section class="kitchen-column"><h2>Chờ chế biến <span>{{ pending|length }}</span></h2>{% for item in pending %}{% include 'staff/kitchen/item_card.html' with target='COOKING' button='Bắt đầu' %}{% empty %}<p class="empty-state">Không có món chờ.</p>{% endfor %}</section>
+<section class="kitchen-column"><h2>Đang chế biến <span>{{ cooking|length }}</span></h2>{% for item in cooking %}{% include 'staff/kitchen/item_card.html' with target='READY' button='Hoàn thành' %}{% empty %}<p class="empty-state">Chưa có món đang làm.</p>{% endfor %}</section>
+<section class="kitchen-column"><h2>Hoàn thành <span>{{ ready|length }}</span></h2>{% for item in ready %}{% include 'staff/kitchen/item_card.html' with target='' button='' %}{% empty %}<p class="empty-state">Chưa có món hoàn thành.</p>{% endfor %}</section>
+</div></section>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/staff-polling.js' %}" defer></script>{% endblock %}

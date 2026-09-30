@@ -45,6 +45,21 @@ class LoginView(auth_views.LoginView):
     authentication_form = LoginForm
     redirect_authenticated_user = True
 
+    def get_success_url(self):
+        explicit = self.get_redirect_url()
+        if explicit:
+            return explicit
+        groups = set(self.request.user.groups.values_list("name", flat=True))
+        if "MANAGER" in groups or self.request.user.is_superuser:
+            return str(reverse_lazy("accounts:workspace"))
+        if "KITCHEN" in groups:
+            return str(reverse_lazy("kitchen:workspace"))
+        if "INVENTORY" in groups:
+            return str(reverse_lazy("inventory:workspace"))
+        if groups.intersection({"WAITER", "CASHIER"}):
+            return str(reverse_lazy("sales:workspace"))
+        return str(reverse_lazy("accounts:workspace"))
+
 
 class LogoutView(auth_views.LogoutView):
     """Django 5.2 chỉ cho đăng xuất bằng POST có CSRF."""

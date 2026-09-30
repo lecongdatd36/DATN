@@ -53,7 +53,7 @@ class ActualArrivalTests(TestCase):
             completed = self.change(seated, "COMPLETED")
         self.assertEqual(completed.completed_at, finish)
         self.assertEqual(completed.seated_at, self.early)
-        self.assertEqual(tables(at=finish).get().current_status, "empty")
+        self.assertEqual(tables(at=finish).get().current_status, "cleaning")
 
     def test_early_arrival_blocked_by_reservation_before_original_start(self):
         earlier = save_booking(actor=self.actor, customer_phone=self.customer.phone, table_id=self.table.pk,

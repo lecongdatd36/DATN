@@ -46,5 +46,6 @@ class TableFilterForm(AreaFilterForm):
     status = forms.ChoiceField(label="Trạng thái bàn", required=False, choices=[
         ("", "Tất cả trạng thái"), ("empty", "Trống hiện tại"),
         ("occupied", "Đang phục vụ"), ("reserved", "Đang giữ chỗ"),
+        ("cleaning", "Cần dọn"),
         ("inactive", "Ngừng sử dụng"), ("active", "Đang mở (mọi trạng thái)"),
     ])

@@ -8,11 +8,12 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
-from django.views.generic import DetailView, FormView, ListView
+from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView
 
 from core.forms import add_service_errors, filter_query_string
-from .forms import CustomerFilterForm, CustomerForm, CustomerLogFilterForm
-from .models import Customer, CustomerActivityLog
+from apps.orders.models import Invoice
+from .forms import CustomerFilterForm, CustomerForm, CustomerLogFilterForm, MembershipTierForm
+from .models import Customer, CustomerActivityLog, MembershipTier
 from .permissions import has_customer_permission
 from .selectors import customer_list, customer_logs
 from .services import create_customer, delete_customer, update_customer
@@ -50,6 +51,9 @@ class CustomerDetailView(CustomerPermissionMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["purchase_history"] = Invoice.objects.filter(
+            customer=self.object, status=Invoice.Status.PAID
+        ).select_related("order__table").prefetch_related("payments")[:20]
         if has_customer_permission(self.request.user, "view_customeractivitylog"):
             context["log_page"] = Paginator(self.object.activity_logs.all(), 20).get_page(self.request.GET.get("page"))
         return context
@@ -136,3 +140,34 @@ class CustomerLogListView(CustomerPermissionMixin, ListView):
         return super().get_context_data(
             filter_form=self.filter_form, query_string=filter_query_string(self.request.GET), **kwargs,
         )
+
+
+class MembershipTierListView(CustomerPermissionMixin, ListView):
+    customer_permission = "view_membershiptier"
+    model = MembershipTier
+    context_object_name = "tiers"
+    template_name = "customers/membership_tier_list.html"
+
+
+class MembershipTierCreateView(CustomerPermissionMixin, CreateView):
+    customer_permission = "add_membershiptier"
+    model = MembershipTier
+    form_class = MembershipTierForm
+    template_name = "customers/membership_tier_form.html"
+    success_url = reverse_lazy("customers:membership_tier_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Đã thêm hạng thành viên.")
+        return super().form_valid(form)
+
+
+class MembershipTierUpdateView(CustomerPermissionMixin, UpdateView):
+    customer_permission = "change_membershiptier"
+    model = MembershipTier
+    form_class = MembershipTierForm
+    template_name = "customers/membership_tier_form.html"
+    success_url = reverse_lazy("customers:membership_tier_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Đã cập nhật hạng thành viên.")
+        return super().form_valid(form)

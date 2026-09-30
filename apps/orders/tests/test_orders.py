@@ -195,7 +195,7 @@ class OrderTests(TestCase):
         self.assertEqual(invoice.payments.first().amount, Decimal("170000"))
         self.assertEqual(invoice.payments.first().method, "CASH")
         self.order.refresh_from_db()
-        self.assertEqual(self.order.status, "PAID")
+        self.assertEqual(self.order.status, "COMPLETED")
 
     def test_paid_invoice_closes_order_and_allows_visit_completion(self):
         item = self.add(quantity=2)
@@ -207,7 +207,7 @@ class OrderTests(TestCase):
 
         self.order.refresh_from_db()
         self.visit.refresh_from_db()
-        self.assertEqual(self.order.status, "PAID")
+        self.assertEqual(self.order.status, "COMPLETED")
         self.assertEqual(self.order.invoice.status, "PAID")
         self.complete_visit()
         self.visit.refresh_from_db()
@@ -345,7 +345,7 @@ class OrderTests(TestCase):
             self.complete_visit()
         services.change_order_status(actor=self.waiter, order_id=self.order.pk, expected_revision=self.revision(), target="VOID", reason="Khách không dùng món")
         self.complete_visit()
-        self.assertEqual(tables().get(pk=self.table.pk).current_status, "empty")
+        self.assertEqual(tables().get(pk=self.table.pk).current_status, "cleaning")
         with self.assertRaises(ValidationError):
             self.add()
         self.assertEqual(OrderActivityLog.objects.filter(action="Đã hủy").count(), 2)

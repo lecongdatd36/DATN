@@ -1,0 +1,38 @@
+{% load static menu_money %}
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% if document_type == 'invoice' %}Hóa đơn {{ invoice.invoice_code }}{% else %}Phiếu tạm tính {{ order.order_code }}{% endif %}</title>
+  <link rel="stylesheet" href="{% static 'css/print-bill.css' %}?v=2">
+</head>
+<body>
+  <main class="receipt">
+    <header class="receipt-header"><div class="receipt-logo">Q</div><h1>QLNH RESTAURANT</h1><p>Ứng dụng quản lý nhà hàng</p><div class="receipt-divider">✦</div><h2>{% if document_type == 'invoice' %}HÓA ĐƠN THANH TOÁN{% else %}PHIẾU TẠM TÍNH{% endif %}</h2>{% if document_type != 'invoice' %}<span class="receipt-draft">KHÔNG PHẢI HÓA ĐƠN</span>{% endif %}</header>
+
+    <section class="receipt-meta">
+      <div><span>Mã đơn</span><strong>{{ order.order_code }}</strong></div>
+      {% if invoice %}<div><span>Mã hóa đơn</span><strong>{{ invoice.invoice_code }}</strong></div>{% endif %}
+      <div><span>Bàn</span><strong>{% if order.table %}{{ order.table.code }} · {{ order.table.area.name }}{% elif order.booking %}{{ order.booking.table.code }} · {{ order.booking.table.area.name }}{% else %}—{% endif %}</strong></div>
+      <div><span>Thời gian</span><strong>{% if invoice %}{{ invoice.closed_at|date:'d/m/Y H:i' }}{% else %}{% now 'd/m/Y H:i' %}{% endif %}</strong></div>
+      <div><span>Khách hàng</span><strong>{% if order.customer %}{{ order.customer.full_name }}{% elif order.booking %}{{ order.booking.customer_name }}{% else %}Khách vãng lai{% endif %}</strong></div>
+      {% if order.customer %}<div><span>Số điện thoại</span><strong>{{ order.customer.phone }}</strong></div>{% endif %}
+      {% if invoice and invoice.payments.first %}<div><span>Thanh toán</span><strong>{{ invoice.payments.first.get_method_display }}</strong></div><div><span>Thu ngân</span><strong>{{ invoice.payments.first.actor_snapshot }}</strong></div>{% endif %}
+    </section>
+
+    <table class="receipt-items">
+      <thead><tr><th>Món</th><th class="num">SL</th><th class="num">Đơn giá</th><th class="num">Thành tiền</th></tr></thead>
+      <tbody>{% for item in order.items.all %}{% if item.status != 'CANCELLED' %}<tr><td><strong>{{ item.dish_name }}</strong>{% if item.note %}<small>{{ item.note }}</small>{% endif %}</td><td class="num">{{ item.quantity }}</td><td class="num">{{ item.unit_price|dong }}</td><td class="num">{{ item.subtotal|dong }}</td></tr>{% endif %}{% empty %}<tr><td colspan="4" class="receipt-empty">Chưa có món</td></tr>{% endfor %}</tbody>
+    </table>
+
+    <section class="totals">
+      {% if invoice %}<div><span>Tạm tính</span><strong>{{ invoice.subtotal|dong }}đ</strong></div><div><span>Ưu đãi thành viên ({{ invoice.discount_percent }}%)</span><strong>-{{ invoice.discount_amount|dong }}đ</strong></div><div class="grand"><span>ĐÃ THANH TOÁN</span><strong>{{ invoice.total_amount|dong }}đ</strong></div>
+      {% else %}<div><span>Tạm tính</span><strong>{{ preview.subtotal|dong }}đ</strong></div><div><span>Ưu đãi{% if preview.tier %} hạng {{ preview.tier.name }}{% endif %} ({{ preview.discount_percent }}%)</span><strong>-{{ preview.discount|dong }}đ</strong></div><div class="grand"><span>DỰ KIẾN THANH TOÁN</span><strong>{{ preview.due|dong }}đ</strong></div>{% endif %}
+    </section>
+
+    <footer><p>{% if document_type == 'invoice' %}Cảm ơn quý khách và hẹn gặp lại!{% else %}Vui lòng kiểm tra món trước khi thanh toán.{% endif %}</p><small>{{ order.order_code }} · In lúc {% now 'H:i d/m/Y' %}</small></footer>
+  </main>
+  <div class="print-actions"><button type="button" onclick="window.print()">In phiếu</button><button type="button" onclick="window.close()">Đóng</button></div>
+</body>
+</html>

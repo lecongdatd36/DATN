@@ -7,7 +7,7 @@
     <p class="eyebrow mb-2">{% if kitchen_action %}BẾP{% else %}ĐƠN HÀNG{% endif %}</p><h1 class="h2 mb-4">{{ title }}</h1>
     <div class="row"><div class="col-lg-8 col-xl-6">
         <form method="post" class="project-card p-3 p-md-4" novalidate>
-            {% if order %}<p class="fw-semibold">{{ order.order_code }} — Bàn {{ order.booking.table.code }} · {{ order.get_status_display }}</p>{% endif %}
+            {% if order %}<p class="fw-semibold">{{ order.order_code }} — Bàn {% if order.table %}{{ order.table.code }}{% elif order.booking %}{{ order.booking.table.code }}{% else %}—{% endif %} · {{ order.get_status_display }}</p>{% endif %}
             {% if action == 'add' %}<div class="mb-4" data-selected-dish-preview data-placeholder-url="{% static 'images/dish-placeholder.svg' %}"><img class="dish-photo dish-photo-preview" src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa chọn món" width="320" height="240" decoding="async"><p class="small text-secondary mt-2">Chọn món bên dưới để xem ảnh minh họa.</p></div>{% endif %}
             {% if item %}<div class="mb-3">{% include 'menu/includes/photo.html' with dish=item.dish %}</div>{% endif %}
             {% if item %}<p class="text-break"><strong>{{ item.dish_name }}</strong> · {{ item.quantity }} {{ item.unit_name }} · {{ item.get_status_display }}</p>{% if item.note %}<p class="text-break">{{ item.note|linebreaksbr }}</p>{% endif %}{% endif %}

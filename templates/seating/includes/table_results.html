@@ -5,6 +5,7 @@
         <a class="is-empty" href="{% url 'seating:table_list' %}?status=empty"><span>Trống</span><strong>{{ status_counts.empty }}</strong></a>
         <a class="is-occupied" href="{% url 'seating:table_list' %}?status=occupied"><span>Có khách</span><strong>{{ status_counts.occupied }}</strong></a>
         <a class="is-reserved" href="{% url 'seating:table_list' %}?status=reserved"><span>Giữ chỗ</span><strong>{{ status_counts.reserved }}</strong></a>
+        <a class="is-reserved" href="{% url 'seating:table_list' %}?status=cleaning"><span>Cần dọn</span><strong>{{ status_counts.cleaning }}</strong></a>
     </div>
     <div class="table-results-meta">
         <p class="mb-0"><strong>{{ page_obj.paginator.count }}</strong> bàn · Cập nhật {{ status_checked_at|date:'H:i:s' }}</p>
@@ -13,20 +14,22 @@
 
     <div class="dining-table-grid">
         {% for table in page_obj %}
-        <article class="dining-table-card table-state-{{ table.current_status }}" aria-label="Bàn {{ table.code }} · {% if table.current_status == 'occupied' %}Đang có khách{% elif table.current_status == 'reserved' %}Đang giữ chỗ{% elif table.current_status == 'inactive' %}Ngừng sử dụng{% else %}Đang trống{% endif %}">
+        <article class="dining-table-card table-state-{{ table.current_status }}" aria-label="Bàn {{ table.code }} · {{ table.current_status }}">
             <div class="table-card-top">
                 <div class="table-identity"><span class="table-mini-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-table"></use></svg></span><div><span class="table-area">{{ table.area.name }}</span><h2 class="table-code">Bàn {{ table.code }}</h2></div></div>
-                {% if access.can_manage_seating %}<a class="table-edit-link" href="{% url 'seating:table_update' table.pk %}" aria-label="Sửa bàn {{ table.code }}"><svg class="app-icon" aria-hidden="true"><use href="#icon-settings"></use></svg></a>{% endif %}
+                {% if access.can_manage_seating %}<a class="table-edit-link" href="{% url 'seating:table_update' table.pk %}" aria-label="Sửa bàn {{ table.code }}"><svg class="app-icon" aria-hidden="true"><use href="#icon-settings"></use></svg><span class="visually-hidden">Sửa / trạng thái</span></a>{% endif %}
             </div>
 
             <div class="table-state-copy">
                 {% if table.current_status == 'occupied' %}
-                    <strong>Đang có khách</strong>
+                    <strong>Đang phục vụ</strong>
                     <span>{% if table.current_visit_customer %}{{ table.current_visit_customer }}{% else %}Khách tại bàn{% endif %}{% if table.current_visit_party_size %} · {{ table.current_visit_party_size }} người{% endif %}</span>
                 {% elif table.current_status == 'reserved' %}
                     <strong>Đang giữ chỗ</strong><span>Đã đến giờ hẹn, đang chờ nhận khách</span>
                 {% elif table.current_status == 'inactive' %}
-                    <strong>Ngừng sử dụng</strong><span>{% if not table.area.is_active %}Khu vực đang tạm ngừng{% else %}Bàn đang tạm ngừng{% endif %}</span>
+                    <strong>Ngừng sử dụng</strong><span>{% if not table.area.is_active %}Khu vực đã ngừng sử dụng{% else %}Bàn đang tạm ngừng{% endif %}</span>
+                {% elif table.current_status == 'cleaning' %}
+                    <strong>Cần dọn</strong><span>Chờ nhân viên hoàn tất dọn bàn</span>
                 {% else %}
                     <strong>Đang trống</strong><span>Sẵn sàng nhận khách</span>
                 {% endif %}
@@ -36,33 +39,36 @@
                 <span><svg class="app-icon" aria-hidden="true"><use href="#icon-customers"></use></svg>{{ table.capacity }} chỗ</span>
                 {% if table.current_status == 'occupied' and table.current_visit_seated_at %}<span>Nhận lúc {{ table.current_visit_seated_at|date:'H:i' }}</span>{% endif %}
             </div>
+            {% if not table.area.is_active and table.current_status != 'inactive' %}<div class="table-notice is-danger">Khu vực đã ngừng sử dụng</div>{% endif %}
 
             {% if table.current_status == 'occupied' and table.current_order_id %}
             <div class="table-order-snapshot">
-                <div><span>{{ table.current_order_quantity }} món</span><small>{% if table.current_order_status == 'OPEN' %}Đang gọi món{% elif table.current_order_status == 'AWAITING_PAYMENT' %}Chờ thanh toán{% elif table.current_order_status == 'PAID' %}Đã thanh toán{% else %}Đơn hiện tại{% endif %}</small></div>
+                <div><span>{{ table.current_order_quantity }} món</span><small>{% if table.current_order_status == 'OPEN' %}Đang gọi món{% elif table.current_order_status == 'IN_PROGRESS' %}Đang phục vụ{% elif table.current_order_status == 'PAYMENT_REQUESTED' %}Chờ thanh toán{% else %}Đơn hiện tại{% endif %}</small></div>
                 <strong>{{ table.current_order_total|dong }} đ</strong>
             </div>
             {% endif %}
 
-            {% if table.current_status == 'occupied' and table.current_visit_end <= status_checked_at %}<div class="table-notice is-danger">Đã quá giờ dự kiến</div>{% endif %}
-            {% if table.next_booking_id %}<div class="table-notice"><svg class="app-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg><span>Lịch tiếp theo {{ table.next_booking_start|date:'H:i · d/m' }}</span>{% if access.can_view_bookings %}<a href="{% url 'bookings:detail' table.next_booking_id %}">Xem</a>{% endif %}</div>{% endif %}
+            {% if table.current_status == 'occupied' and table.current_visit_end <= status_checked_at %}<div class="table-notice is-danger">Đã quá giờ dự kiến, chưa rời bàn</div>{% endif %}
+            {% if table.next_booking_id %}<div class="table-notice"><svg class="app-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg><span>Có lịch lúc {{ table.next_booking_start|date:'H:i · d/m' }}</span>{% if access.can_view_bookings %}<a href="{% url 'bookings:detail' table.next_booking_id %}">Xem</a>{% endif %}</div>{% endif %}
 
             <div class="table-card-actions">
                 {% if table.current_status == 'occupied' %}
                     <div class="table-primary-action">
-                    {% if table.current_order_status == 'OPEN' and access.can_manage_orders %}<a class="btn btn-primary" href="{% url 'orders:add_item' table.current_order_id %}">Gọi món</a>
-                    {% elif table.current_order_status == 'AWAITING_PAYMENT' and access.can_collect_payments %}<a class="btn btn-success" href="{% url 'orders:payment' table.current_order_id %}">Thu tiền</a>
-                    {% elif table.current_order_status == 'PAID' and access.can_manage_bookings %}<a class="btn btn-success" href="{% url 'bookings:transition' table.current_visit_id 'COMPLETED' %}" data-confirm-action data-revision="{{ table.current_visit_revision }}" data-status="SEATED" data-confirm-title="Trả bàn {{ table.code }}?" data-confirm-message="Chỉ xác nhận khi khách đã rời bàn. Bàn sẽ chuyển sang trạng thái trống." data-confirm-label="Trả bàn">Trả bàn</a>
-                    {% elif access.can_manage_orders %}<a class="btn btn-primary" href="{% url 'orders:open' %}?booking={{ table.current_visit_id }}">Mở đơn &amp; gọi món</a>{% endif %}
+                    {% if access.can_manage_orders and table.current_order_status == 'OPEN' or access.can_manage_orders and table.current_order_status == 'IN_PROGRESS' %}<a class="btn btn-primary" href="{% url 'orders:add_item' table.current_order_id %}">Gọi món</a>
+                    {% elif table.current_order_status == 'PAYMENT_REQUESTED' and access.can_collect_payments %}<a class="btn btn-success" href="{% url 'orders:payment' table.current_order_id %}">Thu tiền</a>
+                    {% elif table.current_visit_id and access.can_manage_orders %}<a class="btn btn-primary" href="{% url 'orders:open' %}?booking={{ table.current_visit_id }}">Mở đơn &amp; gọi món</a>
+                    {% elif access.can_view_orders %}<a class="btn btn-primary" href="{% url 'sales:workspace' %}?table={{ table.pk }}">Mở tại Bán hàng</a>{% endif %}
                     {% if table.current_order_id and access.can_view_orders %}<a class="btn btn-outline-secondary" href="{% url 'orders:detail' table.current_order_id %}">Xem đơn</a>{% endif %}
                     </div>
                     <div class="table-secondary-actions">
-                    {% if access.can_manage_bookings and table.current_order_status != 'PAID' %}<a href="{% url 'bookings:transfer_table' table.current_visit_id %}">Chuyển bàn</a>{% endif %}
-                    {% if access.can_manage_bookings and access.can_manage_orders and table.current_order_status != 'PAID' %}<a class="text-danger" href="{% url 'bookings:cancel_seated' table.current_visit_id %}" data-confirm-action data-revision="{{ table.current_visit_revision }}" data-confirm-reason="true" data-confirm-tone="danger" data-confirm-title="Hủy bàn {{ table.code }}?" data-confirm-message="Chỉ dùng khi khách không tiếp tục sử dụng bàn và chưa có món đã phục vụ." data-confirm-label="Hủy bàn">Hủy bàn</a>{% endif %}
-                    {% if access.can_view_bookings %}<a href="{% url 'bookings:detail' table.current_visit_id %}">Chi tiết</a>{% endif %}
+                    {% if table.current_visit_id and access.can_manage_bookings %}<a href="{% url 'bookings:transfer_table' table.current_visit_id %}">Chuyển bàn</a>{% endif %}
+                    {% if table.current_visit_id and access.can_manage_bookings and access.can_manage_orders %}<a class="text-danger" href="{% url 'bookings:cancel_seated' table.current_visit_id %}" data-confirm-action data-revision="{{ table.current_visit_revision }}" data-confirm-reason="true" data-confirm-tone="danger" data-confirm-title="Hủy bàn {{ table.code }}?" data-confirm-message="Chỉ dùng khi khách không tiếp tục sử dụng bàn và chưa có món đã phục vụ." data-confirm-label="Hủy bàn">Hủy bàn</a>{% endif %}
+                    {% if table.current_visit_id and access.can_view_bookings %}<a href="{% url 'bookings:detail' table.current_visit_id %}">Chi tiết đặt bàn</a>{% endif %}
                     </div>
                 {% elif table.current_status == 'reserved' %}
                     {% if table.held_booking_status == 'CONFIRMED' and access.can_manage_bookings and access.can_manage_orders %}<a class="btn btn-warning" href="{% url 'bookings:transition' table.held_booking_id 'SEATED' %}" data-confirm-action data-revision="{{ table.held_booking_revision }}" data-status="CONFIRMED" data-confirm-title="Nhận khách vào bàn {{ table.code }}?" data-confirm-message="Lượt khách sẽ bắt đầu và hệ thống mở đơn để gọi món ngay." data-confirm-label="Nhận khách & gọi món">Nhận khách &amp; gọi món</a>{% elif access.can_view_bookings %}<a class="btn btn-warning" href="{% url 'bookings:detail' table.held_booking_id %}">Xem lịch đặt</a>{% endif %}
+                {% elif table.current_status == 'cleaning' and access.can_manage_orders %}
+                    <form method="post" action="{% url 'sales:finish_cleaning' table.pk %}">{% csrf_token %}<button class="btn btn-warning">Đã dọn xong</button></form>
                 {% elif table.current_status == 'empty' %}
                     {% if access.can_manage_orders %}<a class="btn btn-success" href="{% url 'orders:walk_in' %}?table={{ table.pk }}">Nhận khách &amp; gọi món</a>{% endif %}
                 {% elif access.can_manage_seating %}

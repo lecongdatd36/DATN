@@ -6,12 +6,35 @@ from django.urls import reverse
 from .validators import normalize_phone, validate_phone
 
 
+class MembershipTier(models.Model):
+    name = models.CharField("Tên hạng", max_length=100, unique=True)
+    minimum_spending = models.DecimalField("Mức chi tiêu tối thiểu", max_digits=14, decimal_places=0, default=0)
+    discount_percent = models.DecimalField("Phần trăm giảm", max_digits=5, decimal_places=2, default=0)
+    is_active = models.BooleanField("Đang áp dụng", default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("minimum_spending", "pk")
+        verbose_name = "hạng thành viên"
+        verbose_name_plural = "hạng thành viên"
+        constraints = [
+            models.CheckConstraint(condition=models.Q(minimum_spending__gte=0), name="membership_minimum_nonnegative"),
+            models.CheckConstraint(condition=models.Q(discount_percent__gte=0, discount_percent__lte=100), name="membership_discount_range"),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
 class Customer(models.Model):
     full_name = models.CharField("họ tên", max_length=150)
     phone = models.CharField(
         "số điện thoại", max_length=20, unique=True, validators=[validate_phone],
         error_messages={"unique": "Số điện thoại đã có hồ sơ khách hàng. Hãy tìm khách theo số điện thoại."},
     )
+    membership_tier = models.ForeignKey(MembershipTier, on_delete=models.SET_NULL, null=True, blank=True, related_name="customers", verbose_name="Hạng thành viên")
+    total_spending = models.DecimalField("Tổng chi tiêu", max_digits=14, decimal_places=0, default=0)
     created_at = models.DateTimeField("ngày tạo", auto_now_add=True)
     updated_at = models.DateTimeField("cập nhật lần cuối", auto_now=True)
 

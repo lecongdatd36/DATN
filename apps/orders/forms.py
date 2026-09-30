@@ -76,6 +76,15 @@ class BulkAddItemsForm(forms.Form):
     expected_revision = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
 
     def __init__(self, *args, dishes_queryset=None, **kwargs):
+        # Keep legacy single-dish clients compatible with the POS multi-select.
+        bound_data = args[0] if args else kwargs.get("data")
+        if bound_data is not None and "dishes" not in bound_data and bound_data.get("dish"):
+            data = bound_data.copy()
+            data.setlist("dishes", [bound_data.get("dish")])
+            if args:
+                args = (data, *args[1:])
+            else:
+                kwargs["data"] = data
         super().__init__(*args, **kwargs)
         self.fields["dishes"].queryset = dishes_queryset if dishes_queryset is not None else Dish.objects.none()
 
@@ -90,7 +99,7 @@ class BulkAddItemsForm(forms.Form):
 
         items = []
         for dish in selected:
-            raw_quantity = self.data.get(f"quantity_{dish.pk}", "1")
+            raw_quantity = self.data.get(f"quantity_{dish.pk}", self.data.get("quantity", "1"))
             try:
                 quantity = int(raw_quantity)
             except (TypeError, ValueError):
@@ -99,7 +108,7 @@ class BulkAddItemsForm(forms.Form):
             if not 1 <= quantity <= 100:
                 self.add_error(None, f"Số lượng của {dish.name} phải từ 1 đến 100.")
                 continue
-            note = self.data.get(f"note_{dish.pk}", "").strip()
+            note = self.data.get(f"note_{dish.pk}", self.data.get("note", "")).strip()
             if len(note) > 500:
                 self.add_error(None, f"Ghi chú của {dish.name} không được dài quá 500 ký tự.")
                 continue
@@ -113,10 +122,9 @@ class ReasonForm(RevisionForm):
 
 
 class PaymentForm(RevisionForm):
-    amount = forms.DecimalField(label="Số tiền thu", min_value=1, max_digits=12, decimal_places=0)
-    payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=[("CASH", "Tiền mặt"), ("CARD", "Thẻ"), ("TRANSFER", "Chuyển khoản"), ("OTHER", "Khác")])
+    payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=[("CASH", "Tiền mặt"), ("BANK_TRANSFER", "Chuyển khoản")])
     reference = forms.CharField(label="Ghi chú / mã giao dịch", max_length=100, required=False)
-    field_order = ("amount", "payment_method", "reference", "expected_revision")
+    field_order = ("payment_method", "reference", "expected_revision")
 
 
 class TablePaymentForm(BootstrapFormMixin, forms.Form):
@@ -146,4 +154,4 @@ class OrderFilterForm(BootstrapFormMixin, forms.Form):
 class KitchenFilterForm(BootstrapFormMixin, forms.Form):
     q = forms.CharField(label="Món / mã đơn / bàn", required=False, max_length=150)
     status = forms.ChoiceField(label="Trạng thái món", required=False,
-        choices=[("", "Đang chờ xử lý / giao món"), ("SENT", "Đã gửi Bếp"), ("COOKING", "Đang làm"), ("READY", "Đã xong")])
+        choices=[("", "Đang chờ xử lý / giao món"), ("PENDING", "Đã gửi Bếp"), ("COOKING", "Đang làm"), ("READY", "Đã xong")])

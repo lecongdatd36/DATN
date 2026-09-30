@@ -27,11 +27,12 @@ def table_status_counts(*, at=None):
     )
     result = DiningTable.objects.annotate(has_seated=Exists(seated), has_held=Exists(held)).aggregate(
         all=Count("pk"),
-        occupied=Count("pk", filter=Q(has_seated=True)),
+        occupied=Count("pk", filter=Q(has_seated=True) | Q(status=DiningTable.Status.OCCUPIED)),
+        cleaning=Count("pk", filter=Q(status=DiningTable.Status.CLEANING)),
         inactive=Count("pk", filter=Q(has_seated=False) & (Q(is_active=False) | Q(area__is_active=False))),
         reserved=Count("pk", filter=Q(has_seated=False, has_held=True, is_active=True, area__is_active=True)),
     )
-    result["empty"] = result["all"] - result["occupied"] - result["inactive"] - result["reserved"]
+    result["empty"] = result["all"] - result["occupied"] - result["inactive"] - result["reserved"] - result["cleaning"]
     return result
 
 
@@ -41,17 +42,14 @@ def tables(*, q="", status="", area=None, at=None):
     waiting = Booking.objects.filter(table_id=OuterRef("pk"), status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED))
     held = waiting.filter(starts_at__lte=now, ends_at__gt=now).order_by("starts_at", "pk")
     upcoming = waiting.filter(starts_at__gt=now).order_by("starts_at", "pk")
-    current_order = Order.objects.filter(
-        booking__table_id=OuterRef("pk"), booking__status=Booking.Status.SEATED,
-    ).order_by("-pk")
+    current_order = Order.objects.filter(table_id=OuterRef("pk")).exclude(status__in=(Order.Status.COMPLETED, Order.Status.CANCELLED)).order_by("-pk")
     line_total = ExpressionWrapper(F("unit_price") * F("quantity"), output_field=DecimalField(max_digits=14, decimal_places=0))
     order_items = (
         OrderItem.objects.filter(
-            order__booking__table_id=OuterRef("pk"),
-            order__booking__status=Booking.Status.SEATED,
+            order__table_id=OuterRef("pk"),
         )
         .exclude(status=OrderItem.Status.CANCELLED)
-        .values("order__booking__table_id")
+        .values("order__table_id")
     )
     order_total = order_items.annotate(value=Sum(line_total)).values("value")[:1]
     order_quantity = order_items.annotate(value=Sum("quantity")).values("value")[:1]
@@ -73,9 +71,10 @@ def tables(*, q="", status="", area=None, at=None):
         current_order_quantity=Coalesce(Subquery(order_quantity), Value(0), output_field=IntegerField()),
     ).annotate(current_status=Case(
         # An actual seated party remains visible even after its planned end.
-        When(current_visit_id__isnull=False, then=Value("occupied")),
+        When(Q(current_visit_id__isnull=False) | Q(status=DiningTable.Status.OCCUPIED), then=Value("occupied")),
         When(Q(is_active=False) | Q(area__is_active=False), then=Value("inactive")),
-        When(held_booking_id__isnull=False, then=Value("reserved")),
+        When(status=DiningTable.Status.CLEANING, then=Value("cleaning")),
+        When(Q(held_booking_id__isnull=False) | Q(status=DiningTable.Status.RESERVED), then=Value("reserved")),
         default=Value("empty"), output_field=CharField(),
     ))
     if q:
@@ -86,6 +85,6 @@ def tables(*, q="", status="", area=None, at=None):
         result = result.filter(is_active=True, area__is_active=True)
     elif status == "inactive":
         result = result.filter(Q(is_active=False) | Q(area__is_active=False))
-    elif status in ("occupied", "reserved", "empty"):
+    elif status in ("occupied", "reserved", "cleaning", "empty"):
         result = result.filter(current_status=status)
     return result

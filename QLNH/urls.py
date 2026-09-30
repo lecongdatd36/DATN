@@ -16,6 +16,9 @@ urlpatterns = [
     path("dat-ban/", include("apps.bookings.urls")),
     path("thuc-don/", include("apps.menu.urls")),
     path("don-hang/", include("apps.orders.urls")),
+    path("sales/", include("apps.orders.sales_urls")),
+    path("staff/kitchen/", include("apps.orders.kitchen_urls")),
+    path("staff/inventory/", include("apps.inventory.urls")),
     path("bao-cao/", include("apps.reports.urls")),
     path("admin/", admin_site.urls),
 ]

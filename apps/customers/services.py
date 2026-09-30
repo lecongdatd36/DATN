@@ -3,7 +3,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError, RestrictedError
 
-from .models import Customer, CustomerActivityLog
+from .models import Customer, CustomerActivityLog, MembershipTier
 from .permissions import has_customer_permission
 from .validators import normalize_phone
 
@@ -52,7 +52,10 @@ def _log(actor, customer, action, description):
 @transaction.atomic
 def create_customer(*, actor, full_name, phone):
     actor = _lock_actor(actor, "add_customer")
-    customer = Customer()
+    base_tier = MembershipTier.objects.filter(
+        is_active=True, minimum_spending__lte=0
+    ).order_by("-minimum_spending", "-pk").first()
+    customer = Customer(membership_tier=base_tier)
     _set_data(customer, full_name, phone)
     _save(customer)
     _log(actor, customer, CustomerActivityLog.Action.CREATE, "Thêm hồ sơ khách hàng.")

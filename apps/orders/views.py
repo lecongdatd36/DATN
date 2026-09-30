@@ -2,22 +2,22 @@ from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
-from django.views.generic import DetailView, FormView, ListView
+from django.views.generic import DetailView, FormView, ListView, RedirectView
 
 from core.forms import add_service_errors, filter_query_string
 from apps.bookings.models import Booking
 from apps.menu.models import Dish
-from .forms import OpenOrderForm, WalkInForm, AddItemForm, BulkAddItemsForm, ItemEditForm, RevisionForm, ReasonForm, PaymentForm, TablePaymentForm, OrderFilterForm, KitchenFilterForm
-from .models import Order, OrderItem, Payment
+from .forms import OpenOrderForm, WalkInForm, AddItemForm, BulkAddItemsForm, ItemEditForm, RevisionForm, ReasonForm, PaymentForm, OrderFilterForm, KitchenFilterForm
+from .models import Invoice, Order, OrderActivityLog, OrderItem, Payment
 from .permissions import has_order_permission
-from .selectors import order_list, kitchen_items, payable_table_orders, payment_areas
+from .selectors import order_list, kitchen_items
 from . import services
 
 
@@ -44,9 +44,75 @@ class OrderListView(OrderPermissionMixin, ListView):
         return super().get_context_data(filter_form=self.filter_form, query_string=filter_query_string(self.request.GET), **kwargs)
 
 
+class InvoiceListView(OrderPermissionMixin, ListView):
+    order_permission = "view_invoice"
+    template_name = "orders/invoice_list.html"
+    context_object_name = "invoices"
+    paginate_by = 25
+
+    def get_queryset(self):
+        queryset = Invoice.objects.select_related(
+            "order__table__area", "order__booking__table__area", "customer"
+        ).prefetch_related("payments")
+        query = self.request.GET.get("q", "").strip()
+        status = self.request.GET.get("status", "").strip()
+        if query:
+            queryset = queryset.filter(
+                Q(invoice_code__icontains=query)
+                | Q(order__order_code__icontains=query)
+                | Q(order__table__code__icontains=query)
+                | Q(customer__full_name__icontains=query)
+                | Q(customer__phone__icontains=query)
+            )
+        if status:
+            queryset = queryset.filter(status=status)
+        self.query = query
+        self.status = status
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(
+            query=self.query,
+            selected_status=self.status,
+            status_choices=Invoice.Status.choices,
+            query_string=filter_query_string(self.request.GET),
+            **kwargs,
+        )
+
+
+class OrderActivityLogListView(OrderPermissionMixin, ListView):
+    order_permission = "view_orderactivitylog"
+    template_name = "orders/activity_log_list.html"
+    context_object_name = "logs"
+    paginate_by = 30
+
+    def get_queryset(self):
+        queryset = OrderActivityLog.objects.select_related(
+            "order__table", "order__booking__table", "performed_by"
+        )
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            queryset = queryset.filter(
+                Q(order__order_code__icontains=query)
+                | Q(order__table__code__icontains=query)
+                | Q(action__icontains=query)
+                | Q(description__icontains=query)
+                | Q(actor_snapshot__icontains=query)
+            )
+        self.query = query
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(
+            query=self.query,
+            query_string=filter_query_string(self.request.GET),
+            **kwargs,
+        )
+
+
 class OrderDetailView(OrderPermissionMixin, DetailView):
     order_permission = "view_order"
-    queryset = Order.objects.select_related("booking__table", "invoice").prefetch_related(
+    queryset = Order.objects.select_related("booking__table", "table", "customer", "employee", "invoice").prefetch_related(
         Prefetch("items", queryset=OrderItem.objects.select_related("dish")),
         Prefetch("invoice__payments", queryset=Payment.objects.select_related("batch")),
     )
@@ -113,6 +179,14 @@ class WalkInView(OpenOrderView):
         data["table_id"] = data.pop("table").pk
         return services.open_walk_in_order(actor=self.request.user, **data)
 
+    def form_valid(self, form):
+        try:
+            order = self.save(form.cleaned_data)
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
+        return HttpResponseRedirect(order.get_absolute_url())
+
 
 class OrderActionView(OrderPermissionMixin, FormView):
     template_name = "orders/form.html"
@@ -177,7 +251,7 @@ class OrderActionView(OrderPermissionMixin, FormView):
         elif self.action == "send":
             services.send_to_kitchen(**base)
         else:
-            services.change_order_status(target={"await": "AWAITING_PAYMENT", "reopen": "OPEN", "void": "VOID"}[self.action], **base)
+            services.change_order_status(target={"await": "PAYMENT_REQUESTED", "reopen": "OPEN", "void": "CANCELLED"}[self.action], **base)
 
     def form_valid(self, form):
         try:
@@ -192,91 +266,56 @@ class OrderActionView(OrderPermissionMixin, FormView):
 
 
 class OrderPaymentView(OrderPermissionMixin, FormView):
+    """Compatibility form backed by the same atomic POS payment service."""
+
     order_permission = "collect_payment"
     form_class = PaymentForm
     template_name = "orders/form.html"
     title = "Thu tiền"
 
     def dispatch(self, request, *args, **kwargs):
-        self.order = get_object_or_404(Order.objects.select_related("booking__table", "invoice"), pk=kwargs["pk"])
-        if self.order.status != Order.Status.AWAITING_PAYMENT:
+        self.order = get_object_or_404(Order.objects.select_related("table", "customer"), pk=kwargs["pk"])
+        if self.order.status != Order.Status.PAYMENT_REQUESTED:
             raise Http404("Đơn không ở trạng thái chờ thanh toán.")
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        invoice = getattr(self.order, "invoice", None)
-        remaining = invoice.remaining if invoice else self.order.total
-        kwargs["initial"] = {"expected_revision": self.order.revision, "amount": remaining, "payment_method": "CASH"}
+        kwargs["initial"] = {"expected_revision": self.order.revision, "payment_method": "CASH"}
         return kwargs
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        invoice = getattr(self.order, "invoice", None)
-        remaining = invoice.remaining if invoice else self.order.total
-        context.update(order=self.order, title=self.title, back_url=self.order.get_absolute_url(), remaining=remaining, action="payment")
-        return context
-
-    def save(self, data):
-        return services.record_payment(actor=self.request.user, order_id=self.order.pk, expected_revision=data["expected_revision"],
-            amount=data["amount"], payment_method=data["payment_method"], reference=data["reference"])
-
-    def form_valid(self, form):
-        try:
-            self.save(form.cleaned_data)
-        except ValidationError as error:
-            add_service_errors(form, error)
-            return self.form_invalid(form)
-        messages.success(self.request, "Đã ghi nhận thanh toán.")
-        return HttpResponseRedirect(self.order.get_absolute_url())
-
-
-class TablePaymentView(OrderPermissionMixin, FormView):
-    order_permission = "collect_payment"
-    form_class = TablePaymentForm
-    template_name = "orders/table_payment.html"
-
-    def get_area_id(self):
-        return self.request.POST.get("area") or self.request.GET.get("area") or ""
-
-    def get_ready_orders(self):
-        if not hasattr(self, "ready_orders"):
-            self.ready_orders = payable_table_orders(area_id=self.get_area_id() or None)
-        return self.ready_orders
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        ready_orders = self.get_ready_orders()
-        kwargs["order_queryset"] = Order.objects.filter(pk__in=[order.pk for order in ready_orders])
-        if self.request.method == "GET":
-            kwargs["initial"] = {"payment_method": "CASH"}
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update(
-            ready_orders=self.get_ready_orders(),
-            areas=payment_areas(),
-            selected_area=self.get_area_id(),
-            selected_order_ids=self.request.POST.getlist("orders"),
+        preview = services.payment_preview(self.order)
+        return super().get_context_data(
+            order=self.order,
+            title=self.title,
+            back_url=f'{reverse("sales:workspace")}?order={self.order.pk}',
+            remaining=preview["due"],
+            action="payment",
+            **kwargs,
         )
-        return context
 
     def form_valid(self, form):
         try:
-            batch, table_codes = services.pay_tables(
+            invoice = services.process_payment(
                 actor=self.request.user,
-                order_ids=form.cleaned_data["orders"].values_list("pk", flat=True),
+                order_id=self.order.pk,
                 payment_method=form.cleaned_data["payment_method"],
-                reference=form.cleaned_data["reference"],
+                transaction_code=form.cleaned_data["reference"],
             )
         except ValidationError as error:
             add_service_errors(form, error)
-            if hasattr(self, "ready_orders"):
-                del self.ready_orders
             return self.form_invalid(form)
-        messages.success(self.request, f"{batch.batch_code}: đã thanh toán và trả {len(table_codes)} bàn ({', '.join(table_codes)}).")
-        return HttpResponseRedirect(reverse("seating:table_list"))
+        messages.success(self.request, f"Đã thanh toán hóa đơn {invoice.invoice_code}.")
+        return HttpResponseRedirect(self.order.get_absolute_url())
+
+
+class TablePaymentView(OrderPermissionMixin, RedirectView):
+    """Send old cashier bookmarks to the integrated sales workspace."""
+
+    order_permission = "collect_payment"
+    permanent = False
+    pattern_name = "sales:workspace"
 
 
 class ItemTransitionView(OrderActionView):
@@ -296,8 +335,6 @@ class ItemTransitionView(OrderActionView):
         kwargs = super().get_form_kwargs()
         if self.order_permission == "work_kitchen" and self.item.status in (OrderItem.Status.DRAFT, OrderItem.Status.CANCELLED):
             raise Http404("Món chưa gửi Bếp hoặc đã hủy.")
-        if self.target == OrderItem.Status.CANCELLED and self.item.status == OrderItem.Status.SERVED:
-            raise Http404("Món đã phục vụ không thể hủy.")
         return kwargs
 
     def get_context_data(self, **kwargs):

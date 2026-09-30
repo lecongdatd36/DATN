@@ -5,7 +5,7 @@
 {% block content %}
 <section class="container-fluid px-2 px-md-3 pb-4 order-menu-page" data-order-menu>
     <div class="pos-order-heading">
-        <div><p class="eyebrow mb-1">BÁN HÀNG TẠI BÀN</p><h1>Bàn {{ order.booking.table.code }}</h1><span>{{ order.order_code }} · {{ order.booking.party_size }} khách</span></div>
+        <div><p class="eyebrow mb-1">BÁN HÀNG TẠI BÀN</p><h1>Bàn {% if order.table %}{{ order.table.code }}{% elif order.booking %}{{ order.booking.table.code }}{% else %}—{% endif %}</h1><span>{{ order.order_code }} · {{ order.guest_count }} khách{% if order.customer %} · {{ order.customer.full_name }}{% endif %}</span></div>
         <a class="btn btn-outline-secondary btn-sm" href="{{ order.get_absolute_url }}">Xem đơn</a>
     </div>
 
@@ -47,7 +47,7 @@
         </main>
 
         <aside class="pos-bill-pane">
-            <div class="pos-bill-head"><div><strong>Hóa đơn bàn {{ order.booking.table.code }}</strong><span>{{ order.order_code }}</span></div><span class="pos-order-state">Đang phục vụ</span></div>
+            <div class="pos-bill-head"><div><strong>Hóa đơn bàn {% if order.table %}{{ order.table.code }}{% elif order.booking %}{{ order.booking.table.code }}{% else %}—{% endif %}</strong><span>{{ order.order_code }}</span></div><span class="pos-order-state">Đang phục vụ</span></div>
             <div class="pos-bill-scroll">
                 {% if existing_items %}
                 <section class="bill-section"><h2>Món đã gọi <span>{{ existing_items|length }}</span></h2>

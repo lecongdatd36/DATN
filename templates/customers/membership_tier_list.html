@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load menu_money %}
+{% block title %}Hạng thành viên · QLNH{% endblock %}
+{% block content %}
+<div class="container-fluid px-3 px-md-4 pb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"><div><p class="eyebrow mb-1">KHÁCH HÀNG</p><h1 class="h2 mb-0">Hạng thành viên</h1></div><div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{% url 'customers:customer_list' %}">Khách hàng</a>{% if perms.customers.add_membershiptier %}<a class="btn btn-primary" href="{% url 'customers:membership_tier_create' %}">Thêm hạng</a>{% endif %}</div></div>
+    <div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Tên hạng</th><th class="text-end">Chi tiêu tối thiểu</th><th class="text-end">Giảm giá</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    {% for tier in tiers %}<tr><th>{{ tier.name }}</th><td class="text-end">{{ tier.minimum_spending|dong }} đ</td><td class="text-end">{{ tier.discount_percent }}%</td><td>{% if tier.is_active %}<span class="badge text-bg-success">Đang áp dụng</span>{% else %}<span class="badge text-bg-secondary">Ngừng áp dụng</span>{% endif %}</td><td class="text-end">{% if perms.customers.change_membershiptier %}<a class="btn btn-sm btn-outline-primary" href="{% url 'customers:membership_tier_update' tier.pk %}">Sửa</a>{% endif %}</td></tr>{% empty %}<tr><td class="text-center py-5 text-secondary" colspan="5">Chưa cấu hình hạng thành viên.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+</div>
+{% endblock %}

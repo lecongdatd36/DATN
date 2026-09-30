@@ -4,6 +4,8 @@ from . import views
 app_name = "orders"
 urlpatterns = [
     path("", views.OrderListView.as_view(), name="list"),
+    path("hoa-don/", views.InvoiceListView.as_view(), name="invoice_list"),
+    path("nhat-ky/", views.OrderActivityLogListView.as_view(), name="activity_logs"),
     path("mo/", views.OpenOrderView.as_view(), name="open"),
     path("khach-truc-tiep/", views.WalkInView.as_view(), name="walk_in"),
     path("thanh-toan-ban/", views.TablePaymentView.as_view(), name="table_payment"),

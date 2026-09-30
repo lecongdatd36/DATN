@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "apps.bookings.apps.BookingsConfig",
     "apps.menu.apps.MenuConfig",
     "apps.orders.apps.OrdersConfig",
+    "apps.inventory.apps.InventoryConfig",
     "apps.reports.apps.ReportsConfig",
 ]
 
