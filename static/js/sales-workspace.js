@@ -32,4 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const trigger = workspace.querySelector(`[data-bs-target="${window.location.hash}"]`);
     if (trigger) window.bootstrap.Tab.getOrCreateInstance(trigger).show();
   }
+
+  const openTable = new URLSearchParams(window.location.search).get("open_table");
+  if (openTable && window.bootstrap) {
+    const modal = document.getElementById(`open-table-${openTable}`);
+    if (modal) window.bootstrap.Modal.getOrCreateInstance(modal).show();
+  }
 });

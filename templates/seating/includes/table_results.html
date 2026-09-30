@@ -54,8 +54,7 @@
             <div class="table-card-actions">
                 {% if table.current_status == 'occupied' %}
                     <div class="table-primary-action">
-                    {% if access.can_manage_orders and table.current_order_status == 'OPEN' or access.can_manage_orders and table.current_order_status == 'IN_PROGRESS' %}<a class="btn btn-primary" href="{% url 'orders:add_item' table.current_order_id %}">Gọi món</a>
-                    {% elif table.current_order_status == 'PAYMENT_REQUESTED' and access.can_collect_payments %}<a class="btn btn-success" href="{% url 'orders:payment' table.current_order_id %}">Thu tiền</a>
+                    {% if table.current_order_id and access.can_view_orders %}<a class="btn {% if table.current_order_status == 'PAYMENT_REQUESTED' %}btn-success{% else %}btn-primary{% endif %}" href="{% url 'sales:workspace' %}?order={{ table.current_order_id }}#sales-order">{% if table.current_order_status == 'PAYMENT_REQUESTED' and access.can_collect_payments %}Mở thanh toán{% else %}Mở trong Bán hàng{% endif %}</a>
                     {% elif table.current_visit_id and access.can_manage_orders %}<a class="btn btn-primary" href="{% url 'orders:open' %}?booking={{ table.current_visit_id }}">Mở đơn &amp; gọi món</a>
                     {% elif access.can_view_orders %}<a class="btn btn-primary" href="{% url 'sales:workspace' %}?table={{ table.pk }}">Mở tại Bán hàng</a>{% endif %}
                     {% if table.current_order_id and access.can_view_orders %}<a class="btn btn-outline-secondary" href="{% url 'orders:detail' table.current_order_id %}">Xem đơn</a>{% endif %}
@@ -70,7 +69,7 @@
                 {% elif table.current_status == 'cleaning' and access.can_manage_orders %}
                     <form method="post" action="{% url 'sales:finish_cleaning' table.pk %}">{% csrf_token %}<button class="btn btn-warning">Đã dọn xong</button></form>
                 {% elif table.current_status == 'empty' %}
-                    {% if access.can_manage_orders %}<a class="btn btn-success" href="{% url 'orders:walk_in' %}?table={{ table.pk }}">Nhận khách &amp; gọi món</a>{% endif %}
+                    {% if access.can_manage_orders %}<a class="btn btn-success" href="{% url 'sales:workspace' %}?open_table={{ table.pk }}#sales-tables">Nhận khách &amp; gọi món</a>{% endif %}
                 {% elif access.can_manage_seating %}
                     <a class="btn btn-outline-secondary" href="{% url 'seating:table_update' table.pk %}">Cập nhật bàn</a>
                 {% endif %}

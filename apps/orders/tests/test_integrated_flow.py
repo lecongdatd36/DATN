@@ -148,11 +148,15 @@ class IntegratedRestaurantFlowTests(TestCase):
         order = services.open_table(
             actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2, customer_id=self.customer.pk
         )
+        empty_table = DiningTable.objects.create(code="IT04", name="Bàn trống POS", area=self.area, capacity=4)
         self.assertIsNone(order.booking_id)
         self.client.force_login(self.users["MANAGER"])
         response = self.client.get(reverse("seating:table_list"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, order.get_absolute_url())
+        self.assertContains(response, f'{reverse("sales:workspace")}?order={order.pk}#sales-order')
+        self.assertContains(response, f'{reverse("sales:workspace")}?open_table={empty_table.pk}#sales-tables')
+        self.assertNotContains(response, f'{reverse("orders:walk_in")}?table={empty_table.pk}')
         self.assertNotContains(response, "/dat-ban/None/")
 
     def test_old_table_payment_url_redirects_to_integrated_sales(self):

@@ -176,7 +176,7 @@ class BookingTransitionView(BookingPermissionMixin, FormView):
                 messages.warning(self.request, f"Đã nhận khách nhưng chưa mở được đơn: {'; '.join(error.messages)}")
                 return HttpResponseRedirect(booking.get_absolute_url())
             messages.success(self.request, f"Đã nhận khách vào bàn {booking.table.code}. Hãy chọn món cho đơn {order.order_code}.")
-            return HttpResponseRedirect(reverse("orders:add_item", args=[order.pk]))
+            return HttpResponseRedirect(f'{reverse("sales:workspace")}?order={order.pk}#sales-menu')
         messages.success(self.request, f"{booking.booking_code}: {booking.get_status_display()}.")
         return HttpResponseRedirect(booking.get_absolute_url())
 
