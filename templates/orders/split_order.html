@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load menu_money %}
+{% block title %}Tách hóa đơn {{ order.order_code }} · QLNH{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5">
+    <p class="eyebrow mb-2">THANH TOÁN · BÀN {{ order.table.code }}</p>
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div><h1 class="h2 mb-1">Tách hóa đơn {{ order.order_code }}</h1><p class="text-secondary mb-0">Nhập số lượng muốn chuyển sang hóa đơn mới. Hóa đơn gốc phải còn ít nhất một món.</p></div>
+        <a class="btn btn-outline-secondary" href="{{ order.get_absolute_url }}">Quay lại đơn</a>
+    </div>
+
+    <form method="post" class="project-card overflow-hidden">
+        {% csrf_token %}
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+        {% if form.non_field_errors %}<div class="alert alert-danger m-3 mb-0">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Món</th><th>Đang có</th><th class="text-end">Đơn giá</th><th style="width:190px">Số lượng tách</th></tr></thead>
+                <tbody>
+                {% for item, field in split_rows %}
+                    <tr>
+                        <td><strong>{{ item.dish_name }}</strong>{% if item.note %}<small class="d-block text-secondary">{{ item.note }}</small>{% endif %}</td>
+                        <td>{{ item.quantity }} {{ item.unit_name }}</td>
+                        <td class="text-end text-nowrap">{{ item.unit_price|dong }} đ</td>
+                        <td>{{ field }}{% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors|join:', ' }}</div>{% endif %}<small class="form-text">0 = giữ ở hóa đơn gốc</small></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 border-top">
+            <p class="small text-secondary mb-0">Mã giảm giá đang áp dụng sẽ được bỏ để mỗi hóa đơn tính ưu đãi riêng và minh bạch.</p>
+            <button class="btn btn-primary" type="submit">Tạo hóa đơn tách</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

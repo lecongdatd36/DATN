@@ -6,7 +6,7 @@ from django.core.exceptions import ImproperlyConfigured, PermissionDenied, Valid
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -63,7 +63,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
         order_id = self.request.GET.get("order")
         table_id = self.request.GET.get("table")
         active_orders = Order.objects.exclude(status__in=(Order.Status.COMPLETED, Order.Status.CANCELLED)).select_related(
-            "table__area", "customer__membership_tier", "employee__user"
+            "table__area", "customer__membership_tier", "employee__user", "invoice"
         ).prefetch_related("items", "payment_requests")
         if order_id:
             selected_order = active_orders.filter(pk=order_id).first()
@@ -84,6 +84,16 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             context["selected_can_request_payment"] = bool(live_items) and all(
                 item.status == OrderItem.Status.SERVED for item in live_items
             )
+            invoice = getattr(selected_order, "invoice", None)
+            context["selected_can_full_payment"] = invoice is None or invoice.paid_amount == 0
+            context["selected_invoice_remaining"] = invoice.remaining if invoice else preview["due"]
+            context["guest_seats"] = range(1, selected_order.guest_count + 1)
+            root_id = selected_order.split_root_id or selected_order.pk
+            context["selected_split_group"] = list(
+                Order.objects.filter(Q(pk=root_id) | Q(split_root_id=root_id))
+                .prefetch_related("items")
+                .order_by("pk")
+            )
         payment_requests = list(
             PaymentRequest.objects.filter(status=PaymentRequest.Status.WAITING)
             .select_related("order__table", "order__customer")
@@ -91,17 +101,25 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
         )
         for payment_request in payment_requests:
             payment_request.payable_amount = services.payment_preview(payment_request.order)["due"]
+        can_collect_payment = has_order_permission(self.request.user, "collect_payment")
+        can_collect_selected_payment = can_collect_payment and (
+            selected_order is None or context.get("selected_can_full_payment", True)
+        )
         context.update(
             areas=Area.objects.filter(is_active=True).prefetch_related(Prefetch("tables", queryset=tables)),
             tables=tables,
             categories=Category.objects.filter(is_active=True),
             dishes=Dish.objects.filter(status=Dish.Status.AVAILABLE, category__is_active=True, unit__is_active=True).select_related("category", "unit"),
             selected_order=selected_order,
+            selected_split_group=context.get("selected_split_group", []),
             active_orders=active_orders,
             customers=Customer.objects.order_by("-created_at")[:30],
             payment_requests=payment_requests,
             can_manage_order=has_order_permission(self.request.user, "manage_order"),
-            can_collect_payment=has_order_permission(self.request.user, "collect_payment"),
+            can_collect_payment=can_collect_selected_payment,
+            can_continue_partial_payment=can_collect_payment and bool(
+                selected_order and not context.get("selected_can_full_payment", True)
+            ),
             vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
             is_manager=can_manage_accounts(self.request.user),
             available_tables=DiningTable.objects.filter(status=DiningTable.Status.AVAILABLE, is_active=True, area__is_active=True).exclude(pk=selected_order.table_id if selected_order else None),
@@ -215,9 +233,9 @@ class SalesActionView(SalesAccessMixin, View):
         order = get_object_or_404(Order, pk=order_id)
         revision = int(request.POST.get("expected_revision", order.revision))
         if action == "add":
-            return services.add_item(actor=request.user, order_id=order_id, expected_revision=revision, dish_id=int(request.POST["dish_id"]), quantity=int(request.POST.get("quantity", 1)), note=request.POST.get("note", ""))
+            return services.add_item(actor=request.user, order_id=order_id, expected_revision=revision, dish_id=int(request.POST["dish_id"]), quantity=int(request.POST.get("quantity", 1)), seat_number=request.POST.get("seat_number"), note=request.POST.get("note", ""))
         if action == "update-item":
-            return services.edit_item(actor=request.user, order_id=order_id, item_id=int(request.POST["item_id"]), expected_revision=revision, quantity=int(request.POST["quantity"]), note=request.POST.get("note", ""))
+            return services.edit_item(actor=request.user, order_id=order_id, item_id=int(request.POST["item_id"]), expected_revision=revision, quantity=int(request.POST["quantity"]), seat_number=request.POST.get("seat_number"), note=request.POST.get("note", ""))
         if action == "remove-item":
             return services.remove_draft_item(actor=request.user, order_id=order_id, item_id=int(request.POST["item_id"]), expected_revision=revision)
         if action == "send":

@@ -68,6 +68,13 @@ class RevisionForm(BootstrapFormMixin, forms.Form):
 
 class ItemEditForm(RevisionForm):
     quantity = forms.IntegerField(label="Số lượng", min_value=1, max_value=100)
+    seat_number = forms.IntegerField(
+        label="Vị trí khách / số ghế",
+        min_value=1,
+        max_value=100,
+        required=False,
+        help_text="Bỏ trống nếu đây là món dùng chung cho cả bàn.",
+    )
     note = forms.CharField(label="Ghi chú cho Bếp", required=False, max_length=500, widget=forms.Textarea(attrs={"rows": 3}), help_text="Ví dụ: ít cay, không hành.")
 
 
@@ -88,7 +95,7 @@ class DishSelect(forms.Select):
 
 class AddItemForm(ItemEditForm):
     dish = DishChoiceField(label="Món còn phục vụ", queryset=Dish.objects.filter(status=Dish.Status.AVAILABLE, category__is_active=True, unit__is_active=True).select_related("unit", "category"), widget=DishSelect(attrs={"data-dish-select": ""}))
-    field_order = ("dish", "quantity", "note", "expected_revision")
+    field_order = ("dish", "quantity", "seat_number", "note", "expected_revision")
 
 
 class BulkAddItemsForm(forms.Form):
@@ -136,10 +143,19 @@ class BulkAddItemsForm(forms.Form):
                 self.add_error(None, f"Số lượng của {dish.name} phải từ 1 đến 100.")
                 continue
             note = self.data.get(f"note_{dish.pk}", self.data.get("note", "")).strip()
+            raw_seat = self.data.get(f"seat_number_{dish.pk}", self.data.get("seat_number", "")).strip()
+            try:
+                seat_number = int(raw_seat) if raw_seat else None
+            except (TypeError, ValueError):
+                self.add_error(None, f"Vị trí khách của {dish.name} không hợp lệ.")
+                continue
+            if seat_number is not None and not 1 <= seat_number <= 100:
+                self.add_error(None, f"Vị trí khách của {dish.name} phải từ 1 đến 100.")
+                continue
             if len(note) > 500:
                 self.add_error(None, f"Ghi chú của {dish.name} không được dài quá 500 ký tự.")
                 continue
-            items.append({"dish_id": dish.pk, "quantity": quantity, "note": note})
+            items.append({"dish_id": dish.pk, "quantity": quantity, "seat_number": seat_number, "note": note})
         cleaned_data["items"] = items
         return cleaned_data
 
@@ -149,9 +165,51 @@ class ReasonForm(RevisionForm):
 
 
 class PaymentForm(RevisionForm):
-    payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=[("CASH", "Tiền mặt"), ("BANK_TRANSFER", "Chuyển khoản")])
+    amount = forms.DecimalField(label="Số tiền thu lần này", min_value=1, max_digits=12, decimal_places=0)
+    payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=[
+        (Payment.Method.CASH, "Tiền mặt"),
+        (Payment.Method.BANK_TRANSFER, "Chuyển khoản"),
+        (Payment.Method.CARD, "Thẻ"),
+        (Payment.Method.OTHER, "Khác"),
+    ])
     reference = forms.CharField(label="Ghi chú / mã giao dịch", max_length=100, required=False)
-    field_order = ("payment_method", "reference", "expected_revision")
+    field_order = ("amount", "payment_method", "reference", "expected_revision")
+
+
+class SplitOrderForm(BootstrapFormMixin, forms.Form):
+    expected_revision = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+
+    def __init__(self, *args, items=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.items = list(items or [])
+        for item in self.items:
+            self.fields[f"quantity_{item.pk}"] = forms.IntegerField(
+                label=item.dish_name,
+                min_value=0,
+                max_value=item.quantity,
+                required=False,
+                initial=0,
+                widget=forms.NumberInput(attrs={"inputmode": "numeric"}),
+                help_text=f"Đang có {item.quantity} {item.unit_name}",
+            )
+
+    def clean(self):
+        cleaned = super().clean()
+        quantities = {}
+        selected_units = 0
+        remaining_units = 0
+        for item in self.items:
+            quantity = cleaned.get(f"quantity_{item.pk}") or 0
+            if quantity:
+                quantities[item.pk] = quantity
+                selected_units += quantity
+            remaining_units += item.quantity - quantity
+        if selected_units == 0:
+            raise forms.ValidationError("Hãy chọn ít nhất một món hoặc một phần số lượng để tách.")
+        if remaining_units == 0:
+            raise forms.ValidationError("Không thể chuyển toàn bộ món. Hóa đơn gốc phải còn ít nhất một món.")
+        cleaned["quantities"] = quantities
+        return cleaned
 
 
 class TablePaymentForm(BootstrapFormMixin, forms.Form):

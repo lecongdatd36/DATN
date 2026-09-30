@@ -358,6 +358,10 @@ Vào **Thực đơn** hoặc `/thuc-don/`.
 
 Tại trang **Bàn**, mỗi bàn có đơn đang hoạt động hiển thị nút **Thanh toán nhanh bàn ...** cho Thu ngân/Quản lí. Hộp thoại cho nhập mã giảm giá, chọn tiền mặt/chuyển khoản và chốt theo đúng bàn; hệ thống từ chối nếu còn món chưa phục vụ. Quản lí tạo mã tại menu **Mã giảm giá**, gồm giảm theo phần trăm hoặc số tiền, đơn tối thiểu, mức giảm tối đa và thời hạn. Ưu đãi hạng được tính trước, mã giảm giá tính trên phần tiền còn lại và cả hai được snapshot riêng trên hóa đơn.
 
+Khi đơn đã chờ thanh toán, Thu ngân/Quản lí có thể chọn **Tách hóa đơn theo món**, nhập số lượng của từng món cần chuyển và tạo hóa đơn con để thu riêng. Có thể tách tiếp, chuyển nhanh giữa các hóa đơn cùng bàn hoặc ghép hóa đơn con chưa phát sinh giao dịch về hóa đơn gốc. Mã giảm giá được xóa khi tách/ghép để từng hóa đơn tính lại minh bạch; ưu đãi hạng khách vẫn được tính trên từng phần. Thanh toán một hóa đơn con không đóng bàn nếu còn hóa đơn khác chưa trả; lượt khách và bàn chỉ hoàn tất sau hóa đơn cuối cùng.
+
+Màn hình **Thu nhiều phương thức** cho ghi nhận nhiều lần thu trên cùng hóa đơn bằng tiền mặt, chuyển khoản, thẻ hoặc phương thức khác. Có nút chia nhanh số tiền còn lại thành 2, 3 hoặc 4 phần. Sau lần thu đầu tiên, hệ thống khóa thay đổi mã giảm giá, tách/ghép và VNPAY để giữ nguyên tổng hóa đơn; chỉ lần thu đủ cuối cùng mới cộng tích lũy khách, hoàn tất đơn và cập nhật trạng thái bàn.
+
 - Quản lí/Superuser có toàn bộ quyền; Phục vụ/Thu ngân mở đơn, gọi/sửa món chưa gửi, gửi Bếp và xác nhận phục vụ. Chỉ Thu ngân/Quản lí có quyền thu tiền. Bếp chỉ xem hàng đợi và cập nhật tiến độ làm món; Kho chưa có quyền đơn hàng.
 - Hủy món luôn cần lý do. Phục vụ/Thu ngân hủy món chưa gửi hoặc đã gửi nhưng chưa bắt đầu làm; món đang làm/đã xong/đã phục vụ chỉ Quản lí hủy. Món hủy giữ lịch sử và không cộng tiền tạm tính.
 - Chỉ hủy đơn khi không còn món chưa hủy và có lý do; sau hủy đơn mới được hoàn tất lượt khách để giải phóng bàn. Không xóa đơn/món hoặc giả lập thanh toán để bỏ qua bước thu tiền.

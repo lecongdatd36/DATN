@@ -51,6 +51,10 @@ class Order(models.Model):
     table = models.ForeignKey("seating.DiningTable", on_delete=models.PROTECT, related_name="orders", null=True, blank=True, verbose_name="Bàn")
     customer = models.ForeignKey("customers.Customer", on_delete=models.PROTECT, related_name="orders", null=True, blank=True, verbose_name="Khách hàng")
     employee = models.ForeignKey("employees.EmployeeProfile", on_delete=models.SET_NULL, related_name="orders", null=True, blank=True, verbose_name="Nhân viên phục vụ")
+    split_root = models.ForeignKey(
+        "self", on_delete=models.PROTECT, related_name="split_checks", null=True, blank=True,
+        verbose_name="Hóa đơn gốc khi tách",
+    )
     order_code = models.CharField("Mã đơn", max_length=20, unique=True, null=True, blank=True)
     guest_count = models.PositiveSmallIntegerField("Số khách", default=1, validators=[MinValueValidator(1), MaxValueValidator(100)])
     status = models.CharField("Trạng thái", max_length=20, choices=Status.choices, default=Status.OPEN)
@@ -77,7 +81,10 @@ class Order(models.Model):
             ("work_kitchen", "Xử lý món tại Bếp"),
             ("cancel_prepared_item", "Hủy món đã bắt đầu làm"),
         ]
-        constraints = [models.CheckConstraint(condition=models.Q(status__in=["OPEN", "IN_PROGRESS", "PAYMENT_REQUESTED", "COMPLETED", "CANCELLED"]), name="order_valid_status")]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(status__in=["OPEN", "IN_PROGRESS", "PAYMENT_REQUESTED", "COMPLETED", "CANCELLED"]), name="order_valid_status"),
+            models.CheckConstraint(condition=models.Q(split_root__isnull=True) | ~models.Q(split_root=models.F("id")), name="order_split_root_not_self"),
+        ]
 
     @property
     def reservation(self):
@@ -89,6 +96,14 @@ class Order(models.Model):
 
     def get_absolute_url(self):
         return reverse("orders:detail", args=[self.pk])
+
+    @property
+    def check_root(self):
+        return self.split_root or self
+
+    @property
+    def is_split_check(self):
+        return self.split_root_id is not None
 
     def __str__(self):
         return self.order_code or "Đơn chưa lưu"
@@ -110,6 +125,13 @@ class OrderItem(models.Model):
     unit_name = models.CharField(max_length=100)
     unit_price = models.DecimalField(max_digits=9, decimal_places=0, validators=[MinValueValidator(1), MaxValueValidator(999999999)])
     quantity = models.PositiveSmallIntegerField("Số lượng", validators=[MinValueValidator(1), MaxValueValidator(100)])
+    seat_number = models.PositiveSmallIntegerField(
+        "Vị trí khách",
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(100)],
+        help_text="Số ghế/vị trí của khách trong bàn; bỏ trống nếu là món dùng chung.",
+    )
     total_price = models.DecimalField("Thành tiền", max_digits=12, decimal_places=0, default=0)
     note = models.TextField("Ghi chú cho Bếp", blank=True, max_length=500, validators=[MaxLengthValidator(500)])
     status = models.CharField("Trạng thái", max_length=10, choices=Status.choices, default=Status.DRAFT)
@@ -128,6 +150,10 @@ class OrderItem(models.Model):
         verbose_name_plural = "món trong đơn"
         constraints = [
             models.CheckConstraint(condition=models.Q(quantity__gte=1, quantity__lte=100), name="order_item_quantity_range"),
+            models.CheckConstraint(
+                condition=models.Q(seat_number__isnull=True) | models.Q(seat_number__gte=1, seat_number__lte=100),
+                name="order_item_seat_range",
+            ),
             models.CheckConstraint(condition=models.Q(unit_price__gte=1, unit_price__lte=999999999), name="order_item_price_range"),
             models.CheckConstraint(condition=models.Q(status__in=["DRAFT", "PENDING", "COOKING", "READY", "SERVED", "CANCELLED"]), name="order_item_valid_status"),
             models.CheckConstraint(condition=~models.Q(status="CANCELLED") | models.Q(cancellation_reason__regex=r"\S", cancelled_at__isnull=False), name="order_item_cancel_reason"),

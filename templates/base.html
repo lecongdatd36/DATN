@@ -8,7 +8,7 @@
     <title>{% block title %}QLNH · Quản lý nhà hàng{% endblock %}</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=2">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{% if user.is_authenticated %}staff-layout{% else %}public-layout d-flex flex-column min-vh-100{% endif %}">
@@ -37,9 +37,15 @@
             <header class="admin-topbar">
                 <div class="topbar-left">
                     <button class="icon-button sidebar-toggle" type="button" data-sidebar-toggle aria-controls="admin-sidebar" aria-expanded="true" aria-label="Thu gọn menu"><svg class="app-icon" aria-hidden="true"><use href="#icon-menu"></use></svg></button>
-                    <div class="topbar-title"><strong>Không gian quản lý</strong><small>Vận hành nhà hàng tập trung</small></div>
+                    <div class="topbar-title"><strong data-page-title>Không gian quản lý</strong><small data-live-date>Vận hành nhà hàng tập trung</small></div>
                 </div>
                 <div class="topbar-actions">
+                    <nav class="topbar-shortcuts d-none d-lg-flex" aria-label="Truy cập nhanh">
+                        {% if access.can_view_orders %}<a href="{% url 'sales:workspace' %}" title="Mở Bán hàng"><svg class="app-icon" aria-hidden="true"><use href="#icon-wallet"></use></svg><span>Bán hàng</span></a>{% endif %}
+                        {% if access.can_view_tables %}<a href="{% url 'seating:table_list' %}" title="Mở sơ đồ bàn"><svg class="app-icon" aria-hidden="true"><use href="#icon-table"></use></svg><span>Bàn</span></a>{% endif %}
+                        {% if access.can_work_kitchen %}<a href="{% url 'kitchen:workspace' %}" title="Mở màn hình Bếp"><svg class="app-icon" aria-hidden="true"><use href="#icon-kitchen"></use></svg><span>Bếp</span></a>{% endif %}
+                    </nav>
+                    <span class="topbar-clock d-none d-xl-inline-flex" data-live-clock aria-label="Giờ hiện tại"></span>
                     <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Đổi giao diện sáng tối" title="Đổi giao diện sáng tối"><svg class="app-icon theme-icon-moon" aria-hidden="true"><use href="#icon-moon"></use></svg><svg class="app-icon theme-icon-sun" aria-hidden="true"><use href="#icon-sun"></use></svg></button>
                     <div class="dropdown">
                         <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="user-avatar user-avatar-sm" aria-hidden="true">{{ user.username|first|upper }}</span><span class="profile-copy d-none d-sm-flex"><strong>{{ user.employee_profile.full_name|default:user.get_full_name|default:user.username }}</strong><small>{{ user.username }}</small></span></button>
@@ -97,7 +103,7 @@
     {% endif %}
 
     <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}" defer></script>
-    <script src="{% static 'js/base.js' %}" defer></script>
+    <script src="{% static 'js/base.js' %}?v=2" defer></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

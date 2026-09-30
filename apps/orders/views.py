@@ -14,7 +14,7 @@ from django.views.generic import DetailView, FormView, ListView
 from core.forms import add_service_errors, filter_query_string
 from apps.bookings.models import Booking
 from apps.menu.models import Dish
-from .forms import OpenOrderForm, WalkInForm, AddItemForm, BulkAddItemsForm, ItemEditForm, RevisionForm, ReasonForm, PaymentForm, TablePaymentForm, OrderFilterForm, KitchenFilterForm
+from .forms import OpenOrderForm, WalkInForm, AddItemForm, BulkAddItemsForm, ItemEditForm, RevisionForm, ReasonForm, PaymentForm, SplitOrderForm, TablePaymentForm, OrderFilterForm, KitchenFilterForm
 from .models import Invoice, Order, OrderActivityLog, OrderItem, Payment
 from .permissions import has_order_permission
 from .selectors import order_list, kitchen_items, payable_table_orders, payment_areas
@@ -130,9 +130,112 @@ class OrderDetailView(OrderPermissionMixin, DetailView):
         else:
             context["invoice_remaining"] = self.object.total
         context["can_reopen_order"] = context["invoice"] is None or context["invoice"].paid_amount == 0
+        root_id = self.object.split_root_id or self.object.pk
+        context["split_group"] = list(
+            Order.objects.filter(Q(pk=root_id) | Q(split_root_id=root_id))
+            .select_related("invoice")
+            .prefetch_related("items")
+            .order_by("pk")
+        )
         if has_order_permission(self.request.user, "view_orderactivitylog"):
             context["log_page"] = Paginator(self.object.activity_logs.all(), 20).get_page(self.request.GET.get("page"))
         return context
+
+
+class SplitOrderView(OrderPermissionMixin, FormView):
+    order_permission = "collect_payment"
+    form_class = SplitOrderForm
+    template_name = "orders/split_order.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.order = get_object_or_404(
+            Order.objects.select_related("table", "customer", "split_root").prefetch_related("items"),
+            pk=kwargs["pk"],
+        )
+        if self.order.status != Order.Status.PAYMENT_REQUESTED:
+            raise Http404("Chỉ tách đơn đang chờ thanh toán.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_items(self):
+        return [item for item in self.order.items.all() if item.status != OrderItem.Status.CANCELLED]
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["items"] = self.get_items()
+        if self.request.method == "GET":
+            initial = {"expected_revision": self.order.revision}
+            selected_seat = self.request.GET.get("seat", "")
+            if selected_seat.isdigit() and 1 <= int(selected_seat) <= self.order.guest_count:
+                for item in self.get_items():
+                    if item.seat_number == int(selected_seat):
+                        initial[f"quantity_{item.pk}"] = item.quantity
+            kwargs["initial"] = initial
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(order=self.order, **kwargs)
+        context["split_rows"] = [
+            (item, context["form"][f"quantity_{item.pk}"])
+            for item in self.get_items()
+        ]
+        context["seat_numbers"] = sorted({
+            item.seat_number for item in self.get_items() if item.seat_number is not None
+        })
+        context["selected_seat"] = self.request.GET.get("seat", "")
+        return context
+
+    def form_valid(self, form):
+        try:
+            child = services.split_order(
+                actor=self.request.user,
+                order_id=self.order.pk,
+                expected_revision=form.cleaned_data["expected_revision"],
+                quantities=form.cleaned_data["quantities"],
+            )
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Đã tạo hóa đơn tách {child.order_code}. Mỗi hóa đơn có thể thanh toán riêng.")
+        return HttpResponseRedirect(child.get_absolute_url())
+
+
+class MergeSplitOrderView(OrderPermissionMixin, FormView):
+    order_permission = "collect_payment"
+    form_class = RevisionForm
+    template_name = "orders/form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.order = get_object_or_404(Order.objects.select_related("split_root", "table"), pk=kwargs["pk"])
+        if not self.order.split_root_id or self.order.status != Order.Status.PAYMENT_REQUESTED:
+            raise Http404("Hóa đơn không thể ghép.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["initial"] = {"expected_revision": self.order.revision}
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(
+            order=self.order,
+            title=f"Ghép {self.order.order_code} về {self.order.split_root.order_code}",
+            back_url=self.order.get_absolute_url(),
+            submit_label="Xác nhận ghép hóa đơn",
+            **kwargs,
+        )
+
+    def form_valid(self, form):
+        try:
+            target = services.merge_split_order(
+                actor=self.request.user,
+                order_id=self.order.pk,
+                expected_revision=form.cleaned_data["expected_revision"],
+            )
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Đã ghép món về {target.order_code}.")
+        return HttpResponseRedirect(target.get_absolute_url())
 
 
 class OpenOrderView(OrderPermissionMixin, FormView):
@@ -209,6 +312,7 @@ class OrderActionView(OrderPermissionMixin, FormView):
         )
         self.item = get_object_or_404(OrderItem.objects.select_related("dish"), pk=self.kwargs["item_id"], order=self.order) if "item_id" in self.kwargs else None
         kwargs["initial"] = {"expected_revision": self.order.revision, "quantity": self.item.quantity if self.item else 1,
+                             "seat_number": self.item.seat_number if self.item else None,
                              "note": self.item.note if self.item else ""}
         if self.action == "add":
             self.menu_dishes = list(
@@ -230,6 +334,7 @@ class OrderActionView(OrderPermissionMixin, FormView):
                 dish.order_selected = str(dish.pk) in selected_ids
                 dish.order_quantity = self.request.POST.get(f"quantity_{dish.pk}", "1")
                 dish.order_note = self.request.POST.get(f"note_{dish.pk}", "")
+                dish.order_seat = self.request.POST.get(f"seat_number_{dish.pk}", "")
             context["menu_dishes"] = self.menu_dishes
             context["menu_categories"] = list(dict.fromkeys(dish.category for dish in self.menu_dishes))
             context["existing_items"] = [
@@ -237,6 +342,7 @@ class OrderActionView(OrderPermissionMixin, FormView):
                 if item.status != OrderItem.Status.CANCELLED
             ]
             context["existing_order_total"] = self.order.total
+            context["guest_seats"] = range(1, self.order.guest_count + 1)
         if self.action == "send" and self.item is None:
             context["draft_items"] = self.order.items.filter(status=OrderItem.Status.DRAFT)
         return context
@@ -281,32 +387,41 @@ class OrderPaymentView(OrderPermissionMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["initial"] = {"expected_revision": self.order.revision, "payment_method": "CASH"}
+        invoice = Invoice.objects.filter(order=self.order).first()
+        remaining = invoice.remaining if invoice else services.payment_preview(self.order)["due"]
+        kwargs["initial"] = {"expected_revision": self.order.revision, "amount": remaining, "payment_method": "CASH"}
         return kwargs
 
     def get_context_data(self, **kwargs):
-        preview = services.payment_preview(self.order)
+        invoice = Invoice.objects.filter(order=self.order).first()
+        remaining = invoice.remaining if invoice else services.payment_preview(self.order)["due"]
         return super().get_context_data(
             order=self.order,
             title=self.title,
             back_url=f'{reverse("sales:workspace")}?order={self.order.pk}',
-            remaining=preview["due"],
+            remaining=remaining,
             action="payment",
+            submit_label="Ghi nhận lần thu",
             **kwargs,
         )
 
     def form_valid(self, form):
         try:
-            invoice = services.process_payment(
+            invoice = services.record_payment(
                 actor=self.request.user,
                 order_id=self.order.pk,
+                expected_revision=form.cleaned_data["expected_revision"],
+                amount=form.cleaned_data["amount"],
                 payment_method=form.cleaned_data["payment_method"],
-                transaction_code=form.cleaned_data["reference"],
+                reference=form.cleaned_data["reference"],
             )
         except ValidationError as error:
             add_service_errors(form, error)
             return self.form_invalid(form)
-        messages.success(self.request, f"Đã thanh toán hóa đơn {invoice.invoice_code}.")
+        if invoice.status == Invoice.Status.PAID:
+            messages.success(self.request, f"Đã thanh toán đủ hóa đơn {invoice.invoice_code}.")
+        else:
+            messages.success(self.request, f"Đã thu một phần. Hóa đơn {invoice.invoice_code} còn {invoice.remaining:.0f} đồng.")
         return HttpResponseRedirect(self.order.get_absolute_url())
 
 

@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -203,6 +204,11 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.client.force_login(self.users["CASHIER"])
         table_page = self.client.get(reverse("seating:table_list"))
         self.assertContains(table_page, f"Thanh toán nhanh bàn {self.table.code}")
+        self.assertContains(table_page, self.customer.full_name)
+        self.assertContains(table_page, self.tier.name)
+        self.assertContains(table_page, "5,00%")
+        self.assertContains(table_page, "5.000")
+        self.assertContains(table_page, "95.000")
 
         response = self.client.post(reverse("sales:payment"), {
             "order_id": order.pk,
@@ -215,6 +221,122 @@ class IntegratedRestaurantFlowTests(TestCase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.COMPLETED)
         self.assertEqual(order.invoice.total_amount, Decimal("85500"))
+
+    def test_split_check_by_item_quantity_and_close_table_only_after_all_checks_paid(self):
+        order = self.ready_order_for_payment()
+        item = order.items.get()
+
+        child = services.split_order(
+            actor=self.users["CASHIER"],
+            order_id=order.pk,
+            expected_revision=self.revision(order),
+            quantities={item.pk: 1},
+        )
+        order.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 1)
+        self.assertEqual(child.split_root_id, order.pk)
+        self.assertEqual(child.status, Order.Status.PAYMENT_REQUESTED)
+        self.assertEqual(child.items.get().quantity, 1)
+        self.assertEqual(order.total, Decimal("50000"))
+        self.assertEqual(child.total, Decimal("50000"))
+        self.assertTrue(PaymentRequest.objects.filter(order=child, status=PaymentRequest.Status.WAITING).exists())
+
+        child_invoice = services.process_payment(
+            actor=self.users["CASHIER"], order_id=child.pk, payment_method="CASH"
+        )
+        self.table.refresh_from_db()
+        order.refresh_from_db()
+        self.assertEqual(child_invoice.total_amount, Decimal("47500"))
+        self.assertEqual(self.table.status, DiningTable.Status.OCCUPIED)
+        self.assertEqual(order.status, Order.Status.PAYMENT_REQUESTED)
+
+        root_invoice = services.process_payment(
+            actor=self.users["CASHIER"], order_id=order.pk, payment_method="BANK_TRANSFER"
+        )
+        self.table.refresh_from_db()
+        self.assertEqual(root_invoice.total_amount, Decimal("47500"))
+        self.assertEqual(self.table.status, DiningTable.Status.CLEANING)
+
+    def test_unpaid_split_check_can_merge_back_into_root(self):
+        order = self.ready_order_for_payment()
+        item = order.items.get()
+        child = services.split_order(
+            actor=self.users["CASHIER"], order_id=order.pk,
+            expected_revision=self.revision(order), quantities={item.pk: 1},
+        )
+
+        target = services.merge_split_order(
+            actor=self.users["CASHIER"], order_id=child.pk, expected_revision=child.revision,
+        )
+        target.refresh_from_db()
+        child.refresh_from_db()
+        self.assertEqual(target.pk, order.pk)
+        self.assertEqual(target.total, Decimal("100000"))
+        self.assertEqual(sum(target.items.values_list("quantity", flat=True)), 2)
+        self.assertEqual(child.status, Order.Status.CANCELLED)
+        self.assertFalse(child.items.exists())
+        self.assertFalse(PaymentRequest.objects.filter(order=child, status=PaymentRequest.Status.WAITING).exists())
+
+    def test_one_check_accepts_multiple_payment_methods_before_closing_table(self):
+        order = self.ready_order_for_payment()
+        first_invoice = services.record_payment(
+            actor=self.users["CASHIER"], order_id=order.pk,
+            expected_revision=self.revision(order), amount=Decimal("30000"), payment_method=Payment.Method.CASH,
+        )
+        order.refresh_from_db()
+        self.table.refresh_from_db()
+        self.assertEqual(first_invoice.status, Invoice.Status.UNPAID)
+        self.assertEqual(first_invoice.total, Decimal("95000"))
+        self.assertEqual(first_invoice.remaining, Decimal("65000"))
+        self.assertEqual(order.status, Order.Status.PAYMENT_REQUESTED)
+        self.assertEqual(self.table.status, DiningTable.Status.OCCUPIED)
+        self.client.force_login(self.users["CASHIER"])
+        workspace = self.client.get(reverse("sales:workspace"), {"order": order.pk})
+        self.assertTrue(workspace.context["can_continue_partial_payment"])
+        self.assertFalse(workspace.context["can_collect_payment"])
+        self.assertContains(workspace, reverse("orders:payment", args=[order.pk]))
+        with self.assertRaisesMessage(ValidationError, "thu một phần"):
+            services.process_payment(actor=self.users["CASHIER"], order_id=order.pk, payment_method="CASH")
+        with self.assertRaisesMessage(ValidationError, "phát sinh giao dịch"):
+            services.split_order(
+                actor=self.users["CASHIER"], order_id=order.pk,
+                expected_revision=order.revision, quantities={order.items.get().pk: 1},
+            )
+
+        final_invoice = services.record_payment(
+            actor=self.users["CASHIER"], order_id=order.pk,
+            expected_revision=order.revision, amount=Decimal("65000"), payment_method=Payment.Method.CARD,
+        )
+        order.refresh_from_db()
+        self.table.refresh_from_db()
+        self.customer.refresh_from_db()
+        self.assertEqual(final_invoice.status, Invoice.Status.PAID)
+        self.assertEqual(final_invoice.payments.count(), 2)
+        self.assertEqual(set(final_invoice.payments.values_list("method", flat=True)), {Payment.Method.CASH, Payment.Method.CARD})
+        self.assertEqual(order.status, Order.Status.COMPLETED)
+        self.assertEqual(self.table.status, DiningTable.Status.CLEANING)
+        self.assertEqual(self.customer.total_spending, Decimal("95000"))
+
+    def test_cashier_can_open_and_submit_split_check_form(self):
+        order = self.ready_order_for_payment()
+        item = order.items.get()
+        self.client.force_login(self.users["CASHIER"])
+        page = self.client.get(reverse("orders:split_order", args=[order.pk]))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, "Tách hóa đơn")
+        self.assertContains(page, item.dish_name)
+
+        response = self.client.post(reverse("orders:split_order", args=[order.pk]), {
+            "expected_revision": self.revision(order),
+            f"quantity_{item.pk}": "1",
+        })
+        child = Order.objects.get(split_root=order)
+        self.assertRedirects(response, child.get_absolute_url())
+        detail = self.client.get(child.get_absolute_url())
+        self.assertContains(detail, order.order_code)
+        self.assertContains(detail, child.order_code)
+        self.assertContains(detail, "Ghép về")
 
     def test_manager_can_open_visible_promotion_management(self):
         self.client.force_login(self.users["MANAGER"])

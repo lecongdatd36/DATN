@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from core.seating_lock import lock_seating_schedule
@@ -119,6 +120,8 @@ def apply_promotion(*, actor, order_id, promotion_code):
     order = Order.objects.select_for_update().get(pk=order_id)
     if order.status != Order.Status.PAYMENT_REQUESTED:
         raise ValidationError("Chỉ áp dụng mã khi đơn đang chờ thanh toán.")
+    if Invoice.objects.filter(order=order, paid_amount__gt=0).exists():
+        raise ValidationError("Hóa đơn đã thu một phần nên không thể thay đổi mã giảm giá.")
     preview = payment_preview(order, promotion_code=promotion_code)
     _store_promotion(order, preview)
     order.revision += 1
@@ -162,6 +165,20 @@ def _validate_quantity(quantity):
         raise ValidationError({"quantity": "Số lượng phải là số nguyên từ 1 đến 100."})
 
 
+def _normalize_seat_number(order, seat_number):
+    if seat_number in (None, ""):
+        return None
+    try:
+        seat_number = int(seat_number)
+    except (TypeError, ValueError) as error:
+        raise ValidationError({"seat_number": "Vị trí khách phải là một số nguyên."}) from error
+    if not 1 <= seat_number <= order.guest_count:
+        raise ValidationError({
+            "seat_number": f"Vị trí khách phải từ 1 đến {order.guest_count} theo số khách của bàn."
+        })
+    return seat_number
+
+
 def _create_order(actor, booking):
     employee = getattr(actor, "employee_profile", None)
     order = Order.objects.create(
@@ -201,17 +218,20 @@ def open_walk_in_order(*, actor, **visit_data):
 
 
 @transaction.atomic
-def add_item(*, actor, order_id, expected_revision, dish_id, quantity, note=""):
+def add_item(*, actor, order_id, expected_revision, dish_id, quantity, note="", seat_number=None):
     actor = _lock_actor(actor)
     _validate_quantity(quantity)
     order = _order(order_id, expected_revision)
+    seat_number = _normalize_seat_number(order, seat_number)
     dish = _available_dish(dish_id)
     item = OrderItem(order=order, dish=dish, dish_code=dish.code, dish_name=dish.name, unit_name=dish.unit.name,
-                     unit_price=dish.price, quantity=quantity, note=note.strip() if isinstance(note, str) else "")
+                     unit_price=dish.price, quantity=quantity, seat_number=seat_number,
+                     note=note.strip() if isinstance(note, str) else "")
     item.full_clean()
     item.save()
     _recalculate_order(order)
-    _save(actor, order, "Thêm món", f"Dòng #{item.pk}: {item}; {item.unit_price} đồng/{item.unit_name}; ghi chú: {item.note}")
+    seat_description = f"; vị trí khách {item.seat_number}" if item.seat_number else "; món dùng chung"
+    _save(actor, order, "Thêm món", f"Dòng #{item.pk}: {item}; {item.unit_price} đồng/{item.unit_name}{seat_description}; ghi chú: {item.note}")
     return item
 
 
@@ -239,6 +259,7 @@ def add_items(*, actor, order_id, expected_revision, items):
             raise ValidationError(f"{dish.name} đã hết hoặc ngừng phục vụ. Hãy chọn món khác.")
         quantity = data.get("quantity")
         _validate_quantity(quantity)
+        seat_number = _normalize_seat_number(order, data.get("seat_number"))
         note = data.get("note", "").strip() if isinstance(data.get("note", ""), str) else ""
         if len(note) > 500:
             raise ValidationError(f"Ghi chú của {dish.name} không được dài quá 500 ký tự.")
@@ -250,6 +271,7 @@ def add_items(*, actor, order_id, expected_revision, items):
             unit_name=dish.unit.name,
             unit_price=dish.price,
             quantity=quantity,
+            seat_number=seat_number,
             note=note,
         )
         item.full_clean()
@@ -260,6 +282,7 @@ def add_items(*, actor, order_id, expected_revision, items):
 
     description = "; ".join(
         f"#{item.pk} {item.dish_name} × {item.quantity} {item.unit_name}"
+        + (f" · khách {item.seat_number}" if item.seat_number else " · dùng chung")
         + (f" ({item.note})" if item.note else "")
         for item in created
     )
@@ -268,21 +291,22 @@ def add_items(*, actor, order_id, expected_revision, items):
 
 
 @transaction.atomic
-def edit_item(*, actor, order_id, item_id, expected_revision, quantity, note=""):
+def edit_item(*, actor, order_id, item_id, expected_revision, quantity, note="", seat_number=None):
     actor = _lock_actor(actor)
     _validate_quantity(quantity)
     order = _order(order_id, expected_revision)
+    seat_number = _normalize_seat_number(order, seat_number)
     item = order.items.select_for_update().get(pk=item_id)
     if item.status != OrderItem.Status.DRAFT:
         raise ValidationError("Chỉ sửa số lượng hoặc ghi chú của món chưa gửi Bếp. Muốn gọi thêm, hãy thêm dòng món mới.")
     _available_dish(item.dish_id)
-    before = (item.quantity, item.note)
-    item.quantity, item.note = quantity, note.strip() if isinstance(note, str) else ""
+    before = (item.quantity, item.seat_number, item.note)
+    item.quantity, item.seat_number, item.note = quantity, seat_number, note.strip() if isinstance(note, str) else ""
     item.full_clean()
-    if before != (item.quantity, item.note):
-        item.save(update_fields=("quantity", "note"))
+    if before != (item.quantity, item.seat_number, item.note):
+        item.save(update_fields=("quantity", "seat_number", "note"))
         _recalculate_order(order)
-        _save(actor, order, "Sửa món chưa gửi", f"Dòng #{item.pk} {item.dish_name}; trước: {before[0]}, {before[1]}; sau: {item.quantity}, {item.note}.")
+        _save(actor, order, "Sửa món chưa gửi", f"Dòng #{item.pk} {item.dish_name}; trước: {before}; sau: ({item.quantity}, {item.seat_number}, {item.note}).")
     return item
 
 
@@ -366,6 +390,146 @@ def request_payment(*, actor, order_id, expected_revision, note=""):
     return payment_request
 
 
+def _assert_check_can_be_rearranged(order):
+    if order.status != Order.Status.PAYMENT_REQUESTED:
+        raise ValidationError("Chỉ tách hoặc ghép khi hóa đơn đang chờ thanh toán.")
+    if Invoice.objects.filter(order=order).exists():
+        raise ValidationError("Hóa đơn đã phát sinh giao dịch nên không thể tách hoặc ghép.")
+    if order.online_payments.filter(status=OnlinePayment.Status.PENDING).exists():
+        raise ValidationError("Đơn đang có giao dịch trực tuyến chờ xử lý.")
+
+
+def _clear_order_discounts(order):
+    order.discount_amount = Decimal("0")
+    order.promotion_code_snapshot = ""
+    order.promotion_discount_amount = Decimal("0")
+    _recalculate_order(order)
+
+
+@transaction.atomic
+def split_order(*, actor, order_id, expected_revision, quantities):
+    """Move selected served item quantities into a separately payable check."""
+    actor = _lock_actor(actor, "collect_payment")
+    order = Order.objects.select_for_update().get(pk=order_id)
+    if order.revision != expected_revision:
+        raise ValidationError("Đơn đã thay đổi. Hãy tải lại trang trước khi tách hóa đơn.")
+    _assert_check_can_be_rearranged(order)
+
+    items = list(OrderItem.objects.select_for_update().filter(order=order).exclude(status=OrderItem.Status.CANCELLED))
+    if not items or any(item.status != OrderItem.Status.SERVED for item in items):
+        raise ValidationError("Chỉ tách hóa đơn sau khi tất cả món đã được phục vụ.")
+    normalized = {}
+    for raw_item_id, raw_quantity in (quantities or {}).items():
+        try:
+            item_id, quantity = int(raw_item_id), int(raw_quantity)
+        except (TypeError, ValueError) as error:
+            raise ValidationError("Món hoặc số lượng tách không hợp lệ.") from error
+        if quantity > 0:
+            normalized[item_id] = quantity
+    selected = {item.pk: item for item in items if item.pk in normalized}
+    if not selected:
+        raise ValidationError("Hãy chọn ít nhất một món để tách.")
+    if set(normalized) - set(selected):
+        raise ValidationError("Một món đã thay đổi hoặc không còn thuộc hóa đơn.")
+    for item_id, quantity in normalized.items():
+        if quantity > selected[item_id].quantity:
+            raise ValidationError({"quantities": f"Số lượng tách của {selected[item_id].dish_name} vượt quá số lượng hiện có."})
+    if sum(item.quantity - normalized.get(item.pk, 0) for item in items) <= 0:
+        raise ValidationError("Hóa đơn gốc phải còn ít nhất một món.")
+
+    root = Order.objects.select_for_update().get(pk=order.split_root_id) if order.split_root_id else order
+    child = Order.objects.create(
+        split_root=root,
+        table=order.table,
+        customer=order.customer,
+        employee=order.employee,
+        guest_count=1,
+        status=Order.Status.PAYMENT_REQUESTED,
+        note=f"Hóa đơn tách từ {order.order_code}",
+        created_by=actor,
+        opened_at=order.opened_at or timezone.now(),
+    )
+    child.order_code = f"DH{child.pk:06d}"
+    child.save(update_fields=("order_code",))
+
+    moved_descriptions = []
+    for item_id, quantity in normalized.items():
+        item = selected[item_id]
+        moved_descriptions.append(f"{quantity} × {item.dish_name}")
+        if quantity == item.quantity:
+            item.order = child
+            item.save(update_fields=("order", "updated_at"))
+        else:
+            item.quantity -= quantity
+            item.save(update_fields=("quantity", "updated_at"))
+            OrderItem.objects.create(
+                order=child,
+                dish=item.dish,
+                dish_code=item.dish_code,
+                dish_name=item.dish_name,
+                unit_name=item.unit_name,
+                unit_price=item.unit_price,
+                quantity=quantity,
+                seat_number=item.seat_number,
+                note=item.note,
+                status=item.status,
+                sent_at=item.sent_at,
+                started_at=item.started_at,
+                ready_at=item.ready_at,
+                served_at=item.served_at,
+            )
+
+    _clear_order_discounts(order)
+    order.revision += 1
+    order.save(update_fields=("subtotal", "discount_amount", "promotion_code_snapshot", "promotion_discount_amount", "total_amount", "revision", "updated_at"))
+    _clear_order_discounts(child)
+    child.save(update_fields=("subtotal", "discount_amount", "promotion_code_snapshot", "promotion_discount_amount", "total_amount", "updated_at"))
+    PaymentRequest.objects.create(order=child, requested_by=actor, note=f"Tách từ {order.order_code}")
+    description = f"Tách sang {child.order_code}: {', '.join(moved_descriptions)}. Mã giảm giá được xóa để tính riêng từng hóa đơn."
+    _log(actor, order, "Tách hóa đơn", description)
+    _log(actor, child, "Nhận hóa đơn tách", f"Tách từ {order.order_code}: {', '.join(moved_descriptions)}.")
+    return child
+
+
+@transaction.atomic
+def merge_split_order(*, actor, order_id, expected_revision):
+    """Merge an unpaid child check back into its active root check."""
+    actor = _lock_actor(actor, "collect_payment")
+    source = Order.objects.select_for_update().get(pk=order_id)
+    if source.revision != expected_revision:
+        raise ValidationError("Đơn đã thay đổi. Hãy tải lại trang trước khi ghép hóa đơn.")
+    if not source.split_root_id:
+        raise ValidationError("Đây không phải hóa đơn được tách.")
+    target = Order.objects.select_for_update().get(pk=source.split_root_id)
+    _assert_check_can_be_rearranged(source)
+    _assert_check_can_be_rearranged(target)
+    if source.table_id != target.table_id:
+        raise ValidationError("Hai hóa đơn không còn thuộc cùng một bàn.")
+
+    moved_items = list(OrderItem.objects.select_for_update().filter(order=source))
+    if not moved_items:
+        raise ValidationError("Hóa đơn tách không còn món để ghép.")
+    OrderItem.objects.filter(pk__in=[item.pk for item in moved_items]).update(order=target, updated_at=timezone.now())
+    _clear_order_discounts(target)
+    target.revision += 1
+    target.save(update_fields=("subtotal", "discount_amount", "promotion_code_snapshot", "promotion_discount_amount", "total_amount", "revision", "updated_at"))
+    PaymentRequest.objects.filter(order=source, status__in=(PaymentRequest.Status.WAITING, PaymentRequest.Status.PROCESSING)).update(
+        status=PaymentRequest.Status.CANCELLED, processed_at=timezone.now()
+    )
+    source.status = Order.Status.CANCELLED
+    source.subtotal = Decimal("0")
+    source.discount_amount = Decimal("0")
+    source.promotion_code_snapshot = ""
+    source.promotion_discount_amount = Decimal("0")
+    source.total_amount = Decimal("0")
+    source.closed_at = timezone.now()
+    source.revision += 1
+    source.save()
+    _log(actor, target, "Ghép hóa đơn", f"Nhận lại {len(moved_items)} dòng món từ {source.order_code}.")
+    _log(actor, source, "Ghép về hóa đơn gốc", f"Đã ghép toàn bộ món về {target.order_code}.")
+    return target
+
+
 @transaction.atomic
 def prepare_quick_payment(*, actor, order_id):
     """Move a fully served table to payment from the table overview."""
@@ -431,7 +595,6 @@ def _complete_payment(*, order, subtotal, discount_percent, discount_amount, tot
                       membership_discount_amount=Decimal("0"), promotion_code="", promotion_discount_amount=Decimal("0"),
                       payment_method, reference, actor=None, actor_snapshot=""):
     """Finalize an already locked order exactly once inside the caller's transaction."""
-    table = DiningTable.objects.select_for_update().get(pk=order.table_id)
     customer = Customer.objects.select_for_update().filter(pk=order.customer_id).first()
     invoice, _ = Invoice.objects.select_for_update().get_or_create(
         order=order,
@@ -439,6 +602,8 @@ def _complete_payment(*, order, subtotal, discount_percent, discount_amount, tot
     )
     if invoice.status == Invoice.Status.PAID:
         raise ValidationError("Hóa đơn đã được thanh toán.")
+    if invoice.paid_amount > 0:
+        raise ValidationError("Hóa đơn đã thu một phần. Hãy tiếp tục bằng chức năng thu nhiều phương thức.")
     now = timezone.now()
     invoice.customer = customer
     invoice.subtotal = subtotal
@@ -463,28 +628,43 @@ def _complete_payment(*, order, subtotal, discount_percent, discount_amount, tot
             performed_by=actor,
             actor_snapshot=actor_snapshot,
         )
+    return _finalize_paid_invoice(
+        order=order, invoice=invoice, customer=customer, actor=actor,
+        actor_snapshot=actor_snapshot, now=now,
+    )
+
+
+def _finalize_paid_invoice(*, order, invoice, customer, actor, actor_snapshot, now):
+    """Close the order/table only after an invoice has actually been paid in full."""
+    table = DiningTable.objects.select_for_update().get(pk=order.table_id)
     PaymentRequest.objects.select_for_update().filter(
         order=order, status__in=(PaymentRequest.Status.WAITING, PaymentRequest.Status.PROCESSING),
     ).update(status=PaymentRequest.Status.COMPLETED, processed_at=now)
-    order.subtotal = subtotal
-    order.discount_amount = discount_amount
-    order.promotion_code_snapshot = promotion_code
-    order.promotion_discount_amount = promotion_discount_amount
-    order.total_amount = total
+    order.subtotal = invoice.subtotal
+    order.discount_amount = invoice.discount_amount
+    order.promotion_code_snapshot = invoice.promotion_code
+    order.promotion_discount_amount = invoice.promotion_discount_amount
+    order.total_amount = invoice.total
     order.status = Order.Status.COMPLETED
     order.closed_at = now
     order.revision += 1
     order.save()
-    table.status = DiningTable.Status.CLEANING
+    other_open_checks = Order.objects.select_for_update().filter(
+        table_id=order.table_id,
+        status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS, Order.Status.PAYMENT_REQUESTED),
+    ).exclude(pk=order.pk)
+    has_other_open_checks = other_open_checks.exists()
+    table.status = DiningTable.Status.OCCUPIED if has_other_open_checks else DiningTable.Status.CLEANING
     table.save(update_fields=("status", "updated_at"))
-    if order.booking_id:
-        booking = Booking.objects.select_for_update().get(pk=order.booking_id)
+    root_order = order.split_root or order
+    if root_order.booking_id and not has_other_open_checks:
+        booking = Booking.objects.select_for_update().get(pk=root_order.booking_id)
         booking.status = Booking.Status.COMPLETED
         booking.completed_at = now
         booking.revision += 1
         booking.save(update_fields=("status", "completed_at", "revision", "updated_at"))
     if customer:
-        customer.total_spending += total
+        customer.total_spending += invoice.total
         tier = tier_for_spending(customer.total_spending)
         customer.membership_tier = tier
         customer.save(update_fields=("total_spending", "membership_tier", "updated_at"))
@@ -492,7 +672,8 @@ def _complete_payment(*, order, subtotal, discount_percent, discount_amount, tot
         actor,
         order,
         "Thanh toán",
-        f"{actor_snapshot} thanh toán hóa đơn {invoice.invoice_code}; bàn {table.code} chuyển sang cần dọn.",
+        f"{actor_snapshot} thanh toán hóa đơn {invoice.invoice_code}; bàn {table.code} "
+        + ("vẫn phục vụ vì còn hóa đơn chưa thanh toán." if has_other_open_checks else "chuyển sang cần dọn."),
         actor_snapshot=actor_snapshot,
     )
     return invoice
@@ -504,6 +685,8 @@ def create_vnpay_payment(*, actor, order_id, return_url, ip_address, promotion_c
     order = Order.objects.select_for_update().get(pk=order_id)
     if order.status != Order.Status.PAYMENT_REQUESTED:
         raise ValidationError("Đơn chưa ở trạng thái yêu cầu thanh toán.")
+    if Invoice.objects.filter(order=order, paid_amount__gt=0).exists():
+        raise ValidationError("Hóa đơn đã thu một phần nên không thể chuyển sang VNPAY.")
     if not order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED).exists():
         raise ValidationError("Đơn không có món để thanh toán.")
     preview = payment_preview(order, promotion_code=promotion_code)
@@ -607,6 +790,9 @@ def move_table(*, actor, order_id, target_table_id):
     order = Order.objects.select_for_update().get(pk=order_id)
     if order.status in (Order.Status.COMPLETED, Order.Status.CANCELLED):
         raise ValidationError("Đơn đã kết thúc, không thể chuyển bàn.")
+    root_id = order.split_root_id or order.pk
+    if Order.objects.filter(Q(pk=root_id) | Q(split_root_id=root_id)).exclude(status=Order.Status.CANCELLED).count() > 1:
+        raise ValidationError("Hãy thanh toán hoặc ghép các hóa đơn đã tách trước khi chuyển bàn.")
     source = DiningTable.objects.select_for_update().get(pk=order.table_id)
     target = DiningTable.objects.select_for_update().select_related("area").get(pk=target_table_id)
     if target.status != DiningTable.Status.AVAILABLE or not target.is_active or not target.area.is_active:
@@ -725,21 +911,31 @@ def record_payment(*, actor, order_id, expected_revision, amount, payment_method
     if not amount_decimal.is_finite() or amount_decimal != amount_decimal.to_integral_value() or amount_decimal <= 0:
         raise ValidationError({"amount": "Số tiền thanh toán phải là số nguyên lớn hơn 0."})
 
-    if payment_method not in Payment.Method.values:
+    if payment_method not in (Payment.Method.CASH, Payment.Method.CARD, Payment.Method.BANK_TRANSFER, Payment.Method.OTHER):
         raise ValidationError({"payment_method": "Phương thức thanh toán không hợp lệ."})
     reference = reference.strip() if isinstance(reference, str) else ""
     if len(reference) > 100:
         raise ValidationError({"reference": "Ghi chú / mã giao dịch không được dài quá 100 ký tự."})
 
-    total = order.total
-    if total <= 0:
-        raise ValidationError("Đơn hiện không có giá trị thanh toán.")
-
     invoice = Invoice.objects.select_for_update().filter(order=order).first()
     if invoice is None:
+        preview = payment_preview(order)
+        total = preview["due"]
+        if total <= 0:
+            raise ValidationError("Đơn hiện không có giá trị thanh toán.")
+        customer = Customer.objects.select_for_update().filter(pk=order.customer_id).first()
+        _store_promotion(order, preview)
         invoice = Invoice.objects.create(
             order=order,
             invoice_code=_invoice_code_for(order),
+            customer=customer,
+            subtotal=preview["subtotal"],
+            discount_percent=preview["discount_percent"],
+            discount_amount=preview["discount"],
+            membership_discount_amount=preview["membership_discount"],
+            promotion_code=preview["promotion_code"],
+            promotion_discount_amount=preview["promotion_discount"],
+            total_amount=total,
             total=total,
             status=Invoice.Status.UNPAID,
             payment_method=payment_method,
@@ -764,17 +960,20 @@ def record_payment(*, actor, order_id, expected_revision, amount, payment_method
     invoice.paid_amount += amount_decimal
     invoice.payment_method = payment_method
     invoice.status = Invoice.Status.PAID if invoice.paid_amount >= invoice.total else Invoice.Status.UNPAID
-    order.revision += 1
     if invoice.status == Invoice.Status.PAID:
-        invoice.closed_at = timezone.now()
-        order.status = Order.Status.COMPLETED
-    order.save(update_fields=("status", "revision", "updated_at"))
-    if invoice.status == Invoice.Status.PAID:
-        _log(actor, order, "Đã thanh toán", f"Đơn đã thanh toán đủ, đóng hóa đơn {invoice.invoice_code} và có thể hoàn tất lượt khách.")
+        now = timezone.now()
+        invoice.closed_at = now
     invoice.save(update_fields=("total", "paid_amount", "status", "payment_method", "updated_at", "closed_at"))
-
     description = f"Thu {amount_decimal} đồng bằng {payment.get_method_display()}. Hóa đơn còn lại {invoice.total - invoice.paid_amount} đồng."
     _log(actor, order, "Thanh toán", description)
+    if invoice.status == Invoice.Status.PAID:
+        customer = Customer.objects.select_for_update().filter(pk=order.customer_id).first()
+        return _finalize_paid_invoice(
+            order=order, invoice=invoice, customer=customer, actor=actor,
+            actor_snapshot=actor.username, now=now,
+        )
+    order.revision += 1
+    order.save(update_fields=("subtotal", "discount_amount", "promotion_code_snapshot", "promotion_discount_amount", "total_amount", "revision", "updated_at"))
     return invoice
 
 

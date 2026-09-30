@@ -209,9 +209,9 @@ class OrderTests(TestCase):
         self.visit.refresh_from_db()
         self.assertEqual(self.order.status, "COMPLETED")
         self.assertEqual(self.order.invoice.status, "PAID")
-        self.complete_visit()
-        self.visit.refresh_from_db()
         self.assertEqual(self.visit.status, "COMPLETED")
+        self.table.refresh_from_db()
+        self.assertEqual(self.table.status, DiningTable.Status.CLEANING)
 
     def test_payment_form_renders_and_records_payment(self):
         item = self.add(quantity=2)

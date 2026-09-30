@@ -7,6 +7,14 @@
     <div class="d-flex flex-wrap justify-content-between gap-3 mb-3"><h1 class="h2 mb-0">{{ order.order_code }} — Bàn {% if order.table %}{{ order.table.code }}{% elif order.booking %}{{ order.booking.table.code }}{% else %}—{% endif %}</h1><a class="btn btn-outline-secondary" href="{% url 'orders:list' %}">Danh sách đơn</a></div>
     <p class="text-secondary text-break">{% if order.customer %}{{ order.customer.full_name }}{% elif order.booking %}{{ order.booking.customer_name }}{% else %}Khách vãng lai{% endif %} · {{ order.guest_count }} khách{% if order.booking %} · {% if access.can_view_bookings %}<a href="{{ order.booking.get_absolute_url }}">Lượt {{ order.booking.booking_code }}</a>{% else %}{{ order.booking.booking_code }}{% endif %}{% endif %} · <a href="{{ request.get_full_path }}">Cập nhật trạng thái món</a></p>
     {% if order.status == 'PAYMENT_REQUESTED' %}<p class="alert alert-info">Các món đã được phục vụ. Đơn đang chờ thanh toán, bàn vẫn đang sử dụng.</p>{% elif order.status == 'COMPLETED' %}<p class="alert alert-success">Đơn đã thanh toán đủ. Bàn đang chờ dọn.</p>{% endif %}
+    {% if split_group|length > 1 %}
+    <div class="project-card p-3 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3"><div><p class="eyebrow mb-1">NHÓM HÓA ĐƠN CÙNG BÀN</p><h2 class="h5 mb-0">Thanh toán riêng từng phần</h2></div><span class="badge text-bg-light">{{ split_group|length }} hóa đơn</span></div>
+        <div class="d-flex flex-wrap gap-2">
+            {% for check in split_group %}<a class="btn {% if check.pk == order.pk %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="{{ check.get_absolute_url }}">{{ check.order_code }} · {{ check.total|dong }} đ · {{ check.get_status_display }}</a>{% endfor %}
+        </div>
+    </div>
+    {% endif %}
     {% if invoice or order.status == 'PAYMENT_REQUESTED' %}
     <div class="project-card p-3 mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><h2 class="h5 mb-0">Hóa đơn{% if invoice %} {{ invoice.invoice_code }}{% endif %}</h2><div class="d-flex gap-2">{% if invoice.status == 'PAID' and access.can_collect_payments %}<a class="btn btn-sm btn-outline-primary" href="{% url 'sales:invoice_print' invoice.pk %}" target="_blank" rel="noopener">In hóa đơn</a>{% endif %}{% if invoice %}<span class="badge {% if invoice.status == 'PAID' %}text-bg-success{% else %}text-bg-warning{% endif %}">{{ invoice.get_status_display }}</span>{% endif %}</div></div>
@@ -20,10 +28,12 @@
     {% endif %}
     <div class="d-flex flex-wrap gap-2 mb-4">
         {% if order.status != 'COMPLETED' and order.status != 'CANCELLED' %}<a class="btn btn-outline-primary" href="{% url 'sales:estimate_print' order.pk %}" target="_blank" rel="noopener">In phiếu tạm tính</a>{% endif %}
+        {% if order.status == 'PAYMENT_REQUESTED' and access.can_collect_payments %}<a class="btn btn-outline-primary" href="{% url 'orders:split_order' order.pk %}">Tách hóa đơn theo món</a>{% endif %}
+        {% if order.status == 'PAYMENT_REQUESTED' and order.split_root_id and access.can_collect_payments %}<a class="btn btn-outline-secondary" href="{% url 'orders:merge_split_order' order.pk %}">Ghép về {{ order.split_root.order_code }}</a>{% endif %}
         {% if order.booking.status == 'SEATED' and access.can_manage_bookings and order.status != 'PAID' %}<a class="btn btn-outline-primary" href="{% url 'bookings:transfer_table' order.booking.pk %}">Chuyển bàn</a>{% endif %}
         {% if order.booking.status == 'SEATED' and access.can_manage_bookings and access.can_manage_orders and order.status != 'PAID' %}<a class="btn btn-outline-danger" href="{% url 'bookings:cancel_seated' order.booking.pk %}" data-confirm-action data-revision="{{ order.booking.revision }}" data-confirm-reason="true" data-confirm-tone="danger" data-confirm-title="Hủy bàn {{ order.booking.table.code }}?" data-confirm-message="Bàn chỉ được hủy khi chưa có món đã phục vụ và chưa phát sinh thanh toán." data-confirm-label="Hủy bàn">Hủy bàn</a>{% endif %}
         {% if order.status == 'OPEN' or order.status == 'IN_PROGRESS' %}{% if access.can_manage_orders %}<a class="btn btn-primary" href="{% url 'orders:add_item' order.pk %}">Thêm món</a>{% if has_drafts %}<a class="btn btn-primary" href="{% url 'orders:send' order.pk %}" data-confirm-action data-revision="{{ order.revision }}">Gửi Bếp</a>{% endif %}{% endif %}
-        {% elif order.status == 'PAYMENT_REQUESTED' %}{% if access.can_collect_payments %}<a class="btn btn-primary" href="{% url 'sales:workspace' %}?order={{ order.pk }}">Mở tại Bán hàng để thu tiền</a>{% endif %}{% endif %}
+        {% elif order.status == 'PAYMENT_REQUESTED' %}{% if access.can_collect_payments %}<a class="btn btn-primary" href="{% url 'sales:workspace' %}?order={{ order.pk }}">Mở tại Bán hàng để thu tiền</a><a class="btn btn-outline-success" href="{% url 'orders:payment' order.pk %}">Thu nhiều phương thức</a>{% endif %}{% endif %}
     </div>
     <div class="project-card overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0">
         <thead><tr><th>Món / ghi chú</th><th>Số lượng</th><th class="text-end">Đơn giá</th><th class="text-end">Thành tiền</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>

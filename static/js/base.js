@@ -11,7 +11,20 @@
     const sidebarLinks = document.querySelectorAll(".sidebar-link");
     const themeToggles = document.querySelectorAll("[data-theme-toggle]");
     const actionDialog = document.querySelector("[data-action-dialog]");
+    const liveClock = document.querySelector("[data-live-clock]");
+    const liveDate = document.querySelector("[data-live-date]");
+    const pageTitle = document.querySelector("[data-page-title]");
     let pendingAction = null;
+
+    function updateTopbar() {
+        const now = new Date();
+        if (liveClock) liveClock.textContent = new Intl.DateTimeFormat("vi-VN", {hour: "2-digit", minute: "2-digit"}).format(now);
+        if (liveDate) liveDate.textContent = new Intl.DateTimeFormat("vi-VN", {weekday: "long", day: "2-digit", month: "2-digit", year: "numeric"}).format(now);
+        if (pageTitle) {
+            const title = document.title.split("·")[0].trim();
+            if (title) pageTitle.textContent = title;
+        }
+    }
 
     function csrfToken() {
         const field = document.querySelector("input[name='csrfmiddlewaretoken']");
@@ -135,6 +148,49 @@
 
     applyTheme(preferredTheme());
     enhanceMobileTables(document);
+    updateTopbar();
+    if (liveClock) window.setInterval(updateTopbar, 30000);
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName)) return;
+        const search = document.querySelector("input[type='search'], input[name='q']");
+        if (!search) return;
+        event.preventDefault();
+        search.focus();
+        search.select?.();
+    });
+
+    document.addEventListener("submit", (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || !form.checkValidity()) return;
+        if (form.dataset.submitting === "true") {
+            event.preventDefault();
+            return;
+        }
+        const submitter = event.submitter;
+        if (!(submitter instanceof HTMLButtonElement) && !(submitter instanceof HTMLInputElement)) return;
+        form.dataset.submitting = "true";
+        submitter.classList.add("is-submitting");
+        submitter.setAttribute("aria-disabled", "true");
+        if (submitter instanceof HTMLButtonElement && submitter.textContent.trim()) {
+            submitter.dataset.originalLabel = submitter.textContent;
+            submitter.textContent = "Đang xử lý…";
+        }
+    });
+
+    document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-payment-fraction]");
+        if (!button) return;
+        const panel = button.closest("[data-payment-split]");
+        const amount = document.querySelector("#id_amount");
+        const parts = Number(button.dataset.paymentFraction);
+        const remaining = Number(panel?.dataset.remaining);
+        if (!amount || !Number.isFinite(parts) || parts < 1 || !Number.isFinite(remaining)) return;
+        amount.value = String(Math.floor(remaining / parts));
+        amount.focus();
+        amount.select?.();
+    });
 
     document.addEventListener("click", (event) => {
         const trigger = event.target.closest("[data-confirm-action]");

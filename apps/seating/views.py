@@ -87,7 +87,12 @@ class TableListView(AreaListView):
                 table.current_order_subtotal = preview["subtotal"]
                 table.current_order_total = preview["due"]
                 table.current_order_discount = preview["discount"]
+                table.current_order_customer = order.customer.full_name if order.customer else "Khách lẻ"
+                table.current_order_tier = preview["tier"].name if preview["tier"] else "Không có hạng"
+                table.current_order_discount_percent = preview["discount_percent"]
+                table.current_order_membership_discount = preview["membership_discount"]
                 table.current_order_promotion = preview["promotion_code"]
+                table.current_order_promotion_discount = preview["promotion_discount"]
         context["table_state_signature"] = "|".join(
             f"{table.pk}:{table.current_status}:{table.current_visit_id or 0}:{table.current_visit_revision or 0}:{table.held_booking_revision or 0}:{table.current_order_id or 0}:{table.current_order_status or '-'}:{table.current_order_total}"
             for table in rows
