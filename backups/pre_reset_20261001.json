@@ -1,0 +1,8759 @@
+[
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "admin",
+    "model": "logentry"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "auth",
+    "model": "permission"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "auth",
+    "model": "group"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "contenttypes",
+    "model": "contenttype"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "sessions",
+    "model": "session"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "accounts",
+    "model": "user"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "employees",
+    "model": "employeeprofile"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "employees",
+    "model": "employeeactivitylog"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "employees",
+    "model": "jobposition"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "customers",
+    "model": "customer"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "customers",
+    "model": "customeractivitylog"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "seating",
+    "model": "area"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "seating",
+    "model": "diningtable"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "seating",
+    "model": "seatingactivitylog"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "bookings",
+    "model": "booking"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "bookings",
+    "model": "bookingactivitylog"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "bookings",
+    "model": "bookingsettings"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "bookings",
+    "model": "bookingsettingslog"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "menu",
+    "model": "category"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "menu",
+    "model": "unit"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "menu",
+    "model": "dish"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "menu",
+    "model": "menuactivitylog"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "orders",
+    "model": "order"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "orders",
+    "model": "orderactivitylog"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "orders",
+    "model": "orderitem"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "orders",
+    "model": "invoice"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "orders",
+    "model": "payment"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "reports",
+    "model": "report"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "orders",
+    "model": "paymentbatch"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "customers",
+    "model": "membershiptier"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "orders",
+    "model": "paymentrequest"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "inventory",
+    "model": "supplier"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "inventory",
+    "model": "ingredient"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "inventory",
+    "model": "inventorytransaction"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "orders",
+    "model": "onlinepayment"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "orders",
+    "model": "promotioncode"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "inventory",
+    "model": "recipeingredient"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "inventory",
+    "model": "purchasereceipt"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "inventory",
+    "model": "stocktake"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "inventory",
+    "model": "wasterecord"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "inventory",
+    "model": "purchasereceiptline"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "inventory",
+    "model": "stocktakeline"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "0a9l8p6x0in33ibocism9ql03ztd5ged",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAqIy:PpgkHUeLhtVa_Bj7fKKUHmTY5Ub2AdPFDYP1mSSx2YI",
+    "expire_date": "2026-10-11T14:56:40.515Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "438tviebmhpsvw6zjq74yn7dtyk89rnq",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1x9Nz1:jaTpZoHw2j94wxjQaixMavfH3OKfht4pkTjGDcutCBc",
+    "expire_date": "2026-10-07T14:30:03.904Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "5zl71hdgzhc0zgc3okdozcutu70petca",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAqJa:A_EpmpPgP25XxZMc_-3xE7lLS5yWPFUO91B0erYWSt8",
+    "expire_date": "2026-10-11T14:57:18.035Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "6k4tnf1gxv2teg3bv8sonuj5mxjjyctm",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xApTX:d-FpXCRBPDmf61Dr0rxy2BjtxGpj-qubjn5E1vFjIVc",
+    "expire_date": "2026-10-11T14:03:31.497Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "7qpcra0ob4vku9zcqo3a82szj3y3viux",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xBu43:yAgYM0CBZOPKD_b5KdxFkHKCwii79p7AiIf1lhuJt8g",
+    "expire_date": "2026-10-14T13:09:39.826Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "7wudn3wu23lpskmzfxhbj5auo6xfjquy",
+  "fields": {
+    "session_data": ".eJxVjDEOwjAQBP_iGlmxk2NzlPS8wTrbBwkgR4qTCvF3iJQC2p2ZfZkg6zKEteocxmxOBubwu0VJDy0byHcpt8mmqSzzGO2m2J1We5myPs-7-3cwSB2-dWR0nnKvfQPniNB4MI4pgTVJ0zmBMnJOwg6kAJFwjL7lK3pqvXl_AML_Nw0:1xBqmS:1udYYWH5nBqSqQFv_lnLUj6_uAWZImMtH-Pzd4Wk-ZQ",
+    "expire_date": "2026-10-14T09:39:16.389Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "8mfdqb4nzwain2zcgxjuo511w3083wm3",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAquH:NbVI5Z32wUkl8MXK1xj2kkA5bhSbeQH8s3jUP2KOto0",
+    "expire_date": "2026-10-11T15:35:13.217Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "afktofvg284wnpo6xpebqpmpo0j58940",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xCA1F:BGzgm5NXJqc39opxOJ2dDz2Kankd1GgJU0h8Y4-geks",
+    "expire_date": "2026-10-15T06:11:49.290Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "agm71yyeo3ufx0azubs0os3p87ipq0he",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xCAkb:OB0eVEsUQ5T2tjnRn7re6y4Qd9UbcIBTbvVxtzaoRaQ",
+    "expire_date": "2026-10-15T06:58:41.487Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "ajtd6kx83xw2oril7lgsp4r6f6abbedb",
+  "fields": {
+    "session_data": ".eJxVjDsOwjAQBe_iGlk2_lPScwZr17vgALKlOKkQd4dIKaB9M_NeIsO61LwOnvNE4iS0OPxuCOXBbQN0h3brsvS2zBPKTZE7HfLSiZ_n3f07qDDqtzbJhWBRc4hgTaSiyrF4Z5gtUDDBKEyMEQktuqLAOY-JMGlvdWJ7Fe8P3vo4Cg:1x71oI:c34IOYbP0flMCUa2O0uuWG7-Vkbj1bWjrMQgwC3k7UM",
+    "expire_date": "2026-10-01T02:25:14.063Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "b7ryauwy4nl5swaejf043bymk7d4sp93",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xBqcM:xmQOXky-Er7vOTxzS1uIDr020CnXcutLwhZtOJ7avUA",
+    "expire_date": "2026-10-14T09:28:50.460Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "bf06p54ws0w97glg4v6hdn8smjabx38g",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAqsO:xivABKz9bO5WLAsLvTMfT3D_dLcehAz0oGQkvEcK57E",
+    "expire_date": "2026-10-11T15:33:16.346Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "bqe3p9d0vmfpdivyxhdl8tqwfwf0g7hv",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xBqv3:PebI2O-CoUDqckLlUscDfVW_8XM_hcUoBYGY0aT4fMY",
+    "expire_date": "2026-10-14T09:48:09.546Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "by8dgws6rumtp8kl68j3j021pup5yvpu",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAqVG:WQPH3WReM9ObPIoIb2TvNjvmm3AnaO-cbHaXOhOKXPQ",
+    "expire_date": "2026-10-11T15:09:22.366Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "csx15hi8fdxx2ili77jjwg47n09vqi09",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAqjg:Opo581DmsdibMzNYP0qYzrCrRf0dgdJYpZQOR2HlNVY",
+    "expire_date": "2026-10-11T15:24:16.114Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "dgn31b97fy1pkqicj1qvhjk1bt57ksqv",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xCA08:-46Uzu0yLt8O4_4Epj-3NDWogU_NIhRB7vYkOG-oCLQ",
+    "expire_date": "2026-10-15T06:10:40.722Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "flsyiyaod6nac61qpv7ql2cb3ru5t4nk",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xApz4:QUWWZRPkuIjkqTIeR5a7oK2vVccAa3EiLpng3G369ag",
+    "expire_date": "2026-10-11T14:36:06.907Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "fpnfefoosbmh83tx1pnbos4k04mgbx3v",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xCAvc:_jJ-Tahl3-_R4al7ZQ5pYMbYc5_YXiiPTCDaTrAUCIU",
+    "expire_date": "2026-10-15T07:10:04.413Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "gd5cmrbm37ljzewx7ptz7iw78wq517mr",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xCB46:HsKFKUtAXyxJ9TD5EaF60IZsGDFQB9_wuOyRefdg3_k",
+    "expire_date": "2026-10-15T07:18:50.084Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "jkyi5p3zuppjwazk01btydgwhkzmdgxf",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xApbq:v69m8-rhqHRMx1KGrOBGfNfjhDAiVvkBP-8LX0HbzyQ",
+    "expire_date": "2026-10-11T14:12:06.158Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "jwffdmcihpma9y19nnbauqoe44urju29",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xBrPu:AgUbD1suB1WUGZX6-uGJQefNfpGe8owqKIenmK603is",
+    "expire_date": "2026-10-14T10:20:02.431Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "kqo1gp76jcho7poudm1be2z3si0uqsyi",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xApJS:BcD11vueOcSblzcD9rBxMj5RTDqJCk28xT2nMSVEpjM",
+    "expire_date": "2026-10-11T13:53:06.345Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "m06hj1hiegakh3mbxec5ycqhqb9gcrvh",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAqVN:KpzO65hktiySmHRlSDGtxzsL-awHvxtTS7oRnUnr2OE",
+    "expire_date": "2026-10-11T15:09:29.524Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "obzrumynojn411gxym1lrutjxhm0586s",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAqZD:5uX8yWyjGAZx7gg5igmrZDC2MugO5HbE9db2haK7clY",
+    "expire_date": "2026-10-11T15:13:27.183Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "ohy1munlhvatipoxf8updqzslca6gmso",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xBqo3:Bz_31oreQVOXtVuKxMi90QYSyB9_70VnEBo3fjtylWw",
+    "expire_date": "2026-10-14T09:40:55.193Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "rdsus10n58zg30xt3tekddset5rtgqj3",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAq31:vMM4amb5DRNheJgtGdxKKGE11uAvrTKzOISRLqnRj5Q",
+    "expire_date": "2026-10-11T14:40:11.413Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "s50ilvk8ckygpoadwzss8akipp8h7a7w",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xCAkw:q-3-YmIG_K5yJ6dRZm1RvWeFWVHXZOrPz7mRHcAi0ng",
+    "expire_date": "2026-10-15T06:59:02.368Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "s9oifxfwzs49eh2w8q34fwo4wqnqj1mo",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAqsG:kQ6JCG3qQWRcq_VUn1y6h8spr2m_2LIUpBUhCzIDqTo",
+    "expire_date": "2026-10-11T15:33:08.983Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "tcz00az6ov08uwtchcuxc95zalsgox3y",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xApsh:rIXheVSIf5ABBYJWVzelIKrsWdfyiT92L8uMI6HA9rg",
+    "expire_date": "2026-10-11T14:29:31.451Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "x3epno2q3yqr4fjja5wublmgnsiu1041",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xBrUJ:XAd8LboyTp5zKKuEm2pura0BNicuL1zmKYEie7d8ctY",
+    "expire_date": "2026-10-14T10:24:35.757Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "y7vaetj804my7mlqp5qdkhivcexe18mg",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAquf:FOqM0qLP0qtsNrsj16zX5rq7iOANdcMFKbePjJ5aliI",
+    "expire_date": "2026-10-11T15:35:37.829Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "ydzhosmf1mg0rdsgc2c3fopr141fu6r7",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xAqs5:7iY6kB-Rjr3odeXZYM_utzG5jv1kIBXzqmmP4WgZj8k",
+    "expire_date": "2026-10-11T15:32:57.267Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "yt9e4kr5q22db7ehmzu452p2ucu3qapr",
+  "fields": {
+    "session_data": ".eJxVzMEOwiAQBNB_4WwIZbsFPHrvNxBYtlI1NCntyfjv0qQHvc68mbfwYd-y3yuvfk7iKjpx-c1ioCeXo0iPUO6LpKVs6xzlQeTZVjkuiV-30_4d5FBzW9toiPUAhIEADSgH2nJPU2eNdtai7UE1EKJCYxQkxok0RBwaoOjE5wvC7jbz:1xBryo:ZiOYsk0T_Blk3IvVzePjGjDH0EFjshqYkyNVPYpjeQY",
+    "expire_date": "2026-10-14T10:56:06.034Z"
+  }
+},
+{
+  "model": "customers.membershiptier",
+  "pk": 1,
+  "fields": {
+    "name": "Đồng",
+    "minimum_spending": "0",
+    "discount_percent": "0.00",
+    "is_active": true,
+    "created_at": "2026-09-30T13:36:09.490Z",
+    "updated_at": "2026-09-30T13:36:09.490Z"
+  }
+},
+{
+  "model": "customers.membershiptier",
+  "pk": 2,
+  "fields": {
+    "name": "Bạc",
+    "minimum_spending": "2000000",
+    "discount_percent": "3.00",
+    "is_active": true,
+    "created_at": "2026-09-30T13:36:09.490Z",
+    "updated_at": "2026-09-30T13:36:09.490Z"
+  }
+},
+{
+  "model": "customers.membershiptier",
+  "pk": 3,
+  "fields": {
+    "name": "Vàng",
+    "minimum_spending": "5000000",
+    "discount_percent": "5.00",
+    "is_active": true,
+    "created_at": "2026-09-30T13:36:09.490Z",
+    "updated_at": "2026-09-30T13:36:09.490Z"
+  }
+},
+{
+  "model": "customers.membershiptier",
+  "pk": 4,
+  "fields": {
+    "name": "Kim cương",
+    "minimum_spending": "10000000",
+    "discount_percent": "10.00",
+    "is_active": true,
+    "created_at": "2026-09-30T13:36:09.490Z",
+    "updated_at": "2026-09-30T13:36:09.490Z"
+  }
+},
+{
+  "model": "customers.customer",
+  "pk": 1,
+  "fields": {
+    "full_name": "dieu",
+    "phone": "0776253145",
+    "membership_tier": 4,
+    "total_spending": "17580129",
+    "created_at": "2026-09-20T14:10:25.505Z",
+    "updated_at": "2026-10-01T06:15:13.566Z"
+  }
+},
+{
+  "model": "customers.customer",
+  "pk": 2,
+  "fields": {
+    "full_name": "dat",
+    "phone": "0987654321",
+    "membership_tier": 2,
+    "total_spending": "2322342",
+    "created_at": "2026-09-20T14:14:44.827Z",
+    "updated_at": "2026-09-30T10:30:05.494Z"
+  }
+},
+{
+  "model": "customers.customer",
+  "pk": 3,
+  "fields": {
+    "full_name": "Đạt Lê",
+    "phone": "0776287222",
+    "membership_tier": 2,
+    "total_spending": "2322342",
+    "created_at": "2026-09-30T10:46:06.604Z",
+    "updated_at": "2026-09-30T10:47:29.630Z"
+  }
+},
+{
+  "model": "seating.area",
+  "pk": 1,
+  "fields": {
+    "name": "lầu 1",
+    "is_active": true,
+    "created_at": "2026-09-20T14:31:46.679Z",
+    "updated_at": "2026-09-20T14:31:46.679Z"
+  }
+},
+{
+  "model": "seating.diningtable",
+  "pk": 1,
+  "fields": {
+    "code": "2",
+    "area": 1,
+    "name": "",
+    "capacity": 2,
+    "status": "AVAILABLE",
+    "is_active": true,
+    "created_at": "2026-09-20T14:32:07.806Z",
+    "updated_at": "2026-10-01T06:15:17.296Z"
+  }
+},
+{
+  "model": "seating.diningtable",
+  "pk": 2,
+  "fields": {
+    "code": "3",
+    "area": 1,
+    "name": "",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "is_active": true,
+    "created_at": "2026-09-27T14:04:12.078Z",
+    "updated_at": "2026-09-30T10:47:32.188Z"
+  }
+},
+{
+  "model": "bookings.bookingsettings",
+  "pk": 1,
+  "fields": {
+    "default_duration_minutes": 120,
+    "revision": 1,
+    "updated_at": "2026-09-20T15:05:49.229Z"
+  }
+},
+{
+  "model": "menu.category",
+  "pk": 1,
+  "fields": {
+    "name": "uop lạnh",
+    "is_active": true,
+    "revision": 1,
+    "created_at": "2026-09-25T08:54:35.352Z",
+    "updated_at": "2026-09-25T08:54:35.352Z"
+  }
+},
+{
+  "model": "menu.unit",
+  "pk": 1,
+  "fields": {
+    "name": "phần",
+    "is_active": true,
+    "revision": 1,
+    "created_at": "2026-09-25T08:55:02.946Z",
+    "updated_at": "2026-09-25T08:55:02.946Z"
+  }
+},
+{
+  "model": "menu.dish",
+  "pk": 1,
+  "fields": {
+    "code": "2",
+    "name": "thit",
+    "category": 1,
+    "unit": 1,
+    "price": "2322342",
+    "description": "",
+    "image": "dishes/2334d99b7c034a84a75405c8c00df695-main.webp",
+    "thumbnail": "dishes/2334d99b7c034a84a75405c8c00df695-thumb.webp",
+    "status": "AVAILABLE",
+    "revision": 2,
+    "created_at": "2026-09-25T08:55:24.065Z",
+    "updated_at": "2026-09-27T13:40:31.329Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 1,
+  "fields": {
+    "order": 1,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 3,
+    "seat_number": null,
+    "total_price": "6967026",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-25T08:55:37.333Z",
+    "sent_at": "2026-09-25T08:55:46.394Z",
+    "started_at": "2026-09-25T08:55:51.659Z",
+    "ready_at": "2026-09-25T08:55:54.821Z",
+    "served_at": "2026-09-25T08:56:10.688Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-28T07:26:44.598Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 2,
+  "fields": {
+    "order": 2,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-27T13:11:27.783Z",
+    "sent_at": "2026-09-27T13:11:35.735Z",
+    "started_at": "2026-09-27T13:11:43.229Z",
+    "ready_at": "2026-09-27T13:13:13.520Z",
+    "served_at": "2026-09-27T13:13:31.639Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-28T07:26:44.598Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 3,
+  "fields": {
+    "order": 4,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-27T14:05:21.876Z",
+    "sent_at": "2026-09-27T14:05:26.632Z",
+    "started_at": "2026-09-27T14:05:32.575Z",
+    "ready_at": "2026-09-27T14:05:36.571Z",
+    "served_at": "2026-09-27T14:05:51.445Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-28T07:26:44.598Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 4,
+  "fields": {
+    "order": 8,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "CANCELLED",
+    "cancellation_reason": "aa",
+    "created_at": "2026-09-27T14:49:10.413Z",
+    "sent_at": "2026-09-27T14:49:20.212Z",
+    "started_at": "2026-09-27T14:49:27.347Z",
+    "ready_at": "2026-09-27T14:49:31.805Z",
+    "served_at": "2026-09-27T14:58:12.355Z",
+    "cancelled_at": "2026-09-27T15:11:58.619Z",
+    "updated_at": "2026-09-28T07:26:44.598Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 5,
+  "fields": {
+    "order": 9,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-27T14:58:56.569Z",
+    "sent_at": "2026-09-27T14:59:03.606Z",
+    "started_at": "2026-09-27T15:13:46.903Z",
+    "ready_at": "2026-09-27T15:14:03.179Z",
+    "served_at": "2026-09-27T15:29:48.723Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-28T07:26:44.598Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 6,
+  "fields": {
+    "order": 8,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "CANCELLED",
+    "cancellation_reason": "Hủy nhanh tại màn gọi món",
+    "created_at": "2026-09-27T15:11:52.087Z",
+    "sent_at": "2026-09-27T15:13:29.800Z",
+    "started_at": "2026-09-27T15:13:50.975Z",
+    "ready_at": "2026-09-27T15:14:07.353Z",
+    "served_at": "2026-09-27T15:14:21.205Z",
+    "cancelled_at": "2026-09-27T15:15:32.435Z",
+    "updated_at": "2026-09-28T07:26:44.598Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 7,
+  "fields": {
+    "order": 9,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 3,
+    "seat_number": null,
+    "total_price": "6967026",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-27T15:26:54.779Z",
+    "sent_at": "2026-09-27T15:27:02.606Z",
+    "started_at": "2026-09-27T15:27:40.896Z",
+    "ready_at": "2026-09-27T15:27:51.296Z",
+    "served_at": "2026-09-27T15:30:00.704Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-28T07:26:44.598Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 8,
+  "fields": {
+    "order": 10,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-28T07:48:56.971Z",
+    "sent_at": "2026-09-28T07:49:02.279Z",
+    "started_at": "2026-09-28T07:49:57.275Z",
+    "ready_at": "2026-09-28T07:50:03.378Z",
+    "served_at": "2026-09-28T07:51:36.513Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-28T07:51:36.518Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 9,
+  "fields": {
+    "order": 12,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-30T10:46:22.278Z",
+    "sent_at": "2026-09-30T10:46:25.761Z",
+    "started_at": "2026-09-30T10:46:32.532Z",
+    "ready_at": "2026-09-30T10:46:33.463Z",
+    "served_at": "2026-09-30T10:46:44.245Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-30T10:46:44.251Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 10,
+  "fields": {
+    "order": 13,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-30T13:09:24.310Z",
+    "sent_at": "2026-09-30T13:09:27.072Z",
+    "started_at": "2026-09-30T13:09:43.092Z",
+    "ready_at": "2026-09-30T13:09:43.787Z",
+    "served_at": "2026-09-30T13:10:11.048Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-30T13:10:11.052Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 11,
+  "fields": {
+    "order": 14,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-30T13:11:06.978Z",
+    "sent_at": "2026-09-30T13:11:16.356Z",
+    "started_at": "2026-09-30T13:11:19.012Z",
+    "ready_at": "2026-09-30T13:11:19.636Z",
+    "served_at": "2026-09-30T13:11:30.210Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-30T13:11:30.216Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 12,
+  "fields": {
+    "order": 15,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-30T13:39:59.308Z",
+    "sent_at": "2026-09-30T13:40:07.074Z",
+    "started_at": "2026-09-30T13:40:16.320Z",
+    "ready_at": "2026-09-30T13:40:17.152Z",
+    "served_at": "2026-09-30T13:40:29.922Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-30T13:40:29.929Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 13,
+  "fields": {
+    "order": 16,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-30T14:29:44.419Z",
+    "sent_at": "2026-09-30T14:29:50.738Z",
+    "started_at": "2026-09-30T14:30:37.437Z",
+    "ready_at": "2026-09-30T14:30:38.038Z",
+    "served_at": "2026-09-30T14:30:46.702Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-30T14:30:46.707Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 14,
+  "fields": {
+    "order": 16,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "aaaa",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-09-30T14:30:22.761Z",
+    "sent_at": "2026-09-30T14:30:28.856Z",
+    "started_at": "2026-09-30T14:30:35.302Z",
+    "ready_at": "2026-09-30T14:30:36.797Z",
+    "served_at": "2026-09-30T14:30:48.171Z",
+    "cancelled_at": null,
+    "updated_at": "2026-09-30T14:30:48.177Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 15,
+  "fields": {
+    "order": 17,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 1,
+    "seat_number": null,
+    "total_price": "2322342",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-10-01T06:13:12.112Z",
+    "sent_at": "2026-10-01T06:13:26.612Z",
+    "started_at": "2026-10-01T06:13:58.921Z",
+    "ready_at": "2026-10-01T06:14:02.095Z",
+    "served_at": "2026-10-01T06:15:05.290Z",
+    "cancelled_at": null,
+    "updated_at": "2026-10-01T06:15:05.304Z"
+  }
+},
+{
+  "model": "orders.orderitem",
+  "pk": 16,
+  "fields": {
+    "order": 17,
+    "dish": 1,
+    "dish_code": "2",
+    "dish_name": "thit",
+    "unit_name": "phần",
+    "unit_price": "2322342",
+    "quantity": 2,
+    "seat_number": null,
+    "total_price": "4644684",
+    "unit_cost_snapshot": "0",
+    "total_cost": "0",
+    "inventory_deducted_at": null,
+    "inventory_returned_at": null,
+    "note": "",
+    "status": "SERVED",
+    "cancellation_reason": "",
+    "created_at": "2026-10-01T06:13:19.583Z",
+    "sent_at": "2026-10-01T06:13:26.612Z",
+    "started_at": "2026-10-01T06:14:00.166Z",
+    "ready_at": "2026-10-01T06:14:03.339Z",
+    "served_at": "2026-10-01T06:15:04.025Z",
+    "cancelled_at": null,
+    "updated_at": "2026-10-01T06:15:04.041Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 1,
+  "fields": {
+    "order": 1,
+    "invoice_code": "HD000001",
+    "customer": null,
+    "subtotal": "6967026",
+    "discount_percent": "0.00",
+    "discount_amount": "0",
+    "membership_discount_amount": "0",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "6967026",
+    "total": "6967026",
+    "paid_amount": "6967026",
+    "status": "PAID",
+    "payment_method": "CASH",
+    "created_at": "2026-09-25T08:56:24.561Z",
+    "updated_at": "2026-09-28T07:19:20.999Z",
+    "closed_at": "2026-09-25T08:56:24.564Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 2,
+  "fields": {
+    "order": 2,
+    "invoice_code": "HD000002",
+    "customer": 2,
+    "subtotal": "2322342",
+    "discount_percent": "0.00",
+    "discount_amount": "0",
+    "membership_discount_amount": "0",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "total": "2322342",
+    "paid_amount": "2322342",
+    "status": "PAID",
+    "payment_method": "CASH",
+    "created_at": "2026-09-27T13:13:41.528Z",
+    "updated_at": "2026-09-28T07:19:20.999Z",
+    "closed_at": "2026-09-27T13:13:41.528Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 3,
+  "fields": {
+    "order": 4,
+    "invoice_code": "HD000004",
+    "customer": null,
+    "subtotal": "2322342",
+    "discount_percent": "0.00",
+    "discount_amount": "0",
+    "membership_discount_amount": "0",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "total": "2322342",
+    "paid_amount": "2322342",
+    "status": "PAID",
+    "payment_method": "TRANSFER",
+    "created_at": "2026-09-27T14:06:42.688Z",
+    "updated_at": "2026-09-28T07:19:20.999Z",
+    "closed_at": "2026-09-27T14:06:42.688Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 4,
+  "fields": {
+    "order": 9,
+    "invoice_code": "HD000009",
+    "customer": null,
+    "subtotal": "9289368",
+    "discount_percent": "0.00",
+    "discount_amount": "0",
+    "membership_discount_amount": "0",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "9289368",
+    "total": "9289368",
+    "paid_amount": "9289368",
+    "status": "PAID",
+    "payment_method": "CASH",
+    "created_at": "2026-09-27T15:31:21.030Z",
+    "updated_at": "2026-09-28T07:19:20.999Z",
+    "closed_at": "2026-09-27T15:31:21.030Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 5,
+  "fields": {
+    "order": 10,
+    "invoice_code": "HD000010",
+    "customer": 2,
+    "subtotal": "2322342",
+    "discount_percent": "0.00",
+    "discount_amount": "0",
+    "membership_discount_amount": "0",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "total": "2322342",
+    "paid_amount": "2322342",
+    "status": "PAID",
+    "payment_method": "BANK_TRANSFER",
+    "created_at": "2026-09-30T10:30:05.486Z",
+    "updated_at": "2026-09-30T10:30:05.488Z",
+    "closed_at": "2026-09-30T10:30:05.488Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 6,
+  "fields": {
+    "order": 12,
+    "invoice_code": "HD000012",
+    "customer": 3,
+    "subtotal": "2322342",
+    "discount_percent": "0.00",
+    "discount_amount": "0",
+    "membership_discount_amount": "0",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "total": "2322342",
+    "paid_amount": "2322342",
+    "status": "PAID",
+    "payment_method": "BANK_TRANSFER",
+    "created_at": "2026-09-30T10:47:29.623Z",
+    "updated_at": "2026-09-30T10:47:29.624Z",
+    "closed_at": "2026-09-30T10:47:29.624Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 7,
+  "fields": {
+    "order": 13,
+    "invoice_code": "HD000013",
+    "customer": 1,
+    "subtotal": "2322342",
+    "discount_percent": "0.00",
+    "discount_amount": "0",
+    "membership_discount_amount": "0",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "total": "2322342",
+    "paid_amount": "2322342",
+    "status": "PAID",
+    "payment_method": "BANK_TRANSFER",
+    "created_at": "2026-09-30T13:10:48.310Z",
+    "updated_at": "2026-09-30T13:10:48.310Z",
+    "closed_at": "2026-09-30T13:10:48.310Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 8,
+  "fields": {
+    "order": 14,
+    "invoice_code": "HD000014",
+    "customer": 1,
+    "subtotal": "2322342",
+    "discount_percent": "0.00",
+    "discount_amount": "0",
+    "membership_discount_amount": "0",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "total": "2322342",
+    "paid_amount": "2322342",
+    "status": "PAID",
+    "payment_method": "BANK_TRANSFER",
+    "created_at": "2026-09-30T13:13:49.932Z",
+    "updated_at": "2026-09-30T13:13:49.933Z",
+    "closed_at": "2026-09-30T13:13:49.933Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 11,
+  "fields": {
+    "order": 15,
+    "invoice_code": "HD000015",
+    "customer": 1,
+    "subtotal": "2322342",
+    "discount_percent": "3.00",
+    "discount_amount": "69670",
+    "membership_discount_amount": "69670",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2252672",
+    "total": "2252672",
+    "paid_amount": "2252672",
+    "status": "PAID",
+    "payment_method": "CASH",
+    "created_at": "2026-09-30T14:22:50.652Z",
+    "updated_at": "2026-09-30T14:22:50.652Z",
+    "closed_at": "2026-09-30T14:22:50.652Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 12,
+  "fields": {
+    "order": 16,
+    "invoice_code": "HD000016",
+    "customer": 1,
+    "subtotal": "4644684",
+    "discount_percent": "5.00",
+    "discount_amount": "232234",
+    "membership_discount_amount": "232234",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "4412450",
+    "total": "4412450",
+    "paid_amount": "4412450",
+    "status": "PAID",
+    "payment_method": "CASH",
+    "created_at": "2026-09-30T14:31:33.739Z",
+    "updated_at": "2026-09-30T14:31:33.740Z",
+    "closed_at": "2026-09-30T14:31:33.740Z"
+  }
+},
+{
+  "model": "orders.invoice",
+  "pk": 13,
+  "fields": {
+    "order": 17,
+    "invoice_code": "HD000017",
+    "customer": 1,
+    "subtotal": "6967026",
+    "discount_percent": "10.00",
+    "discount_amount": "696703",
+    "membership_discount_amount": "696703",
+    "promotion_code": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "6270323",
+    "total": "6270323",
+    "paid_amount": "6270323",
+    "status": "PAID",
+    "payment_method": "BANK_TRANSFER",
+    "created_at": "2026-10-01T06:15:13.548Z",
+    "updated_at": "2026-10-01T06:15:13.551Z",
+    "closed_at": "2026-10-01T06:15:13.550Z"
+  }
+},
+{
+  "model": "inventory.supplier",
+  "pk": 2,
+  "fields": {
+    "name": "Nhà cung cấp mặc định",
+    "phone": "",
+    "address": "Cập nhật thông tin nhà cung cấp thực tế",
+    "is_active": true,
+    "created_at": "2026-10-01T06:57:02.539Z",
+    "updated_at": "2026-10-01T06:57:02.539Z"
+  }
+},
+{
+  "model": "inventory.supplier",
+  "pk": 3,
+  "fields": {
+    "name": "Thực phẩm An Phú",
+    "phone": "0901000001",
+    "address": "12 Nguyễn Văn Linh",
+    "is_active": true,
+    "created_at": "2026-10-01T07:16:48.797Z",
+    "updated_at": "2026-10-01T07:16:48.797Z"
+  }
+},
+{
+  "model": "inventory.supplier",
+  "pk": 4,
+  "fields": {
+    "name": "Nông sản Xanh",
+    "phone": "0901000002",
+    "address": "45 Quốc lộ 1A",
+    "is_active": true,
+    "created_at": "2026-10-01T07:16:48.797Z",
+    "updated_at": "2026-10-01T07:16:48.797Z"
+  }
+},
+{
+  "model": "inventory.supplier",
+  "pk": 5,
+  "fields": {
+    "name": "Gia vị Việt",
+    "phone": "0901000003",
+    "address": "18 Lê Văn Việt",
+    "is_active": true,
+    "created_at": "2026-10-01T07:16:48.797Z",
+    "updated_at": "2026-10-01T07:16:48.797Z"
+  }
+},
+{
+  "model": "inventory.ingredient",
+  "pk": 9,
+  "fields": {
+    "code": "NL-THIT-HEO",
+    "name": "Thịt heo",
+    "unit": "kg",
+    "stock_quantity": "25.000",
+    "average_unit_cost": "101000.00",
+    "low_stock_threshold": "3.000",
+    "is_active": true,
+    "created_at": "2026-10-01T06:57:02.554Z",
+    "updated_at": "2026-10-01T07:16:48.813Z"
+  }
+},
+{
+  "model": "inventory.ingredient",
+  "pk": 10,
+  "fields": {
+    "code": "NL-GAO",
+    "name": "Gạo",
+    "unit": "kg",
+    "stock_quantity": "70.000",
+    "average_unit_cost": "20571.43",
+    "low_stock_threshold": "10.000",
+    "is_active": true,
+    "created_at": "2026-10-01T06:57:02.554Z",
+    "updated_at": "2026-10-01T07:16:48.828Z"
+  }
+},
+{
+  "model": "inventory.ingredient",
+  "pk": 11,
+  "fields": {
+    "code": "NL-DAU-AN",
+    "name": "Dầu ăn",
+    "unit": "lít",
+    "stock_quantity": "15.000",
+    "average_unit_cost": "42934.33",
+    "low_stock_threshold": "2.000",
+    "is_active": true,
+    "created_at": "2026-10-01T06:57:02.554Z",
+    "updated_at": "2026-10-01T07:27:07.149Z"
+  }
+},
+{
+  "model": "inventory.ingredient",
+  "pk": 12,
+  "fields": {
+    "code": "NL-RAU-CU",
+    "name": "Rau củ",
+    "unit": "kg",
+    "stock_quantity": "14.500",
+    "average_unit_cost": "30000.00",
+    "low_stock_threshold": "3.000",
+    "is_active": true,
+    "created_at": "2026-10-01T06:57:02.554Z",
+    "updated_at": "2026-10-01T07:16:48.860Z"
+  }
+},
+{
+  "model": "inventory.ingredient",
+  "pk": 13,
+  "fields": {
+    "code": "NL-GIA-VI",
+    "name": "Gia vị tổng hợp",
+    "unit": "kg",
+    "stock_quantity": "5.000",
+    "average_unit_cost": "80000.00",
+    "low_stock_threshold": "1.000",
+    "is_active": true,
+    "created_at": "2026-10-01T06:57:02.554Z",
+    "updated_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.ingredient",
+  "pk": 14,
+  "fields": {
+    "code": "NL-TRUNG",
+    "name": "Trứng",
+    "unit": "quả",
+    "stock_quantity": "101.000",
+    "average_unit_cost": "2970.32",
+    "low_stock_threshold": "20.000",
+    "is_active": true,
+    "created_at": "2026-10-01T06:57:02.554Z",
+    "updated_at": "2026-10-01T07:27:07.152Z"
+  }
+},
+{
+  "model": "inventory.ingredient",
+  "pk": 15,
+  "fields": {
+    "code": "NL-NUOC-MAM",
+    "name": "Nước mắm",
+    "unit": "lít",
+    "stock_quantity": "8.000",
+    "average_unit_cost": "60000.00",
+    "low_stock_threshold": "1.000",
+    "is_active": true,
+    "created_at": "2026-10-01T06:57:02.554Z",
+    "updated_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.ingredient",
+  "pk": 16,
+  "fields": {
+    "code": "NL-HANH-TOI",
+    "name": "Hành và tỏi",
+    "unit": "kg",
+    "stock_quantity": "3.800",
+    "average_unit_cost": "40000.00",
+    "low_stock_threshold": "1.000",
+    "is_active": true,
+    "created_at": "2026-10-01T06:57:02.554Z",
+    "updated_at": "2026-10-01T07:16:48.860Z"
+  }
+},
+{
+  "model": "inventory.recipeingredient",
+  "pk": 1,
+  "fields": {
+    "dish": 1,
+    "ingredient": 9,
+    "quantity": "0.250",
+    "created_at": "2026-10-01T06:57:31.343Z",
+    "updated_at": "2026-10-01T06:57:31.343Z"
+  }
+},
+{
+  "model": "inventory.recipeingredient",
+  "pk": 2,
+  "fields": {
+    "dish": 1,
+    "ingredient": 11,
+    "quantity": "0.002",
+    "created_at": "2026-10-01T06:57:31.343Z",
+    "updated_at": "2026-10-01T07:01:56.786Z"
+  }
+},
+{
+  "model": "inventory.recipeingredient",
+  "pk": 3,
+  "fields": {
+    "dish": 1,
+    "ingredient": 13,
+    "quantity": "0.010",
+    "created_at": "2026-10-01T06:57:31.343Z",
+    "updated_at": "2026-10-01T06:57:31.343Z"
+  }
+},
+{
+  "model": "inventory.recipeingredient",
+  "pk": 4,
+  "fields": {
+    "dish": 1,
+    "ingredient": 16,
+    "quantity": "0.020",
+    "created_at": "2026-10-01T06:57:31.343Z",
+    "updated_at": "2026-10-01T06:57:31.343Z"
+  }
+},
+{
+  "model": "inventory.purchasereceiptline",
+  "pk": 1,
+  "fields": {
+    "receipt": 1,
+    "ingredient": 9,
+    "quantity": "5.000",
+    "unit_cost": "105000"
+  }
+},
+{
+  "model": "inventory.purchasereceiptline",
+  "pk": 2,
+  "fields": {
+    "receipt": 1,
+    "ingredient": 10,
+    "quantity": "20.000",
+    "unit_cost": "22000"
+  }
+},
+{
+  "model": "inventory.purchasereceiptline",
+  "pk": 3,
+  "fields": {
+    "receipt": 1,
+    "ingredient": 11,
+    "quantity": "5.000",
+    "unit_cost": "48000"
+  }
+},
+{
+  "model": "inventory.purchasereceiptline",
+  "pk": 4,
+  "fields": {
+    "receipt": 2,
+    "ingredient": 12,
+    "quantity": "8.000",
+    "unit_cost": "32000"
+  }
+},
+{
+  "model": "inventory.purchasereceiptline",
+  "pk": 5,
+  "fields": {
+    "receipt": 2,
+    "ingredient": 14,
+    "quantity": "60.000",
+    "unit_cost": "3200"
+  }
+},
+{
+  "model": "inventory.purchasereceiptline",
+  "pk": 6,
+  "fields": {
+    "receipt": 3,
+    "ingredient": 13,
+    "quantity": "3.000",
+    "unit_cost": "85000"
+  }
+},
+{
+  "model": "inventory.purchasereceiptline",
+  "pk": 7,
+  "fields": {
+    "receipt": 4,
+    "ingredient": 11,
+    "quantity": "1.000",
+    "unit_cost": "15"
+  }
+},
+{
+  "model": "inventory.purchasereceiptline",
+  "pk": 8,
+  "fields": {
+    "receipt": 4,
+    "ingredient": 14,
+    "quantity": "1.000",
+    "unit_cost": "2"
+  }
+},
+{
+  "model": "inventory.stocktakeline",
+  "pk": 1,
+  "fields": {
+    "stocktake": 1,
+    "ingredient": 9,
+    "system_quantity": "25.000",
+    "actual_quantity": "25.000"
+  }
+},
+{
+  "model": "inventory.stocktakeline",
+  "pk": 2,
+  "fields": {
+    "stocktake": 1,
+    "ingredient": 10,
+    "system_quantity": "70.000",
+    "actual_quantity": "70.000"
+  }
+},
+{
+  "model": "inventory.stocktakeline",
+  "pk": 3,
+  "fields": {
+    "stocktake": 1,
+    "ingredient": 11,
+    "system_quantity": "15.000",
+    "actual_quantity": "15.000"
+  }
+},
+{
+  "model": "inventory.stocktakeline",
+  "pk": 4,
+  "fields": {
+    "stocktake": 1,
+    "ingredient": 12,
+    "system_quantity": "15.000",
+    "actual_quantity": "15.000"
+  }
+},
+{
+  "model": "inventory.stocktakeline",
+  "pk": 5,
+  "fields": {
+    "stocktake": 1,
+    "ingredient": 13,
+    "system_quantity": "5.000",
+    "actual_quantity": "5.000"
+  }
+},
+{
+  "model": "inventory.stocktakeline",
+  "pk": 6,
+  "fields": {
+    "stocktake": 1,
+    "ingredient": 14,
+    "system_quantity": "100.000",
+    "actual_quantity": "100.000"
+  }
+},
+{
+  "model": "inventory.stocktakeline",
+  "pk": 7,
+  "fields": {
+    "stocktake": 1,
+    "ingredient": 15,
+    "system_quantity": "8.000",
+    "actual_quantity": "8.000"
+  }
+},
+{
+  "model": "inventory.stocktakeline",
+  "pk": 8,
+  "fields": {
+    "stocktake": 1,
+    "ingredient": 16,
+    "system_quantity": "4.000",
+    "actual_quantity": "4.000"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add log entry",
+    "content_type": [
+      "admin",
+      "logentry"
+    ],
+    "codename": "add_logentry"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change log entry",
+    "content_type": [
+      "admin",
+      "logentry"
+    ],
+    "codename": "change_logentry"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete log entry",
+    "content_type": [
+      "admin",
+      "logentry"
+    ],
+    "codename": "delete_logentry"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view log entry",
+    "content_type": [
+      "admin",
+      "logentry"
+    ],
+    "codename": "view_logentry"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add permission",
+    "content_type": [
+      "auth",
+      "permission"
+    ],
+    "codename": "add_permission"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change permission",
+    "content_type": [
+      "auth",
+      "permission"
+    ],
+    "codename": "change_permission"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete permission",
+    "content_type": [
+      "auth",
+      "permission"
+    ],
+    "codename": "delete_permission"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view permission",
+    "content_type": [
+      "auth",
+      "permission"
+    ],
+    "codename": "view_permission"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add group",
+    "content_type": [
+      "auth",
+      "group"
+    ],
+    "codename": "add_group"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change group",
+    "content_type": [
+      "auth",
+      "group"
+    ],
+    "codename": "change_group"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete group",
+    "content_type": [
+      "auth",
+      "group"
+    ],
+    "codename": "delete_group"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view group",
+    "content_type": [
+      "auth",
+      "group"
+    ],
+    "codename": "view_group"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add content type",
+    "content_type": [
+      "contenttypes",
+      "contenttype"
+    ],
+    "codename": "add_contenttype"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change content type",
+    "content_type": [
+      "contenttypes",
+      "contenttype"
+    ],
+    "codename": "change_contenttype"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete content type",
+    "content_type": [
+      "contenttypes",
+      "contenttype"
+    ],
+    "codename": "delete_contenttype"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view content type",
+    "content_type": [
+      "contenttypes",
+      "contenttype"
+    ],
+    "codename": "view_contenttype"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add session",
+    "content_type": [
+      "sessions",
+      "session"
+    ],
+    "codename": "add_session"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change session",
+    "content_type": [
+      "sessions",
+      "session"
+    ],
+    "codename": "change_session"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete session",
+    "content_type": [
+      "sessions",
+      "session"
+    ],
+    "codename": "delete_session"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view session",
+    "content_type": [
+      "sessions",
+      "session"
+    ],
+    "codename": "view_session"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add tài khoản",
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "codename": "add_user"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change tài khoản",
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "codename": "change_user"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete tài khoản",
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "codename": "delete_user"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view tài khoản",
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "codename": "view_user"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add employee profile",
+    "content_type": [
+      "employees",
+      "employeeprofile"
+    ],
+    "codename": "add_employeeprofile"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change employee profile",
+    "content_type": [
+      "employees",
+      "employeeprofile"
+    ],
+    "codename": "change_employeeprofile"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete employee profile",
+    "content_type": [
+      "employees",
+      "employeeprofile"
+    ],
+    "codename": "delete_employeeprofile"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view employee profile",
+    "content_type": [
+      "employees",
+      "employeeprofile"
+    ],
+    "codename": "view_employeeprofile"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add employee activity log",
+    "content_type": [
+      "employees",
+      "employeeactivitylog"
+    ],
+    "codename": "add_employeeactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change employee activity log",
+    "content_type": [
+      "employees",
+      "employeeactivitylog"
+    ],
+    "codename": "change_employeeactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete employee activity log",
+    "content_type": [
+      "employees",
+      "employeeactivitylog"
+    ],
+    "codename": "delete_employeeactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view employee activity log",
+    "content_type": [
+      "employees",
+      "employeeactivitylog"
+    ],
+    "codename": "view_employeeactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add job position",
+    "content_type": [
+      "employees",
+      "jobposition"
+    ],
+    "codename": "add_jobposition"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change job position",
+    "content_type": [
+      "employees",
+      "jobposition"
+    ],
+    "codename": "change_jobposition"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete job position",
+    "content_type": [
+      "employees",
+      "jobposition"
+    ],
+    "codename": "delete_jobposition"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view job position",
+    "content_type": [
+      "employees",
+      "jobposition"
+    ],
+    "codename": "view_jobposition"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Quản lý tài khoản và nhân viên",
+    "content_type": [
+      "employees",
+      "employeeprofile"
+    ],
+    "codename": "manage_staff"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view customer",
+    "content_type": [
+      "customers",
+      "customer"
+    ],
+    "codename": "view_customer"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add customer",
+    "content_type": [
+      "customers",
+      "customer"
+    ],
+    "codename": "add_customer"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change customer",
+    "content_type": [
+      "customers",
+      "customer"
+    ],
+    "codename": "change_customer"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete customer",
+    "content_type": [
+      "customers",
+      "customer"
+    ],
+    "codename": "delete_customer"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view customeractivitylog",
+    "content_type": [
+      "customers",
+      "customeractivitylog"
+    ],
+    "codename": "view_customeractivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add nhật ký khách hàng",
+    "content_type": [
+      "customers",
+      "customeractivitylog"
+    ],
+    "codename": "add_customeractivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change nhật ký khách hàng",
+    "content_type": [
+      "customers",
+      "customeractivitylog"
+    ],
+    "codename": "change_customeractivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete nhật ký khách hàng",
+    "content_type": [
+      "customers",
+      "customeractivitylog"
+    ],
+    "codename": "delete_customeractivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view area",
+    "content_type": [
+      "seating",
+      "area"
+    ],
+    "codename": "view_area"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view diningtable",
+    "content_type": [
+      "seating",
+      "diningtable"
+    ],
+    "codename": "view_diningtable"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "manage seating",
+    "content_type": [
+      "seating",
+      "diningtable"
+    ],
+    "codename": "manage_seating"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view seatingactivitylog",
+    "content_type": [
+      "seating",
+      "seatingactivitylog"
+    ],
+    "codename": "view_seatingactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add nhật ký khu vực và bàn",
+    "content_type": [
+      "seating",
+      "seatingactivitylog"
+    ],
+    "codename": "add_seatingactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change nhật ký khu vực và bàn",
+    "content_type": [
+      "seating",
+      "seatingactivitylog"
+    ],
+    "codename": "change_seatingactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete nhật ký khu vực và bàn",
+    "content_type": [
+      "seating",
+      "seatingactivitylog"
+    ],
+    "codename": "delete_seatingactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add khu vực",
+    "content_type": [
+      "seating",
+      "area"
+    ],
+    "codename": "add_area"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change khu vực",
+    "content_type": [
+      "seating",
+      "area"
+    ],
+    "codename": "change_area"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete khu vực",
+    "content_type": [
+      "seating",
+      "area"
+    ],
+    "codename": "delete_area"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add bàn",
+    "content_type": [
+      "seating",
+      "diningtable"
+    ],
+    "codename": "add_diningtable"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change bàn",
+    "content_type": [
+      "seating",
+      "diningtable"
+    ],
+    "codename": "change_diningtable"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete bàn",
+    "content_type": [
+      "seating",
+      "diningtable"
+    ],
+    "codename": "delete_diningtable"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view booking",
+    "content_type": [
+      "bookings",
+      "booking"
+    ],
+    "codename": "view_booking"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "manage booking",
+    "content_type": [
+      "bookings",
+      "booking"
+    ],
+    "codename": "manage_booking"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view bookingactivitylog",
+    "content_type": [
+      "bookings",
+      "bookingactivitylog"
+    ],
+    "codename": "view_bookingactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add đặt bàn",
+    "content_type": [
+      "bookings",
+      "booking"
+    ],
+    "codename": "add_booking"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change đặt bàn",
+    "content_type": [
+      "bookings",
+      "booking"
+    ],
+    "codename": "change_booking"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete đặt bàn",
+    "content_type": [
+      "bookings",
+      "booking"
+    ],
+    "codename": "delete_booking"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add nhật ký đặt bàn",
+    "content_type": [
+      "bookings",
+      "bookingactivitylog"
+    ],
+    "codename": "add_bookingactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change nhật ký đặt bàn",
+    "content_type": [
+      "bookings",
+      "bookingactivitylog"
+    ],
+    "codename": "change_bookingactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete nhật ký đặt bàn",
+    "content_type": [
+      "bookings",
+      "bookingactivitylog"
+    ],
+    "codename": "delete_bookingactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Cấu hình thời lượng đặt bàn",
+    "content_type": [
+      "bookings",
+      "bookingsettings"
+    ],
+    "codename": "configure_bookings"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add cấu hình đặt bàn",
+    "content_type": [
+      "bookings",
+      "bookingsettings"
+    ],
+    "codename": "add_bookingsettings"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change cấu hình đặt bàn",
+    "content_type": [
+      "bookings",
+      "bookingsettings"
+    ],
+    "codename": "change_bookingsettings"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete cấu hình đặt bàn",
+    "content_type": [
+      "bookings",
+      "bookingsettings"
+    ],
+    "codename": "delete_bookingsettings"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view cấu hình đặt bàn",
+    "content_type": [
+      "bookings",
+      "bookingsettings"
+    ],
+    "codename": "view_bookingsettings"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add booking settings log",
+    "content_type": [
+      "bookings",
+      "bookingsettingslog"
+    ],
+    "codename": "add_bookingsettingslog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change booking settings log",
+    "content_type": [
+      "bookings",
+      "bookingsettingslog"
+    ],
+    "codename": "change_bookingsettingslog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete booking settings log",
+    "content_type": [
+      "bookings",
+      "bookingsettingslog"
+    ],
+    "codename": "delete_bookingsettingslog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view booking settings log",
+    "content_type": [
+      "bookings",
+      "bookingsettingslog"
+    ],
+    "codename": "view_bookingsettingslog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view category",
+    "content_type": [
+      "menu",
+      "category"
+    ],
+    "codename": "view_category"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view unit",
+    "content_type": [
+      "menu",
+      "unit"
+    ],
+    "codename": "view_unit"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view dish",
+    "content_type": [
+      "menu",
+      "dish"
+    ],
+    "codename": "view_dish"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "manage menu",
+    "content_type": [
+      "menu",
+      "dish"
+    ],
+    "codename": "manage_menu"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "change availability",
+    "content_type": [
+      "menu",
+      "dish"
+    ],
+    "codename": "change_availability"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view menuactivitylog",
+    "content_type": [
+      "menu",
+      "menuactivitylog"
+    ],
+    "codename": "view_menuactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add nhật ký thực đơn",
+    "content_type": [
+      "menu",
+      "menuactivitylog"
+    ],
+    "codename": "add_menuactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change nhật ký thực đơn",
+    "content_type": [
+      "menu",
+      "menuactivitylog"
+    ],
+    "codename": "change_menuactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete nhật ký thực đơn",
+    "content_type": [
+      "menu",
+      "menuactivitylog"
+    ],
+    "codename": "delete_menuactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add nhóm món",
+    "content_type": [
+      "menu",
+      "category"
+    ],
+    "codename": "add_category"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change nhóm món",
+    "content_type": [
+      "menu",
+      "category"
+    ],
+    "codename": "change_category"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete nhóm món",
+    "content_type": [
+      "menu",
+      "category"
+    ],
+    "codename": "delete_category"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add đơn vị tính",
+    "content_type": [
+      "menu",
+      "unit"
+    ],
+    "codename": "add_unit"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change đơn vị tính",
+    "content_type": [
+      "menu",
+      "unit"
+    ],
+    "codename": "change_unit"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete đơn vị tính",
+    "content_type": [
+      "menu",
+      "unit"
+    ],
+    "codename": "delete_unit"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add món",
+    "content_type": [
+      "menu",
+      "dish"
+    ],
+    "codename": "add_dish"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change món",
+    "content_type": [
+      "menu",
+      "dish"
+    ],
+    "codename": "change_dish"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete món",
+    "content_type": [
+      "menu",
+      "dish"
+    ],
+    "codename": "delete_dish"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view order",
+    "content_type": [
+      "orders",
+      "order"
+    ],
+    "codename": "view_order"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "manage order",
+    "content_type": [
+      "orders",
+      "order"
+    ],
+    "codename": "manage_order"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "work kitchen",
+    "content_type": [
+      "orders",
+      "order"
+    ],
+    "codename": "work_kitchen"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "cancel prepared item",
+    "content_type": [
+      "orders",
+      "order"
+    ],
+    "codename": "cancel_prepared_item"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "view orderactivitylog",
+    "content_type": [
+      "orders",
+      "orderactivitylog"
+    ],
+    "codename": "view_orderactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add đơn hàng",
+    "content_type": [
+      "orders",
+      "order"
+    ],
+    "codename": "add_order"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change đơn hàng",
+    "content_type": [
+      "orders",
+      "order"
+    ],
+    "codename": "change_order"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete đơn hàng",
+    "content_type": [
+      "orders",
+      "order"
+    ],
+    "codename": "delete_order"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add nhật ký đơn hàng",
+    "content_type": [
+      "orders",
+      "orderactivitylog"
+    ],
+    "codename": "add_orderactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change nhật ký đơn hàng",
+    "content_type": [
+      "orders",
+      "orderactivitylog"
+    ],
+    "codename": "change_orderactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete nhật ký đơn hàng",
+    "content_type": [
+      "orders",
+      "orderactivitylog"
+    ],
+    "codename": "delete_orderactivitylog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add món trong đơn",
+    "content_type": [
+      "orders",
+      "orderitem"
+    ],
+    "codename": "add_orderitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change món trong đơn",
+    "content_type": [
+      "orders",
+      "orderitem"
+    ],
+    "codename": "change_orderitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete món trong đơn",
+    "content_type": [
+      "orders",
+      "orderitem"
+    ],
+    "codename": "delete_orderitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view món trong đơn",
+    "content_type": [
+      "orders",
+      "orderitem"
+    ],
+    "codename": "view_orderitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add hóa đơn",
+    "content_type": [
+      "orders",
+      "invoice"
+    ],
+    "codename": "add_invoice"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change hóa đơn",
+    "content_type": [
+      "orders",
+      "invoice"
+    ],
+    "codename": "change_invoice"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete hóa đơn",
+    "content_type": [
+      "orders",
+      "invoice"
+    ],
+    "codename": "delete_invoice"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view hóa đơn",
+    "content_type": [
+      "orders",
+      "invoice"
+    ],
+    "codename": "view_invoice"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add phiếu thu",
+    "content_type": [
+      "orders",
+      "payment"
+    ],
+    "codename": "add_payment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change phiếu thu",
+    "content_type": [
+      "orders",
+      "payment"
+    ],
+    "codename": "change_payment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete phiếu thu",
+    "content_type": [
+      "orders",
+      "payment"
+    ],
+    "codename": "delete_payment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view phiếu thu",
+    "content_type": [
+      "orders",
+      "payment"
+    ],
+    "codename": "view_payment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Thu tiền đơn hàng",
+    "content_type": [
+      "orders",
+      "order"
+    ],
+    "codename": "collect_payment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Xem báo cáo nhà hàng",
+    "content_type": [
+      "reports",
+      "report"
+    ],
+    "codename": "view_report"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add lần thanh toán nhiều bàn",
+    "content_type": [
+      "orders",
+      "paymentbatch"
+    ],
+    "codename": "add_paymentbatch"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change lần thanh toán nhiều bàn",
+    "content_type": [
+      "orders",
+      "paymentbatch"
+    ],
+    "codename": "change_paymentbatch"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete lần thanh toán nhiều bàn",
+    "content_type": [
+      "orders",
+      "paymentbatch"
+    ],
+    "codename": "delete_paymentbatch"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view lần thanh toán nhiều bàn",
+    "content_type": [
+      "orders",
+      "paymentbatch"
+    ],
+    "codename": "view_paymentbatch"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add hạng thành viên",
+    "content_type": [
+      "customers",
+      "membershiptier"
+    ],
+    "codename": "add_membershiptier"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change hạng thành viên",
+    "content_type": [
+      "customers",
+      "membershiptier"
+    ],
+    "codename": "change_membershiptier"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete hạng thành viên",
+    "content_type": [
+      "customers",
+      "membershiptier"
+    ],
+    "codename": "delete_membershiptier"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view hạng thành viên",
+    "content_type": [
+      "customers",
+      "membershiptier"
+    ],
+    "codename": "view_membershiptier"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add payment request",
+    "content_type": [
+      "orders",
+      "paymentrequest"
+    ],
+    "codename": "add_paymentrequest"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change payment request",
+    "content_type": [
+      "orders",
+      "paymentrequest"
+    ],
+    "codename": "change_paymentrequest"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete payment request",
+    "content_type": [
+      "orders",
+      "paymentrequest"
+    ],
+    "codename": "delete_paymentrequest"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view payment request",
+    "content_type": [
+      "orders",
+      "paymentrequest"
+    ],
+    "codename": "view_paymentrequest"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add nhà cung cấp",
+    "content_type": [
+      "inventory",
+      "supplier"
+    ],
+    "codename": "add_supplier"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change nhà cung cấp",
+    "content_type": [
+      "inventory",
+      "supplier"
+    ],
+    "codename": "change_supplier"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete nhà cung cấp",
+    "content_type": [
+      "inventory",
+      "supplier"
+    ],
+    "codename": "delete_supplier"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view nhà cung cấp",
+    "content_type": [
+      "inventory",
+      "supplier"
+    ],
+    "codename": "view_supplier"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add nguyên liệu",
+    "content_type": [
+      "inventory",
+      "ingredient"
+    ],
+    "codename": "add_ingredient"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change nguyên liệu",
+    "content_type": [
+      "inventory",
+      "ingredient"
+    ],
+    "codename": "change_ingredient"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete nguyên liệu",
+    "content_type": [
+      "inventory",
+      "ingredient"
+    ],
+    "codename": "delete_ingredient"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view nguyên liệu",
+    "content_type": [
+      "inventory",
+      "ingredient"
+    ],
+    "codename": "view_ingredient"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Nhập, xuất và điều chỉnh kho",
+    "content_type": [
+      "inventory",
+      "ingredient"
+    ],
+    "codename": "manage_inventory"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add giao dịch kho",
+    "content_type": [
+      "inventory",
+      "inventorytransaction"
+    ],
+    "codename": "add_inventorytransaction"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change giao dịch kho",
+    "content_type": [
+      "inventory",
+      "inventorytransaction"
+    ],
+    "codename": "change_inventorytransaction"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete giao dịch kho",
+    "content_type": [
+      "inventory",
+      "inventorytransaction"
+    ],
+    "codename": "delete_inventorytransaction"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view giao dịch kho",
+    "content_type": [
+      "inventory",
+      "inventorytransaction"
+    ],
+    "codename": "view_inventorytransaction"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add giao dịch trực tuyến",
+    "content_type": [
+      "orders",
+      "onlinepayment"
+    ],
+    "codename": "add_onlinepayment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change giao dịch trực tuyến",
+    "content_type": [
+      "orders",
+      "onlinepayment"
+    ],
+    "codename": "change_onlinepayment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete giao dịch trực tuyến",
+    "content_type": [
+      "orders",
+      "onlinepayment"
+    ],
+    "codename": "delete_onlinepayment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view giao dịch trực tuyến",
+    "content_type": [
+      "orders",
+      "onlinepayment"
+    ],
+    "codename": "view_onlinepayment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view promotion code",
+    "content_type": [
+      "orders",
+      "promotioncode"
+    ],
+    "codename": "view_promotioncode"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add promotion code",
+    "content_type": [
+      "orders",
+      "promotioncode"
+    ],
+    "codename": "add_promotioncode"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change promotion code",
+    "content_type": [
+      "orders",
+      "promotioncode"
+    ],
+    "codename": "change_promotioncode"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete promotion code",
+    "content_type": [
+      "orders",
+      "promotioncode"
+    ],
+    "codename": "delete_promotioncode"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add định lượng món",
+    "content_type": [
+      "inventory",
+      "recipeingredient"
+    ],
+    "codename": "add_recipeingredient"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change định lượng món",
+    "content_type": [
+      "inventory",
+      "recipeingredient"
+    ],
+    "codename": "change_recipeingredient"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete định lượng món",
+    "content_type": [
+      "inventory",
+      "recipeingredient"
+    ],
+    "codename": "delete_recipeingredient"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view định lượng món",
+    "content_type": [
+      "inventory",
+      "recipeingredient"
+    ],
+    "codename": "view_recipeingredient"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add phiếu nhập hàng",
+    "content_type": [
+      "inventory",
+      "purchasereceipt"
+    ],
+    "codename": "add_purchasereceipt"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change phiếu nhập hàng",
+    "content_type": [
+      "inventory",
+      "purchasereceipt"
+    ],
+    "codename": "change_purchasereceipt"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete phiếu nhập hàng",
+    "content_type": [
+      "inventory",
+      "purchasereceipt"
+    ],
+    "codename": "delete_purchasereceipt"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view phiếu nhập hàng",
+    "content_type": [
+      "inventory",
+      "purchasereceipt"
+    ],
+    "codename": "view_purchasereceipt"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add stocktake",
+    "content_type": [
+      "inventory",
+      "stocktake"
+    ],
+    "codename": "add_stocktake"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change stocktake",
+    "content_type": [
+      "inventory",
+      "stocktake"
+    ],
+    "codename": "change_stocktake"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete stocktake",
+    "content_type": [
+      "inventory",
+      "stocktake"
+    ],
+    "codename": "delete_stocktake"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view stocktake",
+    "content_type": [
+      "inventory",
+      "stocktake"
+    ],
+    "codename": "view_stocktake"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add waste record",
+    "content_type": [
+      "inventory",
+      "wasterecord"
+    ],
+    "codename": "add_wasterecord"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change waste record",
+    "content_type": [
+      "inventory",
+      "wasterecord"
+    ],
+    "codename": "change_wasterecord"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete waste record",
+    "content_type": [
+      "inventory",
+      "wasterecord"
+    ],
+    "codename": "delete_wasterecord"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view waste record",
+    "content_type": [
+      "inventory",
+      "wasterecord"
+    ],
+    "codename": "view_wasterecord"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add purchase receipt line",
+    "content_type": [
+      "inventory",
+      "purchasereceiptline"
+    ],
+    "codename": "add_purchasereceiptline"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change purchase receipt line",
+    "content_type": [
+      "inventory",
+      "purchasereceiptline"
+    ],
+    "codename": "change_purchasereceiptline"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete purchase receipt line",
+    "content_type": [
+      "inventory",
+      "purchasereceiptline"
+    ],
+    "codename": "delete_purchasereceiptline"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view purchase receipt line",
+    "content_type": [
+      "inventory",
+      "purchasereceiptline"
+    ],
+    "codename": "view_purchasereceiptline"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add stocktake line",
+    "content_type": [
+      "inventory",
+      "stocktakeline"
+    ],
+    "codename": "add_stocktakeline"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change stocktake line",
+    "content_type": [
+      "inventory",
+      "stocktakeline"
+    ],
+    "codename": "change_stocktakeline"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete stocktake line",
+    "content_type": [
+      "inventory",
+      "stocktakeline"
+    ],
+    "codename": "delete_stocktakeline"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view stocktake line",
+    "content_type": [
+      "inventory",
+      "stocktakeline"
+    ],
+    "codename": "view_stocktakeline"
+  }
+},
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "MANAGER",
+    "permissions": [
+      [
+        "view_user",
+        "accounts",
+        "user"
+      ],
+      [
+        "manage_booking",
+        "bookings",
+        "booking"
+      ],
+      [
+        "view_booking",
+        "bookings",
+        "booking"
+      ],
+      [
+        "view_bookingactivitylog",
+        "bookings",
+        "bookingactivitylog"
+      ],
+      [
+        "configure_bookings",
+        "bookings",
+        "bookingsettings"
+      ],
+      [
+        "add_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "change_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "delete_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "view_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "view_customeractivitylog",
+        "customers",
+        "customeractivitylog"
+      ],
+      [
+        "add_membershiptier",
+        "customers",
+        "membershiptier"
+      ],
+      [
+        "change_membershiptier",
+        "customers",
+        "membershiptier"
+      ],
+      [
+        "delete_membershiptier",
+        "customers",
+        "membershiptier"
+      ],
+      [
+        "view_membershiptier",
+        "customers",
+        "membershiptier"
+      ],
+      [
+        "view_employeeactivitylog",
+        "employees",
+        "employeeactivitylog"
+      ],
+      [
+        "manage_staff",
+        "employees",
+        "employeeprofile"
+      ],
+      [
+        "view_employeeprofile",
+        "employees",
+        "employeeprofile"
+      ],
+      [
+        "view_jobposition",
+        "employees",
+        "jobposition"
+      ],
+      [
+        "add_ingredient",
+        "inventory",
+        "ingredient"
+      ],
+      [
+        "change_ingredient",
+        "inventory",
+        "ingredient"
+      ],
+      [
+        "manage_inventory",
+        "inventory",
+        "ingredient"
+      ],
+      [
+        "view_ingredient",
+        "inventory",
+        "ingredient"
+      ],
+      [
+        "view_inventorytransaction",
+        "inventory",
+        "inventorytransaction"
+      ],
+      [
+        "view_supplier",
+        "inventory",
+        "supplier"
+      ],
+      [
+        "view_category",
+        "menu",
+        "category"
+      ],
+      [
+        "change_availability",
+        "menu",
+        "dish"
+      ],
+      [
+        "manage_menu",
+        "menu",
+        "dish"
+      ],
+      [
+        "view_dish",
+        "menu",
+        "dish"
+      ],
+      [
+        "view_menuactivitylog",
+        "menu",
+        "menuactivitylog"
+      ],
+      [
+        "view_unit",
+        "menu",
+        "unit"
+      ],
+      [
+        "view_invoice",
+        "orders",
+        "invoice"
+      ],
+      [
+        "cancel_prepared_item",
+        "orders",
+        "order"
+      ],
+      [
+        "collect_payment",
+        "orders",
+        "order"
+      ],
+      [
+        "manage_order",
+        "orders",
+        "order"
+      ],
+      [
+        "view_order",
+        "orders",
+        "order"
+      ],
+      [
+        "work_kitchen",
+        "orders",
+        "order"
+      ],
+      [
+        "view_orderactivitylog",
+        "orders",
+        "orderactivitylog"
+      ],
+      [
+        "add_promotioncode",
+        "orders",
+        "promotioncode"
+      ],
+      [
+        "change_promotioncode",
+        "orders",
+        "promotioncode"
+      ],
+      [
+        "delete_promotioncode",
+        "orders",
+        "promotioncode"
+      ],
+      [
+        "view_promotioncode",
+        "orders",
+        "promotioncode"
+      ],
+      [
+        "view_report",
+        "reports",
+        "report"
+      ],
+      [
+        "view_area",
+        "seating",
+        "area"
+      ],
+      [
+        "manage_seating",
+        "seating",
+        "diningtable"
+      ],
+      [
+        "view_diningtable",
+        "seating",
+        "diningtable"
+      ],
+      [
+        "view_seatingactivitylog",
+        "seating",
+        "seatingactivitylog"
+      ]
+    ]
+  }
+},
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "WAITER",
+    "permissions": [
+      [
+        "manage_booking",
+        "bookings",
+        "booking"
+      ],
+      [
+        "view_booking",
+        "bookings",
+        "booking"
+      ],
+      [
+        "add_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "change_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "view_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "view_membershiptier",
+        "customers",
+        "membershiptier"
+      ],
+      [
+        "view_dish",
+        "menu",
+        "dish"
+      ],
+      [
+        "manage_order",
+        "orders",
+        "order"
+      ],
+      [
+        "view_order",
+        "orders",
+        "order"
+      ],
+      [
+        "view_area",
+        "seating",
+        "area"
+      ],
+      [
+        "view_diningtable",
+        "seating",
+        "diningtable"
+      ]
+    ]
+  }
+},
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "CASHIER",
+    "permissions": [
+      [
+        "manage_booking",
+        "bookings",
+        "booking"
+      ],
+      [
+        "view_booking",
+        "bookings",
+        "booking"
+      ],
+      [
+        "add_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "change_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "view_customer",
+        "customers",
+        "customer"
+      ],
+      [
+        "view_membershiptier",
+        "customers",
+        "membershiptier"
+      ],
+      [
+        "view_dish",
+        "menu",
+        "dish"
+      ],
+      [
+        "collect_payment",
+        "orders",
+        "order"
+      ],
+      [
+        "manage_order",
+        "orders",
+        "order"
+      ],
+      [
+        "view_order",
+        "orders",
+        "order"
+      ],
+      [
+        "view_area",
+        "seating",
+        "area"
+      ],
+      [
+        "view_diningtable",
+        "seating",
+        "diningtable"
+      ]
+    ]
+  }
+},
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "KITCHEN",
+    "permissions": [
+      [
+        "change_availability",
+        "menu",
+        "dish"
+      ],
+      [
+        "view_dish",
+        "menu",
+        "dish"
+      ],
+      [
+        "work_kitchen",
+        "orders",
+        "order"
+      ]
+    ]
+  }
+},
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "INVENTORY",
+    "permissions": [
+      [
+        "manage_inventory",
+        "inventory",
+        "ingredient"
+      ],
+      [
+        "view_ingredient",
+        "inventory",
+        "ingredient"
+      ],
+      [
+        "view_inventorytransaction",
+        "inventory",
+        "inventorytransaction"
+      ],
+      [
+        "view_supplier",
+        "inventory",
+        "supplier"
+      ]
+    ]
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$sezepRKkQYq5u7CLea6q9L$QVbXSmI+ZHQ+wUtyozpdNm/oDyc95Jwltlca/HoxEwU=",
+    "last_login": "2026-10-01T07:18:50.084Z",
+    "is_superuser": true,
+    "username": "dat",
+    "first_name": "",
+    "last_name": "",
+    "email": "dat@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-09-17T01:44:40.202Z",
+    "created_at": "2026-09-17T01:44:40.703Z",
+    "updated_at": "2026-09-17T01:44:40.703Z",
+    "session_version": 1,
+    "groups": [
+      [
+        "MANAGER"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$A0D0wFT4Nlz2aBOcOM0mXI$WhybnxCwsIw3ACZJlHhad8DDhMw3ZPPc5qNw/nSiT1k=",
+    "last_login": "2026-09-17T04:56:59.633Z",
+    "is_superuser": false,
+    "username": "NV1",
+    "first_name": "dat",
+    "last_name": "le",
+    "email": "lecongdatd36@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-17T02:25:44.475Z",
+    "created_at": "2026-09-17T02:25:44.952Z",
+    "updated_at": "2026-09-17T02:37:35.283Z",
+    "session_version": 2,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$th8Flo7PTbJJAFTC9R1zkj$y55Vx8Agk8tJL0dx7DilSdLIMUUH0/pjL7g3XRylOR8=",
+    "last_login": "2026-09-17T04:57:13.519Z",
+    "is_superuser": false,
+    "username": "N25DCKT008",
+    "first_name": "",
+    "last_name": "",
+    "email": "lecongdatd36@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-09-17T04:54:40.289Z",
+    "created_at": "2026-09-17T04:54:40.742Z",
+    "updated_at": "2026-09-17T04:54:40.742Z",
+    "session_version": 1,
+    "groups": [
+      [
+        "MANAGER"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$hs3ybwXBqSBE7LeYfpHVJi$XTnSObUq7coO62/OJhYP77FlLYkuwn+F1Pcbh2B5fXg=",
+    "last_login": "2026-09-30T09:39:16.387Z",
+    "is_superuser": false,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "lecongdsatd36@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-09-20T13:23:37.550Z",
+    "created_at": "2026-09-20T13:23:38.147Z",
+    "updated_at": "2026-09-20T13:23:38.147Z",
+    "session_version": 0,
+    "groups": [
+      [
+        "MANAGER"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$XJeTm3oHnZz3KO2QFYhPqY$HV7gwUbO8A7ZG6QITHakt3+cFvUjSpNbueuO56k+aIc=",
+    "last_login": "2026-09-20T14:14:30.778Z",
+    "is_superuser": false,
+    "username": "abc",
+    "first_name": "",
+    "last_name": "",
+    "email": "lecoaaagdatd36@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-20T14:14:15.848Z",
+    "created_at": "2026-09-20T14:14:16.513Z",
+    "updated_at": "2026-09-20T14:14:16.513Z",
+    "session_version": 0,
+    "groups": [
+      [
+        "CASHIER"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$dKJ5sofx2cDi8x5XrKQtEq$VpWS4vuElDMyW+BCcbKNDLFv7cusxUCP1Ha6zGlydn4=",
+    "last_login": "2026-09-28T07:51:13.213Z",
+    "is_superuser": false,
+    "username": "ABCD",
+    "first_name": "",
+    "last_name": "",
+    "email": "1150080130@sv.hcmunre.edu.vn",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-28T07:47:30.320Z",
+    "created_at": "2026-09-28T07:47:30.957Z",
+    "updated_at": "2026-09-28T07:50:48.094Z",
+    "session_version": 2,
+    "groups": [
+      [
+        "CASHIER"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "employees.jobposition",
+  "pk": 1,
+  "fields": {
+    "code": "MANAGER",
+    "name": "Quản lí",
+    "description": "",
+    "group": [
+      "MANAGER"
+    ],
+    "is_active": true,
+    "created_at": "2026-09-17T04:06:07.849Z",
+    "updated_at": "2026-09-17T04:06:07.849Z"
+  }
+},
+{
+  "model": "employees.jobposition",
+  "pk": 2,
+  "fields": {
+    "code": "WAITER",
+    "name": "Phục vụ",
+    "description": "",
+    "group": [
+      "WAITER"
+    ],
+    "is_active": true,
+    "created_at": "2026-09-17T04:06:07.852Z",
+    "updated_at": "2026-09-17T04:06:07.852Z"
+  }
+},
+{
+  "model": "employees.jobposition",
+  "pk": 3,
+  "fields": {
+    "code": "CASHIER",
+    "name": "Thu ngân",
+    "description": "",
+    "group": [
+      "CASHIER"
+    ],
+    "is_active": true,
+    "created_at": "2026-09-17T04:06:07.852Z",
+    "updated_at": "2026-09-17T04:06:07.852Z"
+  }
+},
+{
+  "model": "employees.jobposition",
+  "pk": 4,
+  "fields": {
+    "code": "KITCHEN",
+    "name": "Bếp",
+    "description": "",
+    "group": [
+      "KITCHEN"
+    ],
+    "is_active": true,
+    "created_at": "2026-09-17T04:06:07.852Z",
+    "updated_at": "2026-09-17T04:06:07.852Z"
+  }
+},
+{
+  "model": "employees.jobposition",
+  "pk": 5,
+  "fields": {
+    "code": "INVENTORY",
+    "name": "Kho",
+    "description": "",
+    "group": [
+      "INVENTORY"
+    ],
+    "is_active": true,
+    "created_at": "2026-09-17T04:06:07.852Z",
+    "updated_at": "2026-09-17T04:06:07.852Z"
+  }
+},
+{
+  "model": "employees.employeeprofile",
+  "pk": 2,
+  "fields": {
+    "user": [
+      "N25DCKT008"
+    ],
+    "employee_code": "NV0001",
+    "full_name": "dat le",
+    "phone": "0776253142",
+    "address": "le van sy",
+    "date_of_birth": null,
+    "gender": "",
+    "job_position": 1,
+    "join_date": "2026-09-17",
+    "employment_status": "WORKING",
+    "resignation_date": null,
+    "avatar": "",
+    "note": "",
+    "created_at": "2026-09-17T04:54:40.747Z",
+    "updated_at": "2026-09-17T04:54:40.747Z"
+  }
+},
+{
+  "model": "employees.employeeprofile",
+  "pk": 4,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "employee_code": "NV0003",
+    "full_name": "admin",
+    "phone": "0776253149",
+    "address": "le van sy",
+    "date_of_birth": null,
+    "gender": "",
+    "job_position": 1,
+    "join_date": "2026-09-20",
+    "employment_status": "WORKING",
+    "resignation_date": null,
+    "avatar": "",
+    "note": "",
+    "created_at": "2026-09-20T13:23:38.168Z",
+    "updated_at": "2026-09-20T13:23:38.168Z"
+  }
+},
+{
+  "model": "employees.employeeprofile",
+  "pk": 5,
+  "fields": {
+    "user": [
+      "abc"
+    ],
+    "employee_code": "NV0004",
+    "full_name": "dat le",
+    "phone": "0776253122",
+    "address": "le van sy",
+    "date_of_birth": "2005-02-10",
+    "gender": "MALE",
+    "job_position": 3,
+    "join_date": "2026-09-20",
+    "employment_status": "WORKING",
+    "resignation_date": null,
+    "avatar": "",
+    "note": "",
+    "created_at": "2026-09-20T14:14:16.526Z",
+    "updated_at": "2026-09-20T14:14:16.526Z"
+  }
+},
+{
+  "model": "employees.employeeprofile",
+  "pk": 6,
+  "fields": {
+    "user": [
+      "ABCD"
+    ],
+    "employee_code": "NV0005",
+    "full_name": "A",
+    "phone": "0776253145",
+    "address": "TIẾN THÀNH - TRIỆU SƠN - THANH HOÁ",
+    "date_of_birth": "2004-02-10",
+    "gender": "MALE",
+    "job_position": 3,
+    "join_date": "2026-09-28",
+    "employment_status": "WORKING",
+    "resignation_date": null,
+    "avatar": "employees/WIN_20250327_20_48_29_Pro.jpg",
+    "note": "",
+    "created_at": "2026-09-28T07:47:30.970Z",
+    "updated_at": "2026-09-28T07:50:48.093Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 1,
+  "fields": {
+    "employee": null,
+    "employee_code_snapshot": "NV0001",
+    "employee_name_snapshot": "dat le",
+    "action": "CREATE",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Tạo hồ sơ nhân viên.",
+    "created_at": "2026-09-17T03:01:55.357Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 2,
+  "fields": {
+    "employee": null,
+    "employee_code_snapshot": "NV0001",
+    "employee_name_snapshot": "dat le",
+    "action": "DELETE",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Xóa nhân viên NV0001 - dat le.",
+    "created_at": "2026-09-17T04:37:24.205Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 3,
+  "fields": {
+    "employee": 2,
+    "employee_code_snapshot": "NV0001",
+    "employee_name_snapshot": "dat le",
+    "action": "CREATE",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Tạo tài khoản và hồ sơ với vị trí Quản trị viên / Quản lý.",
+    "created_at": "2026-09-17T04:54:40.747Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 4,
+  "fields": {
+    "employee": null,
+    "employee_code_snapshot": "NV0002",
+    "employee_name_snapshot": "dieu",
+    "action": "CREATE",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Tạo tài khoản và hồ sơ với vị trí Thu ngân.",
+    "created_at": "2026-09-20T13:16:54.479Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 5,
+  "fields": {
+    "employee": 4,
+    "employee_code_snapshot": "NV0003",
+    "employee_name_snapshot": "admin",
+    "action": "CREATE",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Tạo tài khoản và hồ sơ với vị trí Quản trị viên / Quản lý.",
+    "created_at": "2026-09-20T13:23:38.168Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 6,
+  "fields": {
+    "employee": null,
+    "employee_code_snapshot": "NV0002",
+    "employee_name_snapshot": "dieu",
+    "action": "DELETE",
+    "performed_by": [
+      "admin"
+    ],
+    "performed_by_name_snapshot": "admin",
+    "description": "Xóa tài khoản dieu và hồ sơ nhân viên liên kết.",
+    "created_at": "2026-09-20T13:33:04.990Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 7,
+  "fields": {
+    "employee": 5,
+    "employee_code_snapshot": "NV0004",
+    "employee_name_snapshot": "dat le",
+    "action": "CREATE",
+    "performed_by": [
+      "admin"
+    ],
+    "performed_by_name_snapshot": "admin",
+    "description": "Tạo tài khoản và hồ sơ với vị trí Thu ngân.",
+    "created_at": "2026-09-20T14:14:16.529Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 8,
+  "fields": {
+    "employee": 6,
+    "employee_code_snapshot": "NV0005",
+    "employee_name_snapshot": "A",
+    "action": "CREATE",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Tạo tài khoản và hồ sơ với vị trí Thu ngân.",
+    "created_at": "2026-09-28T07:47:30.971Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 9,
+  "fields": {
+    "employee": 6,
+    "employee_code_snapshot": "NV0005",
+    "employee_name_snapshot": "A",
+    "action": "UPDATE",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Cập nhật hồ sơ; trạng thái: Đang làm việc.",
+    "created_at": "2026-09-28T07:49:39.952Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 10,
+  "fields": {
+    "employee": 6,
+    "employee_code_snapshot": "NV0005",
+    "employee_name_snapshot": "A",
+    "action": "CHANGE_POSITION",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Đổi vị trí sang Bếp.",
+    "created_at": "2026-09-28T07:49:39.954Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 11,
+  "fields": {
+    "employee": 6,
+    "employee_code_snapshot": "NV0005",
+    "employee_name_snapshot": "A",
+    "action": "UPDATE",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Cập nhật hồ sơ; trạng thái: Đang làm việc.",
+    "created_at": "2026-09-28T07:50:48.094Z"
+  }
+},
+{
+  "model": "employees.employeeactivitylog",
+  "pk": 12,
+  "fields": {
+    "employee": 6,
+    "employee_code_snapshot": "NV0005",
+    "employee_name_snapshot": "A",
+    "action": "CHANGE_POSITION",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "description": "Đổi vị trí sang Thu ngân.",
+    "created_at": "2026-09-28T07:50:48.094Z"
+  }
+},
+{
+  "model": "customers.customeractivitylog",
+  "pk": 1,
+  "fields": {
+    "customer": 1,
+    "customer_code_snapshot": "KH000001",
+    "customer_name_snapshot": "dieu",
+    "performed_by": [
+      "admin"
+    ],
+    "performed_by_name_snapshot": "admin",
+    "action": "CREATE",
+    "description": "Thêm hồ sơ khách hàng.",
+    "created_at": "2026-09-20T14:10:25.505Z"
+  }
+},
+{
+  "model": "customers.customeractivitylog",
+  "pk": 2,
+  "fields": {
+    "customer": 2,
+    "customer_code_snapshot": "KH000002",
+    "customer_name_snapshot": "dat",
+    "performed_by": [
+      "abc"
+    ],
+    "performed_by_name_snapshot": "abc",
+    "action": "CREATE",
+    "description": "Thêm hồ sơ khách hàng.",
+    "created_at": "2026-09-20T14:14:44.843Z"
+  }
+},
+{
+  "model": "customers.customeractivitylog",
+  "pk": 3,
+  "fields": {
+    "customer": 3,
+    "customer_code_snapshot": "KH000003",
+    "customer_name_snapshot": "Đạt Lê",
+    "performed_by": [
+      "dat"
+    ],
+    "performed_by_name_snapshot": "dat",
+    "action": "CREATE",
+    "description": "Thêm hồ sơ khách hàng.",
+    "created_at": "2026-09-30T10:46:06.606Z"
+  }
+},
+{
+  "model": "seating.seatingactivitylog",
+  "pk": 1,
+  "fields": {
+    "entity": "AREA",
+    "object_id": 1,
+    "label_snapshot": "lầu 1",
+    "action": "CREATE",
+    "description": "Tên: lầu 1. Trạng thái: đang sử dụng.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-20T14:31:46.679Z"
+  }
+},
+{
+  "model": "seating.seatingactivitylog",
+  "pk": 2,
+  "fields": {
+    "entity": "TABLE",
+    "object_id": 1,
+    "label_snapshot": "2",
+    "action": "CREATE",
+    "description": "Bàn 2; khu vực lầu 1; 2 chỗ; đang sử dụng.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-20T14:32:07.806Z"
+  }
+},
+{
+  "model": "seating.seatingactivitylog",
+  "pk": 3,
+  "fields": {
+    "entity": "TABLE",
+    "object_id": 2,
+    "label_snapshot": "3",
+    "action": "CREATE",
+    "description": "Bàn 3; khu vực lầu 1; 4 chỗ; đang sử dụng.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:04:12.079Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 1,
+  "fields": {
+    "customer": 2,
+    "is_walk_in": false,
+    "table": 1,
+    "customer_name": "dat",
+    "customer_phone": "0987654321",
+    "party_size": 2,
+    "starts_at": "2026-09-20T14:54:00Z",
+    "ends_at": "2026-10-11T14:51:00Z",
+    "seated_at": null,
+    "completed_at": null,
+    "status": "COMPLETED",
+    "revision": 6,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-20T14:51:29.532Z",
+    "updated_at": "2026-09-20T15:03:03.220Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 2,
+  "fields": {
+    "customer": null,
+    "is_walk_in": true,
+    "table": 1,
+    "customer_name": "Khách vãng lai",
+    "customer_phone": "",
+    "party_size": 1,
+    "starts_at": "2026-09-25T08:18:24.746Z",
+    "ends_at": "2026-09-25T10:18:24.746Z",
+    "seated_at": "2026-09-25T08:18:24.746Z",
+    "completed_at": "2026-09-25T08:56:40.062Z",
+    "status": "COMPLETED",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-25T08:18:24.753Z",
+    "updated_at": "2026-09-25T08:56:40.063Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 3,
+  "fields": {
+    "customer": 2,
+    "is_walk_in": true,
+    "table": 1,
+    "customer_name": "a dat",
+    "customer_phone": "0987654321",
+    "party_size": 2,
+    "starts_at": "2026-09-27T13:10:44.191Z",
+    "ends_at": "2026-09-27T15:10:44.191Z",
+    "seated_at": "2026-09-27T13:10:44.191Z",
+    "completed_at": "2026-09-27T13:15:50.892Z",
+    "status": "COMPLETED",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-27T13:10:44.215Z",
+    "updated_at": "2026-09-27T13:15:50.895Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 4,
+  "fields": {
+    "customer": null,
+    "is_walk_in": true,
+    "table": 1,
+    "customer_name": "Khách vãng lai",
+    "customer_phone": "",
+    "party_size": 1,
+    "starts_at": "2026-09-27T13:55:20.598Z",
+    "ends_at": "2026-09-27T15:55:20.598Z",
+    "seated_at": "2026-09-27T13:55:20.598Z",
+    "completed_at": "2026-09-27T14:04:40.103Z",
+    "status": "COMPLETED",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-27T13:55:20.598Z",
+    "updated_at": "2026-09-27T14:04:40.107Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 5,
+  "fields": {
+    "customer": null,
+    "is_walk_in": true,
+    "table": 1,
+    "customer_name": "Khách vãng lai",
+    "customer_phone": "",
+    "party_size": 1,
+    "starts_at": "2026-09-27T14:05:09.262Z",
+    "ends_at": "2026-09-27T16:05:09.262Z",
+    "seated_at": "2026-09-27T14:05:09.262Z",
+    "completed_at": "2026-09-27T14:06:42.688Z",
+    "status": "COMPLETED",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-27T14:05:09.267Z",
+    "updated_at": "2026-09-27T14:06:42.688Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 6,
+  "fields": {
+    "customer": null,
+    "is_walk_in": true,
+    "table": 2,
+    "customer_name": "aaaaaa",
+    "customer_phone": "0987654323",
+    "party_size": 1,
+    "starts_at": "2026-09-27T14:08:50.526Z",
+    "ends_at": "2026-09-27T16:08:50.526Z",
+    "seated_at": "2026-09-27T14:08:50.526Z",
+    "completed_at": "2026-09-27T14:30:23.781Z",
+    "status": "CANCELLED",
+    "revision": 3,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-27T14:08:50.542Z",
+    "updated_at": "2026-09-27T14:30:23.786Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 7,
+  "fields": {
+    "customer": null,
+    "is_walk_in": true,
+    "table": 1,
+    "customer_name": "Khách vãng lai",
+    "customer_phone": "",
+    "party_size": 1,
+    "starts_at": "2026-09-27T14:21:35.247Z",
+    "ends_at": "2026-09-27T16:21:35.247Z",
+    "seated_at": "2026-09-27T14:21:35.247Z",
+    "completed_at": "2026-09-27T14:30:29.849Z",
+    "status": "CANCELLED",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-27T14:21:35.247Z",
+    "updated_at": "2026-09-27T14:30:29.850Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 8,
+  "fields": {
+    "customer": null,
+    "is_walk_in": true,
+    "table": 1,
+    "customer_name": "Khách vãng lai",
+    "customer_phone": "",
+    "party_size": 1,
+    "starts_at": "2026-09-27T14:31:59.033Z",
+    "ends_at": "2026-09-27T16:31:59.033Z",
+    "seated_at": "2026-09-27T14:31:59.033Z",
+    "completed_at": "2026-09-27T14:48:46.569Z",
+    "status": "CANCELLED",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-27T14:31:59.049Z",
+    "updated_at": "2026-09-27T14:48:46.569Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 9,
+  "fields": {
+    "customer": 2,
+    "is_walk_in": true,
+    "table": 1,
+    "customer_name": "a dat",
+    "customer_phone": "0987654321",
+    "party_size": 1,
+    "starts_at": "2026-09-27T14:49:01.857Z",
+    "ends_at": "2026-09-27T16:49:01.857Z",
+    "seated_at": "2026-09-27T14:49:01.857Z",
+    "completed_at": "2026-09-27T15:35:07.910Z",
+    "status": "CANCELLED",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-27T14:49:01.860Z",
+    "updated_at": "2026-09-27T15:35:07.910Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 10,
+  "fields": {
+    "customer": null,
+    "is_walk_in": true,
+    "table": 2,
+    "customer_name": "Khách vãng lai",
+    "customer_phone": "",
+    "party_size": 1,
+    "starts_at": "2026-09-27T14:58:50.239Z",
+    "ends_at": "2026-09-27T16:58:50.239Z",
+    "seated_at": "2026-09-27T14:58:50.239Z",
+    "completed_at": "2026-09-27T15:31:21.030Z",
+    "status": "COMPLETED",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-27T14:58:50.239Z",
+    "updated_at": "2026-09-27T15:31:21.033Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 11,
+  "fields": {
+    "customer": 2,
+    "is_walk_in": true,
+    "table": 1,
+    "customer_name": "A",
+    "customer_phone": "0987654321",
+    "party_size": 1,
+    "starts_at": "2026-09-28T07:48:49.504Z",
+    "ends_at": "2026-09-28T09:48:49.504Z",
+    "seated_at": "2026-09-28T07:48:49.504Z",
+    "completed_at": "2026-09-30T10:30:05.488Z",
+    "status": "COMPLETED",
+    "revision": 2,
+    "created_by": [
+      "ABCD"
+    ],
+    "created_at": "2026-09-28T07:48:49.514Z",
+    "updated_at": "2026-09-30T10:30:05.493Z"
+  }
+},
+{
+  "model": "bookings.booking",
+  "pk": 12,
+  "fields": {
+    "customer": 1,
+    "is_walk_in": true,
+    "table": 2,
+    "customer_name": "dieu",
+    "customer_phone": "0776253145",
+    "party_size": 1,
+    "starts_at": "2026-09-30T09:30:08.125Z",
+    "ends_at": "2026-09-30T11:30:08.125Z",
+    "seated_at": "2026-09-30T09:30:08.125Z",
+    "completed_at": "2026-09-30T09:30:22.389Z",
+    "status": "CANCELLED",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "created_at": "2026-09-30T09:30:08.136Z",
+    "updated_at": "2026-09-30T09:30:22.393Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 1,
+  "fields": {
+    "booking": 1,
+    "action": "Tạo đặt bàn",
+    "description": "dat (0987654321); bàn 2; 2 khách; 20/09/2026 22:20 đến 11/10/2026 21:51.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-20T14:51:29.532Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 2,
+  "fields": {
+    "booking": 1,
+    "action": "Đã xác nhận",
+    "description": "Chờ xác nhận → Đã xác nhận. dat (0987654321); bàn 2; 2 khách; 20/09/2026 22:20 đến 11/10/2026 21:51.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-20T14:52:02.937Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 3,
+  "fields": {
+    "booking": 1,
+    "action": "Sửa đặt bàn",
+    "description": "Trước: dat (0987654321); bàn 2; 2 khách; 20/09/2026 22:20 đến 11/10/2026 21:51.\nSau: dat (0987654321); bàn 2; 2 khách; 20/09/2026 21:54 đến 11/10/2026 21:51.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-20T14:53:36.958Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 4,
+  "fields": {
+    "booking": 1,
+    "action": "Đã xác nhận",
+    "description": "Chờ xác nhận → Đã xác nhận. dat (0987654321); bàn 2; 2 khách; 20/09/2026 21:54 đến 11/10/2026 21:51.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-20T14:53:44.455Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 5,
+  "fields": {
+    "booking": 1,
+    "action": "Đang phục vụ",
+    "description": "Đã xác nhận → Đang phục vụ. dat (0987654321); bàn 2; 2 khách; 20/09/2026 21:54 đến 11/10/2026 21:51.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-20T15:02:37.698Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 6,
+  "fields": {
+    "booking": 1,
+    "action": "Hoàn tất",
+    "description": "Đang phục vụ → Hoàn tất. dat (0987654321); bàn 2; 2 khách; 20/09/2026 21:54 đến 11/10/2026 21:51.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-20T15:03:03.222Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 7,
+  "fields": {
+    "booking": 2,
+    "action": "Nhận khách không đặt trước",
+    "description": "Khách vãng lai (); bàn 2; 1 khách; 25/09/2026 15:18 đến 25/09/2026 17:18.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:18:24.753Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 8,
+  "fields": {
+    "booking": 2,
+    "action": "Hoàn tất",
+    "description": "Đang phục vụ → Hoàn tất. Khách vãng lai (); bàn 2; 1 khách; 25/09/2026 15:18 đến 25/09/2026 17:18.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:56:40.066Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 9,
+  "fields": {
+    "booking": 3,
+    "action": "Nhận khách không đặt trước",
+    "description": "a dat (0987654321); bàn 2; 2 khách; 27/09/2026 20:10 đến 27/09/2026 22:10.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:10:44.216Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 10,
+  "fields": {
+    "booking": 3,
+    "action": "Hoàn tất",
+    "description": "Đang phục vụ → Hoàn tất. a dat (0987654321); bàn 2; 2 khách; 27/09/2026 20:10 đến 27/09/2026 22:10.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:15:50.895Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 11,
+  "fields": {
+    "booking": 4,
+    "action": "Nhận khách không đặt trước",
+    "description": "Khách vãng lai (); bàn 2; 1 khách; 27/09/2026 20:55 đến 27/09/2026 22:55.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:55:20.598Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 12,
+  "fields": {
+    "booking": 4,
+    "action": "Hoàn tất",
+    "description": "Đang phục vụ → Hoàn tất. Khách vãng lai (); bàn 2; 1 khách; 27/09/2026 20:55 đến 27/09/2026 22:55.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:04:40.109Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 13,
+  "fields": {
+    "booking": 5,
+    "action": "Nhận khách không đặt trước",
+    "description": "Khách vãng lai (); bàn 2; 1 khách; 27/09/2026 21:05 đến 27/09/2026 23:05.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:05:09.267Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 14,
+  "fields": {
+    "booking": 5,
+    "action": "Thanh toán & trả bàn",
+    "description": "TT000001; hóa đơn HD000004; bàn 2 đã được giải phóng.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:06:42.688Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 15,
+  "fields": {
+    "booking": 6,
+    "action": "Nhận khách không đặt trước",
+    "description": "aaaaaa (0987654323); bàn 2; 1 khách; 27/09/2026 21:08 đến 27/09/2026 23:08.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:08:50.542Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 16,
+  "fields": {
+    "booking": 6,
+    "action": "Chuyển bàn",
+    "description": "Bàn 2 / lầu 1 → bàn 3 / lầu 1; giữ nguyên đơn hàng, món và hóa đơn.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:12:59.192Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 17,
+  "fields": {
+    "booking": 7,
+    "action": "Nhận khách không đặt trước",
+    "description": "Khách vãng lai (); bàn 2; 1 khách; 27/09/2026 21:21 đến 27/09/2026 23:21.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:21:35.247Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 18,
+  "fields": {
+    "booking": 6,
+    "action": "Hủy bàn",
+    "description": "Khách không tiếp tục sử dụng bàn 3. Lý do: k",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:30:23.786Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 19,
+  "fields": {
+    "booking": 7,
+    "action": "Hủy bàn",
+    "description": "Khách không tiếp tục sử dụng bàn 2. Lý do: a",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:30:29.850Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 20,
+  "fields": {
+    "booking": 8,
+    "action": "Nhận khách không đặt trước",
+    "description": "Khách vãng lai (); bàn 2; 1 khách; 27/09/2026 21:31 đến 27/09/2026 23:31.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:31:59.049Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 21,
+  "fields": {
+    "booking": 8,
+    "action": "Hủy bàn",
+    "description": "Khách không tiếp tục sử dụng bàn 2. Lý do: a",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:48:46.569Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 22,
+  "fields": {
+    "booking": 9,
+    "action": "Nhận khách không đặt trước",
+    "description": "a dat (0987654321); bàn 2; 1 khách; 27/09/2026 21:49 đến 27/09/2026 23:49.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:49:01.860Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 23,
+  "fields": {
+    "booking": 10,
+    "action": "Nhận khách không đặt trước",
+    "description": "Khách vãng lai (); bàn 3; 1 khách; 27/09/2026 21:58 đến 27/09/2026 23:58.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:58:50.239Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 24,
+  "fields": {
+    "booking": 10,
+    "action": "Thanh toán & trả bàn",
+    "description": "TT000002; hóa đơn HD000009; bàn 3 đã được giải phóng.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:31:21.033Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 25,
+  "fields": {
+    "booking": 9,
+    "action": "Hủy bàn",
+    "description": "Khách không tiếp tục sử dụng bàn 2. Lý do: aa",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:35:07.910Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 26,
+  "fields": {
+    "booking": 11,
+    "action": "Nhận khách không đặt trước",
+    "description": "A (0987654321); bàn 2; 1 khách; 28/09/2026 14:48 đến 28/09/2026 16:48.",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-28T07:48:49.515Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 27,
+  "fields": {
+    "booking": 12,
+    "action": "Nhận khách không đặt trước",
+    "description": "dieu (0776253145); bàn 3; 1 khách; 30/09/2026 16:30 đến 30/09/2026 18:30.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T09:30:08.137Z"
+  }
+},
+{
+  "model": "bookings.bookingactivitylog",
+  "pk": 28,
+  "fields": {
+    "booking": 12,
+    "action": "Hủy bàn",
+    "description": "Khách không tiếp tục sử dụng bàn 3. Lý do: a",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T09:30:22.394Z"
+  }
+},
+{
+  "model": "menu.menuactivitylog",
+  "pk": 1,
+  "fields": {
+    "entity": "CATEGORY",
+    "object_id": 1,
+    "label_snapshot": "uop lạnh",
+    "action": "Thêm mới",
+    "description": "Sau: uop lạnh, đang sử dụng.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:54:35.353Z"
+  }
+},
+{
+  "model": "menu.menuactivitylog",
+  "pk": 2,
+  "fields": {
+    "entity": "UNIT",
+    "object_id": 1,
+    "label_snapshot": "phần",
+    "action": "Thêm mới",
+    "description": "Sau: phần, đang sử dụng.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:55:02.948Z"
+  }
+},
+{
+  "model": "menu.menuactivitylog",
+  "pk": 3,
+  "fields": {
+    "entity": "DISH",
+    "object_id": 1,
+    "label_snapshot": "2 — thit",
+    "action": "Thêm mới",
+    "description": "2 — thit; nhóm uop lạnh; đơn vị phần; giá 2322342 đồng; Còn món; mô tả: ; ảnh: chưa có",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:55:24.065Z"
+  }
+},
+{
+  "model": "menu.menuactivitylog",
+  "pk": 4,
+  "fields": {
+    "entity": "DISH",
+    "object_id": 1,
+    "label_snapshot": "2 — thit",
+    "action": "Cập nhật",
+    "description": "Trước: 2 — thit; nhóm uop lạnh; đơn vị phần; giá 2322342 đồng; Còn món; mô tả: ; ảnh: chưa có\nSau: 2 — thit; nhóm uop lạnh; đơn vị phần; giá 2322342 đồng; Còn món; mô tả: ; ảnh: dishes/2334d99b7c034a84a75405c8c00df695-main.webp",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:40:31.333Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 1,
+  "fields": {
+    "booking": 2,
+    "table": 1,
+    "customer": null,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000001",
+    "guest_count": 1,
+    "status": "CANCELLED",
+    "subtotal": "6967026",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "6967026",
+    "note": "",
+    "revision": 8,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-25T08:18:24.746Z",
+    "closed_at": "2026-09-25T08:56:40.062Z",
+    "created_at": "2026-09-25T08:18:24.753Z",
+    "updated_at": "2026-09-28T07:19:20.993Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 2,
+  "fields": {
+    "booking": 3,
+    "table": 1,
+    "customer": 2,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000002",
+    "guest_count": 2,
+    "status": "COMPLETED",
+    "subtotal": "2322342",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "note": "",
+    "revision": 8,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-27T13:10:44.191Z",
+    "closed_at": "2026-09-27T13:15:50.892Z",
+    "created_at": "2026-09-27T13:10:44.219Z",
+    "updated_at": "2026-09-28T07:19:20.983Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 3,
+  "fields": {
+    "booking": 4,
+    "table": 1,
+    "customer": null,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000003",
+    "guest_count": 1,
+    "status": "CANCELLED",
+    "subtotal": "0",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "0",
+    "note": "",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-27T13:55:20.598Z",
+    "closed_at": "2026-09-27T14:04:40.103Z",
+    "created_at": "2026-09-27T13:55:20.598Z",
+    "updated_at": "2026-09-28T07:19:20.983Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 4,
+  "fields": {
+    "booking": 5,
+    "table": 1,
+    "customer": null,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000004",
+    "guest_count": 1,
+    "status": "COMPLETED",
+    "subtotal": "2322342",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "note": "",
+    "revision": 7,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-27T14:05:09.262Z",
+    "closed_at": "2026-09-27T14:06:42.688Z",
+    "created_at": "2026-09-27T14:05:09.267Z",
+    "updated_at": "2026-09-28T07:19:20.983Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 5,
+  "fields": {
+    "booking": 6,
+    "table": 2,
+    "customer": null,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000005",
+    "guest_count": 1,
+    "status": "CANCELLED",
+    "subtotal": "0",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "0",
+    "note": "",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-27T14:08:50.526Z",
+    "closed_at": "2026-09-27T14:30:23.781Z",
+    "created_at": "2026-09-27T14:08:50.547Z",
+    "updated_at": "2026-09-28T07:19:20.983Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 6,
+  "fields": {
+    "booking": 7,
+    "table": 1,
+    "customer": null,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000006",
+    "guest_count": 1,
+    "status": "CANCELLED",
+    "subtotal": "0",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "0",
+    "note": "",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-27T14:21:35.247Z",
+    "closed_at": "2026-09-27T14:30:29.849Z",
+    "created_at": "2026-09-27T14:21:35.247Z",
+    "updated_at": "2026-09-28T07:19:20.983Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 7,
+  "fields": {
+    "booking": 8,
+    "table": 1,
+    "customer": null,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000007",
+    "guest_count": 1,
+    "status": "CANCELLED",
+    "subtotal": "0",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "0",
+    "note": "",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-27T14:31:59.033Z",
+    "closed_at": "2026-09-27T14:48:46.569Z",
+    "created_at": "2026-09-27T14:31:59.049Z",
+    "updated_at": "2026-09-28T07:19:20.983Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 8,
+  "fields": {
+    "booking": 9,
+    "table": 1,
+    "customer": 2,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000008",
+    "guest_count": 1,
+    "status": "CANCELLED",
+    "subtotal": "0",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "0",
+    "note": "",
+    "revision": 14,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-27T14:49:01.857Z",
+    "closed_at": "2026-09-27T15:35:07.910Z",
+    "created_at": "2026-09-27T14:49:01.860Z",
+    "updated_at": "2026-09-28T07:19:20.981Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 9,
+  "fields": {
+    "booking": 10,
+    "table": 2,
+    "customer": null,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000009",
+    "guest_count": 1,
+    "status": "COMPLETED",
+    "subtotal": "9289368",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "9289368",
+    "note": "",
+    "revision": 12,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-27T14:58:50.239Z",
+    "closed_at": "2026-09-27T15:31:21.030Z",
+    "created_at": "2026-09-27T14:58:50.239Z",
+    "updated_at": "2026-09-28T07:19:20.973Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 10,
+  "fields": {
+    "booking": 11,
+    "table": 1,
+    "customer": 2,
+    "employee": 6,
+    "split_root": null,
+    "order_code": "DH000010",
+    "guest_count": 1,
+    "status": "COMPLETED",
+    "subtotal": "2322342",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "note": "",
+    "revision": 8,
+    "created_by": [
+      "ABCD"
+    ],
+    "opened_at": "2026-09-28T07:48:49.518Z",
+    "closed_at": "2026-09-30T10:30:05.488Z",
+    "created_at": "2026-09-28T07:48:49.518Z",
+    "updated_at": "2026-09-30T10:30:05.491Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 11,
+  "fields": {
+    "booking": 12,
+    "table": 2,
+    "customer": 1,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000011",
+    "guest_count": 1,
+    "status": "CANCELLED",
+    "subtotal": "0",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "0",
+    "note": "",
+    "revision": 2,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-30T09:30:08.141Z",
+    "closed_at": null,
+    "created_at": "2026-09-30T09:30:08.141Z",
+    "updated_at": "2026-09-30T09:30:22.391Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 12,
+  "fields": {
+    "booking": null,
+    "table": 2,
+    "customer": 3,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000012",
+    "guest_count": 1,
+    "status": "COMPLETED",
+    "subtotal": "2322342",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "note": "",
+    "revision": 8,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-30T10:46:06.612Z",
+    "closed_at": "2026-09-30T10:47:29.624Z",
+    "created_at": "2026-09-30T10:46:06.612Z",
+    "updated_at": "2026-09-30T10:47:29.627Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 13,
+  "fields": {
+    "booking": null,
+    "table": 1,
+    "customer": 1,
+    "employee": 6,
+    "split_root": null,
+    "order_code": "DH000013",
+    "guest_count": 1,
+    "status": "COMPLETED",
+    "subtotal": "2322342",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "note": "ít ngot",
+    "revision": 8,
+    "created_by": [
+      "ABCD"
+    ],
+    "opened_at": "2026-09-30T13:09:16.867Z",
+    "closed_at": "2026-09-30T13:10:48.310Z",
+    "created_at": "2026-09-30T13:09:16.867Z",
+    "updated_at": "2026-09-30T13:10:48.313Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 14,
+  "fields": {
+    "booking": null,
+    "table": 1,
+    "customer": 1,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000014",
+    "guest_count": 1,
+    "status": "COMPLETED",
+    "subtotal": "2322342",
+    "discount_amount": "0",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2322342",
+    "note": "",
+    "revision": 8,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-30T13:11:05.855Z",
+    "closed_at": "2026-09-30T13:13:49.933Z",
+    "created_at": "2026-09-30T13:11:05.855Z",
+    "updated_at": "2026-09-30T13:13:49.937Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 15,
+  "fields": {
+    "booking": null,
+    "table": 1,
+    "customer": 1,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000015",
+    "guest_count": 1,
+    "status": "COMPLETED",
+    "subtotal": "2322342",
+    "discount_amount": "69670",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "2252672",
+    "note": "",
+    "revision": 8,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-30T13:39:53.263Z",
+    "closed_at": "2026-09-30T14:22:50.652Z",
+    "created_at": "2026-09-30T13:39:53.263Z",
+    "updated_at": "2026-09-30T14:22:50.652Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 16,
+  "fields": {
+    "booking": null,
+    "table": 1,
+    "customer": 1,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000016",
+    "guest_count": 1,
+    "status": "COMPLETED",
+    "subtotal": "4644684",
+    "discount_amount": "232234",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "4412450",
+    "note": "đên sớm",
+    "revision": 14,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-09-30T14:29:34.466Z",
+    "closed_at": "2026-09-30T14:31:33.740Z",
+    "created_at": "2026-09-30T14:29:34.466Z",
+    "updated_at": "2026-09-30T14:31:33.741Z"
+  }
+},
+{
+  "model": "orders.order",
+  "pk": 17,
+  "fields": {
+    "booking": null,
+    "table": 1,
+    "customer": 1,
+    "employee": null,
+    "split_root": null,
+    "order_code": "DH000017",
+    "guest_count": 2,
+    "status": "COMPLETED",
+    "subtotal": "6967026",
+    "discount_amount": "696703",
+    "promotion_code_snapshot": "",
+    "promotion_discount_amount": "0",
+    "total_amount": "6270323",
+    "note": "vipp",
+    "revision": 12,
+    "created_by": [
+      "dat"
+    ],
+    "opened_at": "2026-10-01T06:09:00.046Z",
+    "closed_at": "2026-10-01T06:15:13.550Z",
+    "created_at": "2026-10-01T06:09:00.047Z",
+    "updated_at": "2026-10-01T06:15:13.557Z"
+  }
+},
+{
+  "model": "orders.paymentbatch",
+  "pk": 1,
+  "fields": {
+    "total": "2322342",
+    "method": "TRANSFER",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:06:42.687Z"
+  }
+},
+{
+  "model": "orders.paymentbatch",
+  "pk": 2,
+  "fields": {
+    "total": "9289368",
+    "method": "CASH",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:31:21.028Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 1,
+  "fields": {
+    "invoice": 1,
+    "batch": null,
+    "amount": "6967026",
+    "method": "CASH",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:56:24.562Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 2,
+  "fields": {
+    "invoice": 2,
+    "batch": null,
+    "amount": "2322342",
+    "method": "CASH",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:13:41.528Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 3,
+  "fields": {
+    "invoice": 3,
+    "batch": 1,
+    "amount": "2322342",
+    "method": "BANK_TRANSFER",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:06:42.688Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 4,
+  "fields": {
+    "invoice": 4,
+    "batch": 2,
+    "amount": "9289368",
+    "method": "CASH",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:31:21.030Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 5,
+  "fields": {
+    "invoice": 5,
+    "batch": null,
+    "amount": "2322342",
+    "method": "BANK_TRANSFER",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:30:05.489Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 6,
+  "fields": {
+    "invoice": 6,
+    "batch": null,
+    "amount": "2322342",
+    "method": "BANK_TRANSFER",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:47:29.625Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 7,
+  "fields": {
+    "invoice": 7,
+    "batch": null,
+    "amount": "2322342",
+    "method": "BANK_TRANSFER",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:10:48.311Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 8,
+  "fields": {
+    "invoice": 8,
+    "batch": null,
+    "amount": "2322342",
+    "method": "BANK_TRANSFER",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:13:49.934Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 11,
+  "fields": {
+    "invoice": 11,
+    "batch": null,
+    "amount": "2252672",
+    "method": "CASH",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:22:50.652Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 12,
+  "fields": {
+    "invoice": 12,
+    "batch": null,
+    "amount": "4412450",
+    "method": "CASH",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:31:33.741Z"
+  }
+},
+{
+  "model": "orders.payment",
+  "pk": 13,
+  "fields": {
+    "invoice": 13,
+    "batch": null,
+    "amount": "6270323",
+    "method": "BANK_TRANSFER",
+    "reference": "",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:15:13.551Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 1,
+  "fields": {
+    "order": 1,
+    "action": "Mở đơn",
+    "description": "Lượt LK000002; bàn 2; 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:18:24.753Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 2,
+  "fields": {
+    "order": 1,
+    "action": "Thêm món",
+    "description": "Dòng #1: thit × 3; 2322342 đồng/phần; ghi chú: ",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:55:37.339Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 3,
+  "fields": {
+    "order": 1,
+    "action": "Gửi Bếp",
+    "description": "#1 thit × 3",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:55:46.396Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 4,
+  "fields": {
+    "order": 1,
+    "action": "Đang làm",
+    "description": "Dòng #1 thit × 3: Đã gửi Bếp → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:55:51.668Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 5,
+  "fields": {
+    "order": 1,
+    "action": "Đã xong",
+    "description": "Dòng #1 thit × 3: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:55:54.827Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 6,
+  "fields": {
+    "order": 1,
+    "action": "Đã phục vụ",
+    "description": "Dòng #1 thit × 3: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:56:10.696Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 7,
+  "fields": {
+    "order": 1,
+    "action": "Chờ thanh toán",
+    "description": "Cập nhật trạng thái đơn; chưa ghi nhận thanh toán.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:56:15.093Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 8,
+  "fields": {
+    "order": 1,
+    "action": "Đã thanh toán",
+    "description": "Đơn đã thanh toán đủ, đóng hóa đơn HD000001 và giải phóng lượt khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:56:24.565Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 9,
+  "fields": {
+    "order": 1,
+    "action": "Thanh toán",
+    "description": "Thu 6967026 đồng bằng Tiền mặt. Hóa đơn còn lại 0 đồng.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-25T08:56:24.567Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 10,
+  "fields": {
+    "order": 2,
+    "action": "Mở đơn",
+    "description": "Lượt LK000003; bàn 2; 2 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:10:44.220Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 11,
+  "fields": {
+    "order": 2,
+    "action": "Thêm món",
+    "description": "Dòng #2: thit × 1; 2322342 đồng/phần; ghi chú: ",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:11:27.788Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 12,
+  "fields": {
+    "order": 2,
+    "action": "Gửi Bếp",
+    "description": "#2 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:11:35.735Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 13,
+  "fields": {
+    "order": 2,
+    "action": "Đang làm",
+    "description": "Dòng #2 thit × 1: Đã gửi Bếp → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:11:43.233Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 14,
+  "fields": {
+    "order": 2,
+    "action": "Đã xong",
+    "description": "Dòng #2 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:13:13.525Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 15,
+  "fields": {
+    "order": 2,
+    "action": "Đã phục vụ",
+    "description": "Dòng #2 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:13:31.644Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 16,
+  "fields": {
+    "order": 2,
+    "action": "Chờ thanh toán",
+    "description": "Cập nhật trạng thái đơn; chưa ghi nhận thanh toán.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:13:35.168Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 17,
+  "fields": {
+    "order": 2,
+    "action": "Đã thanh toán",
+    "description": "Đơn đã thanh toán đủ, đóng hóa đơn HD000002 và có thể hoàn tất lượt khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:13:41.528Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 18,
+  "fields": {
+    "order": 2,
+    "action": "Thanh toán",
+    "description": "Thu 2322342 đồng bằng Tiền mặt. Hóa đơn còn lại 0 đồng.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:13:41.528Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 19,
+  "fields": {
+    "order": 3,
+    "action": "Mở đơn",
+    "description": "Lượt LK000004; bàn 2; 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T13:55:20.598Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 20,
+  "fields": {
+    "order": 3,
+    "action": "Đã hủy",
+    "description": "aa",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:02:44.650Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 21,
+  "fields": {
+    "order": 4,
+    "action": "Mở đơn",
+    "description": "Lượt LK000005; bàn 2; 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:05:09.267Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 22,
+  "fields": {
+    "order": 4,
+    "action": "Thêm món",
+    "description": "Dòng #3: thit × 1; 2322342 đồng/phần; ghi chú: ",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:05:21.876Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 23,
+  "fields": {
+    "order": 4,
+    "action": "Gửi Bếp",
+    "description": "#3 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:05:26.648Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 24,
+  "fields": {
+    "order": 4,
+    "action": "Đang làm",
+    "description": "Dòng #3 thit × 1: Đã gửi Bếp → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:05:32.575Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 25,
+  "fields": {
+    "order": 4,
+    "action": "Đã xong",
+    "description": "Dòng #3 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:05:36.571Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 26,
+  "fields": {
+    "order": 4,
+    "action": "Đã phục vụ",
+    "description": "Dòng #3 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:05:51.445Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 27,
+  "fields": {
+    "order": 4,
+    "action": "Thanh toán & trả bàn",
+    "description": "TT000001; hóa đơn HD000004; thu 2322342 đồng bằng Chuyển khoản.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:06:42.688Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 28,
+  "fields": {
+    "order": 5,
+    "action": "Mở đơn",
+    "description": "Lượt LK000006; bàn 2; 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:08:50.548Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 29,
+  "fields": {
+    "order": 6,
+    "action": "Mở đơn",
+    "description": "Lượt LK000007; bàn 2; 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:21:35.247Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 30,
+  "fields": {
+    "order": 5,
+    "action": "Hủy bàn",
+    "description": "Hủy đơn và giải phóng bàn 3. Lý do: k",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:30:23.785Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 31,
+  "fields": {
+    "order": 6,
+    "action": "Hủy bàn",
+    "description": "Hủy đơn và giải phóng bàn 2. Lý do: a",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:30:29.850Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 32,
+  "fields": {
+    "order": 7,
+    "action": "Mở đơn",
+    "description": "Lượt LK000008; bàn 2; 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:31:59.053Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 33,
+  "fields": {
+    "order": 7,
+    "action": "Hủy bàn",
+    "description": "Hủy đơn và giải phóng bàn 2. Lý do: a",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:48:46.569Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 34,
+  "fields": {
+    "order": 8,
+    "action": "Mở đơn",
+    "description": "Lượt LK000009; bàn 2; 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:49:01.860Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 35,
+  "fields": {
+    "order": 8,
+    "action": "Thêm 1 món",
+    "description": "#4 thit × 1 phần",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:49:10.413Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 36,
+  "fields": {
+    "order": 8,
+    "action": "Gửi Bếp",
+    "description": "#4 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:49:20.212Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 37,
+  "fields": {
+    "order": 8,
+    "action": "Đang làm",
+    "description": "Dòng #4 thit × 1: Đã gửi Bếp → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:49:27.353Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 38,
+  "fields": {
+    "order": 8,
+    "action": "Đã xong",
+    "description": "Dòng #4 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:49:31.808Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 39,
+  "fields": {
+    "order": 8,
+    "action": "Đã phục vụ",
+    "description": "Dòng #4 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:58:12.370Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 40,
+  "fields": {
+    "order": 9,
+    "action": "Mở đơn",
+    "description": "Lượt LK000010; bàn 3; 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:58:50.239Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 41,
+  "fields": {
+    "order": 9,
+    "action": "Thêm 1 món",
+    "description": "#5 thit × 1 phần",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:58:56.569Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 42,
+  "fields": {
+    "order": 9,
+    "action": "Gửi Bếp",
+    "description": "#5 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T14:59:03.606Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 43,
+  "fields": {
+    "order": 8,
+    "action": "Thêm 1 món",
+    "description": "#6 thit × 1 phần",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:11:52.089Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 44,
+  "fields": {
+    "order": 8,
+    "action": "Đã hủy",
+    "description": "Dòng #4 thit × 1: Đã phục vụ → Đã hủy. Lý do: aa",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:11:58.619Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 45,
+  "fields": {
+    "order": 8,
+    "action": "Gửi Bếp",
+    "description": "#6 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:13:29.801Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 46,
+  "fields": {
+    "order": 9,
+    "action": "Đang làm",
+    "description": "Dòng #5 thit × 1: Đã gửi Bếp → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:13:46.903Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 47,
+  "fields": {
+    "order": 8,
+    "action": "Đang làm",
+    "description": "Dòng #6 thit × 1: Đã gửi Bếp → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:13:50.980Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 48,
+  "fields": {
+    "order": 9,
+    "action": "Đã xong",
+    "description": "Dòng #5 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:14:03.179Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 49,
+  "fields": {
+    "order": 8,
+    "action": "Đã xong",
+    "description": "Dòng #6 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:14:07.369Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 50,
+  "fields": {
+    "order": 8,
+    "action": "Đã phục vụ",
+    "description": "Dòng #6 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:14:21.207Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 51,
+  "fields": {
+    "order": 8,
+    "action": "Đã hủy",
+    "description": "Dòng #6 thit × 1: Đã phục vụ → Đã hủy. Lý do: Hủy nhanh tại màn gọi món",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:15:32.439Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 52,
+  "fields": {
+    "order": 9,
+    "action": "Thêm 1 món",
+    "description": "#7 thit × 3 phần",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:26:54.779Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 53,
+  "fields": {
+    "order": 9,
+    "action": "Gửi Bếp",
+    "description": "#7 thit × 3",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:27:02.606Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 54,
+  "fields": {
+    "order": 9,
+    "action": "Đang làm",
+    "description": "Dòng #7 thit × 3: Đã gửi Bếp → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:27:40.911Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 55,
+  "fields": {
+    "order": 9,
+    "action": "Đã xong",
+    "description": "Dòng #7 thit × 3: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:27:51.296Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 56,
+  "fields": {
+    "order": 9,
+    "action": "Đã phục vụ",
+    "description": "Dòng #5 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:29:48.747Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 57,
+  "fields": {
+    "order": 9,
+    "action": "Đã phục vụ",
+    "description": "Dòng #7 thit × 3: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:30:00.704Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 58,
+  "fields": {
+    "order": 9,
+    "action": "Thanh toán & trả bàn",
+    "description": "TT000002; hóa đơn HD000009; thu 9289368 đồng bằng Tiền mặt.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:31:21.032Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 59,
+  "fields": {
+    "order": 8,
+    "action": "Hủy bàn",
+    "description": "Hủy đơn và giải phóng bàn 2. Lý do: aa",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-27T15:35:07.910Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 60,
+  "fields": {
+    "order": 10,
+    "action": "Mở đơn",
+    "description": "Lượt LK000011; bàn 2; 1 khách.",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-28T07:48:49.534Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 61,
+  "fields": {
+    "order": 10,
+    "action": "Thêm 1 món",
+    "description": "#8 thit × 1 phần",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-28T07:48:56.974Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 62,
+  "fields": {
+    "order": 10,
+    "action": "Gửi Bếp",
+    "description": "#8 thit × 1",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-28T07:49:02.281Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 63,
+  "fields": {
+    "order": 10,
+    "action": "Đang làm",
+    "description": "Dòng #8 thit × 1: Chờ chế biến → Đang làm.",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-28T07:49:57.283Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 64,
+  "fields": {
+    "order": 10,
+    "action": "Đã xong",
+    "description": "Dòng #8 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-28T07:50:03.385Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 65,
+  "fields": {
+    "order": 10,
+    "action": "Đã phục vụ",
+    "description": "Dòng #8 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-28T07:51:36.518Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 66,
+  "fields": {
+    "order": 11,
+    "action": "Mở đơn",
+    "description": "Lượt LK000012; bàn 3; 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T09:30:08.144Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 67,
+  "fields": {
+    "order": 11,
+    "action": "Hủy bàn",
+    "description": "Hủy đơn và giải phóng bàn 3. Lý do: a",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T09:30:22.392Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 68,
+  "fields": {
+    "order": 10,
+    "action": "Yêu cầu thanh toán",
+    "description": "dat gửi yêu cầu thanh toán cho bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:29:50.402Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 69,
+  "fields": {
+    "order": 10,
+    "action": "Thanh toán",
+    "description": "dat thanh toán hóa đơn HD000010; bàn 2 chuyển sang cần dọn.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:30:05.495Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 70,
+  "fields": {
+    "order": 10,
+    "action": "Hoàn tất dọn bàn",
+    "description": "dat đã dọn xong bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:30:20.845Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 71,
+  "fields": {
+    "order": 11,
+    "action": "Hoàn tất dọn bàn",
+    "description": "dat đã dọn xong bàn 3.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:45:19.616Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 72,
+  "fields": {
+    "order": 12,
+    "action": "Mở bàn",
+    "description": "dat mở bàn 3 cho 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:46:06.614Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 73,
+  "fields": {
+    "order": 12,
+    "action": "Thêm 1 món",
+    "description": "#9 thit × 1 phần",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:46:22.281Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 74,
+  "fields": {
+    "order": 12,
+    "action": "Gửi Bếp",
+    "description": "#9 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:46:25.765Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 75,
+  "fields": {
+    "order": 12,
+    "action": "Đang làm",
+    "description": "Dòng #9 thit × 1: Chờ chế biến → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:46:32.540Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 76,
+  "fields": {
+    "order": 12,
+    "action": "Đã xong",
+    "description": "Dòng #9 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:46:33.468Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 77,
+  "fields": {
+    "order": 12,
+    "action": "Đã phục vụ",
+    "description": "Dòng #9 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:46:44.253Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 78,
+  "fields": {
+    "order": 12,
+    "action": "Yêu cầu thanh toán",
+    "description": "dat gửi yêu cầu thanh toán cho bàn 3.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:47:16.434Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 79,
+  "fields": {
+    "order": 12,
+    "action": "Thanh toán",
+    "description": "dat thanh toán hóa đơn HD000012; bàn 3 chuyển sang cần dọn.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:47:29.630Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 80,
+  "fields": {
+    "order": 12,
+    "action": "Hoàn tất dọn bàn",
+    "description": "dat đã dọn xong bàn 3.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T10:47:32.190Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 81,
+  "fields": {
+    "order": 13,
+    "action": "Mở bàn",
+    "description": "ABCD mở bàn 2 cho 1 khách.",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-30T13:09:16.891Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 82,
+  "fields": {
+    "order": 13,
+    "action": "Thêm món",
+    "description": "Dòng #10: thit × 1; 2322342 đồng/phần; ghi chú: ",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-30T13:09:24.313Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 83,
+  "fields": {
+    "order": 13,
+    "action": "Gửi Bếp",
+    "description": "#10 thit × 1",
+    "performed_by": [
+      "ABCD"
+    ],
+    "actor_snapshot": "ABCD",
+    "created_at": "2026-09-30T13:09:27.074Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 84,
+  "fields": {
+    "order": 13,
+    "action": "Đang làm",
+    "description": "Dòng #10 thit × 1: Chờ chế biến → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:09:43.100Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 85,
+  "fields": {
+    "order": 13,
+    "action": "Đã xong",
+    "description": "Dòng #10 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:09:43.793Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 86,
+  "fields": {
+    "order": 13,
+    "action": "Đã phục vụ",
+    "description": "Dòng #10 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:10:11.053Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 87,
+  "fields": {
+    "order": 13,
+    "action": "Yêu cầu thanh toán",
+    "description": "dat gửi yêu cầu thanh toán cho bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:10:36.515Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 88,
+  "fields": {
+    "order": 13,
+    "action": "Thanh toán",
+    "description": "dat thanh toán hóa đơn HD000013; bàn 2 chuyển sang cần dọn.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:10:48.342Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 89,
+  "fields": {
+    "order": 13,
+    "action": "Hoàn tất dọn bàn",
+    "description": "dat đã dọn xong bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:10:54.167Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 90,
+  "fields": {
+    "order": 14,
+    "action": "Mở bàn",
+    "description": "dat mở bàn 2 cho 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:11:05.857Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 91,
+  "fields": {
+    "order": 14,
+    "action": "Thêm món",
+    "description": "Dòng #11: thit × 1; 2322342 đồng/phần; ghi chú: ",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:11:06.980Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 92,
+  "fields": {
+    "order": 14,
+    "action": "Gửi Bếp",
+    "description": "#11 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:11:16.358Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 93,
+  "fields": {
+    "order": 14,
+    "action": "Đang làm",
+    "description": "Dòng #11 thit × 1: Chờ chế biến → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:11:19.022Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 94,
+  "fields": {
+    "order": 14,
+    "action": "Đã xong",
+    "description": "Dòng #11 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:11:19.643Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 95,
+  "fields": {
+    "order": 14,
+    "action": "Đã phục vụ",
+    "description": "Dòng #11 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:11:30.217Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 96,
+  "fields": {
+    "order": 14,
+    "action": "Yêu cầu thanh toán",
+    "description": "dat gửi yêu cầu thanh toán cho bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:12:00.522Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 97,
+  "fields": {
+    "order": 14,
+    "action": "Thanh toán",
+    "description": "dat thanh toán hóa đơn HD000014; bàn 2 chuyển sang cần dọn.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:13:49.940Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 98,
+  "fields": {
+    "order": 14,
+    "action": "Hoàn tất dọn bàn",
+    "description": "dat đã dọn xong bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:14:01.460Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 99,
+  "fields": {
+    "order": 15,
+    "action": "Mở bàn",
+    "description": "dat mở bàn 2 cho 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:39:53.266Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 100,
+  "fields": {
+    "order": 15,
+    "action": "Thêm món",
+    "description": "Dòng #12: thit × 1; 2322342 đồng/phần; ghi chú: ",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:39:59.310Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 101,
+  "fields": {
+    "order": 15,
+    "action": "Gửi Bếp",
+    "description": "#12 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:40:07.075Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 102,
+  "fields": {
+    "order": 15,
+    "action": "Đang làm",
+    "description": "Dòng #12 thit × 1: Chờ chế biến → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:40:16.325Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 103,
+  "fields": {
+    "order": 15,
+    "action": "Đã xong",
+    "description": "Dòng #12 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:40:17.160Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 104,
+  "fields": {
+    "order": 15,
+    "action": "Đã phục vụ",
+    "description": "Dòng #12 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:40:29.930Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 105,
+  "fields": {
+    "order": 15,
+    "action": "Yêu cầu thanh toán",
+    "description": "dat gửi yêu cầu thanh toán cho bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T13:40:53.132Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 108,
+  "fields": {
+    "order": 15,
+    "action": "Thanh toán",
+    "description": "dat thanh toán hóa đơn HD000015; bàn 2 chuyển sang cần dọn.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:22:50.652Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 109,
+  "fields": {
+    "order": 15,
+    "action": "Hoàn tất dọn bàn",
+    "description": "dat đã dọn xong bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:22:52.617Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 110,
+  "fields": {
+    "order": 16,
+    "action": "Mở bàn",
+    "description": "dat mở bàn 2 cho 1 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:29:34.468Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 111,
+  "fields": {
+    "order": 16,
+    "action": "Thêm món",
+    "description": "Dòng #13: thit × 1; 2322342 đồng/phần; ghi chú: ",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:29:44.422Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 112,
+  "fields": {
+    "order": 16,
+    "action": "Gửi Bếp",
+    "description": "#13 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:29:50.738Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 113,
+  "fields": {
+    "order": 16,
+    "action": "Thêm món",
+    "description": "Dòng #14: thit × 1; 2322342 đồng/phần; ghi chú: ",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:30:22.761Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 114,
+  "fields": {
+    "order": 16,
+    "action": "Sửa món chưa gửi",
+    "description": "Dòng #14 thit; trước: 1, ; sau: 1, aaaa.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:30:26.956Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 115,
+  "fields": {
+    "order": 16,
+    "action": "Gửi Bếp",
+    "description": "#14 thit × 1",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:30:28.856Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 116,
+  "fields": {
+    "order": 16,
+    "action": "Đang làm",
+    "description": "Dòng #14 thit × 1: Chờ chế biến → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:30:35.308Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 117,
+  "fields": {
+    "order": 16,
+    "action": "Đã xong",
+    "description": "Dòng #14 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:30:36.803Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 118,
+  "fields": {
+    "order": 16,
+    "action": "Đang làm",
+    "description": "Dòng #13 thit × 1: Chờ chế biến → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:30:37.443Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 119,
+  "fields": {
+    "order": 16,
+    "action": "Đã xong",
+    "description": "Dòng #13 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:30:38.044Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 120,
+  "fields": {
+    "order": 16,
+    "action": "Đã phục vụ",
+    "description": "Dòng #13 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:30:46.709Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 121,
+  "fields": {
+    "order": 16,
+    "action": "Đã phục vụ",
+    "description": "Dòng #14 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:30:48.178Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 122,
+  "fields": {
+    "order": 16,
+    "action": "Yêu cầu thanh toán",
+    "description": "dat gửi yêu cầu thanh toán cho bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:31:28.225Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 123,
+  "fields": {
+    "order": 16,
+    "action": "Thanh toán",
+    "description": "dat thanh toán hóa đơn HD000016; bàn 2 chuyển sang cần dọn.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:31:33.745Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 124,
+  "fields": {
+    "order": 16,
+    "action": "Hoàn tất dọn bàn",
+    "description": "dat đã dọn xong bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-09-30T14:31:37.709Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 125,
+  "fields": {
+    "order": 17,
+    "action": "Mở bàn",
+    "description": "dat mở bàn 2 cho 2 khách.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:09:00.065Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 126,
+  "fields": {
+    "order": 17,
+    "action": "Thêm món",
+    "description": "Dòng #15: thit × 1; 2322342 đồng/phần; món dùng chung; ghi chú: ",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:13:12.129Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 127,
+  "fields": {
+    "order": 17,
+    "action": "Thêm món",
+    "description": "Dòng #16: thit × 2; 2322342 đồng/phần; món dùng chung; ghi chú: ",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:13:19.588Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 128,
+  "fields": {
+    "order": 17,
+    "action": "Gửi Bếp",
+    "description": "#15 thit × 1; #16 thit × 2",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:13:26.617Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 129,
+  "fields": {
+    "order": 17,
+    "action": "Đang làm",
+    "description": "Dòng #15 thit × 1: Chờ chế biến → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:13:58.930Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 130,
+  "fields": {
+    "order": 17,
+    "action": "Đang làm",
+    "description": "Dòng #16 thit × 2: Chờ chế biến → Đang làm.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:14:00.180Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 131,
+  "fields": {
+    "order": 17,
+    "action": "Đã xong",
+    "description": "Dòng #15 thit × 1: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:14:02.116Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 132,
+  "fields": {
+    "order": 17,
+    "action": "Đã xong",
+    "description": "Dòng #16 thit × 2: Đang làm → Đã xong.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:14:03.364Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 133,
+  "fields": {
+    "order": 17,
+    "action": "Đã phục vụ",
+    "description": "Dòng #16 thit × 2: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:15:04.048Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 134,
+  "fields": {
+    "order": 17,
+    "action": "Đã phục vụ",
+    "description": "Dòng #15 thit × 1: Đã xong → Đã phục vụ.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:15:05.304Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 135,
+  "fields": {
+    "order": 17,
+    "action": "Yêu cầu thanh toán nhanh",
+    "description": "dat mở thanh toán nhanh cho bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:15:13.527Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 136,
+  "fields": {
+    "order": 17,
+    "action": "Thanh toán",
+    "description": "dat thanh toán hóa đơn HD000017; bàn 2 chuyển sang cần dọn.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:15:13.569Z"
+  }
+},
+{
+  "model": "orders.orderactivitylog",
+  "pk": 137,
+  "fields": {
+    "order": 17,
+    "action": "Hoàn tất dọn bàn",
+    "description": "dat đã dọn xong bàn 2.",
+    "performed_by": [
+      "dat"
+    ],
+    "actor_snapshot": "dat",
+    "created_at": "2026-10-01T06:15:17.296Z"
+  }
+},
+{
+  "model": "orders.paymentrequest",
+  "pk": 1,
+  "fields": {
+    "order": 10,
+    "requested_by": [
+      "dat"
+    ],
+    "status": "COMPLETED",
+    "requested_at": "2026-09-30T10:29:50.398Z",
+    "processed_at": "2026-09-30T10:30:05.488Z",
+    "note": ""
+  }
+},
+{
+  "model": "orders.paymentrequest",
+  "pk": 2,
+  "fields": {
+    "order": 12,
+    "requested_by": [
+      "dat"
+    ],
+    "status": "COMPLETED",
+    "requested_at": "2026-09-30T10:47:16.431Z",
+    "processed_at": "2026-09-30T10:47:29.624Z",
+    "note": ""
+  }
+},
+{
+  "model": "orders.paymentrequest",
+  "pk": 3,
+  "fields": {
+    "order": 13,
+    "requested_by": [
+      "dat"
+    ],
+    "status": "COMPLETED",
+    "requested_at": "2026-09-30T13:10:36.511Z",
+    "processed_at": "2026-09-30T13:10:48.310Z",
+    "note": ""
+  }
+},
+{
+  "model": "orders.paymentrequest",
+  "pk": 4,
+  "fields": {
+    "order": 14,
+    "requested_by": [
+      "dat"
+    ],
+    "status": "COMPLETED",
+    "requested_at": "2026-09-30T13:12:00.519Z",
+    "processed_at": "2026-09-30T13:13:49.933Z",
+    "note": ""
+  }
+},
+{
+  "model": "orders.paymentrequest",
+  "pk": 5,
+  "fields": {
+    "order": 15,
+    "requested_by": [
+      "dat"
+    ],
+    "status": "COMPLETED",
+    "requested_at": "2026-09-30T13:40:53.127Z",
+    "processed_at": "2026-09-30T14:22:50.652Z",
+    "note": ""
+  }
+},
+{
+  "model": "orders.paymentrequest",
+  "pk": 6,
+  "fields": {
+    "order": 16,
+    "requested_by": [
+      "dat"
+    ],
+    "status": "COMPLETED",
+    "requested_at": "2026-09-30T14:31:28.222Z",
+    "processed_at": "2026-09-30T14:31:33.740Z",
+    "note": ""
+  }
+},
+{
+  "model": "orders.paymentrequest",
+  "pk": 7,
+  "fields": {
+    "order": 17,
+    "requested_by": [
+      "dat"
+    ],
+    "status": "COMPLETED",
+    "requested_at": "2026-10-01T06:15:13.516Z",
+    "processed_at": "2026-10-01T06:15:13.550Z",
+    "note": "Thanh toán nhanh từ sơ đồ bàn"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 9,
+  "fields": {
+    "ingredient": 9,
+    "transaction_type": "IMPORT",
+    "quantity": "20.000",
+    "stock_before": "0.000",
+    "stock_after": "20.000",
+    "unit_cost": "100000",
+    "supplier": null,
+    "note": "Tồn đầu kỳ từ bộ dữ liệu khởi tạo; cần đối chiếu và điều chỉnh theo tồn thực tế.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "",
+    "source_id": null,
+    "created_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 10,
+  "fields": {
+    "ingredient": 10,
+    "transaction_type": "IMPORT",
+    "quantity": "50.000",
+    "stock_before": "0.000",
+    "stock_after": "50.000",
+    "unit_cost": "20000",
+    "supplier": null,
+    "note": "Tồn đầu kỳ từ bộ dữ liệu khởi tạo; cần đối chiếu và điều chỉnh theo tồn thực tế.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "",
+    "source_id": null,
+    "created_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 11,
+  "fields": {
+    "ingredient": 11,
+    "transaction_type": "IMPORT",
+    "quantity": "10.000",
+    "stock_before": "0.000",
+    "stock_after": "10.000",
+    "unit_cost": "45000",
+    "supplier": null,
+    "note": "Tồn đầu kỳ từ bộ dữ liệu khởi tạo; cần đối chiếu và điều chỉnh theo tồn thực tế.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "",
+    "source_id": null,
+    "created_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 12,
+  "fields": {
+    "ingredient": 12,
+    "transaction_type": "IMPORT",
+    "quantity": "15.000",
+    "stock_before": "0.000",
+    "stock_after": "15.000",
+    "unit_cost": "30000",
+    "supplier": null,
+    "note": "Tồn đầu kỳ từ bộ dữ liệu khởi tạo; cần đối chiếu và điều chỉnh theo tồn thực tế.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "",
+    "source_id": null,
+    "created_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 13,
+  "fields": {
+    "ingredient": 13,
+    "transaction_type": "IMPORT",
+    "quantity": "5.000",
+    "stock_before": "0.000",
+    "stock_after": "5.000",
+    "unit_cost": "80000",
+    "supplier": null,
+    "note": "Tồn đầu kỳ từ bộ dữ liệu khởi tạo; cần đối chiếu và điều chỉnh theo tồn thực tế.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "",
+    "source_id": null,
+    "created_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 14,
+  "fields": {
+    "ingredient": 14,
+    "transaction_type": "IMPORT",
+    "quantity": "100.000",
+    "stock_before": "0.000",
+    "stock_after": "100.000",
+    "unit_cost": "3000",
+    "supplier": null,
+    "note": "Tồn đầu kỳ từ bộ dữ liệu khởi tạo; cần đối chiếu và điều chỉnh theo tồn thực tế.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "",
+    "source_id": null,
+    "created_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 15,
+  "fields": {
+    "ingredient": 15,
+    "transaction_type": "IMPORT",
+    "quantity": "8.000",
+    "stock_before": "0.000",
+    "stock_after": "8.000",
+    "unit_cost": "60000",
+    "supplier": null,
+    "note": "Tồn đầu kỳ từ bộ dữ liệu khởi tạo; cần đối chiếu và điều chỉnh theo tồn thực tế.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "",
+    "source_id": null,
+    "created_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 16,
+  "fields": {
+    "ingredient": 16,
+    "transaction_type": "IMPORT",
+    "quantity": "4.000",
+    "stock_before": "0.000",
+    "stock_after": "4.000",
+    "unit_cost": "40000",
+    "supplier": null,
+    "note": "Tồn đầu kỳ từ bộ dữ liệu khởi tạo; cần đối chiếu và điều chỉnh theo tồn thực tế.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "",
+    "source_id": null,
+    "created_at": "2026-10-01T06:57:02.554Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 17,
+  "fields": {
+    "ingredient": 9,
+    "transaction_type": "PURCHASE",
+    "quantity": "5.000",
+    "stock_before": "20.000",
+    "stock_after": "25.000",
+    "unit_cost": "105000",
+    "supplier": 3,
+    "note": "Nhận hàng theo PN-DEMO-DA-NHAN",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "PURCHASE",
+    "source_id": 1,
+    "created_at": "2026-10-01T07:16:48.828Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 18,
+  "fields": {
+    "ingredient": 10,
+    "transaction_type": "PURCHASE",
+    "quantity": "20.000",
+    "stock_before": "50.000",
+    "stock_after": "70.000",
+    "unit_cost": "22000",
+    "supplier": 3,
+    "note": "Nhận hàng theo PN-DEMO-DA-NHAN",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "PURCHASE",
+    "source_id": 1,
+    "created_at": "2026-10-01T07:16:48.828Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 19,
+  "fields": {
+    "ingredient": 11,
+    "transaction_type": "PURCHASE",
+    "quantity": "5.000",
+    "stock_before": "10.000",
+    "stock_after": "15.000",
+    "unit_cost": "48000",
+    "supplier": 3,
+    "note": "Nhận hàng theo PN-DEMO-DA-NHAN",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "PURCHASE",
+    "source_id": 1,
+    "created_at": "2026-10-01T07:16:48.828Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 20,
+  "fields": {
+    "ingredient": 12,
+    "transaction_type": "WASTE",
+    "quantity": "0.500",
+    "stock_before": "15.000",
+    "stock_after": "14.500",
+    "unit_cost": "30000",
+    "supplier": null,
+    "note": "Hư hỏng · HH261001B19DF7 · Rau dập, không đạt chất lượng đầu ca.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "WASTE",
+    "source_id": 1,
+    "created_at": "2026-10-01T07:16:48.860Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 21,
+  "fields": {
+    "ingredient": 16,
+    "transaction_type": "WASTE",
+    "quantity": "0.200",
+    "stock_before": "4.000",
+    "stock_after": "3.800",
+    "unit_cost": "40000",
+    "supplier": null,
+    "note": "Hao hụt sơ chế · HH261001046EEE · Vỏ và phần loại bỏ trong sơ chế.",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "WASTE",
+    "source_id": 2,
+    "created_at": "2026-10-01T07:16:48.860Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 22,
+  "fields": {
+    "ingredient": 11,
+    "transaction_type": "WASTE",
+    "quantity": "1.000",
+    "stock_before": "15.000",
+    "stock_after": "14.000",
+    "unit_cost": "46000",
+    "supplier": null,
+    "note": "Hao hụt sơ chế · HH261001845ED1",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "WASTE",
+    "source_id": 3,
+    "created_at": "2026-10-01T07:22:17.863Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 23,
+  "fields": {
+    "ingredient": 11,
+    "transaction_type": "PURCHASE",
+    "quantity": "1.000",
+    "stock_before": "14.000",
+    "stock_after": "15.000",
+    "unit_cost": "15",
+    "supplier": 5,
+    "note": "Nhận hàng theo PN2610015B655D",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "PURCHASE",
+    "source_id": 4,
+    "created_at": "2026-10-01T07:27:07.151Z"
+  }
+},
+{
+  "model": "inventory.inventorytransaction",
+  "pk": 24,
+  "fields": {
+    "ingredient": 14,
+    "transaction_type": "PURCHASE",
+    "quantity": "1.000",
+    "stock_before": "100.000",
+    "stock_after": "101.000",
+    "unit_cost": "2",
+    "supplier": 5,
+    "note": "Nhận hàng theo PN2610015B655D",
+    "performed_by": [
+      "dat"
+    ],
+    "order_item_reference": null,
+    "source_type": "PURCHASE",
+    "source_id": 4,
+    "created_at": "2026-10-01T07:27:07.153Z"
+  }
+},
+{
+  "model": "inventory.purchasereceipt",
+  "pk": 1,
+  "fields": {
+    "receipt_code": "PN-DEMO-DA-NHAN",
+    "supplier": 3,
+    "invoice_number": "HDAP-2026-001",
+    "status": "RECEIVED",
+    "note": "Phiếu mẫu đã nhận đủ hàng và đối chiếu hóa đơn.",
+    "created_by": [
+      "dat"
+    ],
+    "confirmed_by": [
+      "dat"
+    ],
+    "created_at": "2026-10-01T07:16:48.797Z",
+    "received_at": "2026-10-01T07:16:48.828Z",
+    "updated_at": "2026-10-01T07:16:48.828Z"
+  }
+},
+{
+  "model": "inventory.purchasereceipt",
+  "pk": 2,
+  "fields": {
+    "receipt_code": "PN-DEMO-NHAP",
+    "supplier": 4,
+    "invoice_number": "NSX-DU-KIEN-002",
+    "status": "DRAFT",
+    "note": "Phiếu mẫu đang chờ giao hàng vào sáng mai.",
+    "created_by": [
+      "dat"
+    ],
+    "confirmed_by": null,
+    "created_at": "2026-10-01T07:16:48.828Z",
+    "received_at": null,
+    "updated_at": "2026-10-01T07:16:48.828Z"
+  }
+},
+{
+  "model": "inventory.purchasereceipt",
+  "pk": 3,
+  "fields": {
+    "receipt_code": "PN-DEMO-DA-HUY",
+    "supplier": 5,
+    "invoice_number": "GV-HUY-003",
+    "status": "CANCELLED",
+    "note": "Phiếu mẫu bị hủy do nhà cung cấp giao sai quy cách.",
+    "created_by": [
+      "dat"
+    ],
+    "confirmed_by": null,
+    "created_at": "2026-10-01T07:16:48.828Z",
+    "received_at": null,
+    "updated_at": "2026-10-01T07:16:48.844Z"
+  }
+},
+{
+  "model": "inventory.purchasereceipt",
+  "pk": 4,
+  "fields": {
+    "receipt_code": "PN2610015B655D",
+    "supplier": 5,
+    "invoice_number": "gâcx",
+    "status": "RECEIVED",
+    "note": "q",
+    "created_by": [
+      "dat"
+    ],
+    "confirmed_by": [
+      "dat"
+    ],
+    "created_at": "2026-10-01T07:26:31.898Z",
+    "received_at": "2026-10-01T07:27:07.153Z",
+    "updated_at": "2026-10-01T07:27:07.153Z"
+  }
+},
+{
+  "model": "inventory.stocktake",
+  "pk": 1,
+  "fields": {
+    "stocktake_code": "KK-DEMO-DA-CHOT",
+    "status": "POSTED",
+    "note": "Kiểm kê mẫu cuối ca; số thực tế khớp hệ thống.",
+    "created_by": [
+      "dat"
+    ],
+    "posted_by": [
+      "dat"
+    ],
+    "created_at": "2026-10-01T07:16:48.844Z",
+    "posted_at": "2026-10-01T07:16:48.860Z"
+  }
+},
+{
+  "model": "inventory.wasterecord",
+  "pk": 1,
+  "fields": {
+    "waste_code": "HH-DEMO-RAU",
+    "ingredient": 12,
+    "quantity": "0.500",
+    "reason": "SPOILED",
+    "unit_cost_snapshot": "30000.00",
+    "total_cost": "15000",
+    "note": "Rau dập, không đạt chất lượng đầu ca.",
+    "recorded_by": [
+      "dat"
+    ],
+    "created_at": "2026-10-01T07:16:48.860Z"
+  }
+},
+{
+  "model": "inventory.wasterecord",
+  "pk": 2,
+  "fields": {
+    "waste_code": "HH-DEMO-SO-CHE",
+    "ingredient": 16,
+    "quantity": "0.200",
+    "reason": "PREPARATION",
+    "unit_cost_snapshot": "40000.00",
+    "total_cost": "8000",
+    "note": "Vỏ và phần loại bỏ trong sơ chế.",
+    "recorded_by": [
+      "dat"
+    ],
+    "created_at": "2026-10-01T07:16:48.860Z"
+  }
+},
+{
+  "model": "inventory.wasterecord",
+  "pk": 3,
+  "fields": {
+    "waste_code": "HH261001845ED1",
+    "ingredient": 11,
+    "quantity": "1.000",
+    "reason": "PREPARATION",
+    "unit_cost_snapshot": "46000.00",
+    "total_cost": "46000",
+    "note": "",
+    "recorded_by": [
+      "dat"
+    ],
+    "created_at": "2026-10-01T07:22:17.862Z"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2026-09-17T02:25:44.952Z",
+    "user": [
+      "dat"
+    ],
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "object_id": "2",
+    "object_repr": "NV1",
+    "action_flag": 2,
+    "change_message": "CREATE: Tạo tài khoản nhân viên."
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2026-09-17T02:37:28.633Z",
+    "user": [
+      "dat"
+    ],
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "object_id": "2",
+    "object_repr": "NV1",
+    "action_flag": 2,
+    "change_message": "LOCK: Khóa tài khoản."
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2026-09-17T02:37:35.284Z",
+    "user": [
+      "dat"
+    ],
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "object_id": "2",
+    "object_repr": "NV1",
+    "action_flag": 2,
+    "change_message": "UNLOCK: Mở khóa tài khoản."
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 4,
+  "fields": {
+    "action_time": "2026-09-17T03:06:38.179Z",
+    "user": [
+      "dat"
+    ],
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "object_id": "3",
+    "object_repr": "ABC",
+    "action_flag": 2,
+    "change_message": "LOCK: Khóa tài khoản."
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 5,
+  "fields": {
+    "action_time": "2026-09-17T03:06:40.328Z",
+    "user": [
+      "dat"
+    ],
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "object_id": "3",
+    "object_repr": "ABC",
+    "action_flag": 2,
+    "change_message": "UNLOCK: Mở khóa tài khoản."
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 6,
+  "fields": {
+    "action_time": "2026-09-20T13:33:04.989Z",
+    "user": [
+      "admin"
+    ],
+    "content_type": [
+      "accounts",
+      "user"
+    ],
+    "object_id": "6",
+    "object_repr": "dieu",
+    "action_flag": 3,
+    "change_message": "DELETE: Xóa tài khoản dieu và hồ sơ NV0002."
+  }
+}
+]

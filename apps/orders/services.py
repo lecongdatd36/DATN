@@ -471,8 +471,11 @@ def split_order(*, actor, order_id, expected_revision, quantities):
                 unit_price=item.unit_price,
                 quantity=quantity,
                 seat_number=item.seat_number,
+                unit_cost_snapshot=item.unit_cost_snapshot,
                 note=item.note,
                 status=item.status,
+                inventory_deducted_at=item.inventory_deducted_at,
+                inventory_returned_at=item.inventory_returned_at,
                 sent_at=item.sent_at,
                 started_at=item.started_at,
                 ready_at=item.ready_at,
@@ -834,6 +837,8 @@ def send_to_kitchen(*, actor, order_id, expected_revision):
         raise ValidationError("Không có món chưa gửi Bếp.")
     for item in items:
         _available_dish(item.dish_id)
+    from apps.inventory.services import consume_order_items
+    consume_order_items(actor=actor, items=items)
     now = timezone.now()
     order.items.filter(pk__in=[item.pk for item in items]).update(status=OrderItem.Status.PENDING, sent_at=now)
     order.status = Order.Status.IN_PROGRESS
@@ -847,6 +852,7 @@ def transition_item(*, actor, order_id, item_id, expected_revision, target, reas
     actor = _lock_actor(actor, permission)
     order = _order(order_id, expected_revision)
     item = order.items.select_for_update().get(pk=item_id)
+    previous_status = item.status
     transitions = {"PENDING": "COOKING", "COOKING": "READY", "READY": "SERVED"}
     if target == OrderItem.Status.CANCELLED:
         if item.status == OrderItem.Status.CANCELLED:
@@ -858,6 +864,9 @@ def transition_item(*, actor, order_id, item_id, expected_revision, target, reas
             raise ValidationError({"reason": "Vui lòng ghi lý do hủy món."})
         item.cancellation_reason = reason
         item.cancelled_at = timezone.now()
+        if previous_status == OrderItem.Status.PENDING:
+            from apps.inventory.services import return_order_item_inventory
+            return_order_item_inventory(actor=actor, item=item)
     elif transitions.get(item.status) != target:
         raise ValidationError("Không thể chuyển trạng thái món theo cách này.")
     else:

@@ -220,7 +220,13 @@ python manage.py createsuperuser
 
 Migration `employees.0008_correct_staff_permissions` sửa nhóm quyền trên database cũ và tự tạo quyền cần thiết trên database mới. Migration tăng phiên bản phiên đăng nhập để mọi tài khoản đăng nhập lại. Không sửa migration cũ; đảo ngược migration này không khôi phục bộ quyền sai trước đó.
 
-Hiện chưa có command `seed_demo` hoặc dữ liệu demo. Lệnh `python manage.py seed_demo` chỉ sử dụng sau khi command được triển khai ở giai đoạn dữ liệu demo.
+Để làm mới toàn bộ dữ liệu trình diễn nhưng giữ nguyên tài khoản đăng nhập, dùng lệnh dưới đây. Đây là lệnh **xóa dữ liệu**, chỉ chạy trên PostgreSQL dành cho phát triển/trình diễn và luôn sao lưu database trước khi chạy.
+
+```powershell
+python manage.py reset_and_seed_restaurant --yes
+```
+
+Lệnh giữ bảng tài khoản, nhóm và quyền; xóa phiên đăng nhập cùng toàn bộ dữ liệu nghiệp vụ rồi tạo lại một bộ dữ liệu liên kết từ đầu đến cuối: nhân sự, khu vực/bàn, hạng và khách hàng, thực đơn, nhà cung cấp, nguyên liệu, phiếu nhập, công thức, tồn kho, đặt bàn, đơn hàng, Bếp, hóa đơn/thanh toán, kiểm kê và hao hụt. Ảnh món được để trống để bổ sung sau. Sau khi chạy, các tài khoản đang mở phải đăng nhập lại.
 
 ## Chức năng và quyền tài khoản
 
@@ -404,12 +410,23 @@ Mở [http://127.0.0.1:8000/](http://127.0.0.1:8000/) để kiểm tra trang n�
 
 `scripts/run_tests.py` tạo database kiểm thử PostgreSQL với tên UUID riêng mỗi lần chạy, chạy toàn bộ migration từ đầu và dọn database khi hoàn tất. Tài khoản PostgreSQL cần quyền tạo database. Lệnh chuẩn `manage.py test` vẫn dùng tên mặc định `test_QLNH_DB`; nếu tên đó tồn tại mà không rõ nguồn gốc, không chấp nhận yêu cầu xóa của test runner.
 
+Khởi tạo bộ nguyên liệu/tồn đầu kỳ mẫu cho môi trường trình diễn bằng `python manage.py seed_inventory_starter`. Thêm `--attach-first-dish` nếu cần gắn công thức mẫu vào món đầu tiên chưa có công thức. Lệnh có thể chạy lại an toàn và không ghi đè nguyên liệu đã tồn tại; cần đối chiếu số lượng, giá nhập và định lượng với thực tế nhà hàng trước khi vận hành.
+
+Để trình diễn trọn luồng kho, chạy `python manage.py seed_inventory_workflow_demo`. Lệnh tạo nhà cung cấp, phiếu nhập nháp/đã nhận/đã hủy, kiểm kê đã chốt và các mẫu hao hụt. Các chứng từ có mã `*-DEMO-*`, lệnh chạy lại không nhân đôi dữ liệu.
+
+Luồng kho vận hành gồm:
+
+- **Phiếu nhập:** tạo nháp, thêm nhiều nguyên liệu, sau đó xác nhận nhận hàng. Chỉ bước xác nhận mới tăng tồn và cập nhật giá vốn bình quân.
+- **Kiểm kê:** mỗi thời điểm chỉ có một phiếu đang kiểm; khi chốt, hệ thống lấy tồn mới nhất, lưu tồn thực tế và tạo giao dịch cho phần chênh lệch.
+- **Hao hụt:** ghi nguyên nhân hư hỏng, hết hạn, sơ chế, đổ vỡ hoặc sử dụng nội bộ; hệ thống trừ tồn và lưu giá trị thất thoát.
+- **Cảnh báo:** màn Kho hiển thị nguyên liệu sắp hết, món thiếu công thức, món không đủ tồn và số phần tối đa có thể chế biến.
+
 Thư mục `templates/` chứa template dùng chung; `static/` chứa CSS, JavaScript và ảnh giao diện; `media/` dành cho tệp tải lên. Bootstrap được lưu trong `static/vendor/` để giao diện không phụ thuộc CDN khi chạy. Server phát triển phục vụ static và media khi `DEBUG=True`.
 
 ## Git và phạm vi triển khai
 
 Repository Git đã có lịch sử commit. `.gitignore` loại trừ `.env`, `.venv/`, `__pycache__/`, `*.pyc`, `media/`, `.idea/` và `.vscode/` cùng các tệp phát sinh cục bộ.
 
-Phạm vi hiện tại đã gồm **Hóa đơn, Thanh toán và Báo cáo quản trị**. Báo cáo chỉ dùng dữ liệu nghiệp vụ đã được ghi nhận; chưa hiển thị giá vốn, chi phí hay lợi nhuận vì hệ thống chưa có phân hệ Kho/Chi phí. Đề xuất tiếp theo là triển khai Kho, nhập/xuất tồn và chi phí để bổ sung báo cáo lãi gộp.
+Phạm vi hiện tại đã gồm **Hóa đơn, Thanh toán, Kho/Công thức và Báo cáo quản trị**. Giá nhập được tính bình quân gia quyền; định lượng nguyên liệu tự động xuất kho khi gửi món xuống Bếp; món hủy trước chế biến được hoàn đúng lượng đã xuất. Giá vốn được chụp tại thời điểm bán để báo cáo doanh thu, giá vốn, lãi gộp và biên lãi không thay đổi khi giá nhập về sau thay đổi.
 
 Lịch sử: [Giai đoạn 1](docs/stage-1-report.md), [Giai đoạn 2](docs/stage-2-report.md), [Giai đoạn 3](docs/stage-3-report.md), [Giai đoạn 4](docs/stage-4-report.md), [Giai đoạn 5](docs/stage-5-report.md), [Giai đoạn 6](docs/stage-6-report.md), [Giai đoạn 7](docs/stage-7-report.md), [Giai đoạn 8](docs/stage-8-report.md), [Giai đoạn 9](docs/stage-9-report.md). Hiện trạng vận hành mới nhất được mô tả trực tiếp trong README này.

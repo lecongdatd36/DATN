@@ -17,6 +17,7 @@ from apps.bookings.services import transition_booking
 from apps.customers.models import Customer
 from apps.menu.models import Category, Unit, Dish
 from apps.menu.services import save_dish
+from apps.inventory.models import Ingredient, InventoryTransaction, RecipeIngredient
 from apps.seating.models import Area, DiningTable
 from apps.seating.selectors import tables
 from apps.seating.services import save_table
@@ -176,6 +177,59 @@ class OrderTests(TestCase):
         self.assertEqual(second.unit_name, "Đĩa")
         self.assertEqual(second.status, "DRAFT")
         self.assertEqual(self.order.total, 350000)
+
+    def test_recipe_deducts_stock_snapshots_cost_and_returns_before_cooking(self):
+        ingredient = Ingredient.objects.create(
+            code="GAO01", name="Gạo", unit="kg", stock_quantity=Decimal("10"),
+            average_unit_cost=Decimal("50000"), low_stock_threshold=Decimal("1"),
+        )
+        RecipeIngredient.objects.create(dish=self.dish, ingredient=ingredient, quantity=Decimal("0.200"))
+        item = self.add(quantity=2)
+
+        self.send()
+        ingredient.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(ingredient.stock_quantity, Decimal("9.600"))
+        self.assertEqual(item.unit_cost_snapshot, Decimal("10000"))
+        self.assertEqual(item.total_cost, Decimal("20000"))
+        self.assertIsNotNone(item.inventory_deducted_at)
+        self.assertEqual(
+            InventoryTransaction.objects.filter(
+                transaction_type=InventoryTransaction.Type.SALE_USAGE,
+                order_item_reference=item.pk,
+            ).count(),
+            1,
+        )
+
+        self.transition(item, OrderItem.Status.CANCELLED, reason="Khách đổi món")
+        ingredient.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(ingredient.stock_quantity, Decimal("10.000"))
+        self.assertIsNotNone(item.inventory_returned_at)
+        self.assertEqual(
+            InventoryTransaction.objects.filter(
+                transaction_type=InventoryTransaction.Type.SALE_RETURN,
+                order_item_reference=item.pk,
+            ).count(),
+            1,
+        )
+
+    def test_sending_to_kitchen_rolls_back_when_recipe_stock_is_insufficient(self):
+        ingredient = Ingredient.objects.create(
+            code="THIT01", name="Thịt", unit="kg", stock_quantity=Decimal("0.100"),
+            average_unit_cost=Decimal("120000"), low_stock_threshold=Decimal("0"),
+        )
+        RecipeIngredient.objects.create(dish=self.dish, ingredient=ingredient, quantity=Decimal("0.200"))
+        item = self.add(quantity=1)
+
+        with self.assertRaisesMessage(ValidationError, "Không đủ tồn kho"):
+            self.send()
+        ingredient.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(ingredient.stock_quantity, Decimal("0.100"))
+        self.assertEqual(item.status, OrderItem.Status.DRAFT)
+        self.assertIsNone(item.inventory_deducted_at)
+        self.assertFalse(InventoryTransaction.objects.filter(order_item_reference=item.pk).exists())
 
     def test_invoice_is_created_and_payment_marks_order_paid(self):
         item = self.add(quantity=2)

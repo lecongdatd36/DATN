@@ -1,0 +1,17 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+{% block staff_title %}{% if object %}Sửa{% else %}Thêm{% endif %} {{ entity_label }} · QLNH{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=1">{% endblock %}
+{% block staff_content %}
+<section class="container-fluid px-3 pb-4 inventory-page">
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4"><div><p class="eyebrow mb-1">KHO · DỮ LIỆU NỀN</p><h1 class="h3 mb-1">{% if object %}Sửa{% else %}Thêm{% endif %} {{ entity_label }}</h1><p class="text-secondary mb-0">Thông tin này được dùng cho nhập kho, công thức món và báo cáo giá vốn.</p></div><a class="btn btn-outline-secondary" href="{% url 'inventory:workspace' %}">Quay lại kho</a></div>
+  {% include 'staff/inventory/includes/nav.html' %}
+  <form class="project-card p-3 p-md-4 mx-auto" style="max-width:760px" method="post" novalidate>{% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}<div class="mb-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small class="form-text text-secondary d-block">{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endfor %}
+    {% if common_units %}<datalist id="ingredient-unit-list">{% for unit in common_units %}<option value="{{ unit }}">{% endfor %}</datalist>{% endif %}
+    {% if object and object.stock_quantity != None %}<div class="alert alert-info"><strong>Tồn hiện tại: {{ object.stock_quantity|default:0 }} {{ object.unit }}</strong><br>Muốn đổi số tồn, hãy dùng giao dịch “Điều chỉnh tồn thực tế” để hệ thống giữ lịch sử.</div>{% endif %}
+    <div class="d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" href="{% url 'inventory:workspace' %}">Hủy</a><button class="btn btn-primary" type="submit">Lưu {{ entity_label }}</button></div>
+  </form>
+</section>
+{% endblock %}

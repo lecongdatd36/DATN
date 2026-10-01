@@ -67,12 +67,13 @@ class RevenueExportView(ReportPermissionMixin, View):
         response["Content-Disposition"] = f'attachment; filename="doanh-thu-{date_from:%Y%m%d}-{date_to:%Y%m%d}.csv"'
         response.write("\ufeff")
         writer = csv.writer(response)
-        writer.writerow(["Mã hóa đơn", "Mã thanh toán chung", "Mã đơn", "Bàn", "Khu vực", "Khách hàng", "Thời gian chốt", "Tổng tiền", "Phương thức thanh toán"])
+        writer.writerow(["Mã hóa đơn", "Mã thanh toán chung", "Mã đơn", "Bàn", "Khu vực", "Khách hàng", "Thời gian chốt", "Doanh thu", "Giá vốn", "Lãi gộp", "Phương thức thanh toán"])
         for invoice in paid_invoices_for_export(start_at, end_at):
             booking = invoice.order.booking
             table = invoice.order.table or (booking.table if booking else None)
             methods = ", ".join(dict.fromkeys(payment.get_method_display() for payment in invoice.payments.all()))
             batch_codes = ", ".join(dict.fromkeys(payment.batch.batch_code for payment in invoice.payments.all() if payment.batch_id))
+            cost = sum((item.total_cost for item in invoice.order.items.all() if item.status != "CANCELLED"), 0)
             writer.writerow([
                 invoice.invoice_code,
                 batch_codes,
@@ -82,6 +83,8 @@ class RevenueExportView(ReportPermissionMixin, View):
                 invoice.customer.full_name if invoice.customer_id else (booking.customer_name if booking else "Khách vãng lai"),
                 timezone.localtime(invoice.closed_at).strftime("%d/%m/%Y %H:%M"),
                 invoice.total,
+                cost,
+                invoice.total - cost,
                 methods or invoice.payment_method,
             ])
         return response

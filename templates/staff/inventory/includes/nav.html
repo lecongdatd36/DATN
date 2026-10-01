@@ -1,0 +1,6 @@
+<nav class="inventory-nav" aria-label="Nghiệp vụ kho">
+  <a class="{% if request.resolver_match.url_name == 'workspace' %}active{% endif %}" href="{% url 'inventory:workspace' %}"><span>01</span>Tổng quan</a>
+  <a class="{% if 'purchase' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'inventory:purchase_list' %}"><span>02</span>Nhập hàng</a>
+  <a class="{% if 'stocktake' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'inventory:stocktake_list' %}"><span>03</span>Kiểm kê</a>
+  <a class="{% if request.resolver_match.url_name == 'waste' %}active{% endif %}" href="{% url 'inventory:waste' %}"><span>04</span>Hao hụt</a>
+</nav>

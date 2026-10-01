@@ -69,7 +69,9 @@
                     </div>
                     {% if table.current_order_id and access.can_collect_payments %}<button class="btn btn-success mt-2 w-100" type="button" data-bs-toggle="modal" data-bs-target="#quick-payment-{{ table.current_order_id }}">Thanh toán nhanh bàn {{ table.code }}</button>{% endif %}
                 {% elif table.current_status == 'reserved' %}
+                    {% if table.held_booking_id %}
                     {% if table.held_booking_status == 'CONFIRMED' and access.can_manage_bookings and access.can_manage_orders %}<a class="btn btn-warning" href="{% url 'bookings:transition' table.held_booking_id 'SEATED' %}" data-confirm-action data-revision="{{ table.held_booking_revision }}" data-status="CONFIRMED" data-confirm-title="Nhận khách vào bàn {{ table.code }}?" data-confirm-message="Lượt khách sẽ bắt đầu và hệ thống mở đơn để gọi món ngay." data-confirm-label="Nhận khách & gọi món">Nhận khách &amp; gọi món</a>{% elif access.can_view_bookings %}<a class="btn btn-warning" href="{% url 'bookings:detail' table.held_booking_id %}">Xem lịch đặt</a>{% endif %}
+                    {% endif %}
                 {% elif table.current_status == 'cleaning' and access.can_manage_orders %}
                     <form method="post" action="{% url 'sales:finish_cleaning' table.pk %}">{% csrf_token %}<button class="btn btn-warning">Đã dọn xong</button></form>
                 {% elif table.current_status == 'empty' %}

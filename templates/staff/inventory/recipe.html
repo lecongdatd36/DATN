@@ -1,0 +1,44 @@
+{% extends 'staff/base_staff.html' %}
+{% load static menu_money %}
+{% block staff_title %}Công thức {{ dish.name }} · QLNH{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=1">{% endblock %}
+{% block staff_content %}
+<section class="container-fluid px-3 pb-4 inventory-page">
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div><p class="eyebrow mb-1">KHO · CÔNG THỨC MÓN</p><h1 class="h3 mb-1">{{ dish.name }}</h1><p class="text-secondary mb-0">{{ dish.code }} · Giá bán {{ dish.price|dong }} đ / {{ dish.unit.name }}</p></div>
+    <div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{% url 'menu:detail' dish.pk %}">Xem món</a><a class="btn btn-outline-secondary" href="{% url 'inventory:workspace' %}">Về kho</a></div>
+  </div>
+  {% include 'staff/inventory/includes/nav.html' %}
+
+  <div class="row g-4">
+    <div class="col-12 col-xl-8">
+      <section class="project-card overflow-hidden">
+        <div class="p-3 border-bottom"><h2 class="h5 mb-1">Định lượng cho một {{ dish.unit.name|lower }}</h2><p class="small text-secondary mb-0">Khi món được gửi xuống Bếp, hệ thống nhân định lượng với số lượng món và tự động xuất kho.</p></div>
+        <div class="table-responsive"><table class="table align-middle mb-0">
+          <thead><tr><th>Nguyên liệu</th><th>Định lượng</th><th class="text-end">Giá vốn bình quân</th><th class="text-end">Giá vốn/món</th><th></th></tr></thead>
+          <tbody>{% for line in recipe_lines %}<tr>
+            <td><strong>{{ line.ingredient.name }}</strong><small class="d-block text-secondary">{{ line.ingredient.code }} · Tồn {{ line.ingredient.stock_quantity }} {{ line.ingredient.unit }}</small></td>
+            <td>{{ line.quantity }} {{ line.ingredient.unit }}</td>
+            <td class="text-end">{{ line.ingredient.average_unit_cost|dong }} đ/{{ line.ingredient.unit }}</td>
+            <td class="text-end fw-semibold">{{ line.estimated_cost|dong }} đ</td>
+            <td class="text-end">{% if can_manage %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="line_id" value="{{ line.pk }}"><button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button></form>{% endif %}</td>
+          </tr>{% empty %}<tr><td colspan="5" class="text-center py-5 text-secondary">Chưa khai báo công thức. Món vẫn bán được nhưng giá vốn sẽ bằng 0 và không tự trừ nguyên liệu.</td></tr>{% endfor %}</tbody>
+        </table></div>
+      </section>
+    </div>
+
+    <aside class="col-12 col-xl-4">
+      <section class="project-card p-3 mb-3">
+        <h2 class="h5">Hiệu quả dự kiến</h2>
+        <dl class="row mb-0"><dt class="col-7">Giá bán</dt><dd class="col-5 text-end">{{ dish.price|dong }} đ</dd><dt class="col-7">Giá vốn</dt><dd class="col-5 text-end">{{ estimated_cost|dong }} đ</dd><dt class="col-7">Lãi gộp</dt><dd class="col-5 text-end fw-bold text-success">{{ estimated_profit|dong }} đ</dd><dt class="col-7">Biên lãi gộp</dt><dd class="col-5 text-end fw-bold">{{ estimated_margin|floatformat:1 }}%</dd><dt class="col-7">Có thể làm</dt><dd class="col-5 text-end fw-bold {% if not producible_portions %}text-danger{% endif %}">{{ producible_portions }} phần</dd></dl>
+      </section>
+      {% if can_manage %}<form class="project-card p-3" method="post" novalidate>{% csrf_token %}
+        <h2 class="h5">Thêm / cập nhật nguyên liệu</h2>
+        {% if recipe_form.non_field_errors %}<div class="alert alert-danger py-2">{{ recipe_form.non_field_errors }}</div>{% endif %}
+        {% for field in recipe_form %}<div class="mb-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small class="form-text text-secondary">{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endfor %}
+        <button class="btn btn-primary w-100" type="submit">Lưu định lượng</button>
+      </form>{% endif %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

@@ -133,6 +133,16 @@ class OrderItem(models.Model):
         help_text="Số ghế/vị trí của khách trong bàn; bỏ trống nếu là món dùng chung.",
     )
     total_price = models.DecimalField("Thành tiền", max_digits=12, decimal_places=0, default=0)
+    unit_cost_snapshot = models.DecimalField(
+        "Giá vốn một món", max_digits=12, decimal_places=0, default=0,
+        validators=[MinValueValidator(0)],
+    )
+    total_cost = models.DecimalField(
+        "Tổng giá vốn", max_digits=14, decimal_places=0, default=0,
+        validators=[MinValueValidator(0)],
+    )
+    inventory_deducted_at = models.DateTimeField("Đã trừ kho lúc", null=True, blank=True)
+    inventory_returned_at = models.DateTimeField("Đã hoàn kho lúc", null=True, blank=True)
     note = models.TextField("Ghi chú cho Bếp", blank=True, max_length=500, validators=[MaxLengthValidator(500)])
     status = models.CharField("Trạng thái", max_length=10, choices=Status.choices, default=Status.DRAFT)
     cancellation_reason = models.CharField("Lý do hủy", max_length=500, blank=True)
@@ -155,6 +165,8 @@ class OrderItem(models.Model):
                 name="order_item_seat_range",
             ),
             models.CheckConstraint(condition=models.Q(unit_price__gte=1, unit_price__lte=999999999), name="order_item_price_range"),
+            models.CheckConstraint(condition=models.Q(unit_cost_snapshot__gte=0), name="order_item_unit_cost_nonnegative"),
+            models.CheckConstraint(condition=models.Q(total_cost__gte=0), name="order_item_total_cost_nonnegative"),
             models.CheckConstraint(condition=models.Q(status__in=["DRAFT", "PENDING", "COOKING", "READY", "SERVED", "CANCELLED"]), name="order_item_valid_status"),
             models.CheckConstraint(condition=~models.Q(status="CANCELLED") | models.Q(cancellation_reason__regex=r"\S", cancelled_at__isnull=False), name="order_item_cancel_reason"),
         ]
@@ -177,9 +189,10 @@ class OrderItem(models.Model):
 
     def save(self, *args, **kwargs):
         self.total_price = self.unit_price * self.quantity
+        self.total_cost = self.unit_cost_snapshot * self.quantity
         update_fields = kwargs.get("update_fields")
         if update_fields is not None:
-            kwargs["update_fields"] = tuple(set(update_fields) | {"total_price", "updated_at"})
+            kwargs["update_fields"] = tuple(set(update_fields) | {"total_price", "total_cost", "updated_at"})
         return super().save(*args, **kwargs)
 
 
