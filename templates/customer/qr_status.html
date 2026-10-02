@@ -1,0 +1,17 @@
+{% extends 'customer/base_customer.html' %}
+{% load static %}
+
+{% block title %}Trạng thái gọi món · QLNH{% endblock %}
+
+{% block content %}
+<section class="customer-form-page customer-qr-status-page" data-qr-status-page data-status-endpoint="{{ status_endpoint }}" aria-labelledby="qr-status-title">
+    <div class="customer-container customer-narrow-content">
+        <div class="customer-status-page-heading"><div><span class="customer-section-label">Theo dõi tại bàn {{ table.code }}</span><h1 id="qr-status-title">Trạng thái gọi món</h1><p>Trạng thái sẽ tự cập nhật khi nhân viên xử lý yêu cầu.</p></div><span class="customer-qr-live"><i aria-hidden="true"></i> Đang cập nhật</span></div>
+        <div class="customer-qr-status-list" data-qr-status-list></div>
+        <div class="customer-qr-status-empty" data-qr-status-empty hidden><strong>Chưa có lượt gọi món.</strong><p>Chọn món trong menu tại bàn để gửi yêu cầu.</p><a class="customer-button" href="{% url 'customer_portal:qr_table' qr_token.token %}">Quay lại menu</a></div>
+    </div>
+</section>
+{{ status_data|json_script:"qr-status-data" }}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'customer/js/qr-status.js' %}?v=1" defer></script>{% endblock %}

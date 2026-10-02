@@ -10,6 +10,7 @@
             {% if access.can_collect_payments %}<a class="btn btn-success" href="{% url 'orders:table_payment' %}"><svg class="app-icon me-1" aria-hidden="true"><use href="#icon-wallet"></use></svg> Thanh toán gộp bàn</a><a class="btn btn-outline-success" href="{% url 'sales:workspace' %}">Mở Thu ngân</a>{% endif %}
             {% if access.can_view_areas %}<a class="btn btn-outline-secondary" href="{% url 'seating:area_list' %}">Khu vực</a>{% endif %}
             {% if access.can_view_seating_logs %}<a class="btn btn-outline-secondary" href="{% url 'seating:logs' %}">Nhật ký</a>{% endif %}
+            {% if access.can_view_tables %}<a class="btn btn-outline-primary" href="{% url 'seating:table_qr' %}">QR từng bàn</a>{% endif %}
             {% if access.can_manage_seating %}<a class="btn btn-primary" href="{% url 'seating:table_create' %}">Thêm bàn</a>{% endif %}
         </div>
     </div>

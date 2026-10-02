@@ -1,0 +1,64 @@
+{% load static %}
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Nhà hàng QLNH - trải nghiệm ẩm thực Việt đương đại.">
+    <title>{% block title %}QLNH · Nhà hàng Việt{% endblock %}</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="{% static 'customer/css/customer.css' %}?v=2">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="customer-layout">
+    <a class="customer-skip-link" href="#customer-main">Chuyển đến nội dung chính</a>
+    <header class="customer-header" data-customer-header>
+        <div class="customer-container customer-nav-wrap">
+            <a class="customer-brand" href="{% url 'home' %}" aria-label="QLNH - Trang chủ">
+                <span class="customer-brand-mark" aria-hidden="true">Q</span>
+                <span class="customer-brand-copy"><strong>QLNH</strong><small>Nhà hàng Việt</small></span>
+            </a>
+            <button class="customer-menu-toggle" type="button" data-customer-menu-toggle aria-controls="customer-navigation" aria-expanded="false" aria-label="Mở menu">
+                <span></span><span></span><span></span>
+            </button>
+            <nav class="customer-navigation" id="customer-navigation" aria-label="Điều hướng chính">
+                <a href="{% url 'home' %}">Trang chủ</a>
+                <a href="{% url 'customer_portal:menu' %}">Thực đơn</a>
+                <a href="{% url 'customer_reservations:create' %}">Đặt bàn</a>
+                <a href="{% url 'customer_reservations:lookup' %}">Tra cứu</a>
+                <a class="customer-nav-cta" href="{% url 'customer_reservations:create' %}">Đặt bàn <span aria-hidden="true">↗</span></a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="customer-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="customer-footer" id="customer-footer">
+        <div class="customer-container customer-footer-grid">
+            <div>
+                <a class="customer-brand customer-brand-footer" href="{% url 'home' %}">
+                    <span class="customer-brand-mark" aria-hidden="true">Q</span>
+                    <span class="customer-brand-copy"><strong>QLNH</strong><small>Nhà hàng Việt</small></span>
+                </a>
+                <p class="customer-footer-note">Một bữa ăn ngon bắt đầu từ sự chu đáo trong từng chi tiết.</p>
+            </div>
+            <div class="customer-footer-column">
+                <h2>Ghé thăm</h2>
+                <p>12 Nguyễn Huệ<br>Quận 1, Thành phố Hồ Chí Minh</p>
+            </div>
+            <div class="customer-footer-column">
+                <h2>Liên hệ</h2>
+                <p>028 1234 5678<br>hello@qlnh.vn</p>
+            </div>
+        </div>
+        <div class="customer-container customer-footer-bottom">
+            <span>© {% now 'Y' %} QLNH</span>
+            <span>Ẩm thực Việt, kể bằng sự tử tế.</span>
+        </div>
+    </footer>
+    <script src="{% static 'customer/js/customer.js' %}?v=2" defer></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

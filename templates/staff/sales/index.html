@@ -1,7 +1,7 @@
 {% extends 'staff/base_staff.html' %}
 {% load static menu_money %}
 {% block staff_title %}Bán hàng · QLNH{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/staff-workspaces.css' %}?v=6">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/staff-workspaces.css' %}?v=6"><link rel="stylesheet" href="{% static 'css/qr-requests.css' %}?v=1">{% endblock %}
 {% block staff_content %}
 <section class="container-fluid px-2 px-md-3 pb-4 sales-workspace" data-live-workspace data-state-url="{% url 'sales:state' %}" data-customer-lookup-url="{% url 'sales:customer_lookup' %}">
   <header class="sales-heading">
@@ -21,6 +21,7 @@
       <div class="table-legend"><span><i class="is-available"></i>Trống</span><span><i class="is-occupied"></i>Đang phục vụ</span><span><i class="is-cleaning"></i>Cần dọn</span><span><i class="is-reserved"></i>Đã đặt</span></div>
 
       {% if payment_requests and can_collect_payment %}<div class="payment-request-box"><h3><span class="request-pulse"></span>Yêu cầu thanh toán</h3>{% for payment_request in payment_requests %}<a class="payment-alert" href="?order={{ payment_request.order_id }}#sales-order"><span><strong>Bàn {{ payment_request.order.table.code }}</strong><small>{{ payment_request.order.order_code }}</small></span><strong>{{ payment_request.payable_amount|dong }}đ</strong></a>{% endfor %}</div>{% endif %}
+      {% if qr_requests and can_manage_order %}<div class="qr-request-box"><h3><span class="request-pulse"></span>Yêu cầu gọi món QR <span class="qr-request-count">{{ qr_requests|length }}</span></h3>{% for qr_request in qr_requests %}<article class="qr-request-card"><header><div><strong>Bàn {{ qr_request.table.code }}</strong><small>{{ qr_request }} · {{ qr_request.created_at|timesince }} trước</small></div><strong class="qr-request-total">{{ qr_request.items.all|length }} món</strong></header><ul>{% for item in qr_request.items.all %}<li><span>{{ item.dish.name }} × {{ item.quantity }}{% if item.note %}<small>{{ item.note }}</small>{% endif %}</span><strong>{{ item.unit_price_snapshot|dong }}đ</strong></li>{% endfor %}</ul><div class="qr-request-actions"><form method="post" action="{% url 'sales:qr_request_action' qr_request.pk 'confirm' %}">{% csrf_token %}<button class="btn btn-sm btn-success" type="submit">Xác nhận</button></form><form class="qr-reject-form" method="post" action="{% url 'sales:qr_request_action' qr_request.pk 'reject' %}">{% csrf_token %}<input name="reason" maxlength="500" required placeholder="Lý do từ chối"><button class="btn btn-sm btn-outline-danger" type="submit">Từ chối</button></form></div></article>{% endfor %}</div>{% endif %}
 
       <div class="sales-table-scroll">
         {% for area in areas %}<section class="area-block"><h3>{{ area.name }} <span>{{ area.tables.all|length }} bàn</span></h3><div class="table-tile-grid">

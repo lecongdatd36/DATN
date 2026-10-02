@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.customers.models import Customer
@@ -11,7 +11,7 @@ from core.seating_lock import lock_seating_schedule
 from .models import Booking, BookingActivityLog, BookingSettings, BookingSettingsLog
 from .duration import planned_end
 from .permissions import has_booking_permission
-from .selectors import available_transfer_tables, overlapping_bookings, default_duration_minutes
+from .selectors import available_tables, available_transfer_tables, overlapping_bookings, default_duration_minutes
 
 
 TRANSITIONS = {
@@ -57,7 +57,13 @@ def _snapshot(booking):
 
 
 def _log(actor, booking, action, description):
-    BookingActivityLog.objects.create(booking=booking, action=action, description=description, performed_by=actor, actor_snapshot=actor.username)
+    BookingActivityLog.objects.create(
+        booking=booking,
+        action=action,
+        description=description,
+        performed_by=actor,
+        actor_snapshot=actor.username if actor else "Khách đặt bàn online",
+    )
 
 
 @transaction.atomic
@@ -117,6 +123,69 @@ def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends
             table.status = DiningTable.Status.RESERVED
             table.save(update_fields=("status", "updated_at"))
         _log(actor, booking, "Tạo đặt bàn" if created else "Sửa đặt bàn", (f"Trước: {before}\nSau: " if before else "") + _snapshot(booking))
+    return booking
+
+
+@transaction.atomic
+def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=None, duration_minutes=None, note=""):
+    """Create a pending booking from the anonymous customer web flow."""
+    lock_seating_schedule()
+    try:
+        phone = normalize_phone(phone)
+    except ValidationError as error:
+        raise ValidationError({"phone": error.messages}) from error
+    full_name = " ".join(full_name.split()) if isinstance(full_name, str) else ""
+    if not full_name:
+        raise ValidationError({"full_name": "Vui lòng nhập họ tên."})
+    if not isinstance(party_size, int) or not 1 <= party_size <= 100:
+        raise ValidationError({"party_size": "Số khách phải từ 1 đến 100."})
+    if starts_at is None or timezone.is_naive(starts_at) or starts_at < timezone.now():
+        raise ValidationError({"starts_at": "Giờ đến phải ở tương lai."})
+    try:
+        ends_at = planned_end(starts_at, duration_minutes or default_duration_minutes())
+    except ValidationError as error:
+        raise ValidationError({"duration_minutes": error.messages}) from error
+
+    customer = Customer.objects.select_for_update().filter(phone=phone).first()
+    if customer is None:
+        from apps.customers.models import MembershipTier
+        customer = Customer(full_name=full_name, phone=phone, membership_tier=MembershipTier.objects.filter(is_active=True, minimum_spending=0).order_by("pk").first())
+        customer.full_clean()
+        try:
+            with transaction.atomic():
+                customer.save()
+        except IntegrityError as error:
+            customer = Customer.objects.select_for_update().filter(phone=phone).first()
+            if customer is None:
+                raise error
+
+    tables = available_tables(starts_at=starts_at, ends_at=ends_at, party_size=party_size).filter(
+        status__in=(DiningTable.Status.AVAILABLE, DiningTable.Status.RESERVED)
+    )
+    if area_id:
+        tables = tables.filter(area_id=area_id)
+    table = tables.order_by("capacity", "area__name", "code", "pk").first()
+    if table is None:
+        raise ValidationError({"starts_at": "Hiện không có bàn phù hợp trong thời gian này."})
+    booking = Booking(
+        customer=customer,
+        table=table,
+        customer_name=full_name,
+        customer_phone=phone,
+        party_size=party_size,
+        starts_at=starts_at,
+        ends_at=ends_at,
+        status=Booking.Status.PENDING,
+    )
+    booking.full_clean()
+    _validate_slot(booking)
+    booking.save()
+    if table.status == DiningTable.Status.AVAILABLE:
+        table.status = DiningTable.Status.RESERVED
+        table.save(update_fields=("status", "updated_at"))
+    note = " ".join(note.split()) if isinstance(note, str) else ""
+    description = _snapshot(booking) + (f" Ghi chú khách: {note}." if note else "")
+    _log(None, booking, "Khách tạo đặt bàn online", description)
     return booking
 
 

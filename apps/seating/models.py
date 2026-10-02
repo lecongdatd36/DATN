@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
@@ -65,6 +67,30 @@ class DiningTable(models.Model):
 
     def __str__(self):
         return self.code
+
+
+class DiningTableQRToken(models.Model):
+    table = models.OneToOneField(DiningTable, on_delete=models.CASCADE, related_name="qr_token")
+    token = models.UUIDField(default=uuid4, unique=True, editable=False, db_index=True)
+    is_active = models.BooleanField(default=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    rotated_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "mã QR bàn"
+        verbose_name_plural = "mã QR bàn"
+        ordering = ("table__code", "pk")
+
+    @property
+    def is_valid(self):
+        from django.utils import timezone
+        return self.is_active and self.table.is_active and self.table.area.is_active and (
+            self.expires_at is None or self.expires_at > timezone.now()
+        )
+
+    def __str__(self):
+        return f"QR {self.table.code}"
 
 
 class SeatingActivityLog(models.Model):

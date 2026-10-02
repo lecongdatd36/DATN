@@ -365,3 +365,56 @@ class PaymentRequest(models.Model):
         constraints = [
             models.UniqueConstraint(fields=("order",), condition=models.Q(status__in=("WAITING", "PROCESSING")), name="one_active_payment_request_per_order"),
         ]
+
+
+class QROrderRequest(models.Model):
+    class Status(models.TextChoices):
+        WAITING_CONFIRMATION = "WAITING_CONFIRMATION", "Chờ nhân viên xác nhận"
+        CONFIRMED = "CONFIRMED", "Đã xác nhận"
+        REJECTED = "REJECTED", "Đã từ chối"
+        CANCELLED = "CANCELLED", "Đã hủy"
+
+    table = models.ForeignKey("seating.DiningTable", on_delete=models.PROTECT, related_name="qr_order_requests")
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="qr_order_requests")
+    customer = models.ForeignKey("customers.Customer", on_delete=models.SET_NULL, null=True, blank=True, related_name="qr_order_requests")
+    status = models.CharField(max_length=24, choices=Status.choices, default=Status.WAITING_CONFIRMATION, db_index=True)
+    note = models.TextField(blank=True, max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    confirmed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="confirmed_qr_order_requests")
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    rejected_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="rejected_qr_order_requests")
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    reject_reason = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        verbose_name = "yêu cầu gọi món QR"
+        verbose_name_plural = "yêu cầu gọi món QR"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(status__in=("WAITING_CONFIRMATION", "CONFIRMED", "REJECTED", "CANCELLED")),
+                name="qr_request_valid_status",
+            ),
+        ]
+
+    def __str__(self):
+        return f"QR-{self.pk:06d}"
+
+
+class QROrderRequestItem(models.Model):
+    request = models.ForeignKey(QROrderRequest, on_delete=models.CASCADE, related_name="items")
+    order_item = models.OneToOneField("OrderItem", on_delete=models.SET_NULL, null=True, blank=True, related_name="qr_request_item")
+    dish = models.ForeignKey("menu.Dish", on_delete=models.PROTECT, related_name="qr_order_request_items")
+    quantity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
+    note = models.TextField(blank=True, max_length=500)
+    unit_price_snapshot = models.DecimalField(max_digits=9, decimal_places=0, validators=[MinValueValidator(1), MaxValueValidator(999999999)])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("created_at", "pk")
+        verbose_name = "món trong yêu cầu QR"
+        verbose_name_plural = "món trong yêu cầu QR"
+        constraints = [
+            models.CheckConstraint(condition=models.Q(quantity__gte=1, quantity__lte=100), name="qr_request_item_quantity_range"),
+            models.CheckConstraint(condition=models.Q(unit_price_snapshot__gte=1), name="qr_request_item_price_positive"),
+        ]

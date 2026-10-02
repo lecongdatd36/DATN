@@ -16,4 +16,4 @@ from django.test.runner import DiscoverRunner
 
 connection.settings_dict["TEST"]["NAME"] = f"test_qlnh_{uuid4().hex}"
 runner = DiscoverRunner(verbosity=1, interactive=False)
-raise SystemExit(bool(runner.run_tests(sys.argv[1:] or ["apps.accounts", "apps.employees", "apps.customers", "apps.seating", "apps.bookings", "apps.menu", "apps.orders"])))
+raise SystemExit(bool(runner.run_tests(sys.argv[1:] or ["apps.accounts", "apps.employees", "apps.customers", "apps.seating", "apps.bookings", "apps.menu", "apps.orders", "apps.customer_portal.tests"])))

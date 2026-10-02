@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}QR từng bàn · QLNH{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/seating.css' %}?v=3"><link rel="stylesheet" href="{% static 'css/table-qr.css' %}?v=1">{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5 table-qr-page">
+    <div class="table-page-heading"><div><p class="eyebrow mb-2">KẾT NỐI KHÁCH HÀNG</p><h1 class="h2 mb-1">QR từng bàn</h1><p class="text-secondary mb-0">In đúng mã QR và đặt lên bàn tương ứng để khách gọi món tại chỗ.</p></div><div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="button" onclick="window.print()">In tất cả QR</button><a class="btn btn-outline-secondary" href="{% url 'seating:table_list' %}">Quay lại sơ đồ bàn</a></div></div>
+    <div class="table-qr-grid">
+        {% for card in qr_cards %}
+        <article class="table-qr-card"><div class="table-qr-card-header"><div><span class="eyebrow">{{ card.table.area.name }}</span><h2>Bàn {{ card.table.code }}</h2></div><span class="table-qr-status">Đang sử dụng</span></div><div class="table-qr-image-wrap"><img src="{{ card.qr_image }}" alt="Mã QR gọi món tại bàn {{ card.table.code }}"></div><p class="table-qr-instruction">Quét để mở menu tại bàn</p><code class="table-qr-url">{{ card.scan_url }}</code></article>
+        {% empty %}<div class="empty-state"><strong>Chưa có bàn đang sử dụng.</strong></div>{% endfor %}
+    </div>
+</section>
+{% endblock %}

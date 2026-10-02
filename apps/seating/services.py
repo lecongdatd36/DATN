@@ -3,7 +3,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from core.seating_lock import lock_seating_schedule
 
-from .models import Area, DiningTable, SeatingActivityLog
+from .models import Area, DiningTable, DiningTableQRToken, SeatingActivityLog
 from .permissions import has_seating_permission
 
 
@@ -76,6 +76,7 @@ def save_table(*, actor, code, area_id, capacity, is_active, table_id=None):
             raise ValidationError({"capacity": "Số chỗ mới không đủ cho lịch đặt đang hiệu lực."})
     if created or old != (table.code, table.area_id, table.capacity, table.is_active):
         table.save()
+        DiningTableQRToken.objects.get_or_create(table=table)
         description = f"Bàn {table.code}; khu vực {area.name}; {table.capacity} chỗ; {'đang sử dụng' if table.is_active else 'ngừng sử dụng'}."
         if not created:
             description = f"Trước: mã {old[0]}, khu vực {old_area_name}, {old[2]} chỗ, {'đang sử dụng' if old[3] else 'ngừng sử dụng'}. " + description

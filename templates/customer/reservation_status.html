@@ -1,0 +1,17 @@
+{% extends 'customer/base_customer.html' %}
+
+{% block title %}Trạng thái đặt bàn · QLNH{% endblock %}
+
+{% block content %}
+<section class="customer-form-page" aria-labelledby="status-title">
+    <div class="customer-container customer-narrow-content">
+        <span class="customer-section-label">Mã {{ booking.booking_code }}</span>
+        <h1 id="status-title">Trạng thái đặt bàn</h1>
+        <div class="customer-status-card">
+            <div class="customer-status-heading"><strong>{{ booking.get_status_display }}</strong><span>{{ booking.starts_at|date:'d/m/Y H:i' }}</span></div>
+            <dl class="customer-booking-summary"><div><dt>Số khách</dt><dd>{{ booking.party_size }}</dd></div><div><dt>Khu vực</dt><dd>{{ booking.table.area.name }}</dd></div><div><dt>Thời lượng</dt><dd>{{ booking.duration_minutes }} phút</dd></div></dl>
+            {% if cancelled %}<p class="customer-status-warning">Yêu cầu đặt bàn này đã kết thúc hoặc bị hủy.</p>{% else %}<ol class="customer-timeline">{% for item in timeline %}<li class="{% if item.done %}is-done{% endif %}"><span aria-hidden="true"></span>{{ item.label }}</li>{% endfor %}</ol>{% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

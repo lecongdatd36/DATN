@@ -1,0 +1,31 @@
+{% extends 'customer/base_customer.html' %}
+{% load static %}
+
+{% block title %}{{ dish.name }} · QLNH{% endblock %}
+
+{% block content %}
+<section class="customer-detail-page" aria-labelledby="dish-title">
+    <div class="customer-container">
+        <a class="customer-back-link" href="{% url 'customer_portal:menu' %}">← Quay lại thực đơn</a>
+        <div class="customer-detail-grid">
+            <div class="customer-detail-image-wrap">
+                {% if dish.thumbnail or dish.image %}<img class="customer-detail-image" src="{% if dish.thumbnail %}{{ dish.thumbnail.url }}{% else %}{{ dish.image.url }}{% endif %}" alt="{{ dish.name }}">{% else %}<img class="customer-detail-image" src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa có ảnh cho {{ dish.name }}">{% endif %}
+            </div>
+            <div class="customer-detail-copy">
+                <span class="customer-section-label">{{ dish.category.name }}</span>
+                <h1 id="dish-title">{{ dish.name }}</h1>
+                <p class="customer-detail-price">{{ dish.price|floatformat:0 }}đ / {{ dish.unit.name }}</p>
+                {% if dish.status == 'SOLD_OUT' %}<span class="customer-dish-badge customer-dish-badge-sold customer-detail-badge">Hết món</span>{% else %}<span class="customer-dish-badge customer-dish-badge-available">Đang phục vụ</span>{% endif %}
+                <p class="customer-detail-description">{{ dish.description|default:'Món ăn được chuẩn bị chỉn chu từ những nguyên liệu phù hợp trong ngày.' }}</p>
+                <div class="customer-detail-note">Bạn có thể gọi món tại bàn sau khi nhân viên mở bàn.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if suggested_dishes %}
+<section class="customer-suggestions" aria-labelledby="suggestions-title">
+    <div class="customer-container"><span class="customer-section-label">Cùng danh mục</span><h2 id="suggestions-title">Có thể bạn cũng thích</h2><div class="customer-suggestion-list">{% for suggested in suggested_dishes %}<a href="{% url 'customer_portal:dish_detail' suggested.pk %}"><span>{{ suggested.name }}</span><strong>{{ suggested.price|floatformat:0 }}đ</strong></a>{% endfor %}</div></div>
+</section>
+{% endif %}
+{% endblock %}

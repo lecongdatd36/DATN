@@ -4,6 +4,7 @@ from . import views
 app_name = "seating"
 urlpatterns = [
     path("", views.TableListView.as_view(), name="table_list"),
+    path("qr/", views.TableQRListView.as_view(), name="table_qr"),
     path("them/", views.TableFormView.as_view(), name="table_create"),
     path("<int:pk>/sua/", views.TableFormView.as_view(), name="table_update"),
     path("khu-vuc/", views.AreaListView.as_view(), name="area_list"),

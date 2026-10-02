@@ -13,11 +13,15 @@ from django.views.generic import DetailView, FormView, ListView
 
 from core.forms import add_service_errors, filter_query_string
 from apps.orders.permissions import has_order_permission
-from .forms import BookingFilterForm, BookingForm, SlotForm, TransitionForm, TransferTableForm, CancelSeatedVisitForm, BookingSettingsForm
+from .forms import (
+    BookingFilterForm, BookingForm, SlotForm, TransitionForm, TransferTableForm,
+    CancelSeatedVisitForm, BookingSettingsForm, PublicAvailabilityForm,
+    PublicReservationForm, PublicReservationLookupForm,
+)
 from .models import Booking, BookingSettings, BookingSettingsLog
 from .permissions import has_booking_permission
 from .selectors import available_tables, booking_list, overdue_bookings, next_booking
-from .services import TRANSITIONS, save_booking, transfer_table, transition_booking, update_booking_settings
+from .services import TRANSITIONS, create_public_booking, save_booking, transfer_table, transition_booking, update_booking_settings
 
 
 @method_decorator(never_cache, name="dispatch")
@@ -305,3 +309,113 @@ class BookingSettingsView(BookingPermissionMixin, FormView):
             return self.form_invalid(form)
         messages.success(self.request, "Đã lưu thời lượng mặc định. Các lịch đã đặt giữ nguyên giờ dự kiến.")
         return HttpResponseRedirect(reverse("bookings:settings"))
+
+
+class PublicTableCheckView(FormView):
+    form_class = PublicAvailabilityForm
+    template_name = "customer/table_check.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if self.request.GET:
+            kwargs["data"] = self.request.GET
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = context["form"]
+        if form.is_bound and form.is_valid():
+            result = available_tables(
+                starts_at=form.cleaned_data["starts_at"],
+                ends_at=form.cleaned_data["ends_at"],
+                party_size=form.cleaned_data["party_size"],
+            )
+            if form.cleaned_data.get("area"):
+                result = result.filter(area=form.cleaned_data["area"])
+            context["available_areas"] = result.values("area__name").distinct().order_by("area__name")
+            context["searched"] = True
+        return context
+
+
+class PublicReservationCreateView(FormView):
+    form_class = PublicReservationForm
+    template_name = "customer/reservation_form.html"
+
+    def form_valid(self, form):
+        try:
+            booking = create_public_booking(
+                full_name=form.cleaned_data["full_name"],
+                phone=form.cleaned_data["phone"],
+                starts_at=form.cleaned_data["starts_at"],
+                party_size=form.cleaned_data["party_size"],
+                area_id=form.cleaned_data["area"].pk if form.cleaned_data.get("area") else None,
+                duration_minutes=form.cleaned_data.get("duration_minutes"),
+                note=form.cleaned_data.get("note", ""),
+            )
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
+        self.request.session["public_booking_success"] = {
+            "booking_id": booking.pk,
+            "booking_code": booking.booking_code,
+            "starts_at": booking.starts_at.isoformat(),
+            "ends_at": booking.ends_at.isoformat(),
+            "party_size": booking.party_size,
+            "area_name": booking.table.area.name,
+            "status": booking.get_status_display(),
+        }
+        return HttpResponseRedirect(reverse("customer_reservations:success"))
+
+
+class PublicReservationSuccessView(FormView):
+    template_name = "customer/reservation_success.html"
+    form_class = PublicReservationLookupForm
+
+    def get(self, request, *args, **kwargs):
+        success = request.session.pop("public_booking_success", None)
+        if not success:
+            return HttpResponseRedirect(reverse("customer_reservations:lookup"))
+        return self.render_to_response(self.get_context_data(success=success))
+
+
+class PublicReservationLookupView(FormView):
+    form_class = PublicReservationLookupForm
+    template_name = "customer/reservation_lookup.html"
+
+    def form_valid(self, form):
+        code = form.cleaned_data["reservation_code"]
+        try:
+            booking_id = int(code[2:])
+        except ValueError:
+            form.add_error("reservation_code", "Mã đặt bàn không hợp lệ.")
+            return self.form_invalid(form)
+        booking = Booking.objects.filter(pk=booking_id, is_walk_in=False, customer_phone=form.cleaned_data["phone"]).first()
+        if booking is None:
+            form.add_error(None, "Không tìm thấy đặt bàn với mã và số điện thoại này.")
+            return self.form_invalid(form)
+        verified = set(self.request.session.get("public_booking_verified", []))
+        verified.add(str(booking.pk))
+        self.request.session["public_booking_verified"] = list(verified)
+        return HttpResponseRedirect(reverse("customer_reservations:status", args=[booking.pk]))
+
+
+class PublicReservationStatusView(DetailView):
+    template_name = "customer/reservation_status.html"
+    context_object_name = "booking"
+    queryset = Booking.objects.select_related("table__area")
+
+    def dispatch(self, request, *args, **kwargs):
+        if str(kwargs["pk"]) not in request.session.get("public_booking_verified", []):
+            return HttpResponseRedirect(reverse("customer_reservations:lookup"))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        status_order = [Booking.Status.PENDING, Booking.Status.CONFIRMED, Booking.Status.SEATED, Booking.Status.COMPLETED]
+        current_index = status_order.index(self.object.status) if self.object.status in status_order else -1
+        context["timeline"] = [
+            {"label": status.label, "done": current_index >= status_index}
+            for status_index, status in enumerate(status_order)
+        ]
+        context["cancelled"] = self.object.status in (Booking.Status.CANCELLED, Booking.Status.NO_SHOW)
+        return context

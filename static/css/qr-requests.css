@@ -1,0 +1,135 @@
+.qr-request-box {
+    margin-bottom: 1rem;
+    padding: .7rem;
+    border: 1px solid color-mix(in srgb, #a74732 25%, var(--bs-border-color));
+    border-radius: .8rem;
+    background: color-mix(in srgb, #a74732 5%, var(--bs-body-bg))
+}
+
+.qr-request-box h3 {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin: 0 0 .55rem;
+    color: #a74732;
+    font-size: .76rem;
+    text-transform: uppercase
+}
+
+.qr-request-count {
+    display: grid;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    place-items: center;
+    border-radius: 999px;
+    color: #fff;
+    background: #a74732;
+    font-size: .65rem
+}
+
+.qr-request-card {
+    margin-top: .55rem;
+    padding: .7rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .7rem;
+    background: var(--bs-body-bg)
+}
+
+.qr-request-card header {
+    display: flex;
+    justify-content: space-between;
+    gap: .6rem
+}
+
+.qr-request-card header strong,
+.qr-request-card header small {
+    display: block
+}
+
+.qr-request-card header small {
+    margin-top: .15rem;
+    color: var(--bs-secondary-color);
+    font-size: .64rem
+}
+
+.qr-request-total {
+    color: #a74732;
+    font-size: .75rem;
+    white-space: nowrap
+}
+
+.qr-request-card ul {
+    display: grid;
+    gap: .35rem;
+    margin: .65rem 0;
+    padding: 0;
+    border-top: 1px dashed var(--bs-border-color);
+    list-style: none
+}
+
+.qr-request-card li {
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+    padding-top: .35rem;
+    font-size: .75rem
+}
+
+.qr-request-card li small {
+    display: block;
+    color: var(--bs-secondary-color);
+    font-size: .65rem
+}
+
+.qr-request-card li>strong {
+    color: #a74732;
+    font-size: .7rem;
+    white-space: nowrap
+}
+
+.qr-request-actions {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .65rem
+}
+
+.qr-request-actions form:first-child {
+    flex: 0 0 auto
+}
+
+.qr-reject-form {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    gap: .35rem
+}
+
+.qr-reject-form input {
+    min-width: 0;
+    flex: 1;
+    padding: .35rem .5rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .35rem;
+    font-size: .7rem
+}
+
+.qr-reject-form .btn,
+.qr-request-actions form:first-child .btn {
+    white-space: nowrap
+}
+
+@media(max-width:575.98px) {
+    .qr-request-actions {
+        align-items: stretch;
+        flex-direction: column
+    }
+
+    .qr-reject-form {
+        flex: auto
+    }
+
+    .qr-request-actions form:first-child .btn {
+        width: 100%
+    }
+}

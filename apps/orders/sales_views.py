@@ -22,7 +22,7 @@ from apps.menu.models import Category, Dish
 from apps.seating.models import Area, DiningTable
 from core.permissions import can_manage_accounts
 from .forms import PromotionCodeForm
-from .models import Invoice, OnlinePayment, Order, OrderItem, PaymentRequest, PromotionCode
+from .models import Invoice, OnlinePayment, Order, OrderItem, PaymentRequest, PromotionCode, QROrderRequest
 from .permissions import has_order_permission
 from . import services
 from .vnpay import verify as verify_vnpay
@@ -101,6 +101,11 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
         )
         for payment_request in payment_requests:
             payment_request.payable_amount = services.payment_preview(payment_request.order)["due"]
+        qr_requests = list(
+            QROrderRequest.objects.filter(status=QROrderRequest.Status.WAITING_CONFIRMATION)
+            .select_related("table__area", "order")
+            .prefetch_related("items__dish")
+        )
         can_collect_payment = has_order_permission(self.request.user, "collect_payment")
         can_collect_selected_payment = can_collect_payment and (
             selected_order is None or context.get("selected_can_full_payment", True)
@@ -115,6 +120,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             active_orders=active_orders,
             customers=Customer.objects.order_by("-created_at")[:30],
             payment_requests=payment_requests,
+            qr_requests=qr_requests,
             can_manage_order=has_order_permission(self.request.user, "manage_order"),
             can_collect_payment=can_collect_selected_payment,
             can_continue_partial_payment=can_collect_payment and bool(
@@ -133,6 +139,28 @@ class SalesStateView(SalesAccessMixin, View):
         ready = list(OrderItem.objects.filter(status=OrderItem.Status.READY).values("id", "order_id", "dish_name", "quantity", "ready_at"))
         requests = list(PaymentRequest.objects.filter(status=PaymentRequest.Status.WAITING).values("id", "order_id", "requested_at"))
         return JsonResponse({"tables": tables, "ready": ready, "payment_requests": requests})
+
+
+class QRRequestActionView(SalesAccessMixin, View):
+    permission = "manage_order"
+
+    def post(self, request, request_id, action):
+        try:
+            if action == "confirm":
+                qr_request = services.confirm_qr_order_request(actor=request.user, request_id=request_id)
+                messages.success(request, f"Đã xác nhận {qr_request}.")
+            elif action == "reject":
+                qr_request = services.reject_qr_order_request(
+                    actor=request.user, request_id=request_id, reason=request.POST.get("reason", "")
+                )
+                messages.success(request, f"Đã từ chối {qr_request}.")
+            else:
+                raise ValidationError("Thao tác yêu cầu QR không hợp lệ.")
+        except ValidationError as error:
+            messages.error(request, _error_text(error))
+        except QROrderRequest.DoesNotExist:
+            messages.error(request, "Yêu cầu QR không còn tồn tại.")
+        return redirect("sales:workspace")
 
 
 class CustomerLookupView(SalesAccessMixin, View):

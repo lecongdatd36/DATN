@@ -1,11 +1,12 @@
 from django.urls import path
 
-from .sales_views import CustomerLookupView, EstimatePrintView, FinishCleaningView, InvoicePrintView, PaymentActionView, PromotionActionView, PromotionCreateView, PromotionListView, PromotionUpdateView, SalesActionView, SalesStateView, SalesWorkspaceView, VnpayIpnView, VnpayReturnView
+from .sales_views import CustomerLookupView, EstimatePrintView, FinishCleaningView, InvoicePrintView, PaymentActionView, PromotionActionView, PromotionCreateView, PromotionListView, PromotionUpdateView, QRRequestActionView, SalesActionView, SalesStateView, SalesWorkspaceView, VnpayIpnView, VnpayReturnView
 
 app_name = "sales"
 urlpatterns = [
     path("", SalesWorkspaceView.as_view(), name="workspace"),
     path("state/", SalesStateView.as_view(), name="state"),
+    path("qr-requests/<int:request_id>/<str:action>/", QRRequestActionView.as_view(), name="qr_request_action"),
     path("customers/lookup/", CustomerLookupView.as_view(), name="customer_lookup"),
     path("orders/<int:order_id>/estimate/", EstimatePrintView.as_view(), name="estimate_print"),
     path("invoices/<int:invoice_id>/print/", InvoicePrintView.as_view(), name="invoice_print"),

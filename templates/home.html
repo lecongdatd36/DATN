@@ -1,28 +1,79 @@
-{% extends 'base.html' %}
+{% extends 'customer/base_customer.html' %}
+{% load static %}
+
+{% block title %}QLNH · Nhà hàng Việt{% endblock %}
 
 {% block content %}
-<section class="container hero" aria-labelledby="welcome-title">
-    <div class="row align-items-center g-5">
-        <div class="col-lg-8">
-            <span class="status-label"><span class="status-dot" aria-hidden="true"></span> Chào mừng đến với QLNH</span>
-            <h1 id="welcome-title" class="display-4 fw-semibold mt-4 mb-4">Không gian quản lý<br class="d-none d-md-block"> nhà hàng của bạn.</h1>
-            <p class="lead text-secondary mb-4 hero-description">Đăng nhập bằng tài khoản được cấp để truy cập không gian làm việc và quản lý thông tin tài khoản.</p>
-            {% if user.is_authenticated %}
-            <a class="btn btn-primary btn-lg" href="{% url 'accounts:workspace' %}">Vào không gian làm việc <span aria-hidden="true">→</span></a>
-            {% else %}
-            <a class="btn btn-primary btn-lg" href="{% url 'accounts:login' %}">Đăng nhập <span aria-hidden="true">→</span></a>
-            {% endif %}
+<section class="customer-hero" aria-labelledby="customer-hero-title">
+    <div class="customer-container customer-hero-grid">
+        <div>
+            <p class="customer-kicker">Ẩm thực Việt đương đại</p>
+            <h1 id="customer-hero-title">Một bàn ăn,<br><em>nhiều câu chuyện.</em></h1>
+            <p class="customer-hero-copy">Những món Việt thân quen được nấu chậm, bày đẹp và phục vụ bằng sự chu đáo của một căn bếp luôn chờ bạn ghé thăm.</p>
+            <div class="customer-actions">
+                <a class="customer-button" href="{% url 'customer_portal:menu' %}">Xem thực đơn <span aria-hidden="true">↗</span></a>
+                <a class="customer-button customer-button-light" href="{% url 'customer_reservations:create' %}">Đặt bàn</a>
+            </div>
         </div>
-        <div class="col-lg-4 d-none d-lg-block" aria-hidden="true">
-            <div class="welcome-mark">QLNH<span>Chu đáo trong từng trải nghiệm.</span></div>
+        <div class="customer-hero-art" aria-label="Không gian ẩm thực QLNH">
+            <div class="customer-hero-image-backdrop" aria-hidden="true"></div>
+            <div class="customer-hero-carousel" data-customer-hero-carousel>
+                {% for dish in hero_dishes %}<img class="customer-hero-image{% if not forloop.first %} is-hidden{% endif %}" src="{% if dish.thumbnail %}{{ dish.thumbnail.url }}{% else %}{{ dish.image.url }}{% endif %}" alt="{{ dish.name }}">{% empty %}<img class="customer-hero-image" src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa có ảnh món ăn">{% endfor %}
+            </div>
+            <div class="customer-hero-stamp" aria-hidden="true"><span>Nấu bằng ký ức, phục vụ bằng yêu thương</span></div>
         </div>
     </div>
 </section>
-<section id="about" class="container pb-5" aria-labelledby="about-title">
-    <div class="project-card p-4 p-md-5">
-        <p class="eyebrow mb-3">ĐỒ ÁN TỐT NGHIỆP</p>
-        <h2 id="about-title" class="h4 mb-3">Ứng dụng quản lý nhà hàng tích hợp AI</h2>
-        <p class="text-secondary mb-0">Quản lý tài khoản, nhân sự, khách hàng, bàn, lịch đặt, thực đơn và gọi món trong cùng một hệ thống. Theo dõi món từ khi gửi Bếp đến khi phục vụ khách. Mỗi nhân viên truy cập các chức năng theo vị trí được cấp.</p>
+
+<section class="customer-intro" aria-labelledby="customer-intro-title">
+    <div class="customer-container customer-intro-grid">
+        <div>
+            <span class="customer-section-label">Câu chuyện của chúng tôi</span>
+            <h2 id="customer-intro-title">Bếp Việt, tinh thần mới.</h2>
+        </div>
+        <div>
+            <p class="customer-intro-copy">QLNH là nơi những nguyên liệu quen thuộc được kể lại bằng nhịp điệu hiện đại. Từ mâm cơm gia đình đến những cuộc gặp quan trọng, chúng tôi chăm chút cho từng món ăn và từng khoảnh khắc quanh bàn.</p>
+            <p class="customer-intro-note">Tươi mỗi ngày · Ấm mỗi bữa</p>
+        </div>
+    </div>
+</section>
+
+<section class="customer-menu-preview" id="menu-preview" aria-labelledby="menu-preview-title">
+    <div class="customer-container">
+        <div class="customer-section-heading">
+            <div>
+                <span class="customer-section-label">Từ căn bếp hôm nay</span>
+                <h2 id="menu-preview-title">Món được yêu thích</h2>
+            </div>
+            <p>Thực đơn theo mùa, chọn từ những nguyên liệu gần gũi và ngon nhất trong ngày.</p>
+        </div>
+        <div class="customer-dish-grid">
+            {% for dish in featured_dishes %}
+            <article class="customer-dish-card">
+                <a href="{% url 'customer_portal:dish_detail' dish.pk %}">
+                    {% if dish.thumbnail or dish.image %}<img class="customer-dish-image" src="{% if dish.thumbnail %}{{ dish.thumbnail.url }}{% else %}{{ dish.image.url }}{% endif %}" alt="{{ dish.name }}">{% else %}<img class="customer-dish-image" src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa có ảnh cho {{ dish.name }}">{% endif %}
+                </a>
+                <div class="customer-dish-body"><div class="customer-dish-meta"><h3><a href="{% url 'customer_portal:dish_detail' dish.pk %}">{{ dish.name }}</a></h3><span class="customer-dish-price">{{ dish.price|floatformat:0 }}đ</span></div><p>{{ dish.description|default:'Một lựa chọn được chuẩn bị chỉn chu từ căn bếp QLNH.'|truncatewords:18 }}</p></div>
+            </article>
+            {% empty %}
+            <p>Thực đơn đang được cập nhật. Mời bạn xem lại sau.</p>
+            {% endfor %}
+        </div>
+        <div class="customer-category-strip" aria-label="Nhóm món nổi bật">
+            <a class="customer-category" href="{% url 'customer_portal:menu' %}">Tất cả</a>{% for category in menu_categories %}<a class="customer-category" href="{% url 'customer_portal:menu' %}?category={{ category.pk }}">{{ category.name }}</a>{% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="customer-reservation" id="reservation-cta" aria-labelledby="reservation-title">
+    <div class="customer-container customer-reservation-grid">
+        <div>
+            <span class="customer-section-label">Hẹn bạn bên bàn ăn</span>
+            <h2 id="reservation-title">Để chúng tôi chuẩn bị một chỗ thật đẹp.</h2>
+            <p>Chọn ngày, chọn giờ, phần còn lại để QLNH chăm sóc. Yêu cầu của bạn sẽ được xác nhận bởi nhân viên nhà hàng.</p>
+            <div class="customer-actions"><a class="customer-button" href="{% url 'customer_reservations:create' %}">Đặt bàn ngay <span aria-hidden="true">↗</span></a><a class="customer-button customer-button-light" href="{% url 'customer_reservations:check' %}">Kiểm tra bàn trước</a></div>
+        </div>
+        <div class="customer-reservation-aside"><strong>Thứ Hai – Chủ Nhật</strong><span>10:00 – 22:00<br>Nhận khách cuối lúc 21:00</span></div>
     </div>
 </section>
 {% endblock %}

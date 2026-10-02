@@ -1,0 +1,22 @@
+{% extends 'customer/base_customer.html' %}
+
+{% block title %}Kiểm tra bàn · QLNH{% endblock %}
+
+{% block content %}
+<section class="customer-form-page" aria-labelledby="table-check-title">
+    <div class="customer-container customer-narrow-content">
+        <span class="customer-section-label">Bắt đầu từ một chỗ ngồi</span>
+        <h1 id="table-check-title">Kiểm tra bàn phù hợp</h1>
+        <p class="customer-form-intro">Chọn thời gian và số khách. Chúng tôi sẽ tìm khu vực còn khả dụng cho bạn.</p>
+        <form class="customer-form-card" method="get">
+            {% include 'customer/includes/form_fields.html' with form=form %}
+            <button class="customer-button" type="submit">Kiểm tra bàn <span aria-hidden="true">→</span></button>
+        </form>
+        {% if searched %}
+        <div class="customer-result-card">
+            {% if available_areas %}<strong>Có khu vực phù hợp cho bạn.</strong><div class="customer-result-areas">{% for area in available_areas %}<span>{{ area.area__name }}</span>{% endfor %}</div><a class="customer-button" href="{% url 'customer_reservations:create' %}">Đặt bàn ngay</a>{% else %}<strong>Chưa có bàn phù hợp.</strong><p>Hãy thử một thời gian hoặc khu vực khác.</p>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

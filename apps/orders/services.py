@@ -17,8 +17,11 @@ from apps.bookings.services import seat_walk_in
 from apps.menu.models import Dish
 from apps.customers.models import Customer
 from apps.customers.services import tier_for_spending
-from apps.seating.models import DiningTable
-from .models import Invoice, OnlinePayment, Order, OrderItem, OrderActivityLog, Payment, PaymentBatch, PaymentRequest, PromotionCode
+from apps.seating.models import DiningTable, DiningTableQRToken
+from .models import (
+    Invoice, OnlinePayment, Order, OrderItem, OrderActivityLog, Payment, PaymentBatch,
+    PaymentRequest, PromotionCode, QROrderRequest, QROrderRequestItem,
+)
 from .permissions import has_order_permission
 from .vnpay import payment_url
 
@@ -288,6 +291,121 @@ def add_items(*, actor, order_id, expected_revision, items):
     )
     _save(actor, order, f"Thêm {len(created)} món", description)
     return created
+
+
+@transaction.atomic
+def create_qr_order_request(*, token, items, customer=None, note=""):
+    """Capture a customer QR cart without mutating the active Order or inventory."""
+    token = DiningTableQRToken.objects.select_for_update().select_related("table__area").filter(token=token).first()
+    if token is None or not token.is_valid:
+        raise ValidationError("Mã QR không hợp lệ hoặc đã hết hiệu lực.")
+    table = DiningTable.objects.select_for_update().select_related("area").get(pk=token.table_id)
+    if table.status != DiningTable.Status.OCCUPIED:
+        raise ValidationError("Bàn hiện chưa được mở. Vui lòng liên hệ nhân viên.")
+    active_orders = list(Order.objects.select_for_update().filter(
+        table=table, status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS),
+    ).order_by("-opened_at", "-pk")[:2])
+    if len(active_orders) != 1:
+        raise ValidationError("Bàn chưa có đúng một đơn đang phục vụ.")
+    if not isinstance(items, list) or not items or len(items) > 50:
+        raise ValidationError("Giỏ hàng phải có từ 1 đến 50 món.")
+    dish_ids = [item.get("dish_id") for item in items if isinstance(item, dict)]
+    if len(dish_ids) != len(items) or len(set(dish_ids)) != len(dish_ids):
+        raise ValidationError("Danh sách món trong giỏ không hợp lệ.")
+    dishes = {
+        dish.pk: dish
+        for dish in Dish.objects.select_related("category", "unit").filter(pk__in=dish_ids)
+    }
+    if len(dishes) != len(dish_ids):
+        raise ValidationError("Một món không còn tồn tại. Hãy tải lại menu.")
+    request_note = note.strip() if isinstance(note, str) else ""
+    if len(request_note) > 500:
+        raise ValidationError("Ghi chú yêu cầu không được dài quá 500 ký tự.")
+    request = QROrderRequest.objects.create(table=table, order=active_orders[0], customer=customer, note=request_note)
+    request_items = []
+    for data in items:
+        dish = dishes[data["dish_id"]]
+        if not dish.is_orderable:
+            raise ValidationError(f"{dish.name} đã hết hoặc ngừng phục vụ. Hãy chọn món khác.")
+        quantity = data.get("quantity")
+        _validate_quantity(quantity)
+        item_note = data.get("note", "")
+        if not isinstance(item_note, str) or len(item_note.strip()) > 500:
+            raise ValidationError(f"Ghi chú của {dish.name} không được dài quá 500 ký tự.")
+        request_items.append(QROrderRequestItem(
+            request=request, dish=dish, quantity=quantity,
+            note=item_note.strip(), unit_price_snapshot=dish.price,
+        ))
+    QROrderRequestItem.objects.bulk_create(request_items)
+    _log(None, active_orders[0], "Khách gửi yêu cầu gọi món QR", "; ".join(
+        f"{dish.name} × {data['quantity']}" for dish, data in ((dishes[item["dish_id"]], item) for item in items)
+    ))
+    return request
+
+
+@transaction.atomic
+def confirm_qr_order_request(*, actor, request_id):
+    actor = _lock_actor(actor, "manage_order")
+    qr_request = QROrderRequest.objects.select_for_update().select_related("table").get(pk=request_id)
+    order = Order.objects.select_for_update().get(pk=qr_request.order_id)
+    if qr_request.status != QROrderRequest.Status.WAITING_CONFIRMATION:
+        raise ValidationError("Yêu cầu này đã được xử lý.")
+    if qr_request.table_id != order.table_id or order.status not in (Order.Status.OPEN, Order.Status.IN_PROGRESS):
+        raise ValidationError("Bàn hoặc Order hiện tại không còn hợp lệ.")
+    if qr_request.table.status != DiningTable.Status.OCCUPIED:
+        raise ValidationError("Bàn hiện không còn đang phục vụ.")
+    items = list(qr_request.items.select_related("dish__category", "dish__unit").select_for_update())
+    if not items:
+        raise ValidationError("Yêu cầu không có món.")
+    for item in items:
+        if not item.dish.is_orderable:
+            raise ValidationError(f"{item.dish.name} hiện không còn phục vụ.")
+    created_order_items = []
+    for request_item in items:
+        order_item = OrderItem(
+            order=order,
+            dish=request_item.dish,
+            dish_code=request_item.dish.code,
+            dish_name=request_item.dish.name,
+            unit_name=request_item.dish.unit.name,
+            unit_price=request_item.unit_price_snapshot,
+            quantity=request_item.quantity,
+            note=request_item.note,
+            status=OrderItem.Status.DRAFT,
+        )
+        order_item.full_clean()
+        order_item.save()
+        request_item.order_item = order_item
+        request_item.save(update_fields=("order_item",))
+        created_order_items.append(order_item)
+    _recalculate_order(order)
+    order.revision += 1
+    order.save(update_fields=("subtotal", "total_amount", "revision", "updated_at"))
+    send_to_kitchen(actor=actor, order_id=order.pk, expected_revision=order.revision)
+    qr_request.status = QROrderRequest.Status.CONFIRMED
+    qr_request.confirmed_by = actor
+    qr_request.confirmed_at = timezone.now()
+    qr_request.save(update_fields=("status", "confirmed_by", "confirmed_at"))
+    _log(actor, order, "Xác nhận yêu cầu QR", f"{qr_request}: {', '.join(f'{item.dish.name} × {item.quantity}' for item in items)}; đã gửi Bếp.")
+    return qr_request
+
+
+@transaction.atomic
+def reject_qr_order_request(*, actor, request_id, reason):
+    actor = _lock_actor(actor, "manage_order")
+    qr_request = QROrderRequest.objects.select_for_update().select_related("order").get(pk=request_id)
+    if qr_request.status != QROrderRequest.Status.WAITING_CONFIRMATION:
+        raise ValidationError("Yêu cầu này đã được xử lý.")
+    reason = reason.strip() if isinstance(reason, str) else ""
+    if not reason or len(reason) > 500:
+        raise ValidationError({"reason": "Vui lòng nhập lý do từ chối, tối đa 500 ký tự."})
+    qr_request.status = QROrderRequest.Status.REJECTED
+    qr_request.rejected_by = actor
+    qr_request.rejected_at = timezone.now()
+    qr_request.reject_reason = reason
+    qr_request.save(update_fields=("status", "rejected_by", "rejected_at", "reject_reason"))
+    _log(actor, qr_request.order, "Từ chối yêu cầu QR", f"{qr_request}: {reason}")
+    return qr_request
 
 
 @transaction.atomic

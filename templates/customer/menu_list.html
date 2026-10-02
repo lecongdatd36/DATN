@@ -1,0 +1,52 @@
+{% extends 'customer/base_customer.html' %}
+{% load static %}
+
+{% block title %}Thực đơn · QLNH{% endblock %}
+
+{% block content %}
+<section class="customer-menu-page" aria-labelledby="customer-menu-title">
+    <div class="customer-container">
+        <div class="customer-menu-heading">
+            <div>
+                <span class="customer-section-label">Từ căn bếp hôm nay</span>
+                <h1 id="customer-menu-title">Thực đơn của QLNH</h1>
+                <p>Những món ăn được chuẩn bị chỉn chu để bạn chọn một bữa thật vừa ý.</p>
+            </div>
+            <form class="customer-search" method="get" role="search">
+                <label class="customer-visually-hidden" for="dish-search">Tìm món ăn</label>
+                <input id="dish-search" name="q" type="search" value="{{ query }}" placeholder="Tìm món bạn thích...">
+                {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                <button type="submit" aria-label="Tìm kiếm">Tìm</button>
+            </form>
+        </div>
+
+        <nav class="customer-menu-filters" aria-label="Lọc theo danh mục">
+            <a class="{% if not selected_category %}is-selected{% endif %}" href="{% url 'customer_portal:menu' %}{% if query %}?q={{ query|urlencode }}{% endif %}">Tất cả</a>
+            {% for category in categories %}
+            <a class="{% if selected_category == category.pk|stringformat:'s' %}is-selected{% endif %}" href="?category={{ category.pk }}{% if query %}&q={{ query|urlencode }}{% endif %}">{{ category.name }}</a>
+            {% endfor %}
+        </nav>
+
+        {% if dishes %}
+        <div class="customer-menu-grid">
+            {% for dish in dishes %}
+            <article class="customer-menu-card">
+                <a class="customer-menu-card-image-link" href="{% url 'customer_portal:dish_detail' dish.pk %}">
+                    {% if dish.thumbnail or dish.image %}<img class="customer-menu-card-image" src="{% if dish.thumbnail %}{{ dish.thumbnail.url }}{% else %}{{ dish.image.url }}{% endif %}" alt="{{ dish.name }}">{% else %}<img class="customer-menu-card-image" src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa có ảnh cho {{ dish.name }}">{% endif %}
+                    {% if dish.status == 'SOLD_OUT' %}<span class="customer-dish-badge customer-dish-badge-sold">Hết món</span>{% endif %}
+                </a>
+                <div class="customer-menu-card-body">
+                    <div class="customer-menu-card-top"><span class="customer-menu-card-category">{{ dish.category.name }}</span><span class="customer-dish-price">{{ dish.price|floatformat:0 }}đ</span></div>
+                    <h2><a href="{% url 'customer_portal:dish_detail' dish.pk %}">{{ dish.name }}</a></h2>
+                    <p>{{ dish.description|default:'Một lựa chọn được chuẩn bị chỉn chu từ căn bếp QLNH.'|truncatewords:18 }}</p>
+                    <a class="customer-text-link" href="{% url 'customer_portal:dish_detail' dish.pk %}">Xem chi tiết <span aria-hidden="true">→</span></a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="customer-empty-state"><strong>Chưa tìm thấy món phù hợp.</strong><p>Thử một từ khóa khác hoặc xem toàn bộ thực đơn.</p><a class="customer-button" href="{% url 'customer_portal:menu' %}">Xem tất cả món</a></div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

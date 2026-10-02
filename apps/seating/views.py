@@ -7,13 +7,14 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.generic import FormView, ListView
+from django.views.generic import FormView, ListView, TemplateView
 
 from core.forms import add_service_errors, filter_query_string
 from apps.orders.models import Order
 from apps.orders import services as order_services
 from .forms import AreaFilterForm, AreaForm, DiningTableForm, TableFilterForm
-from .models import Area, DiningTable, SeatingActivityLog
+from .models import Area, DiningTable, DiningTableQRToken, SeatingActivityLog
+from .qr import qr_data_uri
 from .permissions import has_seating_permission
 from .selectors import areas, table_status_counts, tables
 from .services import save_area, save_table
@@ -97,6 +98,21 @@ class TableListView(AreaListView):
             f"{table.pk}:{table.current_status}:{table.current_visit_id or 0}:{table.current_visit_revision or 0}:{table.held_booking_revision or 0}:{table.current_order_id or 0}:{table.current_order_status or '-'}:{table.current_order_total}"
             for table in rows
         )
+        return context
+
+
+class TableQRListView(SeatingPermissionMixin, TemplateView):
+    seating_permission = "view_diningtable"
+    template_name = "seating/table_qr.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cards = []
+        for table in DiningTable.objects.select_related("area").filter(is_active=True, area__is_active=True).order_by("area__name", "code"):
+            token, _ = DiningTableQRToken.objects.get_or_create(table=table)
+            scan_url = self.request.build_absolute_uri(reverse("customer_portal:qr_table", args=[token.token]))
+            cards.append({"table": table, "scan_url": scan_url, "qr_image": qr_data_uri(scan_url)})
+        context["qr_cards"] = cards
         return context
 
 
