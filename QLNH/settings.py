@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-
+import dj_database_url # deploy
 from django.contrib.messages import constants as message_constants
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware", # deploy
     "django.middleware.gzip.GZipMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -90,19 +91,30 @@ TEMPLATES = [
 WSGI_APPLICATION = "QLNH.wsgi.application"
 ASGI_APPLICATION = "QLNH.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": required_env("DB_NAME"),
-        "USER": required_env("DB_USER"),
-        "PASSWORD": required_env("DB_PASSWORD"),
-        "HOST": required_env("DB_HOST"),
-        "PORT": required_env("DB_PORT"),
-        "CONN_MAX_AGE": 60,
-        "CONN_HEALTH_CHECKS": True,
-        "OPTIONS": {"connect_timeout": 5},
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": required_env("DB_NAME"),
+            "USER": required_env("DB_USER"),
+            "PASSWORD": required_env("DB_PASSWORD"),
+            "HOST": required_env("DB_HOST"),
+            "PORT": required_env("DB_PORT"),
+            "CONN_MAX_AGE": 60,
+            "CONN_HEALTH_CHECKS": True,
+            "OPTIONS": {"connect_timeout": 5},
+        }
+    }
 
 # Custom User được khai báo trước migration đầu tiên của dự án.
 AUTH_USER_MODEL = "accounts.User"
