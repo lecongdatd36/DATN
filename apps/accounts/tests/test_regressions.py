@@ -294,6 +294,31 @@ class PersonnelRegressionTests(AccountTestCase):
         self.employee.save(update_fields=["is_active"])
         self.assertRedirects(self.client.post(url, data), reverse("sales:workspace"))
 
+    def test_login_redirects_each_staff_role_to_its_workspace(self):
+        user_model = get_user_model()
+        roles = {
+            "MANAGER": self.manager,
+            "WAITER": self.employee,
+        }
+        for code in ("KITCHEN", "INVENTORY"):
+            position = JobPosition.objects.get(code=code)
+            user = user_model.objects.create_user(username=f"{code.lower()}_login", password=PASSWORD)
+            user.groups.add(position.group)
+            roles[code] = user
+
+        destinations = {
+            "MANAGER": "accounts:workspace",
+            "WAITER": "sales:workspace",
+            "KITCHEN": "kitchen:workspace",
+            "INVENTORY": "inventory:workspace",
+        }
+        url = reverse("accounts:login")
+        for role, user in roles.items():
+            with self.subTest(role=role):
+                self.client.logout()
+                response = self.client.post(url, {"username": user.username, "password": PASSWORD})
+                self.assertRedirects(response, reverse(destinations[role]))
+
     def test_update_employee_form_valid_and_invalid_submissions(self):
         data = {
             "username": self.employee.username, "email": "changed@example.test",

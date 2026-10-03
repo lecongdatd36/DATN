@@ -25,6 +25,12 @@ class CustomerMenuTests(TestCase):
         self.assertContains(response, "Hết món")
         self.assertNotContains(response, "Món ẩn")
 
+    def test_public_pages_include_staff_login_link(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, reverse("accounts:login"))
+        self.assertContains(response, "Đăng nhập")
+
     def test_public_menu_search_and_category_filter(self):
         response = self.client.get(reverse("customer_portal:menu"), {"q": "bún"})
         self.assertContains(response, "Bún bò")

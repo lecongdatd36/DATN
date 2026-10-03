@@ -135,6 +135,20 @@ body.customer-layout {
     color: var(--customer-accent);
 }
 
+.customer-navigation .customer-nav-login {
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid var(--customer-accent);
+    border-radius: 999px;
+    color: var(--customer-accent);
+    font-weight: 700;
+}
+
+.customer-navigation .customer-nav-login:hover {
+    color: #fff9f0;
+    background: var(--customer-accent);
+}
+
 .customer-navigation .customer-nav-cta {
     min-height: 42px;
     padding: 10px 17px;
@@ -1667,6 +1681,10 @@ body.customer-layout {
     }
 
     .customer-navigation .customer-nav-cta {
+        text-align: center;
+    }
+
+    .customer-navigation .customer-nav-login {
         text-align: center;
     }
 

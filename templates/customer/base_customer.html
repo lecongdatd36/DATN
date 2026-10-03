@@ -26,6 +26,11 @@
                 <a href="{% url 'customer_portal:menu' %}">Thực đơn</a>
                 <a href="{% url 'customer_reservations:create' %}">Đặt bàn</a>
                 <a href="{% url 'customer_reservations:lookup' %}">Tra cứu</a>
+                {% if user.is_authenticated %}
+                <a class="customer-nav-login" href="{% url 'accounts:workspace' %}">Không gian quản lý</a>
+                {% else %}
+                <a class="customer-nav-login" href="{% url 'accounts:login' %}">Đăng nhập</a>
+                {% endif %}
                 <a class="customer-nav-cta" href="{% url 'customer_reservations:create' %}">Đặt bàn <span aria-hidden="true">↗</span></a>
             </nav>
         </div>
