@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     "apps.orders.apps.OrdersConfig",
     "apps.inventory.apps.InventoryConfig",
     "apps.reports.apps.ReportsConfig",
+    "cloudinary",
+    "cloudinary_storage",
     "apps.customer_portal.apps.CustomerPortalConfig",
 ]
 
@@ -139,6 +141,15 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# ẢNH TRÊN CLOUDINARY
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Cổng thanh toán VNPAY. Để trống hai mã định danh khi chỉ dùng tiền mặt/chuyển khoản tại quầy.
 VNPAY_PAYMENT_URL = os.environ.get(
