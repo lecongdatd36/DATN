@@ -3,6 +3,7 @@
 {% load static %}
 
 {% block title %}Menu tại bàn · QLNH{% endblock %}
+{% block body_class %}customer-qr-app-body{% endblock %}
 
 {% block content %}
 <section class="customer-form-page customer-qr-page" aria-labelledby="qr-title">
@@ -10,6 +11,19 @@
         {% if qr_error %}
         <div class="customer-empty-state"><span class="customer-section-label">QR bàn</span><strong>{{ qr_error }}</strong><p>Bàn chỉ có thể nhận gọi món sau khi nhân viên mở bàn và đơn hiện tại.</p><a class="customer-button" href="{% url 'customer_portal:menu' %}">Xem thực đơn chung</a></div>
         {% else %}
+        <header class="customer-qr-appbar">
+            <a class="customer-qr-home" href="{% url 'home' %}" aria-label="Về trang chủ">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M9.5 20v-6h5v6"/></svg>
+            </a>
+            <label class="customer-qr-search" for="qr-menu-search">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
+                <input id="qr-menu-search" type="search" inputmode="search" autocomplete="off" placeholder="Bạn muốn tìm món gì?" data-qr-search>
+            </label>
+            <button class="customer-qr-app-cart" type="button" data-qr-cart-open aria-label="Mở giỏ hàng">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14l-1 13H6L5 7Zm3 0a4 4 0 0 1 8 0"/></svg>
+                <span data-qr-count>0</span>
+            </button>
+        </header>
         <div class="customer-qr-heading"><div><span class="customer-section-label">Menu tại bàn</span><h1 id="qr-title">Bàn {{ table.code }}</h1><p>{{ table.area.name }} · {% if order_ready %}Đơn {{ order.order_code }} đang phục vụ.{% else %}Chọn món trong lúc chờ nhân viên nhận bàn.{% endif %}</p></div><span class="customer-qr-live{% if not order_ready %} is-waiting{% endif %}"><i aria-hidden="true"></i> {% if order_ready %}Đang phục vụ{% else %}Chờ nhận bàn{% endif %}</span></div>
         {% if not order_ready %}
         <section class="customer-qr-check-in" data-qr-check-in data-request-url="{% url 'customer_portal:qr_check_in' qr_token.token %}" data-state-url="{% url 'customer_portal:qr_table_state' qr_token.token %}">
@@ -17,17 +31,29 @@
             {% if can_request_check_in %}<form class="customer-qr-check-in-form" data-qr-check-in-form{% if check_in_request.status == 'WAITING_CONFIRMATION' %} hidden{% endif %}>{% csrf_token %}<label for="qr-guest-count">Số khách</label><div><input id="qr-guest-count" name="guest_count" type="number" min="1" max="{{ table.capacity }}" value="1" required><button class="customer-button" type="submit" data-qr-check-in-submit>Yêu cầu nhận bàn</button></div><small>Tối đa {{ table.capacity }} khách · yêu cầu tự hết hạn sau 15 phút.</small></form>{% endif %}
         </section>
         {% endif %}
-        <nav class="customer-qr-filters" aria-label="Lọc menu tại bàn"><button class="is-selected" type="button" data-qr-category="all">Tất cả</button>{% for category in categories %}<button type="button" data-qr-category="{{ category.pk }}">{{ category.name }}</button>{% endfor %}</nav>
+        <nav class="customer-qr-filters" aria-label="Danh mục món ăn"><button class="is-selected" type="button" data-qr-category="all">Tất cả</button>{% for category in categories %}<button type="button" data-qr-category="{{ category.pk }}">{{ category.name }}</button>{% endfor %}</nav>
         <form class="customer-qr-csrf" data-qr-csrf-form>{% csrf_token %}</form>
         <div class="customer-qr-layout">
-            <div class="customer-qr-dishes">
-                {% for dish in dishes %}
-                <article class="customer-qr-dish" data-qr-dish data-category="{{ dish.category_id }}" data-id="{{ dish.pk }}" data-name="{{ dish.name }}" data-price="{{ dish.price }}" data-available="{% if dish.status == 'AVAILABLE' %}true{% else %}false{% endif %}">
-                    {% if dish.thumbnail or dish.image %}<img src="{% if dish.thumbnail %}{{ dish.thumbnail.url }}{% else %}{{ dish.image.url }}{% endif %}" alt="{{ dish.name }}">{% else %}<img src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa có ảnh cho {{ dish.name }}">{% endif %}
-                    <div class="customer-qr-dish-copy"><span>{{ dish.category.name }}</span><h2>{{ dish.name }}</h2><p>{{ dish.description|default:'Món ăn được chuẩn bị chỉn chu từ căn bếp QLNH.'|truncatewords:12 }}</p><strong>{{ dish.price|floatformat:0 }}đ</strong></div>
-                    {% if dish.status == 'AVAILABLE' %}<button class="customer-qr-add" type="button" data-qr-add aria-label="Thêm {{ dish.name }}">+</button>{% else %}<span class="customer-qr-sold">Hết món</span>{% endif %}
-                </article>
-                {% empty %}<div class="customer-empty-state"><strong>Menu đang được cập nhật.</strong><p>Vui lòng thử lại sau ít phút.</p></div>{% endfor %}
+            <div class="customer-qr-menu" data-qr-menu-start>
+                {% if dishes %}
+                {% for category in categories %}
+                {% if category.customer_dishes %}
+                <section class="customer-qr-menu-section" id="qr-category-{{ category.pk }}" data-qr-section data-category="{{ category.pk }}">
+                    <h2>{{ category.name }}</h2>
+                    <div class="customer-qr-dishes">
+                        {% for dish in category.customer_dishes %}
+                        <article class="customer-qr-dish" data-qr-dish data-category="{{ dish.category_id }}" data-id="{{ dish.pk }}" data-name="{{ dish.name }}" data-search="{{ dish.name }} {{ dish.code }} {{ category.name }}" data-price="{{ dish.price }}" data-available="{% if dish.status == 'AVAILABLE' %}true{% else %}false{% endif %}">
+                            {% if dish.thumbnail or dish.image %}<img src="{% if dish.thumbnail %}{{ dish.thumbnail.url }}{% else %}{{ dish.image.url }}{% endif %}" alt="{{ dish.name }}" loading="lazy">{% else %}<img src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa có ảnh cho {{ dish.name }}" loading="lazy">{% endif %}
+                            <div class="customer-qr-dish-copy"><span>{{ category.name }}</span><h3>{{ dish.name }}</h3><p>{{ dish.description|default:'Món ăn được chuẩn bị chỉn chu từ căn bếp QLNH.'|truncatewords:12 }}</p><strong>{{ dish.price|floatformat:0 }}đ</strong></div>
+                            {% if dish.status == 'AVAILABLE' %}<button class="customer-qr-add" type="button" data-qr-add aria-label="Thêm {{ dish.name }}"><span aria-hidden="true">+</span><b data-qr-card-quantity hidden>0</b></button>{% else %}<span class="customer-qr-sold">Hết món</span>{% endif %}
+                        </article>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+                {% endfor %}
+                {% else %}<div class="customer-empty-state"><strong>Menu đang được cập nhật.</strong><p>Vui lòng thử lại sau ít phút.</p></div>{% endif %}
+                <div class="customer-qr-search-empty" data-qr-search-empty hidden><strong>Không tìm thấy món phù hợp.</strong><p>Thử nhập tên món khác hoặc xóa nội dung tìm kiếm.</p></div>
             </div>
             <aside class="customer-qr-cart" data-qr-cart-panel aria-labelledby="qr-cart-title"><div class="customer-qr-cart-header"><div><span class="customer-section-label">Lượt gọi món</span><h2 id="qr-cart-title">Giỏ hàng <span data-qr-count>0</span></h2></div><button class="customer-qr-cart-close" type="button" data-qr-cart-close aria-label="Đóng giỏ hàng">×</button></div><div class="customer-qr-cart-items" data-qr-items><p class="customer-qr-cart-empty">Chưa có món trong giỏ.</p></div><div class="customer-qr-cart-footer"><div><span>Tạm tính</span><strong data-qr-total>0đ</strong></div><button class="customer-button" type="button" data-qr-submit data-order-ready="{{ order_ready|yesno:'true,false' }}" data-endpoint="{% url 'customer_portal:qr_request' qr_token.token %}" disabled>{% if order_ready %}Gửi yêu cầu gọi món{% else %}Chờ nhân viên nhận bàn{% endif %}</button><p class="customer-qr-submit-status" data-qr-submit-status role="status" aria-live="polite" hidden></p><small>{% if order_ready %}Nhân viên sẽ xác nhận trước khi món được gửi bếp.{% else %}Giỏ hàng được giữ lại và sẽ mở gửi món ngay khi bàn được nhận.{% endif %}</small></div></aside>
         </div>
@@ -37,4 +63,4 @@
 </section>
 {% endblock %}
 
-{% block extra_js %}{% if not qr_error %}{% if not order_ready %}<script src="{% static 'customer/js/qr-check-in.js' %}?v=1" defer></script>{% endif %}<script src="{% static 'customer/js/qr-cart.js' %}?v=3" defer></script>{% endif %}{% endblock %}
+{% block extra_js %}{% if not qr_error %}{% if not order_ready %}<script src="{% static 'customer/js/qr-check-in.js' %}?v=1" defer></script>{% endif %}<script src="{% static 'customer/js/qr-cart.js' %}?v=4" defer></script>{% endif %}{% endblock %}

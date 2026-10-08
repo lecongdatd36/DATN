@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.menu.models import Category, Dish, Unit
 from apps.orders.models import Order
 from apps.seating.models import Area, DiningTable, DiningTableQRToken
 
@@ -12,6 +13,16 @@ class CustomerQRFoundationTests(TestCase):
         cls.area = Area.objects.create(name="Tầng 1", is_active=True)
         cls.table = DiningTable.objects.create(code="B10", area=cls.area, capacity=4, is_active=True)
         cls.token = DiningTableQRToken.objects.create(table=cls.table)
+        cls.category = Category.objects.create(name="Món chính", is_active=True)
+        cls.unit = Unit.objects.create(name="Phần", is_active=True)
+        cls.dish = Dish.objects.create(
+            code="QR-MAIN-01",
+            name="Cơm gà QR",
+            category=cls.category,
+            unit=cls.unit,
+            price=65000,
+            status=Dish.Status.AVAILABLE,
+        )
 
     def url(self):
         return reverse("customer_portal:qr_table", args=[self.token.token])
@@ -29,6 +40,15 @@ class CustomerQRFoundationTests(TestCase):
         self.assertEqual(Order.objects.count(), 0)
         self.table.refresh_from_db()
         self.assertEqual(self.table.status, DiningTable.Status.AVAILABLE)
+
+    def test_qr_menu_renders_mobile_search_category_and_dish_list(self):
+        response = self.client.get(self.url())
+
+        self.assertContains(response, 'data-qr-search')
+        self.assertContains(response, f'id="qr-category-{self.category.pk}"')
+        self.assertContains(response, 'data-qr-dish')
+        self.assertContains(response, self.dish.name)
+        self.assertContains(response, 'data-qr-cart-open', count=2)
 
     def test_qr_requires_exactly_one_active_order(self):
         self.table.status = DiningTable.Status.OCCUPIED

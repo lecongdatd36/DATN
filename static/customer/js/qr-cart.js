@@ -2,6 +2,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const dishCards = [...document.querySelectorAll("[data-qr-dish]")];
     const itemsElement = document.querySelector("[data-qr-items]");
     const panel = document.querySelector("[data-qr-cart-panel]");
+    const menuStart = document.querySelector("[data-qr-menu-start]");
+    const menuSections = [...document.querySelectorAll("[data-qr-section]")];
+    const searchInput = document.querySelector("[data-qr-search]");
+    const searchEmpty = document.querySelector("[data-qr-search-empty]");
     const storageKey = `qlnh-qr-cart-${window.location.pathname}`;
     const countElements = [...document.querySelectorAll("[data-qr-count]")];
     const totalElements = [...document.querySelectorAll("[data-qr-total]")];
@@ -18,6 +22,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const formatMoney = (value) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+    const normalizeText = (value) => String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/đ/g, "d")
+        .trim();
     const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (character) => ({
         "&": "&amp;",
         "<": "&lt;",
@@ -40,6 +50,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const { count, total } = summary();
         countElements.forEach((element) => { element.textContent = count; });
         totalElements.forEach((element) => { element.textContent = formatMoney(total); });
+        dishCards.forEach((card) => {
+            const quantity = cart[card.dataset.id]?.quantity || 0;
+            const quantityElement = card.querySelector("[data-qr-card-quantity]");
+            const plusElement = card.querySelector("[data-qr-add] > span");
+            if (quantityElement) {
+                quantityElement.textContent = quantity;
+                quantityElement.hidden = quantity === 0;
+            }
+            if (plusElement) plusElement.hidden = quantity > 0;
+            card.classList.toggle("has-quantity", quantity > 0);
+        });
         if (!itemsElement) return;
         itemsElement.innerHTML = "";
         const entries = Object.values(cart);
@@ -70,8 +91,21 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-qr-category]").forEach((button) => button.addEventListener("click", () => {
         document.querySelectorAll("[data-qr-category]").forEach((item) => item.classList.remove("is-selected"));
         button.classList.add("is-selected");
-        dishCards.forEach((card) => { card.hidden = button.dataset.qrCategory !== "all" && card.dataset.category !== button.dataset.qrCategory; });
+        const target = button.dataset.qrCategory === "all"
+            ? menuStart
+            : document.getElementById(`qr-category-${button.dataset.qrCategory}`);
+        target?.scrollIntoView({ behavior: "smooth", block: "start" });
     }));
+    searchInput?.addEventListener("input", (event) => {
+        const query = normalizeText(event.currentTarget.value);
+        dishCards.forEach((card) => {
+            card.hidden = Boolean(query) && !normalizeText(card.dataset.search).includes(query);
+        });
+        menuSections.forEach((section) => {
+            section.hidden = !section.querySelector("[data-qr-dish]:not([hidden])");
+        });
+        if (searchEmpty) searchEmpty.hidden = dishCards.some((card) => !card.hidden);
+    });
     itemsElement?.addEventListener("click", (event) => {
         const id = event.target.dataset.qrIncrease || event.target.dataset.qrDecrease;
         if (!id || !cart[id]) return;
@@ -85,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = event.target.dataset.qrNote;
         if (id && cart[id]) { cart[id].note = event.target.value; save(); }
     });
-    document.querySelector("[data-qr-cart-open]")?.addEventListener("click", () => panel?.classList.add("is-open"));
+    document.querySelectorAll("[data-qr-cart-open]").forEach((button) => button.addEventListener("click", () => panel?.classList.add("is-open")));
     document.querySelector("[data-qr-cart-close]")?.addEventListener("click", () => panel?.classList.remove("is-open"));
     submitButton?.addEventListener("click", async (event) => {
         const button = event.currentTarget;

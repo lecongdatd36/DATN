@@ -7,10 +7,10 @@
     <meta name="description" content="Nhà hàng QLNH - trải nghiệm ẩm thực Việt đương đại.">
     <title>{% block title %}QLNH · Nhà hàng Việt{% endblock %}</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="{% static 'customer/css/customer.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'customer/css/customer.css' %}?v=3">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="customer-layout">
+<body class="customer-layout {% block body_class %}{% endblock %}">
     <a class="customer-skip-link" href="#customer-main">Chuyển đến nội dung chính</a>
     <header class="customer-header" data-customer-header>
         <div class="customer-container customer-nav-wrap">
