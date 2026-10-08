@@ -81,6 +81,17 @@ def consume_order_items(*, actor, items):
     for recipe in recipes:
         recipes_by_dish[recipe.dish_id].append(recipe)
 
+    missing_recipes = sorted({
+        item.dish_name for item in items
+        if item.dish.tracks_inventory and not recipes_by_dish[item.dish_id]
+    })
+    if missing_recipes:
+        raise ValidationError(
+            "Chưa thể gửi Bếp vì món theo dõi kho chưa có công thức: "
+            + ", ".join(missing_recipes)
+            + ". Hãy khai báo nguyên liệu hoặc tắt quản lý kho cho món."
+        )
+
     required = defaultdict(Decimal)
     for item in items:
         for recipe in recipes_by_dish[item.dish_id]:

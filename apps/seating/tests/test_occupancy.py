@@ -31,7 +31,7 @@ class TableOccupancyTests(TestCase):
     def booking(self, status, *, start=None, end=None, table=None):
         return Booking.objects.create(
             customer=self.customer, customer_name=self.customer.full_name, customer_phone=self.customer.phone,
-            table=table or self.table, party_size=2, starts_at=start or self.now - timedelta(hours=1),
+            table=table or self.table, party_size=2, starts_at=start or self.now - timedelta(minutes=5),
             ends_at=end or self.now + timedelta(hours=1), status=status,
         )
 

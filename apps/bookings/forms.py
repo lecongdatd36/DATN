@@ -100,6 +100,10 @@ class BookingFilterForm(BootstrapFormMixin, forms.Form):
 
 class BookingSettingsForm(BootstrapFormMixin, forms.Form):
     default_duration_minutes = forms.IntegerField(label="Thời lượng mặc định (phút)", min_value=1, max_value=MAX_DURATION_MINUTES)
+    no_show_grace_minutes = forms.IntegerField(
+        label="Tự động ghi nhận không đến sau (phút)", min_value=0, max_value=240, required=False,
+        help_text="Tính từ giờ hẹn. Nhập 0 nếu muốn giải phóng bàn ngay khi quá giờ hẹn.",
+    )
     expected_revision = forms.IntegerField(widget=forms.HiddenInput)
 
 

@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.customers.models import Customer
@@ -20,51 +23,12 @@ TRANSITIONS = {
 }
 
 
-@transaction.atomic
-def expire_overdue_bookings(*, at=None):
-    """Mark unattended reservations as no-shows and reconcile their tables.
-
-    A reservation is only expired after its planned end time, so a late guest
-    can still be checked in during the reserved service window.  The seating
-    advisory lock keeps this sweep ordered with check-in, table opening and
-    booking edits.
-    """
-    lock_seating_schedule()
-    now = at or timezone.now()
-    expired = list(
-        Booking.objects.select_for_update()
-        .filter(
-            status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED),
-            ends_at__lte=now,
-        )
-        .order_by("table_id", "pk")
-    )
-    if not expired:
-        return 0
-
-    for booking in expired:
-        booking.status = Booking.Status.NO_SHOW
-        booking.revision += 1
-        booking.updated_at = now
-    Booking.objects.bulk_update(expired, ("status", "revision", "updated_at"))
-    table_ids = sorted({booking.table_id for booking in expired})
+def _reconcile_table_statuses(*, at, table_ids):
+    """Derive operational table state from live visits and reservations."""
+    table_ids = sorted({table_id for table_id in table_ids if table_id})
+    if not table_ids:
+        return
     tables = list(DiningTable.objects.select_for_update().filter(pk__in=table_ids).order_by("pk"))
-    table_codes = {table.pk: table.code for table in tables}
-    BookingActivityLog.objects.bulk_create(
-        [
-            BookingActivityLog(
-                booking=booking,
-                action="Tự động hủy quá hạn",
-                description=(
-                    f"Khách không đến trước khi hết thời gian giữ bàn; "
-                    f"bàn {table_codes.get(booking.table_id, booking.table_id)} được hệ thống giải phóng."
-                ),
-                performed_by=None,
-                actor_snapshot="Hệ thống",
-            )
-            for booking in expired
-        ]
-    )
     seated_table_ids = set(
         Booking.objects.filter(table_id__in=table_ids, status=Booking.Status.SEATED)
         .values_list("table_id", flat=True)
@@ -73,28 +37,89 @@ def expire_overdue_bookings(*, at=None):
         Booking.objects.filter(
             table_id__in=table_ids,
             status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED),
-            ends_at__gt=now,
+            starts_at__lte=at,
         ).values_list("table_id", flat=True)
     )
-    changed_tables = []
+    # Direct POS orders do not always have a Booking, but still occupy the table.
+    from apps.orders.models import Order
+    live_order_table_ids = set(
+        Order.objects.filter(
+            table_id__in=table_ids,
+            status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS, Order.Status.PAYMENT_REQUESTED),
+        ).values_list("table_id", flat=True)
+    )
+    changed = []
     for table in tables:
         if table.status == DiningTable.Status.CLEANING:
             continue
-        if table.pk in seated_table_ids:
+        if table.pk in seated_table_ids or table.pk in live_order_table_ids:
             next_status = DiningTable.Status.OCCUPIED
         elif table.pk in reserved_table_ids:
             next_status = DiningTable.Status.RESERVED
-        elif table.status != DiningTable.Status.OCCUPIED:
-            next_status = DiningTable.Status.AVAILABLE
         else:
-            # A directly opened POS order can occupy a table without a Booking.
-            continue
+            next_status = DiningTable.Status.AVAILABLE
         if table.status != next_status:
             table.status = next_status
-            table.updated_at = now
-            changed_tables.append(table)
-    if changed_tables:
-        DiningTable.objects.bulk_update(changed_tables, ("status", "updated_at"))
+            table.updated_at = at
+            changed.append(table)
+    if changed:
+        DiningTable.objects.bulk_update(changed, ("status", "updated_at"))
+
+
+@transaction.atomic
+def expire_overdue_bookings(*, at=None):
+    """Mark unattended reservations as no-shows and reconcile their tables.
+
+    The grace period is measured from the promised arrival time. The seating
+    advisory lock keeps this sweep ordered with check-in, table opening and
+    booking edits. This function also activates reservations whose start time
+    has just arrived, so the persisted table state follows the actual clock.
+    """
+    lock_seating_schedule()
+    now = at or timezone.now()
+    grace_minutes = BookingSettings.objects.only("no_show_grace_minutes").get(pk=1).no_show_grace_minutes
+    cutoff = now - timedelta(minutes=grace_minutes)
+    expired = list(
+        Booking.objects.select_for_update()
+        .filter(
+            status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED),
+            starts_at__lte=cutoff,
+        )
+        .order_by("table_id", "pk")
+    )
+    for booking in expired:
+        booking.status = Booking.Status.NO_SHOW
+        booking.revision += 1
+        booking.updated_at = now
+    if expired:
+        Booking.objects.bulk_update(expired, ("status", "revision", "updated_at"))
+
+    active_table_ids = set(
+        Booking.objects.filter(
+            status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED), starts_at__lte=now,
+        ).values_list("table_id", flat=True)
+    )
+    table_ids = active_table_ids | {booking.table_id for booking in expired} | set(
+        DiningTable.objects.filter(status=DiningTable.Status.RESERVED).values_list("pk", flat=True)
+    )
+    table_codes = dict(DiningTable.objects.filter(pk__in=table_ids).values_list("pk", "code"))
+    if expired:
+        BookingActivityLog.objects.bulk_create(
+            [
+                BookingActivityLog(
+                    booking=booking,
+                    action="Tự động ghi nhận không đến",
+                    description=(
+                        f"Khách chưa được nhận bàn sau {grace_minutes} phút tính từ giờ hẹn; "
+                        f"bàn {table_codes.get(booking.table_id, booking.table_id)} được hệ thống giải phóng."
+                    ),
+                    performed_by=None,
+                    actor_snapshot="Hệ thống",
+                )
+                for booking in expired
+            ]
+        )
+    _reconcile_table_statuses(at=now, table_ids=table_ids)
     return len(expired)
 
 
@@ -177,6 +202,7 @@ def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends
     if table is None:
         raise ValidationError({"table": "Bàn không còn tồn tại."})
     before = _snapshot(booking) if not created else ""
+    old_table_id = booking.table_id
     old = (booking.customer_id, booking.table_id, booking.party_size, booking.starts_at, booking.ends_at, booking.customer_name, booking.customer_phone)
     booking.customer = customer
     booking.table = table
@@ -196,9 +222,7 @@ def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends
         if not created:
             booking.revision += 1
         booking.save()
-        if table.status == DiningTable.Status.AVAILABLE:
-            table.status = DiningTable.Status.RESERVED
-            table.save(update_fields=("status", "updated_at"))
+        _reconcile_table_statuses(at=now, table_ids=(old_table_id, table.pk))
         _log(actor, booking, "Tạo đặt bàn" if created else "Sửa đặt bàn", (f"Trước: {before}\nSau: " if before else "") + _snapshot(booking))
     return booking
 
@@ -257,9 +281,7 @@ def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=No
     booking.full_clean()
     _validate_slot(booking)
     booking.save()
-    if table.status == DiningTable.Status.AVAILABLE:
-        table.status = DiningTable.Status.RESERVED
-        table.save(update_fields=("status", "updated_at"))
+    _reconcile_table_statuses(at=timezone.now(), table_ids=(table.pk,))
     note = " ".join(note.split()) if isinstance(note, str) else ""
     description = _snapshot(booking) + (f" Ghi chú khách: {note}." if note else "")
     _log(None, booking, "Khách tạo đặt bàn online", description)
@@ -267,19 +289,32 @@ def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=No
 
 
 @transaction.atomic
-def update_booking_settings(*, actor, default_duration_minutes, expected_revision):
+def update_booking_settings(*, actor, default_duration_minutes, expected_revision, no_show_grace_minutes=None):
     actor = _lock_actor(actor, "configure_bookings")
     settings = BookingSettings.objects.select_for_update().get(pk=1)
     if settings.revision != expected_revision:
         raise ValidationError("Cấu hình đã thay đổi. Hãy tải lại trang trước khi lưu.")
     planned_end(timezone.now(), default_duration_minutes)
+    if no_show_grace_minutes is None:
+        no_show_grace_minutes = settings.no_show_grace_minutes
+    if not isinstance(no_show_grace_minutes, int) or not 0 <= no_show_grace_minutes <= 240:
+        raise ValidationError({"no_show_grace_minutes": "Thời gian chờ phải từ 0 đến 240 phút."})
     previous = settings.default_duration_minutes
-    if previous != default_duration_minutes:
+    previous_grace = settings.no_show_grace_minutes
+    if previous != default_duration_minutes or previous_grace != no_show_grace_minutes:
         settings.default_duration_minutes = default_duration_minutes
+        settings.no_show_grace_minutes = no_show_grace_minutes
         settings.revision += 1
         settings.full_clean()
         settings.save()
-        BookingSettingsLog.objects.create(previous_minutes=previous, new_minutes=default_duration_minutes, performed_by=actor, actor_snapshot=actor.username)
+        BookingSettingsLog.objects.create(
+            previous_minutes=previous,
+            new_minutes=default_duration_minutes,
+            previous_no_show_grace_minutes=previous_grace,
+            new_no_show_grace_minutes=no_show_grace_minutes,
+            performed_by=actor,
+            actor_snapshot=actor.username,
+        )
     return settings
 
 
@@ -323,16 +358,16 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
     booking.status = target
     booking.revision += 1
     booking.save(update_fields=("status", "revision", "updated_at", "seated_at", "completed_at"))
-    table = DiningTable.objects.select_for_update().get(pk=booking.table_id)
     if target == Booking.Status.SEATED:
+        table = DiningTable.objects.select_for_update().get(pk=booking.table_id)
         table.status = DiningTable.Status.OCCUPIED
+        table.save(update_fields=("status", "updated_at"))
     elif target == Booking.Status.COMPLETED:
+        table = DiningTable.objects.select_for_update().get(pk=booking.table_id)
         table.status = DiningTable.Status.CLEANING
-    elif target in (Booking.Status.CANCELLED, Booking.Status.NO_SHOW) and table.status == DiningTable.Status.RESERVED:
-        table.status = DiningTable.Status.AVAILABLE
-    elif target == Booking.Status.CONFIRMED and table.status == DiningTable.Status.AVAILABLE:
-        table.status = DiningTable.Status.RESERVED
-    table.save(update_fields=("status", "updated_at"))
+        table.save(update_fields=("status", "updated_at"))
+    else:
+        _reconcile_table_statuses(at=now, table_ids=(booking.table_id,))
     reason_note = f" Lý do: {reason}." if reason else ""
     _log(actor, booking, booking.get_status_display(), f"{before} → {booking.get_status_display()}.{reason_note} " + _snapshot(booking))
     return booking
@@ -346,9 +381,14 @@ def transfer_table(*, actor, booking_id, table_id, expected_revision):
         raise ValidationError("Chỉ chuyển bàn cho lượt khách đang phục vụ.")
     if booking.revision != expected_revision:
         raise ValidationError("Lượt khách đã thay đổi. Hãy tải lại trang trước khi chuyển bàn.")
-    from apps.orders.models import Order
-    if Order.objects.filter(booking=booking, status=Order.Status.COMPLETED).exists():
+    from apps.orders.models import Order, OrderActivityLog
+    order = Order.objects.select_for_update().filter(booking=booking).first()
+    if order is not None and order.status == Order.Status.COMPLETED:
         raise ValidationError("Đơn đã thanh toán nên không thể chuyển bàn. Hãy trả bàn để hoàn tất lượt khách.")
+    if order is not None:
+        root_id = order.split_root_id or order.pk
+        if Order.objects.filter(Q(pk=root_id) | Q(split_root_id=root_id)).exclude(status=Order.Status.CANCELLED).count() > 1:
+            raise ValidationError("Hãy thanh toán hoặc ghép các hóa đơn đã tách trước khi chuyển bàn.")
 
     target = DiningTable.objects.select_related("area").filter(pk=table_id).first()
     if target is None:
@@ -362,6 +402,17 @@ def transfer_table(*, actor, booking_id, table_id, expected_revision):
     booking.table = target
     booking.revision += 1
     booking.save(update_fields=("table", "revision", "updated_at"))
+    if order is not None and order.status != Order.Status.CANCELLED:
+        order.table = target
+        order.revision += 1
+        order.save(update_fields=("table", "revision", "updated_at"))
+        OrderActivityLog.objects.create(
+            order=order,
+            action="Chuyển bàn",
+            description=f"Đồng bộ lượt {booking.booking_code}: bàn {old_table.code} → {target.code}.",
+            performed_by=actor,
+            actor_snapshot=actor.username,
+        )
     old_table.status = DiningTable.Status.CLEANING
     old_table.save(update_fields=("status", "updated_at"))
     target.status = DiningTable.Status.OCCUPIED

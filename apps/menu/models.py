@@ -53,6 +53,11 @@ class Dish(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name="dishes", verbose_name="Đơn vị tính")
     price = models.DecimalField("Giá bán (đồng)", max_digits=9, decimal_places=0, validators=[MinValueValidator(1), MaxValueValidator(999999999)])
     description = models.TextField("Mô tả", blank=True, max_length=2000, validators=[MaxLengthValidator(2000)])
+    tracks_inventory = models.BooleanField(
+        "Quản lý tồn kho theo công thức",
+        default=False,
+        help_text="Bật để bắt buộc món có ít nhất một nguyên liệu trước khi gửi xuống Bếp.",
+    )
     image = models.ImageField("Ảnh món", upload_to="dishes/", blank=True, validators=[validate_upload_size])
     thumbnail = models.ImageField(upload_to="dishes/", blank=True, editable=False)
     status = models.CharField("Trạng thái", max_length=10, choices=Status.choices, default=Status.AVAILABLE)

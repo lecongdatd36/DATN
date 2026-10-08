@@ -32,7 +32,7 @@ class CustomerReservationTests(TestCase):
         self.assertEqual(booking.customer_name, "Nguyễn An")
         self.assertEqual(Customer.objects.count(), 1)
         self.assertEqual(booking.table_id, self.table.pk)
-        self.assertEqual(booking.table.status, DiningTable.Status.RESERVED)
+        self.assertEqual(booking.table.status, DiningTable.Status.AVAILABLE)
         self.assertTrue(booking.activity_logs.filter(action="Khách tạo đặt bàn online").exists())
 
     def test_public_booking_reuses_existing_customer(self):

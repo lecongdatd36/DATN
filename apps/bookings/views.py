@@ -300,7 +300,11 @@ class BookingSettingsView(BookingPermissionMixin, FormView):
 
     def get_initial(self):
         settings = BookingSettings.objects.get(pk=1)
-        return {"default_duration_minutes": settings.default_duration_minutes, "expected_revision": settings.revision}
+        return {
+            "default_duration_minutes": settings.default_duration_minutes,
+            "no_show_grace_minutes": settings.no_show_grace_minutes,
+            "expected_revision": settings.revision,
+        }
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(settings_logs=BookingSettingsLog.objects.all()[:20], **kwargs)
@@ -311,7 +315,7 @@ class BookingSettingsView(BookingPermissionMixin, FormView):
         except ValidationError as error:
             add_service_errors(form, error)
             return self.form_invalid(form)
-        messages.success(self.request, "Đã lưu thời lượng mặc định. Các lịch đã đặt giữ nguyên giờ dự kiến.")
+        messages.success(self.request, "Đã lưu cấu hình đặt bàn và thời gian chờ khách đến.")
         return HttpResponseRedirect(reverse("bookings:settings"))
 
 

@@ -43,12 +43,15 @@ class DishForm(RevisionForm):
 
     class Meta:
         model = Dish
-        fields = ("code", "name", "category", "unit", "price", "status", "description", "image")
+        fields = ("code", "name", "category", "unit", "price", "status", "tracks_inventory", "description", "image")
         widgets = {"description": forms.Textarea(attrs={"rows": 3}), "price": forms.NumberInput(attrs={"min": 1, "max": 999999999, "step": 1})}
         help_texts = {"price": "Nhập số nguyên đồng, ví dụ 85000. Giá bán lớn hơn 0.", "code": "Mã duy nhất, ví dụ M001. Chữ thường được đổi thành chữ hoa.", "status": "Hết món: tạm hết, có thể mở lại. Ngừng bán: chỉ Quản lí được mở lại."}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["tracks_inventory"].widget.attrs["class"] = "form-check-input ms-2"
+        if not self.instance.pk:
+            self.fields["tracks_inventory"].initial = True
         for field, model in (("category", Category), ("unit", Unit)):
             self.fields[field].queryset = model.objects.filter(Q(is_active=True) | Q(pk=getattr(self.instance, f"{field}_id")))
 

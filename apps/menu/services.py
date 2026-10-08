@@ -57,15 +57,17 @@ def save_catalog(*, actor, kind, name, is_active, object_id=None, expected_revis
 
 
 def _snapshot(dish):
-    return f"{dish}; nhóm {dish.category.name}; đơn vị {dish.unit.name}; giá {dish.price} đồng; {dish.get_status_display()}; mô tả: {dish.description}; ảnh: {dish.image.name or 'chưa có'}"
+    inventory_label = "quản lý kho theo công thức" if dish.tracks_inventory else "không theo dõi kho"
+    return f"{dish}; nhóm {dish.category.name}; đơn vị {dish.unit.name}; giá {dish.price} đồng; {dish.get_status_display()}; {inventory_label}; mô tả: {dish.description}; ảnh: {dish.image.name or 'chưa có'}"
 
 
-def save_dish(*, actor, code, name, category_id, unit_id, price, status, description="", dish_id=None, expected_revision=None, image=None):
+def save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks_inventory=False, description="", dish_id=None, expected_revision=None, image=None):
     written = []
     try:
         with transaction.atomic():
             return _save_dish(actor=actor, code=code, name=name, category_id=category_id, unit_id=unit_id, price=price,
-                status=status, description=description, dish_id=dish_id, expected_revision=expected_revision, image=image, written=written)
+                status=status, tracks_inventory=tracks_inventory, description=description, dish_id=dish_id,
+                expected_revision=expected_revision, image=image, written=written)
     except Exception:
         # Files do not participate in DB rollback. Remove only this attempt's UUID files.
         storage = Dish._meta.get_field("image").storage
@@ -74,13 +76,13 @@ def save_dish(*, actor, code, name, category_id, unit_id, price, status, descrip
         raise
 
 
-def _save_dish(*, actor, code, name, category_id, unit_id, price, status, description, dish_id, expected_revision, image, written):
+def _save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks_inventory, description, dish_id, expected_revision, image, written):
     actor = _lock_actor(actor)
     dish = Dish.objects.select_for_update().get(pk=dish_id) if dish_id is not None else Dish()
     _check_revision(dish, expected_revision)
     created = dish.pk is None
     old_images = (dish.image.name, dish.thumbnail.name)
-    old = None if created else (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.description, *old_images)
+    old = None if created else (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.tracks_inventory, dish.description, *old_images)
     before = "" if created else _snapshot(dish)
     for field, model, pk in (("category", Category, category_id), ("unit", Unit, unit_id)):
         parent = model.objects.filter(pk=pk).first()
@@ -91,7 +93,7 @@ def _save_dish(*, actor, code, name, category_id, unit_id, price, status, descri
         setattr(dish, field, parent)
     dish.code = code.strip().upper() if isinstance(code, str) else ""
     dish.name, dish.description = _text(name), description.strip() if isinstance(description, str) else ""
-    dish.price, dish.status = price, status
+    dish.price, dish.status, dish.tracks_inventory = price, status, bool(tracks_inventory)
     dish.full_clean()
     if image is False:
         dish.image, dish.thumbnail = "", ""
@@ -101,7 +103,7 @@ def _save_dish(*, actor, code, name, category_id, unit_id, price, status, descri
         for filename, content in prepared:
             written.append(storage.save(filename, content))
         dish.image, dish.thumbnail = written
-    new = (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.description, dish.image.name, dish.thumbnail.name)
+    new = (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.tracks_inventory, dish.description, dish.image.name, dish.thumbnail.name)
     if created or old != new:
         if not created:
             dish.revision += 1

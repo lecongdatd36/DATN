@@ -121,7 +121,7 @@ class Command(BaseCommand):
             ("TM01", "Trái cây theo mùa", "Tráng miệng", "Phần", 49000), ("TM02", "Chè khúc bạch", "Tráng miệng", "Phần", 45000),
         )
         dishes = {
-            code: Dish.objects.create(code=code, name=name, category=categories[category], unit=units[unit], price=price,
+            code: Dish.objects.create(code=code, name=name, category=categories[category], unit=units[unit], price=price, tracks_inventory=True,
                                       description=f"{name} được chế biến theo công thức tiêu chuẩn của nhà hàng.")
             for code, name, category, unit, price in dish_rows
         }

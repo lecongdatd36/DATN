@@ -467,7 +467,7 @@ def confirm_qr_order_request(*, actor, request_id):
     _recalculate_order(order)
     order.revision += 1
     order.save(update_fields=("subtotal", "total_amount", "revision", "updated_at"))
-    send_to_kitchen(actor=actor, order_id=order.pk, expected_revision=order.revision)
+    _send_items_to_kitchen(actor=actor, order=order, items=created_order_items)
     qr_request.status = QROrderRequest.Status.CONFIRMED
     qr_request.confirmed_by = actor
     qr_request.confirmed_at = timezone.now()
@@ -546,6 +546,16 @@ def open_table(*, actor, table_id, guest_count, customer_id=None, reservation_id
             raise ValidationError("Đặt bàn không còn hợp lệ.")
     elif table.status == DiningTable.Status.RESERVED:
         raise ValidationError("Bàn đang được giữ chỗ; hãy chọn đúng lượt đặt bàn.")
+    else:
+        from apps.bookings.duration import planned_end
+        from apps.bookings.selectors import default_duration_minutes, overlapping_bookings
+        now = timezone.now()
+        if overlapping_bookings(
+            table_id=table.pk,
+            starts_at=now,
+            ends_at=planned_end(now, default_duration_minutes()),
+        ).exists():
+            raise ValidationError("Bàn sắp có lịch đặt trong thời gian phục vụ dự kiến. Hãy chọn bàn khác hoặc nhận đúng lịch đặt.")
     customer = Customer.objects.filter(pk=customer_id).first() if customer_id else None
     order = Order.objects.create(
         booking=reservation,
@@ -1002,14 +1012,45 @@ def move_table(*, actor, order_id, target_table_id):
         raise ValidationError("Hãy thanh toán hoặc ghép các hóa đơn đã tách trước khi chuyển bàn.")
     source = DiningTable.objects.select_for_update().get(pk=order.table_id)
     target = DiningTable.objects.select_for_update().select_related("area").get(pk=target_table_id)
+    if target.pk == source.pk:
+        raise ValidationError("Đơn đang ở bàn này.")
     if target.status != DiningTable.Status.AVAILABLE or not target.is_active or not target.area.is_active:
         raise ValidationError("Bàn đích không còn trống.")
     now = timezone.now()
-    if Booking.objects.filter(table=target, status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED), starts_at__lte=now, ends_at__gt=now).exists():
+    booking = Booking.objects.select_for_update().filter(pk=order.booking_id).first() if order.booking_id else None
+    if booking is not None:
+        if booking.status != Booking.Status.SEATED:
+            raise ValidationError("Lượt khách không còn ở trạng thái đang phục vụ.")
+        from apps.bookings.selectors import available_transfer_tables
+        if not available_transfer_tables(booking, at=now).filter(pk=target.pk).exists():
+            raise ValidationError("Bàn đích có khách, không đủ chỗ hoặc vướng lịch đặt trong thời gian còn lại.")
+    elif Booking.objects.filter(
+        table=target, status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED), starts_at__lte=now,
+    ).exists():
         raise ValidationError("Bàn đích đang có lịch giữ chỗ.")
+    else:
+        from apps.bookings.duration import planned_end
+        from apps.bookings.selectors import default_duration_minutes, overlapping_bookings
+        if overlapping_bookings(
+            table_id=target.pk,
+            starts_at=now,
+            ends_at=planned_end(now, default_duration_minutes()),
+        ).exists():
+            raise ValidationError("Bàn đích sắp có lịch đặt trong thời gian phục vụ dự kiến.")
     order.table = target
     order.revision += 1
     order.save(update_fields=("table", "revision", "updated_at"))
+    if booking is not None:
+        booking.table = target
+        booking.revision += 1
+        booking.save(update_fields=("table", "revision", "updated_at"))
+        BookingActivityLog.objects.create(
+            booking=booking,
+            action="Chuyển bàn",
+            description=f"Đồng bộ đơn {order.order_code}: bàn {source.code} → {target.code}.",
+            performed_by=actor,
+            actor_snapshot=actor.username,
+        )
     target.status = DiningTable.Status.OCCUPIED
     target.save(update_fields=("status", "updated_at"))
     source.status = DiningTable.Status.CLEANING
@@ -1032,11 +1073,7 @@ def finish_cleaning(*, actor, table_id):
     return table
 
 
-@transaction.atomic
-def send_to_kitchen(*, actor, order_id, expected_revision):
-    actor = _lock_actor(actor)
-    order = _order(order_id, expected_revision)
-    items = list(order.items.select_for_update().filter(status=OrderItem.Status.DRAFT))
+def _send_items_to_kitchen(*, actor, order, items):
     if not items:
         raise ValidationError("Không có món chưa gửi Bếp.")
     for item in items:
@@ -1048,6 +1085,26 @@ def send_to_kitchen(*, actor, order_id, expected_revision):
     order.status = Order.Status.IN_PROGRESS
     _save(actor, order, "Gửi Bếp", "; ".join(f"#{item.pk} {item}" for item in items))
     return order
+
+
+@transaction.atomic
+def send_to_kitchen(*, actor, order_id, expected_revision, item_ids=None):
+    actor = _lock_actor(actor)
+    order = _order(order_id, expected_revision)
+    items_query = order.items.select_for_update().select_related("dish").filter(status=OrderItem.Status.DRAFT)
+    selected_ids = None
+    if item_ids is not None:
+        try:
+            selected_ids = {int(item_id) for item_id in item_ids}
+        except (TypeError, ValueError) as exc:
+            raise ValidationError("Danh sách món gửi Bếp không hợp lệ.") from exc
+        if not selected_ids:
+            raise ValidationError("Không có món được chọn để gửi Bếp.")
+        items_query = items_query.filter(pk__in=selected_ids)
+    items = list(items_query)
+    if selected_ids is not None and len(items) != len(selected_ids):
+        raise ValidationError("Một món được duyệt không còn ở trạng thái chưa gửi Bếp.")
+    return _send_items_to_kitchen(actor=actor, order=order, items=items)
 
 
 @transaction.atomic
@@ -1085,10 +1142,17 @@ def transition_item(*, actor, order_id, item_id, expected_revision, target, reas
 
 @transaction.atomic
 def change_order_status(*, actor, order_id, expected_revision, target, reason=""):
+    target = {"AWAITING_PAYMENT": Order.Status.PAYMENT_REQUESTED, "VOID": Order.Status.CANCELLED}.get(target, target)
+    if target == Order.Status.CANCELLED:
+        return cancel_table_order(
+            actor=actor,
+            order_id=order_id,
+            expected_revision=expected_revision,
+            reason=reason,
+        )
     actor = _lock_actor(actor)
     order = _order(order_id, expected_revision, require_open=False)
     live = order.items.exclude(status=OrderItem.Status.CANCELLED)
-    target = {"AWAITING_PAYMENT": Order.Status.PAYMENT_REQUESTED, "VOID": Order.Status.CANCELLED}.get(target, target)
     if target == Order.Status.PAYMENT_REQUESTED and order.status in (Order.Status.OPEN, Order.Status.IN_PROGRESS):
         if not live.exists() or live.exclude(status=OrderItem.Status.SERVED).exists():
             raise ValidationError("Cần phục vụ xong tất cả món chưa hủy trước khi chuyển chờ thanh toán.")
@@ -1096,12 +1160,6 @@ def change_order_status(*, actor, order_id, expected_revision, target, reason=""
         invoice = Invoice.objects.select_for_update().filter(order=order).first()
         if invoice is not None and invoice.paid_amount > 0:
             raise ValidationError("Đơn đã thu một phần nên không thể gọi thêm món. Hãy thu đủ số tiền còn lại.")
-    elif target == Order.Status.CANCELLED and order.status in (Order.Status.OPEN, Order.Status.IN_PROGRESS):
-        if live.exists():
-            raise ValidationError("Hãy hủy từng món và ghi lý do trước khi hủy đơn.")
-        reason = reason.strip() if isinstance(reason, str) else ""
-        if not reason or len(reason) > 500:
-            raise ValidationError({"reason": "Lý do hủy đơn phải có từ 1 đến 500 ký tự."})
     else:
         raise ValidationError("Không thể chuyển trạng thái đơn theo cách này.")
     order.status = target

@@ -296,7 +296,7 @@ class OrderActionView(OrderPermissionMixin, FormView):
     form_class = RevisionForm
     action = "send"
     titles = {"add": "Thêm món", "edit": "Sửa món chưa gửi Bếp", "send": "Gửi các món chưa gửi xuống Bếp",
-              "await": "Chuyển đơn sang chờ thanh toán", "reopen": "Tiếp tục gọi món", "void": "Hủy đơn"}
+              "await": "Chuyển đơn sang chờ thanh toán", "reopen": "Tiếp tục gọi món", "void": "Hủy bàn và đơn"}
 
     def get_form_class(self):
         return {"add": BulkAddItemsForm, "edit": ItemEditForm, "void": ReasonForm}.get(self.action, RevisionForm)

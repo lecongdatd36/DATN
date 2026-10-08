@@ -13,7 +13,7 @@ from django.utils import timezone
 
 from apps.accounts.admin import admin_site
 from apps.bookings.models import Booking, BookingActivityLog
-from apps.bookings.services import transition_booking
+from apps.bookings.services import transfer_table, transition_booking
 from apps.customers.models import Customer
 from apps.menu.models import Category, Unit, Dish
 from apps.menu.services import save_dish
@@ -391,25 +391,65 @@ class OrderTests(TestCase):
         self.assertFalse(kitchen_items().exists())
         self.assertIn("quản lí duyệt", OrderActivityLog.objects.first().description)
 
-    def test_cancelling_sent_item_and_void_order_allows_finishing_visit(self):
+    def test_void_after_cancelling_sent_items_closes_visit_and_cleans_table(self):
         item = self.add()
         self.send()
         self.transition(item, "CANCELLED", reason="Khách đổi ý trước khi làm")
         with self.assertRaises(ValidationError):
             self.complete_visit()
         services.change_order_status(actor=self.waiter, order_id=self.order.pk, expected_revision=self.revision(), target="VOID", reason="Khách không dùng món")
-        self.complete_visit()
+        self.order.refresh_from_db()
+        self.visit.refresh_from_db()
+        self.assertEqual(self.order.status, Order.Status.CANCELLED)
+        self.assertEqual(self.visit.status, Booking.Status.CANCELLED)
         self.assertEqual(tables().get(pk=self.table.pk).current_status, "cleaning")
         with self.assertRaises(ValidationError):
             self.add()
-        self.assertEqual(OrderActivityLog.objects.filter(action="Đã hủy").count(), 2)
+        self.assertTrue(OrderActivityLog.objects.filter(order=self.order, action="Hủy bàn").exists())
 
-    def test_void_rejects_live_items_and_needs_reason(self):
+    def test_void_needs_reason_and_cancels_draft_items_atomically(self):
         with self.assertRaises(ValidationError):
             services.change_order_status(actor=self.waiter, order_id=self.order.pk, expected_revision=self.revision(), target="VOID")
-        self.add()
-        with self.assertRaises(ValidationError):
-            services.change_order_status(actor=self.waiter, order_id=self.order.pk, expected_revision=self.revision(), target="VOID", reason="Không được bỏ qua món")
+        item = self.add()
+        services.change_order_status(actor=self.waiter, order_id=self.order.pk, expected_revision=self.revision(), target="VOID", reason="Khách đổi ý")
+        item.refresh_from_db()
+        self.visit.refresh_from_db()
+        self.assertEqual(item.status, OrderItem.Status.CANCELLED)
+        self.assertEqual(self.visit.status, Booking.Status.CANCELLED)
+
+    def test_table_transfer_keeps_booking_and_order_in_sync_both_directions(self):
+        order_revision = self.order.revision
+        visit_revision = self.visit.revision
+        services.move_table(actor=self.waiter, order_id=self.order.pk, target_table_id=self.other_table.pk)
+        self.order.refresh_from_db()
+        self.visit.refresh_from_db()
+        self.assertEqual(self.order.table_id, self.other_table.pk)
+        self.assertEqual(self.visit.table_id, self.other_table.pk)
+        self.assertEqual(self.order.revision, order_revision + 1)
+        self.assertEqual(self.visit.revision, visit_revision + 1)
+
+        services.finish_cleaning(actor=self.waiter, table_id=self.table.pk)
+        transfer_table(
+            actor=self.waiter,
+            booking_id=self.visit.pk,
+            table_id=self.table.pk,
+            expected_revision=self.visit.revision,
+        )
+        self.order.refresh_from_db()
+        self.visit.refresh_from_db()
+        self.assertEqual(self.order.table_id, self.table.pk)
+        self.assertEqual(self.visit.table_id, self.table.pk)
+
+    def test_inventory_tracked_dish_requires_recipe_before_sending(self):
+        Dish.objects.filter(pk=self.dish.pk).update(tracks_inventory=True)
+        self.add(quantity=1)
+        with self.assertRaisesMessage(ValidationError, "chưa có công thức"):
+            self.send()
+        ingredient = Ingredient.objects.create(
+            code="NL-CONG-THUC", name="Nguyên liệu công thức", unit="kg", stock_quantity=10,
+        )
+        RecipeIngredient.objects.create(dish=self.dish, ingredient=ingredient, quantity=Decimal("0.100"))
+        self.send()
 
     def test_booking_completion_is_blocked_in_service_and_ui(self):
         self.client.force_login(self.waiter)

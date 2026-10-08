@@ -58,7 +58,8 @@ class InventoryWorkspaceView(InventoryPermissionMixin, TemplateView):
             lines = list(dish.recipe_ingredients.all())
             if not lines:
                 dish.inventory_portions = 0
-                missing_recipe_count += 1
+                if dish.tracks_inventory:
+                    missing_recipe_count += 1
                 continue
             dish.inventory_portions = min(int(line.ingredient.stock_quantity // line.quantity) for line in lines)
             if dish.inventory_portions <= 0:

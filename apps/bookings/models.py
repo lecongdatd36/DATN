@@ -45,6 +45,7 @@ class Booking(models.Model):
         indexes = [
             models.Index(fields=("table", "status", "starts_at", "ends_at"), name="booking_slot_idx"),
             models.Index(fields=("status", "ends_at"), name="booking_expiry_idx"),
+            models.Index(fields=("status", "starts_at"), name="booking_no_show_idx"),
         ]
 
     @property
@@ -84,6 +85,10 @@ class BookingSettings(models.Model):
     default_duration_minutes = models.PositiveSmallIntegerField(
         "Thời lượng mặc định (phút)", default=120, validators=[MinValueValidator(1), MaxValueValidator(1440)],
     )
+    no_show_grace_minutes = models.PositiveSmallIntegerField(
+        "Thời gian chờ khách đến (phút)", default=15,
+        validators=[MinValueValidator(0), MaxValueValidator(240)],
+    )
     revision = models.PositiveIntegerField(default=1, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -94,12 +99,15 @@ class BookingSettings(models.Model):
         constraints = [
             models.CheckConstraint(condition=models.Q(pk=1), name="booking_settings_singleton"),
             models.CheckConstraint(condition=models.Q(default_duration_minutes__gte=1, default_duration_minutes__lte=1440), name="booking_default_duration_range"),
+            models.CheckConstraint(condition=models.Q(no_show_grace_minutes__gte=0, no_show_grace_minutes__lte=240), name="booking_no_show_grace_range"),
         ]
 
 
 class BookingSettingsLog(models.Model):
     previous_minutes = models.PositiveSmallIntegerField()
     new_minutes = models.PositiveSmallIntegerField()
+    previous_no_show_grace_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
+    new_no_show_grace_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
     performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     actor_snapshot = models.CharField(max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)

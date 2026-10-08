@@ -43,6 +43,26 @@ class QRStaffActionTests(TestCase):
         with self.assertRaises(ValidationError):
             confirm_qr_order_request(actor=self.manager, request_id=qr_request.pk)
 
+    def test_confirm_only_sends_items_from_the_approved_qr_request(self):
+        staff_draft = OrderItem.objects.create(
+            order=self.order,
+            dish=self.dish,
+            dish_code=self.dish.code,
+            dish_name=self.dish.name,
+            unit_name=self.unit.name,
+            unit_price=self.dish.price,
+            quantity=1,
+            status=OrderItem.Status.DRAFT,
+        )
+        qr_request = self.request()
+
+        confirm_qr_order_request(actor=self.manager, request_id=qr_request.pk)
+
+        staff_draft.refresh_from_db()
+        qr_item = OrderItem.objects.get(qr_request_item__request=qr_request)
+        self.assertEqual(staff_draft.status, OrderItem.Status.DRAFT)
+        self.assertEqual(qr_item.status, OrderItem.Status.PENDING)
+
     def test_reject_requires_reason_and_does_not_create_order_item(self):
         qr_request = self.request()
         with self.assertRaises(ValidationError):
@@ -71,7 +91,7 @@ class QRStaffActionTests(TestCase):
 
     def test_kitchen_failure_rolls_back_order_item_and_request(self):
         qr_request = self.request()
-        with patch("apps.orders.services.send_to_kitchen", side_effect=ValidationError("Không đủ tồn kho.")):
+        with patch("apps.orders.services._send_items_to_kitchen", side_effect=ValidationError("Không đủ tồn kho.")):
             with self.assertRaises(ValidationError):
                 confirm_qr_order_request(actor=self.manager, request_id=qr_request.pk)
 

@@ -22,7 +22,7 @@
             <td class="text-end">{{ line.ingredient.average_unit_cost|dong }} đ/{{ line.ingredient.unit }}</td>
             <td class="text-end fw-semibold">{{ line.estimated_cost|dong }} đ</td>
             <td class="text-end">{% if can_manage %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="line_id" value="{{ line.pk }}"><button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button></form>{% endif %}</td>
-          </tr>{% empty %}<tr><td colspan="5" class="text-center py-5 text-secondary">Chưa khai báo công thức. Món vẫn bán được nhưng giá vốn sẽ bằng 0 và không tự trừ nguyên liệu.</td></tr>{% endfor %}</tbody>
+          </tr>{% empty %}<tr><td colspan="5" class="text-center py-5 text-secondary">{% if dish.tracks_inventory %}Chưa khai báo công thức. Món sẽ bị chặn khi gửi Bếp để tránh sai tồn kho và giá vốn.{% else %}Món đang không theo dõi kho nên có thể bán mà không cần công thức.{% endif %}</td></tr>{% endfor %}</tbody>
         </table></div>
       </section>
     </div>

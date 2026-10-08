@@ -151,8 +151,18 @@ class BookingDurationTests(TestCase):
         self.assertEqual(BookingSettingsLog.objects.count(), 1)
         self.assertEqual(BookingSettingsLog.objects.get().previous_minutes, 120)
 
+    def test_no_show_grace_is_configurable_and_audited(self):
+        settings = self.configure(120, no_show_grace_minutes=25)
+        self.assertEqual(settings.no_show_grace_minutes, 25)
+        log = BookingSettingsLog.objects.get()
+        self.assertEqual(log.previous_no_show_grace_minutes, 15)
+        self.assertEqual(log.new_no_show_grace_minutes, 25)
+
     def test_database_settings_constraints(self):
-        for changes in ({"default_duration_minutes": 0}, {"default_duration_minutes": 1441}, {"id": 2}):
+        for changes in (
+            {"default_duration_minutes": 0}, {"default_duration_minutes": 1441},
+            {"no_show_grace_minutes": 241}, {"id": 2},
+        ):
             with self.assertRaises(IntegrityError), transaction.atomic():
                 BookingSettings.objects.filter(pk=1).update(**changes)
 

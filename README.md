@@ -396,6 +396,18 @@ Từ **Bàn → Thanh toán bàn**, Thu ngân hoặc Quản lí có thể lọc 
 
 ## Kiểm tra và chạy ứng dụng
 
+### Tự động xử lý khách không đến
+
+Trong **Đặt bàn → Cấu hình**, đặt số phút chờ khách kể từ giờ hẹn (mặc định 15 phút). Khi quá hạn mà lượt chưa được nhận, hệ thống chuyển lịch sang **Không đến** và trả bàn về **Trống**; màn hình Bán hàng/Bàn đang mở sẽ tự quét cùng nhịp cập nhật trạng thái.
+
+Để việc quét vẫn chạy khi không có nhân viên mở ứng dụng, cấu hình scheduler/Render Cron chạy mỗi phút với lệnh:
+
+```text
+python manage.py expire_overdue_bookings
+```
+
+Lệnh dùng chung khóa nghiệp vụ với thao tác nhận bàn nên có thể chạy lặp an toàn, không hủy nhầm lượt đã nhận khách.
+
 Từ thư mục gốc, với môi trường ảo đã kích hoạt và `.env` đã điền:
 
 ```powershell
