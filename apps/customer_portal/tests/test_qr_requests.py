@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import uuid4
 
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase, override_settings
@@ -6,7 +7,7 @@ from django.urls import reverse
 
 from apps.inventory.models import InventoryTransaction
 from apps.menu.models import Category, Dish, Unit
-from apps.orders.models import Order, OrderItem, QROrderRequest
+from apps.orders.models import Order, OrderItem, QROrderRequest, QRServiceRequest
 from apps.orders.services import create_qr_order_request
 from apps.seating.models import Area, DiningTable, DiningTableQRToken
 
@@ -71,6 +72,43 @@ class CustomerQRRequestTests(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["status"], "Chờ nhân viên xác nhận")
+
+    def test_retry_with_same_client_id_does_not_create_duplicate_order_request(self):
+        client_request_id = str(uuid4())
+        url = reverse("customer_portal:qr_request", args=[self.token.token])
+        body = (
+            '{"client_request_id":"%s","items":[{"dish_id":%d,"quantity":1}]}'
+            % (client_request_id, self.dish.pk)
+        )
+
+        first = self.client.post(url, data=body, content_type="application/json")
+        second = self.client.post(url, data=body, content_type="application/json")
+
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 200)
+        self.assertTrue(second.json()["duplicate"])
+        self.assertEqual(second.json()["request_id"], first.json()["request_id"])
+        self.assertEqual(QROrderRequest.objects.count(), 1)
+
+    def test_customer_can_request_table_service_without_duplicate_waiting_request(self):
+        url = reverse("customer_portal:qr_service_request", args=[self.token.token])
+        first = self.client.post(
+            url,
+            data='{"request_type":"WATER","client_request_id":"%s"}' % uuid4(),
+            content_type="application/json",
+        )
+        second = self.client.post(
+            url,
+            data='{"request_type":"WATER","client_request_id":"%s"}' % uuid4(),
+            content_type="application/json",
+        )
+
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(first.json()["request_id"], second.json()["request_id"])
+        self.assertEqual(QRServiceRequest.objects.count(), 1)
+        status = self.client.get(reverse("customer_portal:qr_status_data", args=[self.token.token]))
+        self.assertEqual(status.json()["service_requests"][0]["request_type"], "Xin thêm nước")
 
     @override_settings(ALLOWED_HOSTS=["qr.example.test"])
     def test_https_proxy_qr_post_passes_real_csrf_checks(self):

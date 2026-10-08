@@ -5,7 +5,10 @@ from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
+
+from core.menu_lock import lock_menu
 
 from .models import (
     Ingredient, InventoryTransaction, PurchaseReceipt, PurchaseReceiptLine,
@@ -14,8 +17,69 @@ from .models import (
 from .permissions import has_inventory_permission
 
 
+def dish_inventory_state(dish):
+    lines = list(dish.recipe_ingredients.all())
+    if not dish.tracks_inventory:
+        return {"has_recipe": bool(lines), "can_prepare": True, "portions": None}
+    if not lines:
+        return {"has_recipe": False, "can_prepare": False, "portions": 0}
+    portions = min(
+        int(line.ingredient.stock_quantity // line.quantity) if line.ingredient.is_active else 0
+        for line in lines
+    )
+    return {"has_recipe": True, "can_prepare": portions > 0, "portions": portions}
+
+
+def sync_dish_availability(*, actor, ingredient_ids=(), dish_ids=()):
+    """Auto-close tracked dishes on shortage; reopening always remains a staff decision."""
+    ingredient_ids = {int(value) for value in ingredient_ids}
+    dish_ids = {int(value) for value in dish_ids}
+    if not ingredient_ids and not dish_ids:
+        return []
+
+    lock_menu()
+    from apps.menu.models import Dish, MenuActivityLog
+
+    criteria = Q(pk__in=dish_ids)
+    if ingredient_ids:
+        criteria |= Q(recipe_ingredients__ingredient_id__in=ingredient_ids)
+    candidate_ids = list(
+        Dish.objects.filter(criteria, tracks_inventory=True)
+        .order_by()
+        .values_list("pk", flat=True)
+        .distinct()
+    )
+    dishes = list(
+        Dish.objects.select_for_update()
+        .filter(pk__in=candidate_ids)
+        .prefetch_related("recipe_ingredients__ingredient")
+        .order_by("pk")
+    )
+    changed = []
+    for dish in dishes:
+        state = dish_inventory_state(dish)
+        if state["can_prepare"] or dish.status != Dish.Status.AVAILABLE:
+            continue
+        dish.status = Dish.Status.SOLD_OUT
+        dish.inventory_sold_out_at = timezone.now()
+        dish.revision += 1
+        dish.save(update_fields=("status", "inventory_sold_out_at", "revision", "updated_at"))
+        MenuActivityLog.objects.create(
+            entity="DISH",
+            object_id=dish.pk,
+            label_snapshot=str(dish),
+            action="Tự động hết món theo kho",
+            description="Không đủ nguyên liệu hoạt động để làm thêm 1 phần; hệ thống đã khóa gọi món.",
+            performed_by=actor if getattr(actor, "pk", None) else None,
+            actor_snapshot=getattr(actor, "username", "Hệ thống"),
+        )
+        changed.append(dish.pk)
+    return changed
+
+
 @transaction.atomic
 def record_inventory_transaction(*, actor, ingredient_id, transaction_type, quantity, unit_cost=0, supplier_id=None, note=""):
+    lock_menu()
     actor = get_user_model().objects.select_for_update().get(pk=actor.pk)
     if not has_inventory_permission(actor, "manage_inventory"):
         raise PermissionDenied("Bạn không có quyền cập nhật kho.")
@@ -54,7 +118,7 @@ def record_inventory_transaction(*, actor, ingredient_id, transaction_type, quan
     ingredient.stock_quantity = after
     ingredient.average_unit_cost = average_cost
     ingredient.save(update_fields=("stock_quantity", "average_unit_cost", "updated_at"))
-    return InventoryTransaction.objects.create(
+    inventory_transaction = InventoryTransaction.objects.create(
         ingredient=ingredient,
         transaction_type=transaction_type,
         quantity=quantity,
@@ -65,10 +129,13 @@ def record_inventory_transaction(*, actor, ingredient_id, transaction_type, quan
         note=(note or "").strip(),
         performed_by=actor,
     )
+    sync_dish_availability(actor=actor, ingredient_ids=(ingredient.pk,))
+    return inventory_transaction
 
 
 def consume_order_items(*, actor, items):
     """Atomically deduct recipe quantities and snapshot cost for draft order items."""
+    lock_menu()
     items = [item for item in items if item.inventory_deducted_at is None]
     if not items:
         return
@@ -137,10 +204,12 @@ def consume_order_items(*, actor, items):
         item.unit_cost_snapshot = unit_cost.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
         item.inventory_deducted_at = now
         item.save(update_fields=("unit_cost_snapshot", "inventory_deducted_at"))
+    sync_dish_availability(actor=actor, ingredient_ids=required.keys())
 
 
 def return_order_item_inventory(*, actor, item):
     """Return the exact quantities deducted for an item cancelled before cooking starts."""
+    lock_menu()
     if item.inventory_deducted_at is None or item.inventory_returned_at is not None:
         return False
     usages = list(
@@ -173,11 +242,13 @@ def return_order_item_inventory(*, actor, item):
         )
     item.inventory_returned_at = now
     item.save(update_fields=("inventory_returned_at",))
+    sync_dish_availability(actor=actor, ingredient_ids=ingredient_ids)
     return True
 
 
 @transaction.atomic
 def save_recipe_line(*, actor, dish_id, ingredient_id, quantity):
+    lock_menu()
     actor = get_user_model().objects.select_for_update().get(pk=actor.pk)
     if not has_inventory_permission(actor, "manage_inventory"):
         raise PermissionDenied("Bạn không có quyền cập nhật công thức món.")
@@ -191,16 +262,19 @@ def save_recipe_line(*, actor, dish_id, ingredient_id, quantity):
     )
     line.full_clean()
     line.save()
+    sync_dish_availability(actor=actor, dish_ids=(dish.pk,))
     return line
 
 
 @transaction.atomic
 def delete_recipe_line(*, actor, dish_id, line_id):
+    lock_menu()
     actor = get_user_model().objects.select_for_update().get(pk=actor.pk)
     if not has_inventory_permission(actor, "manage_inventory"):
         raise PermissionDenied("Bạn không có quyền cập nhật công thức món.")
     line = RecipeIngredient.objects.select_for_update().get(pk=line_id, dish_id=dish_id)
     line.delete()
+    sync_dish_availability(actor=actor, dish_ids=(dish_id,))
 
 
 def _document_code(prefix):
@@ -208,6 +282,7 @@ def _document_code(prefix):
 
 
 def _lock_inventory_actor(actor):
+    lock_menu()
     actor = get_user_model().objects.select_for_update().get(pk=actor.pk)
     if not has_inventory_permission(actor, "manage_inventory"):
         raise PermissionDenied("Bạn không có quyền thực hiện nghiệp vụ kho.")
@@ -285,6 +360,7 @@ def confirm_purchase_receipt(*, actor, receipt_id):
     receipt.confirmed_by = actor
     receipt.received_at = timezone.now()
     receipt.save(update_fields=("status", "confirmed_by", "received_at", "updated_at"))
+    sync_dish_availability(actor=actor, ingredient_ids=ingredients.keys())
     return receipt
 
 
@@ -353,6 +429,7 @@ def post_stocktake(*, actor, stocktake_id, actual_quantities):
     stocktake.posted_by = actor
     stocktake.posted_at = timezone.now()
     stocktake.save(update_fields=("status", "posted_by", "posted_at"))
+    sync_dish_availability(actor=actor, ingredient_ids=ingredients.keys())
     return stocktake
 
 
@@ -394,4 +471,5 @@ def record_waste(*, actor, ingredient_id, quantity, reason, note=""):
         note=f"{record.get_reason_display()} · {record.waste_code}" + (f" · {record.note}" if record.note else ""),
         performed_by=actor, source_type="WASTE", source_id=record.pk,
     )
+    sync_dish_availability(actor=actor, ingredient_ids=(ingredient.pk,))
     return record

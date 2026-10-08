@@ -6,7 +6,7 @@
 {% block body_class %}customer-qr-app-body{% endblock %}
 
 {% block content %}
-<section class="customer-form-page customer-qr-page" aria-labelledby="qr-title">
+<section class="customer-form-page customer-qr-page" aria-labelledby="qr-title" data-qr-menu-page data-menu-state-url="{% url 'customer_portal:qr_table_state' qr_token.token %}" data-menu-version="{{ menu_version }}" data-order-ready="{{ order_ready|yesno:'true,false' }}">
     <div class="customer-container customer-narrow-content">
         {% if qr_error %}
         <div class="customer-empty-state"><span class="customer-section-label">QR bàn</span><strong>{{ qr_error }}</strong><p>Bàn chỉ có thể nhận gọi món sau khi nhân viên mở bàn và đơn hiện tại.</p><a class="customer-button" href="{% url 'customer_portal:menu' %}">Xem thực đơn chung</a></div>
@@ -25,6 +25,7 @@
             </button>
         </header>
         <div class="customer-qr-heading"><div><span class="customer-section-label">Menu tại bàn</span><h1 id="qr-title">Bàn {{ table.code }}</h1><p>{{ table.area.name }} · {% if order_ready %}Đơn {{ order.order_code }} đang phục vụ.{% else %}Chọn món trong lúc chờ nhân viên nhận bàn.{% endif %}</p></div><span class="customer-qr-live{% if not order_ready %} is-waiting{% endif %}"><i aria-hidden="true"></i> {% if order_ready %}Đang phục vụ{% else %}Chờ nhận bàn{% endif %}</span></div>
+        {% if order_ready %}<section class="customer-qr-service" data-qr-service data-endpoint="{% url 'customer_portal:qr_service_request' qr_token.token %}"><div><span class="customer-section-label">Hỗ trợ tại bàn</span><h2>Bạn cần thêm gì?</h2></div><div class="customer-qr-service-actions"><button type="button" data-service-type="STAFF">Gọi nhân viên</button><button type="button" data-service-type="WATER">Thêm nước</button><button type="button" data-service-type="ICE">Thêm đá</button><button type="button" data-service-type="BOWLS">Thêm chén</button></div><p data-service-status role="status" aria-live="polite"></p><a href="{% url 'customer_portal:qr_status' qr_token.token %}">Theo dõi món và yêu cầu phục vụ →</a></section>{% endif %}
         {% if not order_ready %}
         <section class="customer-qr-check-in" data-qr-check-in data-request-url="{% url 'customer_portal:qr_check_in' qr_token.token %}" data-state-url="{% url 'customer_portal:qr_table_state' qr_token.token %}">
             <div class="customer-qr-check-in-copy"><span class="customer-section-label">Nhận bàn qua QR</span><h2>{% if check_in_request.status == 'WAITING_CONFIRMATION' %}Đã báo nhân viên{% else %}Bàn chưa được mở{% endif %}</h2><p data-qr-check-in-message>{% if check_in_request.status == 'WAITING_CONFIRMATION' %}Yêu cầu {{ check_in_request }} đang chờ xác nhận. Trang sẽ tự mở gọi món sau khi nhân viên nhận bàn.{% elif check_in_request.status == 'REJECTED' %}Nhân viên đã từ chối: {{ check_in_request.reject_reason }}{% elif check_in_request.status == 'EXPIRED' %}Yêu cầu trước đã hết hạn. Bạn có thể gửi lại.{% else %}{{ check_in_hint }}{% endif %}</p></div>
@@ -63,4 +64,4 @@
 </section>
 {% endblock %}
 
-{% block extra_js %}{% if not qr_error %}{% if not order_ready %}<script src="{% static 'customer/js/qr-check-in.js' %}?v=1" defer></script>{% endif %}<script src="{% static 'customer/js/qr-cart.js' %}?v=4" defer></script>{% endif %}{% endblock %}
+{% block extra_js %}{% if not qr_error %}{% if not order_ready %}<script src="{% static 'customer/js/qr-check-in.js' %}?v=1" defer></script>{% else %}<script src="{% static 'customer/js/qr-service.js' %}?v=1" defer></script>{% endif %}<script src="{% static 'customer/js/qr-cart.js' %}?v=5" defer></script>{% endif %}{% endblock %}

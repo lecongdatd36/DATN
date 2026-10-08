@@ -81,6 +81,7 @@ def _save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks
     dish = Dish.objects.select_for_update().get(pk=dish_id) if dish_id is not None else Dish()
     _check_revision(dish, expected_revision)
     created = dish.pk is None
+    previous_status = dish.status if not created else None
     old_images = (dish.image.name, dish.thumbnail.name)
     old = None if created else (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.tracks_inventory, dish.description, *old_images)
     before = "" if created else _snapshot(dish)
@@ -94,6 +95,8 @@ def _save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks
     dish.code = code.strip().upper() if isinstance(code, str) else ""
     dish.name, dish.description = _text(name), description.strip() if isinstance(description, str) else ""
     dish.price, dish.status, dish.tracks_inventory = price, status, bool(tracks_inventory)
+    if not dish.tracks_inventory or (previous_status is not None and previous_status != status):
+        dish.inventory_sold_out_at = None
     dish.full_clean()
     if image is False:
         dish.image, dish.thumbnail = "", ""
@@ -111,6 +114,9 @@ def _save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks
         _log(actor, dish, "DISH", "Thêm mới" if created else "Cập nhật", (f"Trước: {before}\nSau: " if before else "") + _snapshot(dish))
         if old_images != (dish.image.name, dish.thumbnail.name):
             transaction.on_commit(lambda: delete_unreferenced_images(old_images), robust=True)
+    from apps.inventory.services import sync_dish_availability
+    sync_dish_availability(actor=actor, dish_ids=(dish.pk,))
+    dish.refresh_from_db()
     return dish
 
 
@@ -123,10 +129,19 @@ def change_availability(*, actor, dish_id, status, expected_revision):
         raise ValidationError({"status": "Chỉ được chọn Còn món hoặc Hết món."})
     if not dish.can_toggle_availability:
         raise ValidationError("Món hoặc danh mục đã ngừng sử dụng. Hãy liên hệ Quản lí để mở lại.")
+    if status == Dish.Status.AVAILABLE and dish.tracks_inventory:
+        from apps.inventory.services import dish_inventory_state
+        dish = Dish.objects.prefetch_related("recipe_ingredients__ingredient").get(pk=dish.pk)
+        state = dish_inventory_state(dish)
+        if not state["can_prepare"]:
+            raise ValidationError(
+                "Kho chưa đủ nguyên liệu hoạt động để làm 1 phần. Hãy nhập kho hoặc cập nhật công thức trước."
+            )
     if dish.status != status:
         before = dish.get_status_display()
         dish.status = status
+        dish.inventory_sold_out_at = None
         dish.revision += 1
-        dish.save(update_fields=("status", "revision", "updated_at"))
+        dish.save(update_fields=("status", "inventory_sold_out_at", "revision", "updated_at"))
         _log(actor, dish, "DISH", "Cập nhật còn / hết món", f"{before} → {dish.get_status_display()}.")
     return dish

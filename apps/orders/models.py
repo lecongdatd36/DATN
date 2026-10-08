@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+from uuid import uuid4
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator, MaxLengthValidator
 from django.db import models
@@ -425,6 +426,7 @@ class QROrderRequest(models.Model):
     customer = models.ForeignKey("customers.Customer", on_delete=models.SET_NULL, null=True, blank=True, related_name="qr_order_requests")
     status = models.CharField(max_length=24, choices=Status.choices, default=Status.WAITING_CONFIRMATION, db_index=True)
     note = models.TextField(blank=True, max_length=500)
+    client_request_id = models.UUIDField(default=uuid4, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     confirmed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="confirmed_qr_order_requests")
     confirmed_at = models.DateTimeField(null=True, blank=True)
@@ -445,6 +447,61 @@ class QROrderRequest(models.Model):
 
     def __str__(self):
         return f"QR-{self.pk:06d}"
+
+
+class QRServiceRequest(models.Model):
+    class RequestType(models.TextChoices):
+        STAFF = "STAFF", "Gọi nhân viên"
+        WATER = "WATER", "Xin thêm nước"
+        ICE = "ICE", "Xin thêm đá"
+        BOWLS = "BOWLS", "Xin thêm chén"
+        OTHER = "OTHER", "Yêu cầu khác"
+
+    class Status(models.TextChoices):
+        WAITING = "WAITING", "Đang chờ nhân viên"
+        COMPLETED = "COMPLETED", "Đã xử lý"
+        CANCELLED = "CANCELLED", "Đã hủy"
+
+    table = models.ForeignKey(
+        "seating.DiningTable", on_delete=models.PROTECT, related_name="qr_service_requests"
+    )
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="qr_service_requests")
+    request_type = models.CharField(max_length=12, choices=RequestType.choices)
+    note = models.CharField(max_length=300, blank=True)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.WAITING, db_index=True)
+    client_request_id = models.UUIDField(default=uuid4, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="completed_qr_service_requests",
+    )
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("created_at", "pk")
+        verbose_name = "yêu cầu phục vụ QR"
+        verbose_name_plural = "yêu cầu phục vụ QR"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(request_type__in=("STAFF", "WATER", "ICE", "BOWLS", "OTHER")),
+                name="qr_service_request_valid_type",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(status__in=("WAITING", "COMPLETED", "CANCELLED")),
+                name="qr_service_request_valid_status",
+            ),
+            models.UniqueConstraint(
+                fields=("table", "request_type"),
+                condition=models.Q(status="WAITING"),
+                name="one_waiting_qr_service_per_table_type",
+            ),
+        ]
+
+    def __str__(self):
+        return f"PVQR-{self.pk:06d}" if self.pk else "PVQR"
 
 
 class QROrderRequestItem(models.Model):

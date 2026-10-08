@@ -139,3 +139,48 @@ class InventoryServiceTests(TestCase):
             reverse("inventory:waste"),
         ):
             self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_stock_shortage_auto_sells_out_but_restock_requires_manual_reopen(self):
+        category = Category.objects.create(name="Món tự động hết")
+        unit = Unit.objects.create(name="Phần tự động")
+        dish = Dish.objects.create(
+            code="AUTO-HET",
+            name="Món theo kho",
+            category=category,
+            unit=unit,
+            price=50000,
+            tracks_inventory=True,
+            status=Dish.Status.AVAILABLE,
+        )
+        RecipeIngredient.objects.create(dish=dish, ingredient=self.ingredient, quantity=Decimal("1"))
+        record_inventory_transaction(
+            actor=self.user,
+            ingredient_id=self.ingredient.pk,
+            transaction_type=InventoryTransaction.Type.IMPORT,
+            quantity="2",
+            unit_cost="10000",
+        )
+        dish.refresh_from_db()
+        self.assertEqual(dish.status, Dish.Status.AVAILABLE)
+
+        record_inventory_transaction(
+            actor=self.user,
+            ingredient_id=self.ingredient.pk,
+            transaction_type=InventoryTransaction.Type.EXPORT,
+            quantity="2",
+        )
+        dish.refresh_from_db()
+        self.assertEqual(dish.status, Dish.Status.SOLD_OUT)
+        self.assertIsNotNone(dish.inventory_sold_out_at)
+
+        record_inventory_transaction(
+            actor=self.user,
+            ingredient_id=self.ingredient.pk,
+            transaction_type=InventoryTransaction.Type.IMPORT,
+            quantity="2",
+            unit_cost="10000",
+        )
+        dish.refresh_from_db()
+        self.assertEqual(dish.status, Dish.Status.SOLD_OUT)
+        self.client.force_login(self.user)
+        self.assertContains(self.client.get(reverse("inventory:workspace")), "Đủ kho · cần mở bán")

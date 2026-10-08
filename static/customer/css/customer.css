@@ -1992,6 +1992,9 @@ body.customer-layout {
     }
 }
 
+.customer-qr-service{display:grid;gap:10px;margin:0 0 18px;padding:16px 18px;border:1px solid #f1dfcf;border-radius:15px;background:#fffaf5}.customer-qr-service h2,.customer-qr-service-status h2{margin:2px 0 0;font-size:18px}.customer-qr-service-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.customer-qr-service-actions button{min-height:44px;padding:8px;border:1px solid #ead7c6;border-radius:11px;color:#6d3529;background:#fff;font-size:13px;font-weight:750}.customer-qr-service-actions button:hover,.customer-qr-service-actions button.is-requested{border-color:#ef8d23;color:#fff;background:#ef8d23}.customer-qr-service p{min-height:20px;margin:0;color:#6c625a;font-size:12px}.customer-qr-service>a{color:#8f3829;font-size:13px;font-weight:750;text-decoration:none}.customer-qr-service-status{margin-top:28px}.customer-qr-back-menu{display:inline-flex;margin-top:20px}.customer-qr-status-card.is-rejected,.customer-qr-status-card.is-cancelled{border-color:#efc8c8}.customer-qr-status-card.is-completed,.customer-qr-status-card.is-confirmed{border-color:#b8dfc8}.customer-qr-status-reason{margin:8px 0 0;color:#a13232;font-size:13px}
+@media (max-width:800px){.customer-qr-service{margin:0 12px 10px;padding:14px}.customer-qr-service-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 /* Keep QR app rules last so the shared customer components cannot override them. */
 body.customer-qr-app-body {
     background: #f5f5f4;

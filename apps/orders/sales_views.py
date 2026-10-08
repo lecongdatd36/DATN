@@ -25,7 +25,10 @@ from apps.seating.models import Area, DiningTable
 from core.http import conditional_json_response
 from core.permissions import can_manage_accounts
 from .forms import PromotionCodeForm
-from .models import Invoice, OnlinePayment, Order, OrderItem, PaymentRequest, PromotionCode, QRCheckInRequest, QROrderRequest
+from .models import (
+    Invoice, OnlinePayment, Order, OrderItem, PaymentRequest, PromotionCode,
+    QRCheckInRequest, QROrderRequest, QRServiceRequest,
+)
 from .permissions import has_order_permission
 from . import services
 from .vnpay import verify as verify_vnpay
@@ -125,6 +128,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
                 payment_requests=[],
                 qr_check_in_requests=[],
                 qr_requests=[],
+                qr_service_requests=[],
                 can_manage_order=has_order_permission(self.request.user, "manage_order"),
                 can_collect_payment=can_collect_selected_payment,
                 can_continue_partial_payment=can_collect_payment and bool(
@@ -171,6 +175,14 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             .select_related("table__area")
             .order_by("created_at", "pk")
         )
+        qr_service_requests = list(
+            QRServiceRequest.objects.filter(
+                status=QRServiceRequest.Status.WAITING,
+                order__status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS),
+            )
+            .select_related("table__area", "order")
+            .order_by("created_at", "pk")
+        )
         can_collect_payment = has_order_permission(self.request.user, "collect_payment")
         can_collect_selected_payment = can_collect_payment and (
             selected_order is None or context.get("selected_can_full_payment", True)
@@ -187,6 +199,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             payment_requests=payment_requests,
             qr_check_in_requests=qr_check_in_requests,
             qr_requests=qr_requests,
+            qr_service_requests=qr_service_requests,
             can_manage_order=has_order_permission(self.request.user, "manage_order"),
             can_collect_payment=can_collect_selected_payment,
             can_continue_partial_payment=can_collect_payment and bool(
@@ -216,6 +229,13 @@ class SalesStateView(SalesAccessMixin, View):
             ),
             "qr_orders": _state_summary(
                 QROrderRequest.objects.filter(status=QROrderRequest.Status.WAITING_CONFIRMATION), "created_at"
+            ),
+            "qr_service_requests": _state_summary(
+                QRServiceRequest.objects.filter(
+                    status=QRServiceRequest.Status.WAITING,
+                    order__status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS),
+                ),
+                "created_at",
             ),
         }
         return conditional_json_response(request, payload)
@@ -265,6 +285,26 @@ class QRRequestActionView(SalesAccessMixin, View):
             messages.error(request, _error_text(error))
         except QROrderRequest.DoesNotExist:
             messages.error(request, "Yêu cầu QR không còn tồn tại.")
+        return redirect("sales:workspace")
+
+
+class QRServiceRequestActionView(SalesAccessMixin, View):
+    permission = "manage_order"
+
+    def post(self, request, request_id):
+        try:
+            service_request = services.complete_qr_service_request(
+                actor=request.user,
+                request_id=request_id,
+            )
+        except (ValidationError, QRServiceRequest.DoesNotExist) as error:
+            message = _error_text(error) if isinstance(error, ValidationError) else "Yêu cầu phục vụ không còn tồn tại."
+            messages.error(request, message)
+        else:
+            messages.success(
+                request,
+                f"Đã xử lý {service_request.get_request_type_display().lower()} tại bàn {service_request.table.code}.",
+            )
         return redirect("sales:workspace")
 
 

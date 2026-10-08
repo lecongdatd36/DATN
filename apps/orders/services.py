@@ -1,6 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -21,6 +21,7 @@ from apps.seating.models import DiningTable, DiningTableQRToken
 from .models import (
     Invoice, OnlinePayment, Order, OrderItem, OrderActivityLog, Payment, PaymentBatch,
     PaymentRequest, PromotionCode, QRCheckInRequest, QROrderRequest, QROrderRequestItem,
+    QRServiceRequest,
 )
 from .permissions import has_order_permission
 from .vnpay import payment_url
@@ -379,8 +380,17 @@ def reject_qr_check_in_request(*, actor, request_id, reason):
     return check_in
 
 
+def _client_request_uuid(value):
+    if value in (None, ""):
+        return uuid4()
+    try:
+        return UUID(str(value))
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise ValidationError("Mã chống gửi trùng không hợp lệ. Hãy tải lại trang và thử lại.") from exc
+
+
 @transaction.atomic
-def create_qr_order_request(*, token, items, customer=None, note=""):
+def create_qr_order_request(*, token, items, customer=None, note="", client_request_id=None):
     """Capture a customer QR cart without mutating the active Order or inventory."""
     token = DiningTableQRToken.objects.select_for_update().select_related("table__area").filter(token=token).first()
     if token is None or not token.is_valid:
@@ -393,6 +403,13 @@ def create_qr_order_request(*, token, items, customer=None, note=""):
     ).order_by("-opened_at", "-pk")[:2])
     if len(active_orders) != 1:
         raise ValidationError("Bàn chưa có đúng một đơn đang phục vụ.")
+    client_request_id = _client_request_uuid(client_request_id)
+    existing = QROrderRequest.objects.filter(client_request_id=client_request_id).first()
+    if existing is not None:
+        if existing.table_id != table.pk:
+            raise ValidationError("Mã gửi yêu cầu đã được sử dụng ở bàn khác.")
+        existing.was_created = False
+        return existing
     if not isinstance(items, list) or not items or len(items) > 50:
         raise ValidationError("Giỏ hàng phải có từ 1 đến 50 món.")
     dish_ids = [item.get("dish_id") for item in items if isinstance(item, dict)]
@@ -407,7 +424,13 @@ def create_qr_order_request(*, token, items, customer=None, note=""):
     request_note = note.strip() if isinstance(note, str) else ""
     if len(request_note) > 500:
         raise ValidationError("Ghi chú yêu cầu không được dài quá 500 ký tự.")
-    request = QROrderRequest.objects.create(table=table, order=active_orders[0], customer=customer, note=request_note)
+    request = QROrderRequest.objects.create(
+        table=table,
+        order=active_orders[0],
+        customer=customer,
+        note=request_note,
+        client_request_id=client_request_id,
+    )
     request_items = []
     for data in items:
         dish = dishes[data["dish_id"]]
@@ -426,7 +449,78 @@ def create_qr_order_request(*, token, items, customer=None, note=""):
     _log(None, active_orders[0], "Khách gửi yêu cầu gọi món QR", "; ".join(
         f"{dish.name} × {data['quantity']}" for dish, data in ((dishes[item["dish_id"]], item) for item in items)
     ))
+    request.was_created = True
     return request
+
+
+@transaction.atomic
+def create_qr_service_request(*, token, request_type, note="", client_request_id=None):
+    token = DiningTableQRToken.objects.select_for_update().filter(token=token).first()
+    if token is None or not token.is_valid:
+        raise ValidationError("Mã QR không hợp lệ hoặc đã hết hiệu lực.")
+    table = DiningTable.objects.select_for_update().get(pk=token.table_id)
+    if table.status != DiningTable.Status.OCCUPIED:
+        raise ValidationError("Bàn không còn trong trạng thái phục vụ.")
+    orders = list(
+        Order.objects.select_for_update()
+        .filter(table=table, status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS))
+        .order_by("-opened_at", "-pk")[:2]
+    )
+    if len(orders) != 1:
+        raise ValidationError("Không xác định được Order đang phục vụ của bàn.")
+    if request_type not in QRServiceRequest.RequestType.values:
+        raise ValidationError("Loại yêu cầu phục vụ không hợp lệ.")
+    note = note.strip() if isinstance(note, str) else ""
+    if len(note) > 300:
+        raise ValidationError("Ghi chú yêu cầu phục vụ tối đa 300 ký tự.")
+
+    client_request_id = _client_request_uuid(client_request_id)
+    existing = QRServiceRequest.objects.filter(client_request_id=client_request_id).first()
+    if existing is not None:
+        if existing.table_id != table.pk:
+            raise ValidationError("Mã gửi yêu cầu đã được sử dụng ở bàn khác.")
+        existing.was_created = False
+        return existing
+    existing = QRServiceRequest.objects.filter(
+        table=table,
+        request_type=request_type,
+        status=QRServiceRequest.Status.WAITING,
+    ).first()
+    if existing is not None:
+        existing.was_created = False
+        return existing
+
+    service_request = QRServiceRequest.objects.create(
+        table=table,
+        order=orders[0],
+        request_type=request_type,
+        note=note,
+        client_request_id=client_request_id,
+    )
+    _log(None, orders[0], "Khách gọi phục vụ qua QR", service_request.get_request_type_display())
+    service_request.was_created = True
+    return service_request
+
+
+@transaction.atomic
+def complete_qr_service_request(*, actor, request_id):
+    actor = _lock_actor(actor, "manage_order")
+    service_request = QRServiceRequest.objects.select_for_update().select_related("order", "table").get(
+        pk=request_id
+    )
+    if service_request.status != QRServiceRequest.Status.WAITING:
+        raise ValidationError("Yêu cầu phục vụ này đã được xử lý.")
+    service_request.status = QRServiceRequest.Status.COMPLETED
+    service_request.completed_by = actor
+    service_request.completed_at = timezone.now()
+    service_request.save(update_fields=("status", "completed_by", "completed_at"))
+    _log(
+        actor,
+        service_request.order,
+        "Hoàn tất yêu cầu QR",
+        f"{service_request.get_request_type_display()} tại bàn {service_request.table.code}.",
+    )
+    return service_request
 
 
 @transaction.atomic
@@ -871,6 +965,11 @@ def _finalize_paid_invoice(*, order, invoice, customer, actor, actor_snapshot, n
         status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS, Order.Status.PAYMENT_REQUESTED),
     ).exclude(pk=order.pk)
     has_other_open_checks = other_open_checks.exists()
+    if not has_other_open_checks:
+        QRServiceRequest.objects.select_for_update().filter(
+            table_id=order.table_id,
+            status=QRServiceRequest.Status.WAITING,
+        ).update(status=QRServiceRequest.Status.CANCELLED)
     table.status = DiningTable.Status.OCCUPIED if has_other_open_checks else DiningTable.Status.CLEANING
     table.save(update_fields=("status", "updated_at"))
     root_order = order.split_root or order
@@ -1334,6 +1433,10 @@ def _cancel_locked_order(*, actor, order, table, reason, now):
     order.closed_at = now
     order.revision += 1
     order.save(update_fields=("status", "closed_at", "revision", "updated_at"))
+    QRServiceRequest.objects.select_for_update().filter(
+        order=order,
+        status=QRServiceRequest.Status.WAITING,
+    ).update(status=QRServiceRequest.Status.CANCELLED)
     _log(actor, order, "Hủy bàn", f"Hủy đơn và giải phóng bàn {table.code}. Lý do: {reason}")
 
 

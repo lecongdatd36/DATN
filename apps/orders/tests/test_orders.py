@@ -451,6 +451,20 @@ class OrderTests(TestCase):
         RecipeIngredient.objects.create(dish=self.dish, ingredient=ingredient, quantity=Decimal("0.100"))
         self.send()
 
+    def test_sending_last_inventory_portion_auto_marks_dish_sold_out(self):
+        Dish.objects.filter(pk=self.dish.pk).update(tracks_inventory=True)
+        ingredient = Ingredient.objects.create(
+            code="NL-CUOI", name="Nguyên liệu phần cuối", unit="kg", stock_quantity=Decimal("0.200"),
+        )
+        RecipeIngredient.objects.create(dish=self.dish, ingredient=ingredient, quantity=Decimal("0.200"))
+        self.add(quantity=1)
+
+        self.send()
+
+        self.dish.refresh_from_db()
+        self.assertEqual(self.dish.status, Dish.Status.SOLD_OUT)
+        self.assertIsNotNone(self.dish.inventory_sold_out_at)
+
     def test_booking_completion_is_blocked_in_service_and_ui(self):
         self.client.force_login(self.waiter)
         response = self.client.get(self.visit.get_absolute_url())

@@ -6,8 +6,14 @@ from django.urls import reverse
 from unittest.mock import patch
 
 from apps.menu.models import Category, Dish, Unit
-from apps.orders.models import Order, OrderItem, QROrderRequest
-from apps.orders.services import confirm_qr_order_request, create_qr_order_request, reject_qr_order_request
+from apps.orders.models import Order, OrderItem, QROrderRequest, QRServiceRequest
+from apps.orders.services import (
+    complete_qr_service_request,
+    confirm_qr_order_request,
+    create_qr_order_request,
+    create_qr_service_request,
+    reject_qr_order_request,
+)
 from apps.seating.models import Area, DiningTable, DiningTableQRToken
 
 
@@ -100,3 +106,26 @@ class QRStaffActionTests(TestCase):
         self.assertEqual(qr_request.status, QROrderRequest.Status.WAITING_CONFIRMATION)
         self.assertFalse(OrderItem.objects.filter(order=self.order).exists())
         self.assertEqual(self.order.status, Order.Status.OPEN)
+
+    def test_staff_completes_customer_service_request_once(self):
+        service_request = create_qr_service_request(
+            token=self.token.token,
+            request_type=QRServiceRequest.RequestType.ICE,
+        )
+
+        completed = complete_qr_service_request(actor=self.manager, request_id=service_request.pk)
+
+        self.assertEqual(completed.status, QRServiceRequest.Status.COMPLETED)
+        self.assertEqual(completed.completed_by_id, self.manager.pk)
+        with self.assertRaises(ValidationError):
+            complete_qr_service_request(actor=self.manager, request_id=service_request.pk)
+
+        waiting = create_qr_service_request(
+            token=self.token.token,
+            request_type=QRServiceRequest.RequestType.WATER,
+        )
+        self.client.force_login(self.manager)
+        response = self.client.post(reverse("sales:qr_service_request_action", args=[waiting.pk]))
+        self.assertRedirects(response, reverse("sales:workspace"))
+        waiting.refresh_from_db()
+        self.assertEqual(waiting.status, QRServiceRequest.Status.COMPLETED)

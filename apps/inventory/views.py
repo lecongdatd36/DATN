@@ -2,6 +2,7 @@ from django.contrib import messages
 from decimal import Decimal
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction
 from django.db.models import Count, F, Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
@@ -22,6 +23,7 @@ from .services import (
     add_purchase_line, cancel_purchase_receipt, cancel_stocktake, confirm_purchase_receipt,
     create_purchase_receipt, create_stocktake, delete_recipe_line, post_stocktake,
     record_inventory_transaction, record_waste, remove_purchase_line, save_recipe_line,
+    sync_dish_availability,
 )
 
 
@@ -56,14 +58,23 @@ class InventoryWorkspaceView(InventoryPermissionMixin, TemplateView):
         unavailable_dish_count = 0
         for dish in recipe_dishes:
             lines = list(dish.recipe_ingredients.all())
+            dish.inventory_reopen_suggested = False
             if not lines:
                 dish.inventory_portions = 0
                 if dish.tracks_inventory:
                     missing_recipe_count += 1
                 continue
-            dish.inventory_portions = min(int(line.ingredient.stock_quantity // line.quantity) for line in lines)
+            dish.inventory_portions = min(
+                int(line.ingredient.stock_quantity // line.quantity) if line.ingredient.is_active else 0
+                for line in lines
+            )
             if dish.inventory_portions <= 0:
                 unavailable_dish_count += 1
+            dish.inventory_reopen_suggested = bool(
+                dish.inventory_portions > 0
+                and dish.status == Dish.Status.SOLD_OUT
+                and dish.inventory_sold_out_at
+            )
         context.update(
             filter_form=filter_form,
             transaction_form=InventoryTransactionForm(),
@@ -138,6 +149,13 @@ class IngredientFormView(InventoryCatalogFormView):
     model = Ingredient
     form_class = IngredientForm
     entity_label = "nguyên liệu"
+
+    @transaction.atomic
+    def form_valid(self, form):
+        ingredient = form.save()
+        sync_dish_availability(actor=self.request.user, ingredient_ids=(ingredient.pk,))
+        messages.success(self.request, "Đã lưu nguyên liệu và đồng bộ trạng thái món.")
+        return HttpResponseRedirect(reverse("inventory:workspace"))
 
 
 class SupplierFormView(InventoryCatalogFormView):

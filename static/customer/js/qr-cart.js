@@ -6,7 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const menuSections = [...document.querySelectorAll("[data-qr-section]")];
     const searchInput = document.querySelector("[data-qr-search]");
     const searchEmpty = document.querySelector("[data-qr-search-empty]");
+    const page = document.querySelector("[data-qr-menu-page]");
     const storageKey = `qlnh-qr-cart-${window.location.pathname}`;
+    const storageTtl = 12 * 60 * 60 * 1000;
     const countElements = [...document.querySelectorAll("[data-qr-count]")];
     const totalElements = [...document.querySelectorAll("[data-qr-total]")];
     const submitButton = document.querySelector("[data-qr-submit]");
@@ -14,11 +16,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const orderReady = submitButton?.dataset.orderReady === "true";
     let isSubmitting = false;
     let cart = {};
+    let pendingSubmission = null;
+    const storage = (() => {
+        try {
+            const probe = `${storageKey}-probe`;
+            localStorage.setItem(probe, "1");
+            localStorage.removeItem(probe);
+            return localStorage;
+        } catch (_error) {
+            return sessionStorage;
+        }
+    })();
     try {
-        const storedCart = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
-        cart = storedCart && typeof storedCart === "object" && !Array.isArray(storedCart) ? storedCart : {};
+        let stored = JSON.parse(storage.getItem(storageKey) || "null");
+        if (!stored && storage !== sessionStorage) {
+            const legacy = JSON.parse(sessionStorage.getItem(storageKey) || "null");
+            if (legacy) stored = {savedAt: Date.now(), cart: legacy, pending: null};
+        }
+        if (stored?.savedAt && Date.now() - stored.savedAt <= storageTtl) {
+            cart = stored.cart && typeof stored.cart === "object" && !Array.isArray(stored.cart) ? stored.cart : {};
+            pendingSubmission = stored.pending || null;
+        } else {
+            storage.removeItem(storageKey);
+        }
     } catch (_error) {
-        sessionStorage.removeItem(storageKey);
+        storage.removeItem(storageKey);
     }
 
     const formatMoney = (value) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
@@ -35,7 +57,20 @@ document.addEventListener("DOMContentLoaded", () => {
         "'": "&#39;",
         '"': "&quot;",
     })[character]);
-    const save = () => sessionStorage.setItem(storageKey, JSON.stringify(cart));
+    const save = () => storage.setItem(storageKey, JSON.stringify({
+        savedAt: Date.now(),
+        cart,
+        pending: pendingSubmission,
+    }));
+    const requestId = () => {
+        if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+        const bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        const hex = [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
+        return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    };
     const showStatus = (message = "") => {
         if (!submitStatus) return;
         submitStatus.textContent = message;
@@ -48,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const render = () => {
         const { count, total } = summary();
+        const frozen = Boolean(pendingSubmission);
         countElements.forEach((element) => { element.textContent = count; });
         totalElements.forEach((element) => { element.textContent = formatMoney(total); });
         dishCards.forEach((card) => {
@@ -59,12 +95,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 quantityElement.hidden = quantity === 0;
             }
             if (plusElement) plusElement.hidden = quantity > 0;
+            const addButton = card.querySelector("[data-qr-add]");
+            if (addButton) addButton.disabled = frozen;
             card.classList.toggle("has-quantity", quantity > 0);
         });
         if (!itemsElement) return;
         itemsElement.innerHTML = "";
         const entries = Object.values(cart);
-        if (submitButton) submitButton.disabled = !orderReady || isSubmitting || !entries.length;
+        if (submitButton) {
+            submitButton.disabled = !orderReady || isSubmitting || !entries.length;
+            if (!isSubmitting) submitButton.textContent = frozen ? "Kiểm tra / gửi lại yêu cầu" : "Gửi yêu cầu gọi món";
+        }
         if (!entries.length) {
             itemsElement.innerHTML = '<p class="customer-qr-cart-empty">Chưa có món trong giỏ.</p>';
             return;
@@ -72,12 +113,14 @@ document.addEventListener("DOMContentLoaded", () => {
         entries.forEach((item) => {
             const row = document.createElement("div");
             row.className = "customer-qr-cart-item";
-            row.innerHTML = `<div class="customer-qr-cart-item-head"><strong>${escapeHtml(item.name)}</strong><span>${formatMoney(item.price * item.quantity)}</span></div><div class="customer-qr-quantity"><button type="button" data-qr-decrease="${item.id}" aria-label="Giảm ${escapeHtml(item.name)}">−</button><b>${item.quantity}</b><button type="button" data-qr-increase="${item.id}" aria-label="Tăng ${escapeHtml(item.name)}">+</button></div><label>Ghi chú món<input type="text" maxlength="500" value="${escapeHtml(item.note || "")}" data-qr-note="${item.id}" placeholder="Ví dụ: không hành"></label>`;
+            const disabled = frozen ? " disabled" : "";
+            row.innerHTML = `<div class="customer-qr-cart-item-head"><strong>${escapeHtml(item.name)}</strong><span>${formatMoney(item.price * item.quantity)}</span></div><div class="customer-qr-quantity"><button type="button" data-qr-decrease="${item.id}" aria-label="Giảm ${escapeHtml(item.name)}"${disabled}>−</button><b>${item.quantity}</b><button type="button" data-qr-increase="${item.id}" aria-label="Tăng ${escapeHtml(item.name)}"${disabled}>+</button></div><label>Ghi chú món<input type="text" maxlength="500" value="${escapeHtml(item.note || "")}" data-qr-note="${item.id}" placeholder="Ví dụ: không hành"${disabled}></label>`;
             itemsElement.appendChild(row);
         });
     };
 
     const add = (card) => {
+        if (pendingSubmission) return;
         showStatus();
         const id = card.dataset.id;
         const item = cart[id] || { id, name: card.dataset.name, price: Number(card.dataset.price), quantity: 0, note: "" };
@@ -107,6 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (searchEmpty) searchEmpty.hidden = dishCards.some((card) => !card.hidden);
     });
     itemsElement?.addEventListener("click", (event) => {
+        if (pendingSubmission) return;
         const id = event.target.dataset.qrIncrease || event.target.dataset.qrDecrease;
         if (!id || !cart[id]) return;
         if (event.target.dataset.qrIncrease) cart[id].quantity = Math.min(cart[id].quantity + 1, 100);
@@ -116,6 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
         render();
     });
     itemsElement?.addEventListener("input", (event) => {
+        if (pendingSubmission) return;
         const id = event.target.dataset.qrNote;
         if (id && cart[id]) { cart[id].note = event.target.value; save(); }
     });
@@ -131,6 +176,13 @@ document.addEventListener("DOMContentLoaded", () => {
         button.textContent = "Đang gửi...";
         try {
             const csrf = document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
+            if (!pendingSubmission) {
+                pendingSubmission = {
+                    client_request_id: requestId(),
+                    items: entries.map(({ id, quantity, note }) => ({dish_id: Number(id), quantity, note})),
+                };
+                save();
+            }
             const response = await fetch(button.dataset.endpoint, {
                 method: "POST",
                 credentials: "same-origin",
@@ -140,27 +192,53 @@ document.addEventListener("DOMContentLoaded", () => {
                     "X-CSRFToken": csrf,
                     "X-Requested-With": "XMLHttpRequest",
                 },
-                body: JSON.stringify({ items: entries.map(({ id, quantity, note }) => ({ dish_id: Number(id), quantity, note })) }),
+                body: JSON.stringify(pendingSubmission),
             });
             const responseText = await response.text();
             let result = {};
             try { result = responseText ? JSON.parse(responseText) : {}; } catch (_error) { /* HTML error page */ }
             if (!response.ok) {
+                if (response.status >= 400 && response.status < 500) {
+                    pendingSubmission = null;
+                    save();
+                }
                 const fallback = response.status === 403
                     ? "Phiên gọi món đã hết hạn. Hãy tải lại mã QR rồi gửi lại."
                     : "Không thể gửi yêu cầu. Vui lòng thử lại.";
                 throw new Error(result.error || fallback);
             }
+            storage.removeItem(storageKey);
             sessionStorage.removeItem(storageKey);
             cart = {};
+            pendingSubmission = null;
             render();
             window.location.href = result.status_url;
         } catch (error) {
             showStatus(error.message || "Không thể gửi yêu cầu. Vui lòng thử lại.");
             isSubmitting = false;
-            button.textContent = "Gửi yêu cầu gọi món";
             render();
         }
     });
+    if (!pendingSubmission) {
+        const availableIds = new Set(dishCards.filter((card) => card.dataset.available === "true").map((card) => card.dataset.id));
+        Object.keys(cart).forEach((id) => { if (!availableIds.has(id)) delete cart[id]; });
+        save();
+    } else {
+        showStatus("Yêu cầu trước có thể đã tới hệ thống. Bấm “Kiểm tra / gửi lại” để xác nhận, hệ thống sẽ không tạo trùng.");
+    }
+
+    const pollMenuState = async () => {
+        if (!page?.dataset.menuStateUrl || !orderReady || document.hidden) return;
+        try {
+            const response = await fetch(page.dataset.menuStateUrl, {headers: {Accept: "application/json"}, cache: "no-store"});
+            if (!response.ok) return;
+            const state = await response.json();
+            if (!state.ready || state.menu_version !== page.dataset.menuVersion) window.location.reload();
+        } catch (_error) {
+            // The persisted cart remains available while the network is interrupted.
+        }
+    };
+    window.setInterval(pollMenuState, 15000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) pollMenuState(); });
     render();
 });

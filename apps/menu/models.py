@@ -61,6 +61,12 @@ class Dish(models.Model):
     image = models.ImageField("Ảnh món", upload_to="dishes/", blank=True, validators=[validate_upload_size])
     thumbnail = models.ImageField(upload_to="dishes/", blank=True, editable=False)
     status = models.CharField("Trạng thái", max_length=10, choices=Status.choices, default=Status.AVAILABLE)
+    inventory_sold_out_at = models.DateTimeField(
+        "Tự động hết món do kho lúc",
+        null=True,
+        blank=True,
+        editable=False,
+    )
     revision = models.PositiveIntegerField(default=1, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
