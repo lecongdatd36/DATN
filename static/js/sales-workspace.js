@@ -6,8 +6,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const categoryButtons = [...workspace.querySelectorAll("[data-category-filter] button")];
   const cards = [...workspace.querySelectorAll("[data-dish-grid] .dish-card")];
   const empty = workspace.querySelector("[data-dish-empty]");
+  const feedback = workspace.querySelector("[data-sales-feedback]");
   const phoneQuery = window.matchMedia("(max-width: 767.98px)");
   let category = "all";
+
+  const showFeedback = (message, tone = "danger") => {
+    if (!feedback) return;
+    feedback.textContent = message;
+    feedback.className = `workspace-feedback alert alert-${tone}`;
+    feedback.hidden = false;
+    window.setTimeout(() => { feedback.hidden = true; }, 4000);
+  };
 
   const showMobileOrder = (scrollToCheckout = false) => {
     workspace.classList.remove("is-mobile-menu-open");
@@ -149,6 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.requestAnimationFrame(() => dock.classList.add("is-updated"));
       window.setTimeout(() => dock.classList.remove("is-updated"), 500);
     }
+    document.dispatchEvent(new CustomEvent("workspace:mutation"));
   };
 
   workspace.addEventListener("submit", async (event) => {
@@ -159,6 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
     form.dataset.loading = "true";
     form.classList.add("is-updating");
     form.querySelectorAll("button").forEach((button) => { button.disabled = true; });
+    document.dispatchEvent(new CustomEvent("workspace:busy", {detail: true}));
     try {
       const response = await fetch(form.action, {
         method: "POST",
@@ -174,11 +185,13 @@ document.addEventListener("DOMContentLoaded", () => {
       syncOrderFromResponse(await response.text());
     } catch (error) {
       form.classList.add("is-add-error");
+      showFeedback(error.message);
       window.setTimeout(() => form.classList.remove("is-add-error"), 900);
     } finally {
       form.dataset.loading = "false";
       form.classList.remove("is-updating");
       form.querySelectorAll("button").forEach((button) => { button.disabled = false; });
+      document.dispatchEvent(new CustomEvent("workspace:busy", {detail: false}));
     }
   });
 
@@ -189,6 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
     form.dataset.loading = "true";
     form.classList.add("is-adding");
     if (button) button.disabled = true;
+    document.dispatchEvent(new CustomEvent("workspace:busy", {detail: true}));
     try {
       const response = await fetch(form.action, {
         method: "POST",
@@ -211,11 +225,13 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       form.classList.add("is-add-error");
       if (button) button.setAttribute("aria-label", error.message);
+      showFeedback(error.message);
       window.setTimeout(() => form.classList.remove("is-add-error"), 900);
     } finally {
       form.dataset.loading = "false";
       form.classList.remove("is-adding");
       if (button) button.disabled = false;
+      document.dispatchEvent(new CustomEvent("workspace:busy", {detail: false}));
     }
   }));
 

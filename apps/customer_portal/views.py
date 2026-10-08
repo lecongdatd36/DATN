@@ -97,8 +97,10 @@ class CustomerQRTableView(DetailView):
         expire_qr_check_in_requests()
         orders = _active_qr_orders(token.table)
         context["table"] = token.table
-        context["categories"] = customer_categories()
-        context["dishes"] = customer_dishes()
+        categories = list(customer_categories(with_dishes=True))
+        context["categories"] = categories
+        # Reuse the prefetched dishes instead of executing the same menu query twice.
+        context["dishes"] = [dish for category in categories for dish in category.customer_dishes]
         if token.table.status == token.table.Status.OCCUPIED and len(orders) == 1:
             context["order"] = orders[0]
             context["order_ready"] = True

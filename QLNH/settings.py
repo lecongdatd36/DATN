@@ -19,6 +19,17 @@ def required_env(name):
     return value
 
 
+def positive_int_env(name, default):
+    raw_value = os.environ.get(name, str(default)).strip()
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise ImproperlyConfigured(f"{name} phải là số nguyên dương.") from exc
+    if value <= 0:
+        raise ImproperlyConfigured(f"{name} phải là số nguyên dương.")
+    return value
+
+
 SECRET_KEY = required_env("SECRET_KEY")
 debug_value = os.environ.get("DEBUG", "False").strip().lower()
 if debug_value not in {"true", "false", "1", "0"}:
@@ -75,6 +86,7 @@ MIDDLEWARE = [
     "django.middleware.gzip.GZipMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "core.middleware.RequestTimingMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -91,6 +103,25 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 MESSAGE_STORAGE = "django.contrib.messages.storage.fallback.FallbackStorage"
 MESSAGE_TAGS = {message_constants.ERROR: "danger"}
+
+# Ngưỡng vận hành có thể chỉnh trực tiếp bằng biến môi trường trên Render.
+SLOW_REQUEST_THRESHOLD_MS = positive_int_env("SLOW_REQUEST_THRESHOLD_MS", 750)
+KITCHEN_PENDING_SLA_MINUTES = positive_int_env("KITCHEN_PENDING_SLA_MINUTES", 8)
+KITCHEN_COOKING_SLA_MINUTES = positive_int_env("KITCHEN_COOKING_SLA_MINUTES", 15)
+KITCHEN_READY_SLA_MINUTES = positive_int_env("KITCHEN_READY_SLA_MINUTES", 5)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {
+        "qlnh.performance": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        }
+    },
+}
 
 ROOT_URLCONF = "QLNH.urls"
 TEMPLATES = [

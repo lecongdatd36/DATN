@@ -3,15 +3,18 @@ from django.db.models import Prefetch
 from apps.menu.models import Category, Dish
 
 
-def customer_categories():
+def customer_categories(*, with_dishes=False):
+    categories = Category.objects.filter(is_active=True).order_by("name", "pk")
+    if not with_dishes:
+        return categories
     available_dishes = Dish.objects.select_related("category", "unit").filter(
         status__in=(Dish.Status.AVAILABLE, Dish.Status.SOLD_OUT),
         category__is_active=True,
         unit__is_active=True,
     )
-    return Category.objects.filter(is_active=True).prefetch_related(
+    return categories.prefetch_related(
         Prefetch("dishes", queryset=available_dishes, to_attr="customer_dishes")
-    ).order_by("name", "pk")
+    )
 
 
 def customer_dishes(*, query="", category_id=None):

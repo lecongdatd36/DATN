@@ -2,11 +2,12 @@ from django.contrib import messages
 import logging
 from django.contrib.auth.mixins import AccessMixin
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ValidationError
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
+from django.db.models import Count, Exists, Max, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -21,6 +22,7 @@ from apps.customers.validators import normalize_phone
 from apps.bookings.services import expire_overdue_bookings
 from apps.menu.models import Category, Dish
 from apps.seating.models import Area, DiningTable
+from core.http import conditional_json_response
 from core.permissions import can_manage_accounts
 from .forms import PromotionCodeForm
 from .models import Invoice, OnlinePayment, Order, OrderItem, PaymentRequest, PromotionCode, QRCheckInRequest, QROrderRequest
@@ -38,6 +40,23 @@ def _error_text(error):
     return " ".join(error.messages)
 
 
+def _state_summary(queryset, timestamp_field):
+    return queryset.aggregate(count=Count("pk"), latest=Max(timestamp_field))
+
+
+def _run_polling_maintenance():
+    """Keep polling cheap while retaining a fallback when the scheduler is late."""
+    cache_key = "sales:polling-maintenance:v1"
+    if not cache.add(cache_key, True, timeout=30):
+        return
+    try:
+        expire_overdue_bookings()
+        services.expire_qr_check_in_requests()
+    except Exception:
+        cache.delete(cache_key)
+        raise
+
+
 class SalesAccessMixin(AccessMixin):
     permission = "view_order"
 
@@ -51,25 +70,11 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
     template_name = "staff/sales/index.html"
 
     def get_context_data(self, **kwargs):
-        expire_overdue_bookings()
-        services.expire_qr_check_in_requests()
+        is_order_fragment = self.request.headers.get("X-Order-Fragment") == "1"
+        if not is_order_fragment:
+            expire_overdue_bookings()
+            services.expire_qr_check_in_requests()
         context = super().get_context_data(**kwargs)
-        table_orders = Order.objects.filter(table_id=OuterRef("pk")).order_by("-opened_at", "-pk")
-        active_table_orders = table_orders.exclude(status__in=(Order.Status.COMPLETED, Order.Status.CANCELLED))
-        tables = DiningTable.objects.select_related("area").filter(
-            is_active=True, area__is_active=True
-        ).annotate(
-            active_order_id=Subquery(active_table_orders.values("pk")[:1]),
-            active_order_revision=Subquery(active_table_orders.values("revision")[:1]),
-            active_order_booking_id=Subquery(active_table_orders.values("booking_id")[:1]),
-            latest_order_id=Subquery(table_orders.values("pk")[:1]),
-        ).annotate(
-            active_order_has_sent_items=Exists(
-                OrderItem.objects.filter(order_id=OuterRef("active_order_id")).exclude(
-                    status__in=(OrderItem.Status.DRAFT, OrderItem.Status.CANCELLED)
-                )
-            ),
-        )
         selected_order = None
         order_id = self.request.GET.get("order")
         table_id = self.request.GET.get("table")
@@ -106,7 +111,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
                 .prefetch_related("items")
                 .order_by("pk")
             )
-        if self.request.headers.get("X-Order-Fragment") == "1":
+        if is_order_fragment:
             can_collect_payment = has_order_permission(self.request.user, "collect_payment")
             can_collect_selected_payment = can_collect_payment and (
                 selected_order is None or context.get("selected_can_full_payment", True)
@@ -133,6 +138,22 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
                 ).exclude(pk=selected_order.table_id if selected_order else None),
             )
             return context
+        table_orders = Order.objects.filter(table_id=OuterRef("pk")).order_by("-opened_at", "-pk")
+        active_table_orders = table_orders.exclude(status__in=(Order.Status.COMPLETED, Order.Status.CANCELLED))
+        tables = DiningTable.objects.select_related("area").filter(
+            is_active=True, area__is_active=True
+        ).annotate(
+            active_order_id=Subquery(active_table_orders.values("pk")[:1]),
+            active_order_revision=Subquery(active_table_orders.values("revision")[:1]),
+            active_order_booking_id=Subquery(active_table_orders.values("booking_id")[:1]),
+            latest_order_id=Subquery(table_orders.values("pk")[:1]),
+        ).annotate(
+            active_order_has_sent_items=Exists(
+                OrderItem.objects.filter(order_id=OuterRef("active_order_id")).exclude(
+                    status__in=(OrderItem.Status.DRAFT, OrderItem.Status.CANCELLED)
+                )
+            ),
+        )
         payment_requests = list(
             PaymentRequest.objects.filter(status=PaymentRequest.Status.WAITING)
             .select_related("order__table", "order__customer")
@@ -180,23 +201,24 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
 
 class SalesStateView(SalesAccessMixin, View):
     def get(self, request):
-        expire_overdue_bookings()
-        services.expire_qr_check_in_requests()
-        tables = list(DiningTable.objects.filter(is_active=True).values("id", "code", "name", "status", "updated_at"))
-        ready = list(OrderItem.objects.filter(status=OrderItem.Status.READY).values("id", "order_id", "dish_name", "quantity", "ready_at"))
-        requests = list(PaymentRequest.objects.filter(status=PaymentRequest.Status.WAITING).values("id", "order_id", "requested_at"))
-        qr_check_ins = list(QRCheckInRequest.objects.filter(
-            status=QRCheckInRequest.Status.WAITING_CONFIRMATION,
-        ).values("id", "table_id", "guest_count", "created_at"))
-        return JsonResponse(
-            {
-                "ui_version": "staff-pos-2026-10-06.3",
-                "tables": tables,
-                "ready": ready,
-                "payment_requests": requests,
-                "qr_check_ins": qr_check_ins,
-            }
-        )
+        _run_polling_maintenance()
+        active_statuses = (Order.Status.OPEN, Order.Status.IN_PROGRESS, Order.Status.PAYMENT_REQUESTED)
+        payload = {
+            "ui_version": "staff-pos-2026-10-09.1",
+            "tables": _state_summary(DiningTable.objects.filter(is_active=True), "updated_at"),
+            "orders": _state_summary(Order.objects.filter(status__in=active_statuses), "updated_at"),
+            "items": _state_summary(OrderItem.objects.filter(order__status__in=active_statuses), "updated_at"),
+            "payment_requests": _state_summary(
+                PaymentRequest.objects.filter(status=PaymentRequest.Status.WAITING), "requested_at"
+            ),
+            "qr_check_ins": _state_summary(
+                QRCheckInRequest.objects.filter(status=QRCheckInRequest.Status.WAITING_CONFIRMATION), "created_at"
+            ),
+            "qr_orders": _state_summary(
+                QROrderRequest.objects.filter(status=QROrderRequest.Status.WAITING_CONFIRMATION), "created_at"
+            ),
+        }
+        return conditional_json_response(request, payload)
 
 
 class QRCheckInActionView(SalesAccessMixin, View):

@@ -94,6 +94,10 @@
   .open-table-modal .modal-footer{position:sticky;z-index:4;bottom:0;display:grid!important;grid-template-columns:1fr!important;gap:.55rem;padding:.75rem .8rem max(.8rem,env(safe-area-inset-bottom))!important;border-top:1px solid var(--bs-border-color);background:var(--bs-body-bg)!important}.open-table-modal .modal-footer .btn{width:100%;min-height:52px}.open-table-submit{order:-1;font-size:1rem;font-weight:800}
 }
 
+/* Operational latency/SLA feedback. */
+.workspace-feedback{position:fixed;z-index:1090;top:5rem;right:1rem;max-width:min(420px,calc(100vw - 2rem));margin:0;box-shadow:0 .7rem 2rem rgba(15,23,42,.18)}
+.kitchen-ticket-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}.kitchen-ticket-head>div{display:grid;justify-items:end;gap:.15rem}.kitchen-sla-clock{padding:.18rem .4rem;border-radius:999px;color:#315a48;background:#dff5e9;font-size:.65rem;font-weight:800}.kitchen-ticket.is-sla-warning{border-color:#e6aa3a;background:color-mix(in srgb,#fff4df 32%,var(--bs-body-bg))}.kitchen-ticket.is-sla-warning .kitchen-sla-clock{color:#74420d;background:#fff0c2}.kitchen-ticket.is-sla-overdue{border-color:#d84a4a;background:color-mix(in srgb,#ffe6e6 38%,var(--bs-body-bg));box-shadow:0 0 0 2px color-mix(in srgb,#d84a4a 12%,transparent)}.kitchen-ticket.is-sla-overdue .kitchen-sla-clock{color:#8b1f1f;background:#ffd7d7}.kitchen-ready-badge{display:inline-block;margin-top:.25rem}
+
 @media(max-width:389.98px){
   .sales-workspace{padding-inline:.55rem!important}.mobile-pos-appbar{margin-inline:-.55rem}.sales-order-panel .order-line{grid-template-columns:78px minmax(0,1fr);gap:.6rem}.order-line-image{width:78px;height:78px}.order-qty-stepper{grid-template-columns:36px 40px 36px}.order-qty-stepper input{width:40px}.order-line-title .item-status{width:max-content}.open-table-overview{grid-template-columns:58px 1fr 1fr;gap:.65rem}.open-table-icon{width:58px;height:58px}
 }

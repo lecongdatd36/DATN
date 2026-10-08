@@ -1,12 +1,13 @@
 {% extends 'staff/base_staff.html' %}
 {% load static menu_money %}
 {% block staff_title %}Bán hàng · QLNH{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/staff-workspaces.css' %}?v=15"><link rel="stylesheet" href="{% static 'css/qr-requests.css' %}?v=1">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/staff-workspaces.css' %}?v=16"><link rel="stylesheet" href="{% static 'css/qr-requests.css' %}?v=1">{% endblock %}
 {% block staff_content %}
 <section class="container-fluid px-2 px-md-3 pb-4 sales-workspace{% if selected_order %} has-selected-order{% endif %}" data-mobile-pos-page data-live-workspace data-state-url="{% url 'sales:state' %}" data-customer-lookup-url="{% url 'sales:customer_lookup' %}">
+  <div class="workspace-feedback alert alert-danger" data-sales-feedback role="alert" aria-live="assertive" hidden></div>
   <header class="sales-heading">
     <div><p class="eyebrow mb-1">VẬN HÀNH TẠI QUẦY</p><h1>Bán hàng</h1><p>Quản lý bàn, gọi món và thanh toán trên cùng một màn hình.</p></div>
-    <div class="sales-live"><span aria-hidden="true"></span>Tự cập nhật mỗi 7 giây</div>
+    <div class="sales-live"><span aria-hidden="true"></span>Tự cập nhật mỗi 10 giây</div>
   </header>
 
   <nav class="sales-mobile-tabs nav nav-pills" aria-label="Khu vực bán hàng">
@@ -74,4 +75,4 @@
   </div>
 </section>
 {% endblock %}
-{% block extra_js %}<script src="{% static 'js/staff-polling.js' %}?v=2" defer></script><script src="{% static 'js/sales-customer.js' %}?v=3" defer></script><script src="{% static 'js/sales-workspace.js' %}?v=10" defer></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/staff-polling.js' %}?v=2" defer></script><script src="{% static 'js/sales-customer.js' %}?v=3" defer></script><script src="{% static 'js/sales-workspace.js' %}?v=11" defer></script>{% endblock %}

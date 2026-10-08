@@ -147,6 +147,54 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.assertContains(response, "GHI CHÚ BÀN")
         self.assertContains(response, "Khách dị ứng đậu phộng")
 
+    @override_settings(KITCHEN_PENDING_SLA_MINUTES=8)
+    def test_kitchen_marks_overdue_ticket_and_updates_it_asynchronously(self):
+        order = services.open_table(
+            actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2,
+            customer_id=self.customer.pk,
+        )
+        item = services.add_item(
+            actor=self.users["WAITER"], order_id=order.pk, expected_revision=self.revision(order),
+            dish_id=self.dish.pk, quantity=1,
+        )
+        services.send_to_kitchen(
+            actor=self.users["WAITER"], order_id=order.pk, expected_revision=self.revision(order)
+        )
+        OrderItem.objects.filter(pk=item.pk).update(sent_at=timezone.now() - timedelta(minutes=9))
+
+        self.client.force_login(self.users["KITCHEN"])
+        workspace = self.client.get(reverse("kitchen:workspace"))
+        self.assertContains(workspace, "is-sla-overdue")
+        self.assertContains(workspace, "Quá SLA")
+
+        response = self.client.post(
+            reverse("kitchen:transition", args=[item.pk, OrderItem.Status.COOKING]),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], OrderItem.Status.COOKING)
+        self.assertEqual(response.json()["next_target"], OrderItem.Status.READY)
+        item.refresh_from_db()
+        self.assertEqual(item.status, OrderItem.Status.COOKING)
+
+    def test_live_state_uses_etag_and_changes_only_with_operational_state(self):
+        self.client.force_login(self.users["WAITER"])
+        first = self.client.get(reverse("sales:state"))
+        self.assertEqual(first.status_code, 200)
+        self.assertIn("ETag", first)
+        self.assertIn("Server-Timing", first)
+
+        unchanged = self.client.get(reverse("sales:state"), HTTP_IF_NONE_MATCH=first["ETag"])
+        self.assertEqual(unchanged.status_code, 304)
+
+        DiningTable.objects.filter(pk=self.table.pk).update(
+            status=DiningTable.Status.RESERVED,
+            updated_at=timezone.now(),
+        )
+        changed = self.client.get(reverse("sales:state"), HTTP_IF_NONE_MATCH=first["ETag"])
+        self.assertEqual(changed.status_code, 200)
+        self.assertNotEqual(changed["ETag"], first["ETag"])
+
     def test_manager_operational_pages_render(self):
         self.client.force_login(self.users["MANAGER"])
         for route in (
