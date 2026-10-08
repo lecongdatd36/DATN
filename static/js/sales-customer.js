@@ -9,19 +9,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const result = form.querySelector("[data-customer-result]");
     const newCustomer = form.querySelector("[data-new-customer]");
     const nameInput = form.querySelector("[name='customer_name']");
+    const modeButtons = [...form.querySelectorAll("[data-customer-mode-button]")];
     let timer;
     let controller;
 
     const showNewCustomer = (show) => {
       newCustomer.hidden = !show;
-      nameInput.required = show;
+      nameInput.required = show && Boolean(phoneInput.value.trim());
       if (!show) nameInput.value = "";
     };
 
+    const setMode = (mode) => {
+      form.dataset.customerMode = mode;
+      modeButtons.forEach((button) => button.classList.toggle("active", button.dataset.customerModeButton === mode));
+      showNewCustomer(mode === "new");
+      if (mode === "existing") window.setTimeout(() => phoneInput.focus(), 0);
+    };
+
     const reset = () => {
-      showNewCustomer(false);
+      showNewCustomer(form.dataset.customerMode === "new");
       result.className = "customer-lookup-result small my-2 text-secondary";
-      result.textContent = "Có thể bỏ trống nếu là khách vãng lai.";
+      result.textContent = "Dùng số điện thoại để lưu lịch sử và tích điểm.";
     };
 
     const lookup = async () => {
@@ -45,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
           result.className = "customer-lookup-result small my-2 alert alert-success py-2";
           result.textContent = `${data.customer.name} · Hạng ${data.customer.tier} · Giảm ${data.customer.discount_percent}% · Đã chi ${spending}đ`;
         } else {
+          setMode("new");
           showNewCustomer(true);
           result.className = "customer-lookup-result small my-2 alert alert-warning py-2";
           result.textContent = "Khách mới. Nhập tên; hệ thống sẽ tự tạo hồ sơ khi mở bàn.";
@@ -60,11 +69,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     phoneInput.addEventListener("input", () => {
       clearTimeout(timer);
+      nameInput.required = !newCustomer.hidden && Boolean(phoneInput.value.trim());
       if (!phoneInput.value.trim()) return reset();
       const digitCount = phoneInput.value.replace(/\D/g, "").length;
       if (digitCount >= 10) timer = setTimeout(lookup, 450);
     });
     searchButton.addEventListener("click", lookup);
     form.addEventListener("reset", reset);
+    modeButtons.forEach((button) => button.addEventListener("click", () => setMode(button.dataset.customerModeButton)));
+    setMode(form.dataset.customerMode || "new");
   });
 });

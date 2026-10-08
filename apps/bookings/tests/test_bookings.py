@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from apps.bookings.models import Booking, BookingActivityLog
 from apps.bookings.selectors import available_tables
-from apps.bookings.services import save_booking, transition_booking
+from apps.bookings.services import expire_overdue_bookings, save_booking, transition_booking
 from apps.customers.models import Customer
 from apps.customers.services import delete_customer
 from apps.seating.models import Area, DiningTable
@@ -127,6 +127,59 @@ class BookingTests(TestCase):
             self.assertEqual(terminal.activity_logs.count(), 2)
             self.assertIn(self.table, available_tables(starts_at=self.start, ends_at=self.end, party_size=4))
         self.assertEqual(Booking.objects.count(), 2)
+
+    def test_overdue_unattended_booking_is_expired_and_table_is_released(self):
+        now = timezone.now()
+        expired = Booking.objects.create(
+            customer=self.customer,
+            table=self.table,
+            customer_name=self.customer.full_name,
+            customer_phone=self.customer.phone,
+            party_size=2,
+            starts_at=now - timedelta(hours=2),
+            ends_at=now - timedelta(minutes=1),
+            status=Booking.Status.CONFIRMED,
+        )
+        DiningTable.objects.filter(pk=self.table.pk).update(status=DiningTable.Status.RESERVED)
+
+        self.assertEqual(expire_overdue_bookings(at=now), 1)
+        expired.refresh_from_db()
+        self.table.refresh_from_db()
+        self.assertEqual(expired.status, Booking.Status.NO_SHOW)
+        self.assertEqual(expired.revision, 2)
+        self.assertEqual(self.table.status, DiningTable.Status.AVAILABLE)
+        self.assertEqual(expired.activity_logs.get().actor_snapshot, "Hệ thống")
+        self.assertEqual(expire_overdue_bookings(at=now), 0)
+
+    def test_expiry_keeps_table_reserved_for_the_next_booking(self):
+        now = timezone.now()
+        Booking.objects.create(
+            customer=self.customer,
+            table=self.table,
+            customer_name=self.customer.full_name,
+            customer_phone=self.customer.phone,
+            party_size=2,
+            starts_at=now - timedelta(hours=2),
+            ends_at=now - timedelta(minutes=1),
+            status=Booking.Status.PENDING,
+        )
+        future = Booking.objects.create(
+            customer=self.customer,
+            table=self.table,
+            customer_name=self.customer.full_name,
+            customer_phone=self.customer.phone,
+            party_size=2,
+            starts_at=now + timedelta(hours=1),
+            ends_at=now + timedelta(hours=2),
+            status=Booking.Status.CONFIRMED,
+        )
+        DiningTable.objects.filter(pk=self.table.pk).update(status=DiningTable.Status.RESERVED)
+
+        self.assertEqual(expire_overdue_bookings(at=now), 1)
+        future.refresh_from_db()
+        self.table.refresh_from_db()
+        self.assertEqual(future.status, Booking.Status.CONFIRMED)
+        self.assertEqual(self.table.status, DiningTable.Status.RESERVED)
 
     def test_capacity_period_past_and_missing_customer_validation(self):
         invalid = [

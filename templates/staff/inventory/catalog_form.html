@@ -1,7 +1,7 @@
 {% extends 'staff/base_staff.html' %}
 {% load static %}
 {% block staff_title %}{% if object %}Sửa{% else %}Thêm{% endif %} {{ entity_label }} · QLNH{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=1">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=2">{% endblock %}
 {% block staff_content %}
 <section class="container-fluid px-3 pb-4 inventory-page">
   <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4"><div><p class="eyebrow mb-1">KHO · DỮ LIỆU NỀN</p><h1 class="h3 mb-1">{% if object %}Sửa{% else %}Thêm{% endif %} {{ entity_label }}</h1><p class="text-secondary mb-0">Thông tin này được dùng cho nhập kho, công thức món và báo cáo giá vốn.</p></div><a class="btn btn-outline-secondary" href="{% url 'inventory:workspace' %}">Quay lại kho</a></div>

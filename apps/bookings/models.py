@@ -42,7 +42,10 @@ class Booking(models.Model):
             models.CheckConstraint(condition=models.Q(status__in=["PENDING", "CONFIRMED", "SEATED", "COMPLETED", "CANCELLED", "NO_SHOW"]), name="booking_valid_status"),
             models.CheckConstraint(condition=models.Q(completed_at__isnull=True) | models.Q(seated_at__isnull=True) | models.Q(completed_at__gte=models.F("seated_at")), name="booking_actual_time_order"),
         ]
-        indexes = [models.Index(fields=("table", "status", "starts_at", "ends_at"), name="booking_slot_idx")]
+        indexes = [
+            models.Index(fields=("table", "status", "starts_at", "ends_at"), name="booking_slot_idx"),
+            models.Index(fields=("status", "ends_at"), name="booking_expiry_idx"),
+        ]
 
     @property
     def booking_code(self):

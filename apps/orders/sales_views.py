@@ -6,7 +6,7 @@ from django.core.exceptions import ImproperlyConfigured, PermissionDenied, Valid
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import OuterRef, Prefetch, Q, Subquery
+from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -18,6 +18,7 @@ from apps.customers.models import Customer
 from apps.customers.services import tier_for_spending
 from apps.customers.services import create_customer
 from apps.customers.validators import normalize_phone
+from apps.bookings.services import expire_overdue_bookings
 from apps.menu.models import Category, Dish
 from apps.seating.models import Area, DiningTable
 from core.permissions import can_manage_accounts
@@ -50,6 +51,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
     template_name = "staff/sales/index.html"
 
     def get_context_data(self, **kwargs):
+        expire_overdue_bookings()
         context = super().get_context_data(**kwargs)
         table_orders = Order.objects.filter(table_id=OuterRef("pk")).order_by("-opened_at", "-pk")
         active_table_orders = table_orders.exclude(status__in=(Order.Status.COMPLETED, Order.Status.CANCELLED))
@@ -57,14 +59,22 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             is_active=True, area__is_active=True
         ).annotate(
             active_order_id=Subquery(active_table_orders.values("pk")[:1]),
+            active_order_revision=Subquery(active_table_orders.values("revision")[:1]),
+            active_order_booking_id=Subquery(active_table_orders.values("booking_id")[:1]),
             latest_order_id=Subquery(table_orders.values("pk")[:1]),
+        ).annotate(
+            active_order_has_sent_items=Exists(
+                OrderItem.objects.filter(order_id=OuterRef("active_order_id")).exclude(
+                    status__in=(OrderItem.Status.DRAFT, OrderItem.Status.CANCELLED)
+                )
+            ),
         )
         selected_order = None
         order_id = self.request.GET.get("order")
         table_id = self.request.GET.get("table")
         active_orders = Order.objects.exclude(status__in=(Order.Status.COMPLETED, Order.Status.CANCELLED)).select_related(
             "table__area", "customer__membership_tier", "employee__user", "invoice"
-        ).prefetch_related("items", "payment_requests")
+        ).prefetch_related("items__dish", "payment_requests")
         if order_id:
             selected_order = active_orders.filter(pk=order_id).first()
         elif table_id:
@@ -81,6 +91,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             selected_order.payment_due = preview["due"]
             live_items = [item for item in selected_order.items.all() if item.status != OrderItem.Status.CANCELLED]
             context["selected_has_drafts"] = any(item.status == OrderItem.Status.DRAFT for item in live_items)
+            context["selected_can_cancel"] = all(item.status == OrderItem.Status.DRAFT for item in live_items)
             context["selected_can_request_payment"] = bool(live_items) and all(
                 item.status == OrderItem.Status.SERVED for item in live_items
             )
@@ -94,6 +105,32 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
                 .prefetch_related("items")
                 .order_by("pk")
             )
+        if self.request.headers.get("X-Order-Fragment") == "1":
+            can_collect_payment = has_order_permission(self.request.user, "collect_payment")
+            can_collect_selected_payment = can_collect_payment and (
+                selected_order is None or context.get("selected_can_full_payment", True)
+            )
+            context.update(
+                areas=Area.objects.none(),
+                categories=Category.objects.none(),
+                dishes=Dish.objects.none(),
+                selected_order=selected_order,
+                selected_split_group=context.get("selected_split_group", []),
+                payment_requests=[],
+                qr_requests=[],
+                can_manage_order=has_order_permission(self.request.user, "manage_order"),
+                can_collect_payment=can_collect_selected_payment,
+                can_continue_partial_payment=can_collect_payment and bool(
+                    selected_order and not context.get("selected_can_full_payment", True)
+                ),
+                vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
+                available_tables=DiningTable.objects.filter(
+                    status=DiningTable.Status.AVAILABLE,
+                    is_active=True,
+                    area__is_active=True,
+                ).exclude(pk=selected_order.table_id if selected_order else None),
+            )
+            return context
         payment_requests = list(
             PaymentRequest.objects.filter(status=PaymentRequest.Status.WAITING)
             .select_related("order__table", "order__customer")
@@ -135,10 +172,18 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
 
 class SalesStateView(SalesAccessMixin, View):
     def get(self, request):
+        expire_overdue_bookings()
         tables = list(DiningTable.objects.filter(is_active=True).values("id", "code", "name", "status", "updated_at"))
         ready = list(OrderItem.objects.filter(status=OrderItem.Status.READY).values("id", "order_id", "dish_name", "quantity", "ready_at"))
         requests = list(PaymentRequest.objects.filter(status=PaymentRequest.Status.WAITING).values("id", "order_id", "requested_at"))
-        return JsonResponse({"tables": tables, "ready": ready, "payment_requests": requests})
+        return JsonResponse(
+            {
+                "ui_version": "staff-pos-2026-10-06.3",
+                "tables": tables,
+                "ready": ready,
+                "payment_requests": requests,
+            }
+        )
 
 
 class QRRequestActionView(SalesAccessMixin, View):
@@ -220,21 +265,27 @@ class SalesActionView(SalesAccessMixin, View):
     permission = "manage_order"
 
     def post(self, request, action):
+        is_async = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         try:
             # Customer creation and opening the table must either both succeed
             # or both roll back, preventing orphan customer records.
             with transaction.atomic():
                 result = self._perform(request, action)
         except (ValidationError, PermissionDenied, TypeError, ValueError, KeyError) as error:
-            messages.error(request, _error_text(error) if isinstance(error, ValidationError) else (str(error) or "Dữ liệu thao tác không hợp lệ."))
+            message = _error_text(error) if isinstance(error, ValidationError) else (str(error) or "Dữ liệu thao tác không hợp lệ.")
+            if is_async:
+                return JsonResponse({"ok": False, "error": message}, status=400)
+            messages.error(request, message)
             return redirect(request.POST.get("next") or reverse("sales:workspace"))
-        messages.success(request, "Đã cập nhật bán hàng.")
+        if not is_async:
+            messages.success(request, "Đã cập nhật bán hàng.")
         order_id = getattr(result, "order_id", None) or getattr(result, "pk", None)
         if isinstance(result, DiningTable):
             order_id = None
         target = reverse("sales:workspace")
         if order_id:
-            target += f"?order={order_id}"
+            fragment = "sales-menu" if action in ("open", "add") else "sales-order"
+            target += f"?order={order_id}#{fragment}"
         return redirect(target)
 
     def _perform(self, request, action):
@@ -274,6 +325,13 @@ class SalesActionView(SalesAccessMixin, View):
             return services.request_payment(actor=request.user, order_id=order_id, expected_revision=revision, note=request.POST.get("note", ""))
         if action == "move":
             return services.move_table(actor=request.user, order_id=order_id, target_table_id=int(request.POST["target_table_id"]))
+        if action == "cancel":
+            return services.cancel_table_order(
+                actor=request.user,
+                order_id=order_id,
+                expected_revision=revision,
+                reason=request.POST.get("reason", ""),
+            )
         raise ValidationError("Thao tác bán hàng không hợp lệ.")
 
 

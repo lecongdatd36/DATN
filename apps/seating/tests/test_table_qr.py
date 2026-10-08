@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from apps.seating.models import DiningTableQRToken
@@ -24,6 +24,17 @@ class TableQRManagementTests(TestCase):
         self.assertContains(response, "Bàn QR01")
         self.assertContains(response, "data:image/png;base64,")
         self.assertEqual(DiningTableQRToken.objects.filter(table=self.table).count(), 1)
+
+    @override_settings(PUBLIC_BASE_URL="http://192.168.1.14:8000")
+    def test_printed_qr_uses_phone_reachable_public_base_url(self):
+        self.client.force_login(self.manager)
+
+        response = self.client.get(reverse("seating:table_qr"), HTTP_HOST="localhost:8000")
+
+        token = DiningTableQRToken.objects.get(table=self.table)
+        expected_url = f"http://192.168.1.14:8000{reverse('customer_portal:qr_table', args=[token.token])}"
+        self.assertContains(response, expected_url)
+        self.assertNotContains(response, f"http://localhost:8000/menu/table/{token.token}/")
 
     def test_anonymous_cannot_view_staff_qr_page(self):
         response = self.client.get(reverse("seating:table_qr"))

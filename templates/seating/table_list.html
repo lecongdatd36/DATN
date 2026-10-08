@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Bàn · QLNH{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/seating.css' %}?v=3">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/seating.css' %}?v=7">{% endblock %}
 {% block content %}
-<section class="container-fluid px-3 px-md-4 pb-5" data-table-live>
+<section class="container-fluid px-3 px-md-4 pb-5" data-mobile-table-page data-table-live>
+    <header class="mobile-table-appbar"><a href="{% url 'accounts:workspace' %}" aria-label="Quay lại">‹</a><div><h1>Khu vực bàn</h1><p>{{ page_obj.paginator.count }} bàn đang hiển thị</p></div><button type="button" data-mobile-table-filter aria-label="Mở bộ lọc">☷</button></header>
     <div class="table-page-heading">
         <div><p class="eyebrow mb-2">SƠ ĐỒ PHỤC VỤ</p><h1 class="h2 mb-1">Bàn ăn</h1><p class="text-secondary mb-0">Chạm vào từng bàn để nhận khách, mở đơn hoặc xem lượt đang phục vụ.</p></div>
         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -26,13 +27,15 @@
         </aside>
         <div class="table-pos-main">
             <div class="live-status-bar"><span class="live-indicator" aria-hidden="true"></span><span data-live-message aria-live="polite">Trạng thái bàn được tự động cập nhật.</span><a class="ms-auto" data-live-refresh href="{{ request.get_full_path }}">Cập nhật ngay</a></div>
-            <details class="table-filter-drawer" data-table-filters>
+            <form class="mobile-table-search" method="get"><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ request.GET.q }}" placeholder="Tìm bàn, khu vực..." aria-label="Tìm bàn">{% if selected_area_id %}<input type="hidden" name="area" value="{{ selected_area_id }}">{% endif %}{% if request.GET.status %}<input type="hidden" name="status" value="{{ request.GET.status }}">{% endif %}</form>
+            <details class="table-filter-drawer" id="table-filter-panel" data-table-filters>
                 <summary><svg class="app-icon" aria-hidden="true"><use href="#icon-search"></use></svg> Tìm và lọc bàn</summary>
                 {% include 'seating/includes/filters.html' %}
             </details>
             {% include 'seating/includes/table_results.html' %}
         </div>
     </div>
+    {% if access.can_manage_orders %}<a class="mobile-table-cta" href="{% url 'sales:workspace' %}">＋ <span>Nhận bàn / Mở bàn</span></a>{% endif %}
 </section>
 {% endblock %}
-{% block extra_js %}<script src="{% static 'js/table-live.js' %}" defer></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/table-live.js' %}?v=2" defer></script>{% endblock %}

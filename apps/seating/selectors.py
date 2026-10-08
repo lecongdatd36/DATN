@@ -57,6 +57,8 @@ def tables(*, q="", status="", area=None, at=None):
         next_booking_id=Subquery(upcoming.values("pk")[:1]),
         next_booking_start=Subquery(upcoming.values("starts_at")[:1]),
         current_order_id=Subquery(current_order.values("pk")[:1]),
+        current_order_revision=Subquery(current_order.values("revision")[:1]),
+        current_order_booking_id=Subquery(current_order.values("booking_id")[:1]),
         current_order_status=Subquery(current_order.values("status")[:1]),
     )
     current_items = OrderItem.objects.filter(order_id=OuterRef("current_order_id")).exclude(
@@ -67,6 +69,11 @@ def tables(*, q="", status="", area=None, at=None):
     result = result.annotate(
         current_order_total=Coalesce(Subquery(order_total), Value(0), output_field=DecimalField(max_digits=14, decimal_places=0)),
         current_order_quantity=Coalesce(Subquery(order_quantity), Value(0), output_field=IntegerField()),
+        current_order_has_sent_items=Exists(
+            OrderItem.objects.filter(order_id=OuterRef("current_order_id")).exclude(
+                status__in=(OrderItem.Status.DRAFT, OrderItem.Status.CANCELLED)
+            )
+        ),
     ).annotate(current_status=Case(
         # An actual seated party remains visible even after its planned end.
         When(Q(current_visit_id__isnull=False) | Q(status=DiningTable.Status.OCCUPIED), then=Value("occupied")),

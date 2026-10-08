@@ -1634,6 +1634,17 @@ body.customer-layout {
     opacity: .45;
 }
 
+.customer-qr-submit-status {
+    margin: 10px 0 0;
+    padding: 9px 11px;
+    border-radius: 7px;
+    color: #8b1e1e;
+    background: #fff0f0;
+    font-size: 12px;
+    line-height: 1.45;
+    text-align: left;
+}
+
 .customer-qr-cart-footer small {
     display: block;
     margin-top: 10px;

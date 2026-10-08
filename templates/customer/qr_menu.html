@@ -23,7 +23,7 @@
                 </article>
                 {% empty %}<div class="customer-empty-state"><strong>Menu đang được cập nhật.</strong><p>Vui lòng thử lại sau ít phút.</p></div>{% endfor %}
             </div>
-            <aside class="customer-qr-cart" data-qr-cart-panel aria-labelledby="qr-cart-title"><div class="customer-qr-cart-header"><div><span class="customer-section-label">Lượt gọi món</span><h2 id="qr-cart-title">Giỏ hàng <span data-qr-count>0</span></h2></div><button class="customer-qr-cart-close" type="button" data-qr-cart-close aria-label="Đóng giỏ hàng">×</button></div><div class="customer-qr-cart-items" data-qr-items><p class="customer-qr-cart-empty">Chưa có món trong giỏ.</p></div><div class="customer-qr-cart-footer"><div><span>Tạm tính</span><strong data-qr-total>0đ</strong></div><button class="customer-button" type="button" data-qr-submit data-endpoint="{% url 'customer_portal:qr_request' qr_token.token %}" disabled>Gửi yêu cầu gọi món</button><small>Nhân viên sẽ xác nhận trước khi món được gửi bếp.</small></div></aside>
+            <aside class="customer-qr-cart" data-qr-cart-panel aria-labelledby="qr-cart-title"><div class="customer-qr-cart-header"><div><span class="customer-section-label">Lượt gọi món</span><h2 id="qr-cart-title">Giỏ hàng <span data-qr-count>0</span></h2></div><button class="customer-qr-cart-close" type="button" data-qr-cart-close aria-label="Đóng giỏ hàng">×</button></div><div class="customer-qr-cart-items" data-qr-items><p class="customer-qr-cart-empty">Chưa có món trong giỏ.</p></div><div class="customer-qr-cart-footer"><div><span>Tạm tính</span><strong data-qr-total>0đ</strong></div><button class="customer-button" type="button" data-qr-submit data-endpoint="{% url 'customer_portal:qr_request' qr_token.token %}" disabled>Gửi yêu cầu gọi món</button><p class="customer-qr-submit-status" data-qr-submit-status role="status" aria-live="polite" hidden></p><small>Nhân viên sẽ xác nhận trước khi món được gửi bếp.</small></div></aside>
         </div>
         <button class="customer-qr-cart-bar" type="button" data-qr-cart-open><span>Giỏ hàng · <strong data-qr-count>0</strong> món</span><strong data-qr-total>0đ</strong><span aria-hidden="true">↑</span></button>
         {% endif %}
@@ -31,4 +31,4 @@
 </section>
 {% endblock %}
 
-{% block extra_js %}{% if not qr_error %}<script src="{% static 'customer/js/qr-cart.js' %}?v=1" defer></script>{% endif %}{% endblock %}
+{% block extra_js %}{% if not qr_error %}<script src="{% static 'customer/js/qr-cart.js' %}?v=2" defer></script>{% endif %}{% endblock %}

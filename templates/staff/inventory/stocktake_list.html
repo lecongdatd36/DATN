@@ -1,7 +1,7 @@
 {% extends 'staff/base_staff.html' %}
 {% load static %}
 {% block staff_title %}Kiểm kê kho · QLNH{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=1">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=2">{% endblock %}
 {% block staff_content %}<section class="container-fluid px-3 pb-4 inventory-page"><div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4"><div><p class="eyebrow mb-1">KHO · ĐỐI CHIẾU</p><h1 class="h3 mb-1">Kiểm kê kho</h1><p class="text-secondary mb-0">Nhập tồn thực tế; hệ thống tự ghi nhận chênh lệch và người chốt.</p></div><a class="btn btn-outline-secondary" href="{% url 'inventory:workspace' %}">Về kho</a></div>
 {% include 'staff/inventory/includes/nav.html' %}
 {% if can_manage %}<form class="project-card p-3 mb-4" method="post">{% csrf_token %}<div class="row g-2 align-items-end"><div class="col"><label class="form-label" for="stocktake-note">Ghi chú đợt kiểm kê</label><input class="form-control" id="stocktake-note" name="note" maxlength="500" placeholder="Ví dụ: Kiểm kê cuối ca"></div><div class="col-auto"><button class="btn btn-primary">Bắt đầu kiểm kê</button></div></div></form>{% endif %}

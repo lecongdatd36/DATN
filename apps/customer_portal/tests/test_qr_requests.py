@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from apps.inventory.models import InventoryTransaction
@@ -71,3 +71,29 @@ class CustomerQRRequestTests(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["status"], "Chờ nhân viên xác nhận")
+
+    @override_settings(ALLOWED_HOSTS=["qr.example.test"])
+    def test_https_proxy_qr_post_passes_real_csrf_checks(self):
+        client = Client(enforce_csrf_checks=True)
+        menu_url = reverse("customer_portal:qr_table", args=[self.token.token])
+        request_url = reverse("customer_portal:qr_request", args=[self.token.token])
+        proxy_headers = {
+            "HTTP_HOST": "qr.example.test",
+            "HTTP_X_FORWARDED_PROTO": "https",
+        }
+
+        menu_response = client.get(menu_url, **proxy_headers)
+
+        self.assertEqual(menu_response.status_code, 200)
+        self.assertTrue(menu_response.wsgi_request.is_secure())
+        csrf_token = client.cookies["csrftoken"].value
+        response = client.post(
+            request_url,
+            data='{"items":[{"dish_id": %d, "quantity": 1}]}' % self.dish.pk,
+            content_type="application/json",
+            HTTP_ORIGIN="https://qr.example.test",
+            HTTP_X_CSRFTOKEN=csrf_token,
+            **proxy_headers,
+        )
+
+        self.assertEqual(response.status_code, 201)

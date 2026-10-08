@@ -4,7 +4,6 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.customers.models import Customer
-from apps.seating.models import DiningTable
 from apps.customers.validators import normalize_phone
 from apps.seating.models import DiningTable
 from core.seating_lock import lock_seating_schedule
@@ -19,6 +18,84 @@ TRANSITIONS = {
     Booking.Status.CONFIRMED: (Booking.Status.SEATED, Booking.Status.CANCELLED, Booking.Status.NO_SHOW),
     Booking.Status.SEATED: (Booking.Status.COMPLETED,),
 }
+
+
+@transaction.atomic
+def expire_overdue_bookings(*, at=None):
+    """Mark unattended reservations as no-shows and reconcile their tables.
+
+    A reservation is only expired after its planned end time, so a late guest
+    can still be checked in during the reserved service window.  The seating
+    advisory lock keeps this sweep ordered with check-in, table opening and
+    booking edits.
+    """
+    lock_seating_schedule()
+    now = at or timezone.now()
+    expired = list(
+        Booking.objects.select_for_update()
+        .filter(
+            status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED),
+            ends_at__lte=now,
+        )
+        .order_by("table_id", "pk")
+    )
+    if not expired:
+        return 0
+
+    for booking in expired:
+        booking.status = Booking.Status.NO_SHOW
+        booking.revision += 1
+        booking.updated_at = now
+    Booking.objects.bulk_update(expired, ("status", "revision", "updated_at"))
+    table_ids = sorted({booking.table_id for booking in expired})
+    tables = list(DiningTable.objects.select_for_update().filter(pk__in=table_ids).order_by("pk"))
+    table_codes = {table.pk: table.code for table in tables}
+    BookingActivityLog.objects.bulk_create(
+        [
+            BookingActivityLog(
+                booking=booking,
+                action="Tự động hủy quá hạn",
+                description=(
+                    f"Khách không đến trước khi hết thời gian giữ bàn; "
+                    f"bàn {table_codes.get(booking.table_id, booking.table_id)} được hệ thống giải phóng."
+                ),
+                performed_by=None,
+                actor_snapshot="Hệ thống",
+            )
+            for booking in expired
+        ]
+    )
+    seated_table_ids = set(
+        Booking.objects.filter(table_id__in=table_ids, status=Booking.Status.SEATED)
+        .values_list("table_id", flat=True)
+    )
+    reserved_table_ids = set(
+        Booking.objects.filter(
+            table_id__in=table_ids,
+            status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED),
+            ends_at__gt=now,
+        ).values_list("table_id", flat=True)
+    )
+    changed_tables = []
+    for table in tables:
+        if table.status == DiningTable.Status.CLEANING:
+            continue
+        if table.pk in seated_table_ids:
+            next_status = DiningTable.Status.OCCUPIED
+        elif table.pk in reserved_table_ids:
+            next_status = DiningTable.Status.RESERVED
+        elif table.status != DiningTable.Status.OCCUPIED:
+            next_status = DiningTable.Status.AVAILABLE
+        else:
+            # A directly opened POS order can occupy a table without a Booking.
+            continue
+        if table.status != next_status:
+            table.status = next_status
+            table.updated_at = now
+            changed_tables.append(table)
+    if changed_tables:
+        DiningTable.objects.bulk_update(changed_tables, ("status", "updated_at"))
+    return len(expired)
 
 
 def _lock_actor(actor, permission="manage_booking"):

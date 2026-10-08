@@ -1,0 +1,11 @@
+<div class="mobile-nav-more dropup">
+    <button type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mở thêm chức năng"><span class="mobile-more-icon" aria-hidden="true">•••</span><span>Thêm</span></button>
+    <div class="dropdown-menu dropdown-menu-end mobile-more-menu">
+        {% if access.can_view_orders %}<a class="dropdown-item" href="{% url 'orders:list' %}">Đơn hàng</a>{% endif %}
+        {% if access.can_collect_payments %}<a class="dropdown-item" href="{% url 'orders:table_payment' %}">Thanh toán theo bàn</a><a class="dropdown-item" href="{% url 'orders:invoice_list' %}">Hóa đơn</a>{% endif %}
+        {% if access.can_work_kitchen %}<a class="dropdown-item" href="{% url 'kitchen:workspace' %}">Bếp</a>{% endif %}
+        {% if access.can_view_inventory %}<a class="dropdown-item" href="{% url 'inventory:workspace' %}">Kho</a>{% endif %}
+        {% if access.can_view_reports %}<a class="dropdown-item" href="{% url 'reports:dashboard' %}">Báo cáo</a>{% endif %}
+        <a class="dropdown-item" href="{% url 'accounts:password_change' %}">Tài khoản</a>
+    </div>
+</div>

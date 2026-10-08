@@ -72,6 +72,7 @@
             csrfmiddlewaretoken: csrfToken(),
             expected_revision: pendingAction.dataset.revision || "",
             expected_status: pendingAction.dataset.status || "",
+            order_id: pendingAction.dataset.orderId || "",
             reason: needsReason ? reason.value.trim() : (pendingAction.dataset.reason || ""),
         };
         Object.entries(fields).forEach(([name, value]) => {
@@ -162,6 +163,7 @@
     });
 
     document.addEventListener("submit", (event) => {
+        if (event.defaultPrevented) return;
         const form = event.target;
         if (!(form instanceof HTMLFormElement) || !form.checkValidity()) return;
         if (form.dataset.submitting === "true") {

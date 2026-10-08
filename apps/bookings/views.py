@@ -21,7 +21,10 @@ from .forms import (
 from .models import Booking, BookingSettings, BookingSettingsLog
 from .permissions import has_booking_permission
 from .selectors import available_tables, booking_list, overdue_bookings, next_booking
-from .services import TRANSITIONS, create_public_booking, save_booking, transfer_table, transition_booking, update_booking_settings
+from .services import (
+    TRANSITIONS, create_public_booking, expire_overdue_bookings, save_booking,
+    transfer_table, transition_booking, update_booking_settings,
+)
 
 
 @method_decorator(never_cache, name="dispatch")
@@ -32,6 +35,7 @@ class BookingPermissionMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if not has_booking_permission(request.user, self.booking_permission):
             return self.handle_no_permission()
+        expire_overdue_bookings()
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -403,6 +407,10 @@ class PublicReservationStatusView(DetailView):
     template_name = "customer/reservation_status.html"
     context_object_name = "booking"
     queryset = Booking.objects.select_related("table__area")
+
+    def get_object(self, queryset=None):
+        expire_overdue_bookings()
+        return super().get_object(queryset)
 
     def dispatch(self, request, *args, **kwargs):
         if str(kwargs["pk"]) not in request.session.get("public_booking_verified", []):

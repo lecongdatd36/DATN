@@ -8,7 +8,7 @@
     <title>{% block title %}QLNH · Quản lý nhà hàng{% endblock %}</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=5">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{% if user.is_authenticated %}staff-layout{% else %}public-layout d-flex flex-column min-vh-100{% endif %}">
@@ -103,7 +103,7 @@
     {% endif %}
 
     <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}" defer></script>
-    <script src="{% static 'js/base.js' %}?v=2" defer></script>
+    <script src="{% static 'js/base.js' %}?v=5" defer></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

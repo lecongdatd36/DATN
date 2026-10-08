@@ -1,11 +1,11 @@
 {% load menu_money %}
 <div id="table-live-results" data-state-signature="{{ table_state_signature }}">
     <div class="table-summary-strip" aria-label="Tổng quan bàn">
-        <a href="{% url 'seating:table_list' %}"><span>Tất cả</span><strong>{{ status_counts.all }}</strong></a>
-        <a class="is-empty" href="{% url 'seating:table_list' %}?status=empty"><span>Trống</span><strong>{{ status_counts.empty }}</strong></a>
-        <a class="is-occupied" href="{% url 'seating:table_list' %}?status=occupied"><span>Có khách</span><strong>{{ status_counts.occupied }}</strong></a>
-        <a class="is-reserved" href="{% url 'seating:table_list' %}?status=reserved"><span>Giữ chỗ</span><strong>{{ status_counts.reserved }}</strong></a>
-        <a class="is-reserved" href="{% url 'seating:table_list' %}?status=cleaning"><span>Cần dọn</span><strong>{{ status_counts.cleaning }}</strong></a>
+        <a class="{% if not request.GET.status %}active{% endif %}" href="{% url 'seating:table_list' %}{% if selected_area_id %}?area={{ selected_area_id }}{% endif %}"><span>Tất cả</span><strong>{{ status_counts.all }}</strong></a>
+        <a class="is-empty {% if request.GET.status == 'empty' %}active{% endif %}" href="{% url 'seating:table_list' %}?status=empty{% if selected_area_id %}&amp;area={{ selected_area_id }}{% endif %}"><span>Trống</span><strong>{{ status_counts.empty }}</strong></a>
+        <a class="is-occupied {% if request.GET.status == 'occupied' %}active{% endif %}" href="{% url 'seating:table_list' %}?status=occupied{% if selected_area_id %}&amp;area={{ selected_area_id }}{% endif %}"><span>Có khách</span><strong>{{ status_counts.occupied }}</strong></a>
+        <a class="is-reserved {% if request.GET.status == 'reserved' %}active{% endif %}" href="{% url 'seating:table_list' %}?status=reserved{% if selected_area_id %}&amp;area={{ selected_area_id }}{% endif %}"><span>Đặt trước</span><strong>{{ status_counts.reserved }}</strong></a>
+        <a class="is-cleaning {% if request.GET.status == 'cleaning' %}active{% endif %}" href="{% url 'seating:table_list' %}?status=cleaning{% if selected_area_id %}&amp;area={{ selected_area_id }}{% endif %}"><span>Cần dọn</span><strong>{{ status_counts.cleaning }}</strong></a>
     </div>
     <div class="table-results-meta">
         <p class="mb-0"><strong>{{ page_obj.paginator.count }}</strong> bàn · Cập nhật {{ status_checked_at|date:'H:i:s' }}</p>
@@ -16,7 +16,7 @@
         {% for table in page_obj %}
         <article class="dining-table-card table-state-{{ table.current_status }}" aria-label="Bàn {{ table.code }} · {{ table.current_status }}">
             <div class="table-card-top">
-                <div class="table-identity"><span class="table-mini-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-table"></use></svg></span><div><span class="table-area">{{ table.area.name }}</span><h2 class="table-code">Bàn {{ table.code }}</h2></div></div>
+                <div class="table-identity"><span class="table-mini-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-table"></use></svg></span><div><span class="table-area">{{ table.area.name }}</span><h2 class="table-code">{{ table.code }}</h2></div></div>
                 <div class="table-card-controls">
                     <span class="table-status-pill">{% if table.current_status == 'occupied' %}Có khách{% elif table.current_status == 'reserved' %}Giữ chỗ{% elif table.current_status == 'cleaning' %}Cần dọn{% elif table.current_status == 'inactive' %}Ngừng dùng{% else %}Trống{% endif %}</span>
                     {% if access.can_manage_seating %}<a class="table-edit-link" href="{% url 'seating:table_update' table.pk %}" aria-label="Sửa bàn {{ table.code }}"><svg class="app-icon" aria-hidden="true"><use href="#icon-settings"></use></svg><span class="visually-hidden">Sửa / trạng thái</span></a>{% endif %}
@@ -39,8 +39,8 @@
             </div>
 
             <div class="table-facts">
-                <span><svg class="app-icon" aria-hidden="true"><use href="#icon-customers"></use></svg>{{ table.capacity }} chỗ</span>
-                {% if table.current_status == 'occupied' and table.current_visit_seated_at %}<span>Nhận lúc {{ table.current_visit_seated_at|date:'H:i' }}</span>{% endif %}
+                <span><svg class="app-icon" aria-hidden="true"><use href="#icon-customers"></use></svg>{{ table.current_visit_party_size|default:0 }}/{{ table.capacity }}</span>
+                {% if table.current_status == 'occupied' and table.current_visit_seated_at %}<span>◷ {{ table.current_visit_seated_at|timesince }}</span>{% else %}<span>{{ table.capacity }} chỗ</span>{% endif %}
             </div>
             {% if not table.area.is_active and table.current_status != 'inactive' %}<div class="table-notice is-danger">Khu vực đã ngừng sử dụng</div>{% endif %}
 
@@ -64,7 +64,7 @@
                     </div>
                     <div class="table-secondary-actions">
                     {% if table.current_visit_id and access.can_manage_bookings %}<a href="{% url 'bookings:transfer_table' table.current_visit_id %}">Chuyển bàn</a>{% endif %}
-                    {% if table.current_visit_id and access.can_manage_bookings and access.can_manage_orders %}<a class="text-danger" href="{% url 'bookings:cancel_seated' table.current_visit_id %}" data-confirm-action data-revision="{{ table.current_visit_revision }}" data-confirm-reason="true" data-confirm-tone="danger" data-confirm-title="Hủy bàn {{ table.code }}?" data-confirm-message="Chỉ dùng khi khách không tiếp tục sử dụng bàn và chưa có món đã phục vụ." data-confirm-label="Hủy bàn">Hủy bàn</a>{% endif %}
+                    {% if not table.current_order_has_sent_items %}{% if table.current_visit_id and access.can_manage_bookings and access.can_manage_orders %}<a class="text-danger" href="{% url 'bookings:cancel_seated' table.current_visit_id %}" data-confirm-action data-revision="{{ table.current_visit_revision }}" data-confirm-reason="true" data-confirm-tone="danger" data-confirm-title="Hủy bàn {{ table.code }}?" data-confirm-message="Chỉ hủy được khi chưa gửi món xuống Bếp." data-confirm-label="Hủy bàn">Hủy bàn</a>{% elif table.current_order_id and not table.current_order_booking_id and access.can_manage_orders %}<a class="text-danger" href="{% url 'sales:action' 'cancel' %}" data-confirm-action data-revision="{{ table.current_order_revision }}" data-order-id="{{ table.current_order_id }}" data-confirm-reason="true" data-confirm-tone="danger" data-confirm-title="Hủy bàn {{ table.code }}?" data-confirm-message="Chỉ hủy được khi chưa gửi món xuống Bếp. Đơn sẽ bị hủy và bàn chuyển sang trạng thái cần dọn." data-confirm-label="Hủy bàn">Hủy bàn</a>{% endif %}{% endif %}
                     {% if table.current_visit_id and access.can_view_bookings %}<a href="{% url 'bookings:detail' table.current_visit_id %}">Chi tiết đặt bàn</a>{% endif %}
                     </div>
                     {% if table.current_order_id and access.can_collect_payments %}<button class="btn btn-success mt-2 w-100" type="button" data-bs-toggle="modal" data-bs-target="#quick-payment-{{ table.current_order_id }}">Thanh toán nhanh bàn {{ table.code }}</button>{% endif %}
@@ -85,6 +85,8 @@
         <div class="project-card empty-table-state"><svg class="app-icon" aria-hidden="true"><use href="#icon-table"></use></svg><h2 class="h5">Chưa có bàn phù hợp</h2><p class="text-secondary mb-0">Thử thay đổi bộ lọc hoặc tạo khu vực và bàn mới.</p></div>
         {% endfor %}
     </div>
+
+    <section class="mobile-table-totals" aria-label="Tổng quan trạng thái bàn"><div><span class="is-empty"></span><small>Trống</small><strong>{{ status_counts.empty }}</strong></div><div><span class="is-occupied"></span><small>Có khách</small><strong>{{ status_counts.occupied }}</strong></div><div><span class="is-reserved"></span><small>Đặt trước</small><strong>{{ status_counts.reserved }}</strong></div><div><span class="is-cleaning"></span><small>Cần dọn</small><strong>{{ status_counts.cleaning }}</strong></div></section>
 
     {# Keep dialogs outside table cards: transformed/scrollable cards otherwise clip fixed modals. #}
     {% for table in page_obj %}

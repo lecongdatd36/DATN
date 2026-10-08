@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ValidationError
@@ -10,6 +11,7 @@ from django.views.decorators.cache import never_cache
 from django.views.generic import FormView, ListView, TemplateView
 
 from core.forms import add_service_errors, filter_query_string
+from apps.bookings.services import expire_overdue_bookings
 from apps.orders.models import Order
 from apps.orders import services as order_services
 from .forms import AreaFilterForm, AreaForm, DiningTableForm, TableFilterForm
@@ -65,6 +67,7 @@ class TableListView(AreaListView):
         return paginator, page, page.object_list, page.has_other_pages()
 
     def get_queryset(self):
+        expire_overdue_bookings()
         self.status_checked_at = timezone.now()
         self.filter_form = self.filter_class(self.request.GET)
         return tables(at=self.status_checked_at, **self.filter_form.cleaned_data) if self.filter_form.is_valid() else self.model.objects.none()
@@ -110,7 +113,8 @@ class TableQRListView(SeatingPermissionMixin, TemplateView):
         cards = []
         for table in DiningTable.objects.select_related("area").filter(is_active=True, area__is_active=True).order_by("area__name", "code"):
             token, _ = DiningTableQRToken.objects.get_or_create(table=table)
-            scan_url = self.request.build_absolute_uri(reverse("customer_portal:qr_table", args=[token.token]))
+            qr_path = reverse("customer_portal:qr_table", args=[token.token])
+            scan_url = f"{settings.PUBLIC_BASE_URL}{qr_path}" if settings.PUBLIC_BASE_URL else self.request.build_absolute_uri(qr_path)
             cards.append({"table": table, "scan_url": scan_url, "qr_image": qr_data_uri(scan_url)})
         context["qr_cards"] = cards
         return context

@@ -5,7 +5,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const storageKey = `qlnh-qr-cart-${window.location.pathname}`;
     const countElements = [...document.querySelectorAll("[data-qr-count]")];
     const totalElements = [...document.querySelectorAll("[data-qr-total]")];
-    let cart = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
+    const submitButton = document.querySelector("[data-qr-submit]");
+    const submitStatus = document.querySelector("[data-qr-submit-status]");
+    let isSubmitting = false;
+    let cart = {};
+    try {
+        const storedCart = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
+        cart = storedCart && typeof storedCart === "object" && !Array.isArray(storedCart) ? storedCart : {};
+    } catch (_error) {
+        sessionStorage.removeItem(storageKey);
+    }
 
     const formatMoney = (value) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
     const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (character) => ({
@@ -16,6 +25,11 @@ document.addEventListener("DOMContentLoaded", () => {
         '"': "&quot;",
     })[character]);
     const save = () => sessionStorage.setItem(storageKey, JSON.stringify(cart));
+    const showStatus = (message = "") => {
+        if (!submitStatus) return;
+        submitStatus.textContent = message;
+        submitStatus.hidden = !message;
+    };
     const summary = () => Object.values(cart).reduce((result, item) => ({
         count: result.count + item.quantity,
         total: result.total + item.price * item.quantity,
@@ -28,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!itemsElement) return;
         itemsElement.innerHTML = "";
         const entries = Object.values(cart);
+        if (submitButton) submitButton.disabled = isSubmitting || !entries.length;
         if (!entries.length) {
             itemsElement.innerHTML = '<p class="customer-qr-cart-empty">Chưa có món trong giỏ.</p>';
             return;
@@ -38,10 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
             row.innerHTML = `<div class="customer-qr-cart-item-head"><strong>${escapeHtml(item.name)}</strong><span>${formatMoney(item.price * item.quantity)}</span></div><div class="customer-qr-quantity"><button type="button" data-qr-decrease="${item.id}" aria-label="Giảm ${escapeHtml(item.name)}">−</button><b>${item.quantity}</b><button type="button" data-qr-increase="${item.id}" aria-label="Tăng ${escapeHtml(item.name)}">+</button></div><label>Ghi chú món<input type="text" maxlength="500" value="${escapeHtml(item.note || "")}" data-qr-note="${item.id}" placeholder="Ví dụ: không hành"></label>`;
             itemsElement.appendChild(row);
         });
-        document.querySelector("[data-qr-submit]").disabled = false;
     };
 
     const add = (card) => {
+        showStatus();
         const id = card.dataset.id;
         const item = cart[id] || { id, name: card.dataset.name, price: Number(card.dataset.price), quantity: 0, note: "" };
         item.quantity = Math.min(item.quantity + 1, 100);
@@ -71,29 +86,45 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.querySelector("[data-qr-cart-open]")?.addEventListener("click", () => panel?.classList.add("is-open"));
     document.querySelector("[data-qr-cart-close]")?.addEventListener("click", () => panel?.classList.remove("is-open"));
-    document.querySelector("[data-qr-submit]")?.addEventListener("click", async (event) => {
+    submitButton?.addEventListener("click", async (event) => {
         const button = event.currentTarget;
         const entries = Object.values(cart);
-        if (!entries.length) return;
-        button.disabled = true;
+        if (!entries.length || isSubmitting) return;
+        isSubmitting = true;
+        showStatus();
+        render();
         button.textContent = "Đang gửi...";
         try {
             const csrf = document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
             const response = await fetch(button.dataset.endpoint, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+                credentials: "same-origin",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrf,
+                    "X-Requested-With": "XMLHttpRequest",
+                },
                 body: JSON.stringify({ items: entries.map(({ id, quantity, note }) => ({ dish_id: Number(id), quantity, note })) }),
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || "Không thể gửi yêu cầu.");
+            const responseText = await response.text();
+            let result = {};
+            try { result = responseText ? JSON.parse(responseText) : {}; } catch (_error) { /* HTML error page */ }
+            if (!response.ok) {
+                const fallback = response.status === 403
+                    ? "Phiên gọi món đã hết hạn. Hãy tải lại mã QR rồi gửi lại."
+                    : "Không thể gửi yêu cầu. Vui lòng thử lại.";
+                throw new Error(result.error || fallback);
+            }
             sessionStorage.removeItem(storageKey);
             cart = {};
             render();
             window.location.href = result.status_url;
         } catch (error) {
-            window.alert(error.message);
-            button.disabled = false;
+            showStatus(error.message || "Không thể gửi yêu cầu. Vui lòng thử lại.");
+            isSubmitting = false;
             button.textContent = "Gửi yêu cầu gọi món";
+            render();
         }
     });
     render();

@@ -1160,6 +1160,80 @@ def pay_tables(*, actor, order_ids, payment_method="CASH", reference="", promoti
     return batch, table_codes
 
 
+def _cancel_locked_order(*, actor, order, table, reason, now):
+    """Cancel an unpaid order while its row is locked by the caller."""
+    if order.status == Order.Status.COMPLETED:
+        raise ValidationError("Đơn đã thanh toán. Hãy dùng Hoàn tất để trả bàn, không thể hủy bàn.")
+    if order.status == Order.Status.CANCELLED:
+        raise ValidationError("Đơn đã được hủy trước đó.")
+    invoice = Invoice.objects.select_for_update().filter(order=order).first()
+    if invoice is not None and invoice.paid_amount > 0:
+        raise ValidationError("Đơn đã thu một phần. Cần xử lý hoàn tiền trước khi hủy bàn.")
+
+    items = list(order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED))
+    if any(item.status != OrderItem.Status.DRAFT for item in items):
+        raise ValidationError(
+            "Đơn đã có món gửi xuống Bếp nên không thể hủy thẳng cả bàn. "
+            "Hãy xử lý từng món theo đúng quyền, sau đó thanh toán hoặc đóng đơn."
+        )
+    if items:
+        order.items.filter(pk__in=[item.pk for item in items]).update(
+            status=OrderItem.Status.CANCELLED,
+            cancellation_reason=reason,
+            cancelled_at=now,
+        )
+    if invoice is not None:
+        invoice.status = Invoice.Status.CANCELLED
+        invoice.closed_at = now
+        invoice.save(update_fields=("status", "closed_at", "updated_at"))
+    order.status = Order.Status.CANCELLED
+    order.closed_at = now
+    order.revision += 1
+    order.save(update_fields=("status", "closed_at", "revision", "updated_at"))
+    _log(actor, order, "Hủy bàn", f"Hủy đơn và giải phóng bàn {table.code}. Lý do: {reason}")
+
+
+@transaction.atomic
+def cancel_table_order(*, actor, order_id, expected_revision, reason):
+    """Cancel a table opened directly from POS, or its linked seated visit."""
+    actor = _lock_actor(actor, "manage_order")
+    reason = reason.strip() if isinstance(reason, str) else ""
+    if not reason or len(reason) > 500:
+        raise ValidationError({"reason": "Lý do hủy bàn phải có từ 1 đến 500 ký tự."})
+
+    order = Order.objects.select_for_update().get(pk=order_id)
+    if order.revision != expected_revision:
+        raise ValidationError("Đơn đã thay đổi. Hãy tải lại trang trước khi hủy bàn.")
+    if order.table_id is None:
+        raise ValidationError("Đơn không gắn với bàn nên không thể dùng thao tác hủy bàn.")
+    if order.booking_id and not has_booking_permission(actor, "manage_booking"):
+        raise PermissionDenied("Bạn không có quyền hủy lượt khách đang phục vụ.")
+
+    table = DiningTable.objects.select_for_update().get(pk=order.table_id)
+    now = timezone.now()
+    _cancel_locked_order(actor=actor, order=order, table=table, reason=reason, now=now)
+
+    booking = Booking.objects.select_for_update().filter(pk=order.booking_id).first() if order.booking_id else None
+    if booking is not None:
+        if booking.status != Booking.Status.SEATED:
+            raise ValidationError("Bàn không còn ở trạng thái đang phục vụ.")
+        booking.status = Booking.Status.CANCELLED
+        booking.completed_at = now
+        booking.revision += 1
+        booking.save(update_fields=("status", "completed_at", "revision", "updated_at"))
+        BookingActivityLog.objects.create(
+            booking=booking,
+            action="Hủy bàn",
+            description=f"Khách không tiếp tục sử dụng bàn {table.code}. Lý do: {reason}",
+            performed_by=actor,
+            actor_snapshot=actor.username,
+        )
+
+    table.status = DiningTable.Status.CLEANING
+    table.save(update_fields=("status", "updated_at"))
+    return table
+
+
 @transaction.atomic
 def cancel_table_visit(*, actor, booking_id, expected_revision, reason):
     actor = _lock_actor(actor, "manage_order")
@@ -1178,34 +1252,7 @@ def cancel_table_visit(*, actor, booking_id, expected_revision, reason):
     order = Order.objects.select_for_update().filter(booking=booking).first()
     now = timezone.now()
     if order is not None:
-        if order.status == Order.Status.COMPLETED:
-            raise ValidationError("Đơn đã thanh toán. Hãy dùng Hoàn tất để trả bàn, không thể hủy bàn.")
-        if order.status == Order.Status.CANCELLED:
-            raise ValidationError("Đơn đã được hủy trước đó.")
-        invoice = Invoice.objects.select_for_update().filter(order=order).first()
-        if invoice is not None and invoice.paid_amount > 0:
-            raise ValidationError("Đơn đã thu một phần. Cần xử lý hoàn tiền trước khi hủy bàn.")
-
-        items = list(order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED))
-        if any(item.status == OrderItem.Status.SERVED for item in items):
-            raise ValidationError("Bàn đã có món được phục vụ nên không thể hủy. Hãy chuyển đơn sang thanh toán.")
-        has_prepared_items = any(item.status in (OrderItem.Status.COOKING, OrderItem.Status.READY) for item in items)
-        if has_prepared_items and not has_order_permission(actor, "cancel_prepared_item"):
-            raise PermissionDenied("Món đã bắt đầu làm hoặc đã làm xong; chỉ Quản lý được hủy bàn này.")
-        if items:
-            order.items.filter(pk__in=[item.pk for item in items]).update(
-                status=OrderItem.Status.CANCELLED,
-                cancellation_reason=reason,
-                cancelled_at=now,
-            )
-        if invoice is not None:
-            invoice.status = Invoice.Status.CANCELLED
-            invoice.closed_at = now
-            invoice.save(update_fields=("status", "closed_at", "updated_at"))
-        order.status = Order.Status.CANCELLED
-        order.revision += 1
-        order.save(update_fields=("status", "revision", "updated_at"))
-        _log(actor, order, "Hủy bàn", f"Hủy đơn và giải phóng bàn {booking.table.code}. Lý do: {reason}")
+        _cancel_locked_order(actor=actor, order=order, table=booking.table, reason=reason, now=now)
 
     table_code = booking.table.code
     booking.status = Booking.Status.CANCELLED

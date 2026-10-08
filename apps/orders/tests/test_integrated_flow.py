@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.contrib.messages import get_messages
 from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -222,6 +223,111 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.assertEqual(order.status, Order.Status.COMPLETED)
         self.assertEqual(order.invoice.total_amount, Decimal("85500"))
 
+    def test_sales_workspace_can_cancel_a_direct_pos_table(self):
+        order = services.open_table(
+            actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2,
+            customer_id=self.customer.pk,
+        )
+        self.client.force_login(self.users["WAITER"])
+        workspace = self.client.get(reverse("sales:workspace"), {"order": order.pk})
+        self.assertContains(workspace, "Hủy bàn")
+        self.assertContains(workspace, f'data-order-id="{order.pk}"')
+
+        response = self.client.post(reverse("sales:action", args=["cancel"]), {
+            "order_id": order.pk,
+            "expected_revision": order.revision,
+            "reason": "Khách đổi ý trước khi gọi món",
+        })
+        self.assertRedirects(response, reverse("sales:workspace"))
+        order.refresh_from_db()
+        self.table.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.CANCELLED)
+        self.assertIsNotNone(order.closed_at)
+        self.assertEqual(self.table.status, DiningTable.Status.CLEANING)
+
+    def test_sent_kitchen_item_blocks_table_cancellation_and_hides_action(self):
+        order = services.open_table(
+            actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2,
+            customer_id=self.customer.pk,
+        )
+        item = services.add_item(
+            actor=self.users["WAITER"], order_id=order.pk,
+            expected_revision=self.revision(order), dish_id=self.dish.pk, quantity=1,
+        )
+        services.send_to_kitchen(
+            actor=self.users["WAITER"], order_id=order.pk,
+            expected_revision=self.revision(order),
+        )
+
+        with self.assertRaisesMessage(ValidationError, "đã có món gửi xuống Bếp"):
+            services.cancel_table_order(
+                actor=self.users["MANAGER"], order_id=order.pk,
+                expected_revision=self.revision(order), reason="Khách đổi ý",
+            )
+        order.refresh_from_db()
+        item.refresh_from_db()
+        self.table.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.IN_PROGRESS)
+        self.assertEqual(item.status, OrderItem.Status.PENDING)
+        self.assertEqual(self.table.status, DiningTable.Status.OCCUPIED)
+
+        self.client.force_login(self.users["MANAGER"])
+        workspace = self.client.get(reverse("sales:workspace"), {"order": order.pk})
+        table_page = self.client.get(reverse("seating:table_list"))
+        cancel_title = f'data-confirm-title="Hủy bàn {self.table.code}?"'
+        self.assertNotContains(workspace, cancel_title)
+        self.assertNotContains(table_page, cancel_title)
+
+    def test_waiter_can_quick_add_without_page_message(self):
+        order = services.open_table(actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2)
+        self.client.force_login(self.users["WAITER"])
+        response = self.client.post(
+            reverse("sales:action", args=["add"]),
+            {
+                "order_id": order.pk,
+                "expected_revision": order.revision,
+                "dish_id": self.dish.pk,
+                "quantity": 1,
+            },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(OrderItem.objects.filter(order=order).count(), 1)
+        self.assertEqual(list(get_messages(response.wsgi_request)), [])
+
+        fragment = self.client.get(
+            f'{reverse("sales:workspace")}?order={order.pk}',
+            HTTP_X_ORDER_FRAGMENT="1",
+        )
+        self.assertEqual(fragment.status_code, 200)
+        self.assertContains(fragment, 'id="sales-order"')
+        self.assertContains(fragment, self.dish.name)
+        self.assertNotContains(fragment, "data-quick-add")
+
+    def test_cashier_can_pay_in_one_step_from_sales_workspace(self):
+        order = self.ready_order_for_payment(request_payment=False)
+        self.client.force_login(self.users["CASHIER"])
+        workspace = self.client.get(reverse("sales:workspace"), {"order": order.pk})
+        self.assertContains(workspace, "THANH TOÁN NHANH · 1 BƯỚC")
+        self.assertContains(workspace, 'name="quick_payment" value="1"')
+        self.assertContains(workspace, 'class="mobile-order-dock"')
+        self.assertContains(workspace, 'data-quick-add')
+        self.assertContains(workspace, 'class="dish-quick-add"')
+        self.assertContains(workspace, 'type="radio" name="payment_method" value="CASH"')
+        self.assertContains(workspace, 'class="dish-card-media"')
+        self.assertContains(workspace, "dish-placeholder")
+
+        response = self.client.post(reverse("sales:payment"), {
+            "order_id": order.pk,
+            "quick_payment": "1",
+            "payment_method": "CASH",
+        })
+        self.assertRedirects(response, reverse("sales:workspace"))
+        order.refresh_from_db()
+        self.table.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.COMPLETED)
+        self.assertEqual(self.table.status, DiningTable.Status.CLEANING)
+
     def test_split_check_by_item_quantity_and_close_table_only_after_all_checks_paid(self):
         order = self.ready_order_for_payment()
         item = order.items.get()
@@ -405,6 +511,8 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, order.get_absolute_url())
         self.assertContains(response, f'{reverse("sales:workspace")}?order={order.pk}#sales-order')
+        self.assertContains(response, f'data-order-id="{order.pk}"')
+        self.assertContains(response, "Hủy bàn")
         self.assertContains(response, f'{reverse("sales:workspace")}?open_table={empty_table.pk}#sales-tables')
         self.assertNotContains(response, f'{reverse("orders:walk_in")}?table={empty_table.pk}')
         self.assertNotContains(response, "/dat-ban/None/")

@@ -1,7 +1,7 @@
 {% extends 'staff/base_staff.html' %}
 {% load static menu_money %}
 {% block staff_title %}Nhập hàng · QLNH{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=1">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=2">{% endblock %}
 {% block staff_content %}<section class="container-fluid px-3 pb-4 inventory-page">
 <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4"><div><p class="eyebrow mb-1">KHO · MUA HÀNG</p><h1 class="h3 mb-1">Phiếu nhập hàng</h1><p class="text-secondary mb-0">Tồn kho chỉ tăng sau khi phiếu được xác nhận “Đã nhận hàng”.</p></div><a class="btn btn-outline-secondary" href="{% url 'inventory:workspace' %}">Về kho</a></div>
 {% include 'staff/inventory/includes/nav.html' %}

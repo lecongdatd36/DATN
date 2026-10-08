@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static menu_money %}
 {% block title %}Thanh toán bàn · QLNH{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/table-payment.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/table-payment.css' %}?v=2">{% endblock %}
 {% block content %}
 <section class="container-fluid px-3 px-md-4 pb-5 table-payment-page" data-table-payment>
     <div class="dashboard-heading">
@@ -53,9 +53,8 @@
         {% if ready_orders %}
         <div class="payment-checkout project-card">
             <div class="payment-total"><span>Tổng cần thu</span><strong data-payment-total>0 đ</strong><small>Một mã thanh toán chung, hóa đơn từng bàn vẫn được giữ riêng trong Báo cáo.</small></div>
-            <div><label class="form-label" for="{{ form.payment_method.id_for_label }}">{{ form.payment_method.label }}</label>{{ form.payment_method }}{% for error in form.payment_method.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
-            <div><label class="form-label" for="{{ form.promotion_code.id_for_label }}">{{ form.promotion_code.label }}</label>{{ form.promotion_code }}<small class="d-block text-secondary">Nếu nhập, mã được kiểm tra riêng trên từng bàn.</small>{% for error in form.promotion_code.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
-            <div><label class="form-label" for="{{ form.reference.id_for_label }}">{{ form.reference.label }}</label>{{ form.reference }}{% for error in form.reference.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <fieldset class="payment-methods"><legend class="form-label">Phương thức thanh toán</legend><div class="payment-method-grid"><label><input type="radio" name="payment_method" value="CASH" {% if form.payment_method.value != 'BANK_TRANSFER' %}checked{% endif %}><span>Tiền mặt</span></label><label><input type="radio" name="payment_method" value="BANK_TRANSFER" {% if form.payment_method.value == 'BANK_TRANSFER' %}checked{% endif %}><span>Chuyển khoản</span></label></div>{% for error in form.payment_method.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</fieldset>
+            <details class="payment-advanced"><summary>Ưu đãi và thông tin nâng cao</summary><div class="pt-3"><label class="form-label" for="{{ form.promotion_code.id_for_label }}">{{ form.promotion_code.label }}</label>{{ form.promotion_code }}<small class="d-block text-secondary mb-3">Nếu nhập, mã được kiểm tra riêng trên từng bàn.</small>{% for error in form.promotion_code.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}<label class="form-label" for="{{ form.reference.id_for_label }}">{{ form.reference.label }}</label>{{ form.reference }}{% for error in form.reference.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div></details>
             <button class="btn btn-primary payment-submit" type="submit" data-payment-submit disabled><svg class="app-icon me-1" aria-hidden="true"><use href="#icon-wallet"></use></svg> Thanh toán &amp; trả bàn</button>
         </div>
         {% endif %}

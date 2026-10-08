@@ -19,6 +19,7 @@ media/
 staticfiles/
 *.log
 *.sqlite3
+*.dump
 .ipynb_checkpoints/
 
 # Editors and OS

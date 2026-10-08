@@ -5,7 +5,9 @@ from django.http import Http404, JsonResponse
 from django.views import View
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, ListView, TemplateView
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from apps.menu.models import Dish
 from apps.orders.models import Order, QROrderRequest
@@ -61,6 +63,7 @@ class CustomerDishDetailView(DetailView):
         return context
 
 
+@method_decorator(ensure_csrf_cookie, name="dispatch")
 class CustomerQRTableView(DetailView):
     template_name = "customer/qr_menu.html"
     context_object_name = "qr_token"

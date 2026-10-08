@@ -5,6 +5,7 @@
     if (!root) return;
     const message = root.querySelector("[data-live-message]");
     const filters = root.querySelector("[data-table-filters]");
+    const mobileFilterButton = root.querySelector("[data-mobile-table-filter]");
     const manual = root.querySelector("[data-live-refresh]");
     let timer;
     let controller;
@@ -61,6 +62,10 @@
         event.preventDefault();
         clearTimeout(timer);
         refresh();
+    });
+    mobileFilterButton?.addEventListener("click", () => {
+        filters.open = !filters.open;
+        if (filters.open) filters.scrollIntoView({behavior: "smooth", block: "nearest"});
     });
     document.addEventListener("visibilitychange", () => {
         clearTimeout(timer);
