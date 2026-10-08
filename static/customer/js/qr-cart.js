@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const totalElements = [...document.querySelectorAll("[data-qr-total]")];
     const submitButton = document.querySelector("[data-qr-submit]");
     const submitStatus = document.querySelector("[data-qr-submit-status]");
+    const orderReady = submitButton?.dataset.orderReady === "true";
     let isSubmitting = false;
     let cart = {};
     try {
@@ -42,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!itemsElement) return;
         itemsElement.innerHTML = "";
         const entries = Object.values(cart);
-        if (submitButton) submitButton.disabled = isSubmitting || !entries.length;
+        if (submitButton) submitButton.disabled = !orderReady || isSubmitting || !entries.length;
         if (!entries.length) {
             itemsElement.innerHTML = '<p class="customer-qr-cart-empty">Chưa có món trong giỏ.</p>';
             return;

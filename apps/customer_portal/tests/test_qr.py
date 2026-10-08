@@ -20,11 +20,12 @@ class CustomerQRFoundationTests(TestCase):
         response = self.client.get(reverse("customer_portal:qr_table", args=["00000000-0000-0000-0000-000000000000"]))
         self.assertEqual(response.status_code, 404)
 
-    def test_qr_does_not_open_table_or_order(self):
+    def test_closed_table_shows_check_in_request_without_opening_order(self):
         response = self.client.get(self.url())
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Bàn hiện chưa được mở")
+        self.assertContains(response, "Yêu cầu nhận bàn")
+        self.assertContains(response, "Chọn món trong lúc chờ nhân viên nhận bàn")
         self.assertEqual(Order.objects.count(), 0)
         self.table.refresh_from_db()
         self.assertEqual(self.table.status, DiningTable.Status.AVAILABLE)
@@ -35,7 +36,7 @@ class CustomerQRFoundationTests(TestCase):
         Order.objects.create(table=self.table, status=Order.Status.COMPLETED, order_code="DH000001", guest_count=2, opened_at=timezone.now())
         response = self.client.get(self.url())
 
-        self.assertContains(response, "Bàn chưa có đúng một đơn đang phục vụ")
+        self.assertContains(response, "Bàn đang đồng bộ đơn phục vụ")
 
     def test_valid_qr_exposes_current_order_without_mutating_it(self):
         self.table.status = DiningTable.Status.OCCUPIED

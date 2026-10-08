@@ -23,7 +23,7 @@ from apps.menu.models import Category, Dish
 from apps.seating.models import Area, DiningTable
 from core.permissions import can_manage_accounts
 from .forms import PromotionCodeForm
-from .models import Invoice, OnlinePayment, Order, OrderItem, PaymentRequest, PromotionCode, QROrderRequest
+from .models import Invoice, OnlinePayment, Order, OrderItem, PaymentRequest, PromotionCode, QRCheckInRequest, QROrderRequest
 from .permissions import has_order_permission
 from . import services
 from .vnpay import verify as verify_vnpay
@@ -52,6 +52,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         expire_overdue_bookings()
+        services.expire_qr_check_in_requests()
         context = super().get_context_data(**kwargs)
         table_orders = Order.objects.filter(table_id=OuterRef("pk")).order_by("-opened_at", "-pk")
         active_table_orders = table_orders.exclude(status__in=(Order.Status.COMPLETED, Order.Status.CANCELLED))
@@ -117,6 +118,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
                 selected_order=selected_order,
                 selected_split_group=context.get("selected_split_group", []),
                 payment_requests=[],
+                qr_check_in_requests=[],
                 qr_requests=[],
                 can_manage_order=has_order_permission(self.request.user, "manage_order"),
                 can_collect_payment=can_collect_selected_payment,
@@ -143,6 +145,11 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             .select_related("table__area", "order")
             .prefetch_related("items__dish")
         )
+        qr_check_in_requests = list(
+            QRCheckInRequest.objects.filter(status=QRCheckInRequest.Status.WAITING_CONFIRMATION)
+            .select_related("table__area")
+            .order_by("created_at", "pk")
+        )
         can_collect_payment = has_order_permission(self.request.user, "collect_payment")
         can_collect_selected_payment = can_collect_payment and (
             selected_order is None or context.get("selected_can_full_payment", True)
@@ -157,6 +164,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             active_orders=active_orders,
             customers=Customer.objects.order_by("-created_at")[:30],
             payment_requests=payment_requests,
+            qr_check_in_requests=qr_check_in_requests,
             qr_requests=qr_requests,
             can_manage_order=has_order_permission(self.request.user, "manage_order"),
             can_collect_payment=can_collect_selected_payment,
@@ -173,17 +181,47 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
 class SalesStateView(SalesAccessMixin, View):
     def get(self, request):
         expire_overdue_bookings()
+        services.expire_qr_check_in_requests()
         tables = list(DiningTable.objects.filter(is_active=True).values("id", "code", "name", "status", "updated_at"))
         ready = list(OrderItem.objects.filter(status=OrderItem.Status.READY).values("id", "order_id", "dish_name", "quantity", "ready_at"))
         requests = list(PaymentRequest.objects.filter(status=PaymentRequest.Status.WAITING).values("id", "order_id", "requested_at"))
+        qr_check_ins = list(QRCheckInRequest.objects.filter(
+            status=QRCheckInRequest.Status.WAITING_CONFIRMATION,
+        ).values("id", "table_id", "guest_count", "created_at"))
         return JsonResponse(
             {
                 "ui_version": "staff-pos-2026-10-06.3",
                 "tables": tables,
                 "ready": ready,
                 "payment_requests": requests,
+                "qr_check_ins": qr_check_ins,
             }
         )
+
+
+class QRCheckInActionView(SalesAccessMixin, View):
+    permission = "manage_order"
+
+    def post(self, request, request_id, action):
+        try:
+            if action == "confirm":
+                check_in = services.confirm_qr_check_in_request(actor=request.user, request_id=request_id)
+                messages.success(request, f"Đã nhận bàn {check_in.table.code} cho {check_in.guest_count} khách.")
+                return redirect(f'{reverse("sales:workspace")}?order={check_in.order_id}#sales-order')
+            if action == "reject":
+                check_in = services.reject_qr_check_in_request(
+                    actor=request.user,
+                    request_id=request_id,
+                    reason=request.POST.get("reason", ""),
+                )
+                messages.success(request, f"Đã từ chối {check_in}.")
+            else:
+                raise ValidationError("Thao tác nhận bàn QR không hợp lệ.")
+        except ValidationError as error:
+            messages.error(request, _error_text(error))
+        except QRCheckInRequest.DoesNotExist:
+            messages.error(request, "Yêu cầu nhận bàn QR không còn tồn tại.")
+        return redirect("sales:workspace")
 
 
 class QRRequestActionView(SalesAccessMixin, View):

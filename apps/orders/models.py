@@ -1,8 +1,10 @@
+from datetime import timedelta
 from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator, MaxLengthValidator
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 
 class PromotionCode(models.Model):
@@ -365,6 +367,50 @@ class PaymentRequest(models.Model):
         constraints = [
             models.UniqueConstraint(fields=("order",), condition=models.Q(status__in=("WAITING", "PROCESSING")), name="one_active_payment_request_per_order"),
         ]
+
+
+def default_qr_check_in_expiry():
+    return timezone.now() + timedelta(minutes=15)
+
+
+class QRCheckInRequest(models.Model):
+    class Status(models.TextChoices):
+        WAITING_CONFIRMATION = "WAITING_CONFIRMATION", "Chờ nhân viên nhận bàn"
+        CONFIRMED = "CONFIRMED", "Đã nhận bàn"
+        REJECTED = "REJECTED", "Đã từ chối"
+        EXPIRED = "EXPIRED", "Đã hết hạn"
+
+    table = models.ForeignKey("seating.DiningTable", on_delete=models.PROTECT, related_name="qr_check_in_requests")
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True, related_name="qr_check_in_requests")
+    guest_count = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
+    status = models.CharField(max_length=24, choices=Status.choices, default=Status.WAITING_CONFIRMATION, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(default=default_qr_check_in_expiry, db_index=True)
+    confirmed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="confirmed_qr_check_in_requests")
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    rejected_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="rejected_qr_check_in_requests")
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    reject_reason = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        verbose_name = "yêu cầu nhận bàn QR"
+        verbose_name_plural = "yêu cầu nhận bàn QR"
+        constraints = [
+            models.CheckConstraint(condition=models.Q(guest_count__gte=1, guest_count__lte=100), name="qr_check_in_guest_count_range"),
+            models.CheckConstraint(
+                condition=models.Q(status__in=("WAITING_CONFIRMATION", "CONFIRMED", "REJECTED", "EXPIRED")),
+                name="qr_check_in_valid_status",
+            ),
+            models.UniqueConstraint(
+                fields=("table",),
+                condition=models.Q(status="WAITING_CONFIRMATION"),
+                name="one_waiting_qr_check_in_per_table",
+            ),
+        ]
+
+    def __str__(self):
+        return f"NBQR-{self.pk:06d}" if self.pk else "NBQR"
 
 
 class QROrderRequest(models.Model):

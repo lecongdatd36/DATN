@@ -5,16 +5,29 @@ from django.http import Http404, JsonResponse
 from django.views import View
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, ListView, TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from apps.menu.models import Dish
-from apps.orders.models import Order, QROrderRequest
-from apps.orders.services import create_qr_order_request
+from apps.orders.models import Order, QRCheckInRequest, QROrderRequest
+from apps.orders.services import create_qr_check_in_request, create_qr_order_request, expire_qr_check_in_requests
 from apps.seating.models import DiningTableQRToken
 
 from .selectors import customer_categories, customer_dish_detail, customer_dishes
+
+
+def _active_qr_orders(table):
+    return list(Order.objects.filter(
+        table=table,
+        status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS),
+    ).order_by("-opened_at", "-pk")[:2])
+
+
+def _validation_message(error):
+    messages = error.messages if hasattr(error, "messages") else [str(error)]
+    return messages[0]
 
 
 class CustomerMenuView(ListView):
@@ -81,21 +94,95 @@ class CustomerQRTableView(DetailView):
         if token is None or not token.is_valid:
             context["qr_error"] = "Mã QR không hợp lệ hoặc đã hết hiệu lực."
             return context
-        active_orders = Order.objects.filter(
-            table=token.table,
-            status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS),
-        ).order_by("-opened_at", "-pk")
-        orders = list(active_orders[:2])
-        if token.table.status != token.table.Status.OCCUPIED:
-            context["qr_error"] = "Bàn hiện chưa được mở. Vui lòng liên hệ nhân viên."
-        elif len(orders) != 1:
-            context["qr_error"] = "Bàn chưa có đúng một đơn đang phục vụ. Vui lòng liên hệ nhân viên."
-        else:
-            context["table"] = token.table
+        expire_qr_check_in_requests()
+        orders = _active_qr_orders(token.table)
+        context["table"] = token.table
+        context["categories"] = customer_categories()
+        context["dishes"] = customer_dishes()
+        if token.table.status == token.table.Status.OCCUPIED and len(orders) == 1:
             context["order"] = orders[0]
-            context["categories"] = customer_categories()
-            context["dishes"] = customer_dishes()
+            context["order_ready"] = True
+        else:
+            context["order_ready"] = False
+            context["can_request_check_in"] = token.table.status in (
+                token.table.Status.AVAILABLE,
+                token.table.Status.RESERVED,
+            )
+            request_ids = [
+                int(value) for value in self.request.session.get("qr_check_in_request_ids", [])
+                if str(value).isdigit()
+            ]
+            context["check_in_request"] = QRCheckInRequest.objects.filter(
+                pk__in=request_ids,
+                table_id=token.table_id,
+            ).order_by("-created_at", "-pk").first()
+            if token.table.status == token.table.Status.RESERVED:
+                context["check_in_hint"] = "Bàn đang được giữ cho lịch đặt. Nhân viên sẽ đối chiếu lịch trước khi nhận bàn."
+            elif token.table.status == token.table.Status.CLEANING:
+                context["check_in_hint"] = "Bàn đang được dọn. Vui lòng chờ nhân viên hoàn tất."
+            elif token.table.status == token.table.Status.OCCUPIED:
+                context["check_in_hint"] = "Bàn đang đồng bộ đơn phục vụ. Vui lòng gọi nhân viên kiểm tra."
+            else:
+                context["check_in_hint"] = "Gửi yêu cầu để nhân viên xác nhận và mở bàn. Bạn có thể chọn món trong lúc chờ."
         return context
+
+
+class CustomerQRCheckInRequestView(View):
+    def post(self, request, token):
+        try:
+            payload = json.loads(request.body or "{}")
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Dữ liệu nhận bàn không hợp lệ."}, status=400)
+        try:
+            check_in = create_qr_check_in_request(token=token, guest_count=payload.get("guest_count"))
+        except ValidationError as error:
+            return JsonResponse({"error": _validation_message(error)}, status=400)
+        request_ids = [
+            str(value) for value in request.session.get("qr_check_in_request_ids", [])
+            if str(value).isdigit()
+        ]
+        request_ids.append(str(check_in.pk))
+        request.session["qr_check_in_request_ids"] = request_ids[-20:]
+        return JsonResponse({
+            "request_id": check_in.pk,
+            "request_code": str(check_in),
+            "status": check_in.get_status_display(),
+            "expires_at": check_in.expires_at.isoformat(),
+        }, status=201)
+
+
+class CustomerQRTableStateView(View):
+    def get(self, request, token):
+        qr_token = DiningTableQRToken.objects.select_related("table__area").filter(token=token).first()
+        if qr_token is None or not qr_token.is_valid:
+            raise Http404("Mã QR không hợp lệ hoặc đã hết hiệu lực.")
+        expire_qr_check_in_requests()
+        orders = _active_qr_orders(qr_token.table)
+        ready = qr_token.table.status == qr_token.table.Status.OCCUPIED and len(orders) == 1
+        request_ids = [
+            int(value) for value in request.session.get("qr_check_in_request_ids", [])
+            if str(value).isdigit()
+        ]
+        check_in = QRCheckInRequest.objects.filter(
+            pk__in=request_ids,
+            table_id=qr_token.table_id,
+        ).order_by("-created_at", "-pk").first()
+        if ready and check_in and check_in.status == QRCheckInRequest.Status.WAITING_CONFIRMATION:
+            check_in.status = QRCheckInRequest.Status.CONFIRMED
+            check_in.order = orders[0]
+            check_in.confirmed_at = timezone.now()
+            check_in.save(update_fields=("status", "order", "confirmed_at"))
+        return JsonResponse({
+            "ready": ready,
+            "table_status": qr_token.table.status,
+            "request": ({
+                "code": str(check_in),
+                "status": check_in.status,
+                "status_label": check_in.get_status_display(),
+                "reject_reason": check_in.reject_reason,
+            } if check_in else None),
+            "refresh_url": reverse("customer_portal:qr_table", args=[token]),
+        })
 
 
 class CustomerQRRequestView(View):
@@ -111,8 +198,7 @@ class CustomerQRRequestView(View):
                 note=payload.get("note", ""),
             )
         except ValidationError as error:
-            messages = error.messages if hasattr(error, "messages") else [str(error)]
-            return JsonResponse({"error": messages[0]}, status=400)
+            return JsonResponse({"error": _validation_message(error)}, status=400)
         request_ids = [str(value) for value in request.session.get("qr_request_ids", []) if str(value).isdigit()]
         request_ids.append(str(qr_request.pk))
         request.session["qr_request_ids"] = request_ids[-20:]

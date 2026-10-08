@@ -87,6 +87,22 @@
     white-space: nowrap
 }
 
+.qr-check-in-request-box {
+    border-color: color-mix(in srgb, #197a50 30%, var(--bs-border-color));
+    background: color-mix(in srgb, #197a50 6%, var(--bs-body-bg));
+}
+
+.qr-check-in-request-box h3,
+.qr-check-in-request-box .qr-request-total {
+    color: #197a50;
+}
+
+.qr-check-in-table-state {
+    margin: .6rem 0 0;
+    color: var(--bs-secondary-color);
+    font-size: .72rem;
+}
+
 .qr-request-actions {
     display: flex;
     align-items: center;

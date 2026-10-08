@@ -1367,6 +1367,70 @@ body.customer-layout {
     padding-bottom: 5px;
 }
 
+.customer-qr-check-in {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, .7fr);
+    align-items: center;
+    gap: 22px;
+    margin-bottom: 24px;
+    padding: 20px;
+    border: 1px solid color-mix(in srgb, var(--customer-accent) 30%, var(--customer-border));
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--customer-accent) 5%, var(--customer-surface));
+}
+
+.customer-qr-check-in.has-error {
+    border-color: #c86464;
+    background: #fff7f7;
+}
+
+.customer-qr-check-in-copy h2 {
+    margin: 7px 0 5px;
+    font-size: 24px;
+}
+
+.customer-qr-check-in-copy p {
+    margin: 0;
+    color: var(--customer-muted);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.customer-qr-check-in-form label,
+.customer-qr-check-in-form small {
+    display: block;
+    color: var(--customer-muted);
+    font-size: 11px;
+}
+
+.customer-qr-check-in-form>div {
+    display: grid;
+    grid-template-columns: 82px 1fr;
+    gap: 8px;
+    margin: 6px 0;
+}
+
+.customer-qr-check-in-form input {
+    min-width: 0;
+    padding: 9px 11px;
+    border: 1px solid var(--customer-border);
+    border-radius: 8px;
+    font: inherit;
+}
+
+.customer-qr-check-in-form .customer-button {
+    border: 0;
+}
+
+.customer-qr-live.is-waiting {
+    color: #8a5a16;
+    background: #fff5d9;
+}
+
+.customer-qr-live.is-waiting i {
+    background: #d99022;
+}
+
 .customer-qr-filters button {
     flex: 0 0 auto;
     min-height: 40px;
@@ -1658,6 +1722,12 @@ body.customer-layout {
 }
 
 @media (max-width: 800px) {
+    .customer-qr-check-in {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 17px;
+    }
+
     .customer-container {
         width: min(100% - 32px, 620px);
     }

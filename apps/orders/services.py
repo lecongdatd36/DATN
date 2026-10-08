@@ -20,7 +20,7 @@ from apps.customers.services import tier_for_spending
 from apps.seating.models import DiningTable, DiningTableQRToken
 from .models import (
     Invoice, OnlinePayment, Order, OrderItem, OrderActivityLog, Payment, PaymentBatch,
-    PaymentRequest, PromotionCode, QROrderRequest, QROrderRequestItem,
+    PaymentRequest, PromotionCode, QRCheckInRequest, QROrderRequest, QROrderRequestItem,
 )
 from .permissions import has_order_permission
 from .vnpay import payment_url
@@ -291,6 +291,92 @@ def add_items(*, actor, order_id, expected_revision, items):
     )
     _save(actor, order, f"Thêm {len(created)} món", description)
     return created
+
+
+def expire_qr_check_in_requests(*, at=None):
+    now = at or timezone.now()
+    return QRCheckInRequest.objects.filter(
+        status=QRCheckInRequest.Status.WAITING_CONFIRMATION,
+        expires_at__lte=now,
+    ).update(status=QRCheckInRequest.Status.EXPIRED)
+
+
+@transaction.atomic
+def create_qr_check_in_request(*, token, guest_count):
+    token = DiningTableQRToken.objects.select_for_update().select_related("table__area").filter(token=token).first()
+    if token is None or not token.is_valid:
+        raise ValidationError("Mã QR không hợp lệ hoặc đã hết hiệu lực.")
+    table = DiningTable.objects.select_for_update().select_related("area").get(pk=token.table_id)
+    _validate_quantity(guest_count)
+    if guest_count > table.capacity:
+        raise ValidationError({"guest_count": "Số khách vượt quá sức chứa của bàn."})
+    expire_qr_check_in_requests()
+    active_orders = Order.objects.select_for_update().filter(
+        table=table, status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS),
+    )
+    if table.status == DiningTable.Status.OCCUPIED and active_orders.count() == 1:
+        raise ValidationError("Bàn đã được nhận. Hãy tải lại trang để gọi món.")
+    if table.status not in (DiningTable.Status.AVAILABLE, DiningTable.Status.RESERVED):
+        raise ValidationError("Bàn đang được dọn hoặc chưa sẵn sàng. Vui lòng gọi nhân viên.")
+    existing = QRCheckInRequest.objects.filter(
+        table=table, status=QRCheckInRequest.Status.WAITING_CONFIRMATION,
+    ).first()
+    if existing:
+        return existing
+    return QRCheckInRequest.objects.create(table=table, guest_count=guest_count)
+
+
+@transaction.atomic
+def confirm_qr_check_in_request(*, actor, request_id):
+    actor = _lock_actor(actor)
+    check_in = QRCheckInRequest.objects.select_for_update().select_related("table__area").get(pk=request_id)
+    if check_in.status != QRCheckInRequest.Status.WAITING_CONFIRMATION:
+        raise ValidationError("Yêu cầu nhận bàn này đã được xử lý.")
+    if check_in.expires_at <= timezone.now():
+        check_in.status = QRCheckInRequest.Status.EXPIRED
+        check_in.save(update_fields=("status",))
+        raise ValidationError("Yêu cầu nhận bàn đã hết hạn. Khách cần gửi lại từ mã QR.")
+    table = DiningTable.objects.select_for_update().get(pk=check_in.table_id)
+    active_orders = list(Order.objects.select_for_update().filter(
+        table=table, status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS),
+    ).order_by("-opened_at", "-pk")[:2])
+    if table.status == DiningTable.Status.OCCUPIED and len(active_orders) == 1:
+        order = active_orders[0]
+    elif table.status == DiningTable.Status.AVAILABLE:
+        order = open_table(
+            actor=actor,
+            table_id=table.pk,
+            guest_count=check_in.guest_count,
+            note=f"Nhận bàn từ yêu cầu QR {check_in}",
+        )
+    elif table.status == DiningTable.Status.RESERVED:
+        raise ValidationError("Bàn đang giữ cho lịch đặt. Hãy nhận khách từ lịch đặt bàn; trang QR sẽ tự mở sau đó.")
+    else:
+        raise ValidationError("Bàn hiện chưa sẵn sàng để nhận khách.")
+    check_in.status = QRCheckInRequest.Status.CONFIRMED
+    check_in.order = order
+    check_in.confirmed_by = actor
+    check_in.confirmed_at = timezone.now()
+    check_in.save(update_fields=("status", "order", "confirmed_by", "confirmed_at"))
+    _log(actor, order, "Xác nhận nhận bàn QR", f"{check_in}; bàn {table.code}; {check_in.guest_count} khách.")
+    return check_in
+
+
+@transaction.atomic
+def reject_qr_check_in_request(*, actor, request_id, reason):
+    actor = _lock_actor(actor)
+    check_in = QRCheckInRequest.objects.select_for_update().get(pk=request_id)
+    if check_in.status != QRCheckInRequest.Status.WAITING_CONFIRMATION:
+        raise ValidationError("Yêu cầu nhận bàn này đã được xử lý.")
+    reason = reason.strip() if isinstance(reason, str) else ""
+    if not reason or len(reason) > 500:
+        raise ValidationError({"reason": "Vui lòng nhập lý do từ chối, tối đa 500 ký tự."})
+    check_in.status = QRCheckInRequest.Status.REJECTED
+    check_in.rejected_by = actor
+    check_in.rejected_at = timezone.now()
+    check_in.reject_reason = reason
+    check_in.save(update_fields=("status", "rejected_by", "rejected_at", "reject_reason"))
+    return check_in
 
 
 @transaction.atomic
