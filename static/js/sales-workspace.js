@@ -233,7 +233,50 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  document.addEventListener("workspace:state-change", refreshSelectedOrder);
+  let lastSalesState = null;
+  const handleSalesStateChange = (event) => {
+    const data = event?.detail;
+    if (data && lastSalesState) {
+      const newPay = Number(data.payment_requests?.count || 0);
+      const prevPay = Number(lastSalesState.payment_requests?.count || 0);
+      if (newPay > prevPay) {
+        window.QLNHAudio?.play("payment");
+        window.QLNHAudio?.toast("Có yêu cầu thanh toán mới!", "💰", "success");
+      }
+
+      const newService = Number(data.qr_service_requests?.count || 0);
+      const prevService = Number(lastSalesState.qr_service_requests?.count || 0);
+      if (newService > prevService) {
+        window.QLNHAudio?.play("service");
+        window.QLNHAudio?.toast("Khách quét QR gọi phục vụ!", "🙋", "info");
+      }
+
+      const newCheckIn = Number(data.qr_check_ins?.count || 0);
+      const prevCheckIn = Number(lastSalesState.qr_check_ins?.count || 0);
+      if (newCheckIn > prevCheckIn) {
+        window.QLNHAudio?.play("service");
+        window.QLNHAudio?.toast("Khách quét QR yêu cầu nhận bàn!", "📱", "info");
+      }
+
+      const newQROrder = Number(data.qr_orders?.count || 0);
+      const prevQROrder = Number(lastSalesState.qr_orders?.count || 0);
+      if (newQROrder > prevQROrder) {
+        window.QLNHAudio?.play("order");
+        window.QLNHAudio?.toast("Có yêu cầu gọi món QR mới!", "🛒", "primary");
+      }
+    }
+    if (data) lastSalesState = data;
+    refreshSelectedOrder();
+
+    if (data && (data.qr_check_ins || data.payment_requests || data.qr_service_requests || data.qr_orders)) {
+      const isTablesTab = workspace.querySelector("#sales-tables.active") || !workspace.classList.contains("has-selected-order");
+      if (isTablesTab && !workspaceBusy && !workspace.querySelector("input:focus")) {
+        window.setTimeout(() => window.location.reload(), 450);
+      }
+    }
+  };
+
+  document.addEventListener("workspace:state-change", handleSalesStateChange);
   document.addEventListener("workspace:busy", (event) => {
     workspaceBusy = event.detail ? true : false;
     if (!workspaceBusy && refreshPending) {

@@ -1180,7 +1180,7 @@ def _send_items_to_kitchen(*, actor, order, items):
     from apps.inventory.services import consume_order_items
     consume_order_items(actor=actor, items=items)
     now = timezone.now()
-    order.items.filter(pk__in=[item.pk for item in items]).update(status=OrderItem.Status.PENDING, sent_at=now)
+    order.items.filter(pk__in=[item.pk for item in items]).update(status=OrderItem.Status.PENDING, sent_at=now, updated_at=now)
     order.status = Order.Status.IN_PROGRESS
     _save(actor, order, "Gửi Bếp", "; ".join(f"#{item.pk} {item}" for item in items))
     return order

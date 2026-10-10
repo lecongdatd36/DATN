@@ -1,5 +1,7 @@
-from django.contrib import messages
+import json
 import logging
+import time
+from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.conf import settings
 from django.core.cache import cache
@@ -8,7 +10,7 @@ from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Count, Exists, Max, OuterRef, Prefetch, Q, Subquery
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -239,6 +241,61 @@ class SalesStateView(SalesAccessMixin, View):
             ),
         }
         return conditional_json_response(request, payload)
+
+
+class SalesStreamView(SalesAccessMixin, View):
+    """Server-Sent Events (SSE) streaming endpoint for Sales POS Workspace."""
+
+    def get(self, request):
+        def event_stream():
+            last_signature = None
+            start_time = time.time()
+            active_statuses = (Order.Status.OPEN, Order.Status.IN_PROGRESS, Order.Status.PAYMENT_REQUESTED)
+
+            while time.time() - start_time < 25:
+                pay_summary = _state_summary(
+                    PaymentRequest.objects.filter(status=PaymentRequest.Status.WAITING), "requested_at"
+                )
+                service_summary = _state_summary(
+                    QRServiceRequest.objects.filter(
+                        status=QRServiceRequest.Status.WAITING,
+                        order__status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS),
+                    ),
+                    "created_at",
+                )
+                checkin_summary = _state_summary(
+                    QRCheckInRequest.objects.filter(status=QRCheckInRequest.Status.WAITING_CONFIRMATION), "created_at"
+                )
+                order_summary = _state_summary(
+                    QROrderRequest.objects.filter(status=QROrderRequest.Status.WAITING_CONFIRMATION), "created_at"
+                )
+                orders_active = _state_summary(Order.objects.filter(status__in=active_statuses), "updated_at")
+                tables_active = _state_summary(DiningTable.objects.filter(is_active=True), "updated_at")
+
+                signature = (
+                    f"{pay_summary['count']}:{service_summary['count']}:{checkin_summary['count']}:"
+                    f"{order_summary['count']}:{orders_active['count']}:{orders_active['latest']}:{tables_active['latest']}"
+                )
+
+                if signature != last_signature:
+                    last_signature = signature
+                    payload = {
+                        "ui_version": "staff-pos-2026-10-09.1",
+                        "tables": tables_active,
+                        "orders": orders_active,
+                        "payment_requests": pay_summary,
+                        "qr_check_ins": checkin_summary,
+                        "qr_orders": order_summary,
+                        "qr_service_requests": service_summary,
+                    }
+                    data = json.dumps(payload, ensure_ascii=False, default=str)
+                    yield f"data: {data}\n\n"
+                time.sleep(1)
+
+        response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"
+        return response
 
 
 class QRCheckInActionView(SalesAccessMixin, View):
