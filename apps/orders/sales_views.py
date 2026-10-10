@@ -9,7 +9,7 @@ from decimal import Decimal
 from django.db import transaction
 from django.db.models import Count, Exists, Max, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
@@ -365,7 +365,10 @@ class SalesActionView(SalesAccessMixin, View):
     permission = "manage_order"
 
     def post(self, request, action):
-        is_async = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        is_async = (
+            request.headers.get("X-Requested-With") == "XMLHttpRequest"
+            or request.headers.get("X-Order-Fragment") == "1"
+        )
         try:
             # Customer creation and opening the table must either both succeed
             # or both roll back, preventing orphan customer records.
@@ -379,6 +382,14 @@ class SalesActionView(SalesAccessMixin, View):
             return redirect(request.POST.get("next") or reverse("sales:workspace"))
         if not is_async:
             messages.success(request, "Đã cập nhật bán hàng.")
+        if is_async and action != "open":
+            order_id = request.POST.get("order_id") or getattr(result, "order_id", None) or getattr(result, "pk", None)
+            if order_id:
+                request.GET = request.GET.copy()
+                request.GET["order"] = str(order_id)
+            workspace_view = SalesWorkspaceView()
+            workspace_view.setup(request)
+            return render(request, workspace_view.template_name, workspace_view.get_context_data())
         order_id = getattr(result, "order_id", None) or getattr(result, "pk", None)
         if isinstance(result, DiningTable):
             order_id = None

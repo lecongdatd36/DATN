@@ -339,7 +339,8 @@ class IntegratedRestaurantFlowTests(TestCase):
             },
             HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data-order-revision")
         self.assertEqual(OrderItem.objects.filter(order=order).count(), 1)
         self.assertEqual(list(get_messages(response.wsgi_request)), [])
 

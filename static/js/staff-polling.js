@@ -51,8 +51,7 @@
       const nextEtag = response.headers.get("ETag");
       const nextSignature = nextEtag || await response.text();
       if (initialized && signature !== nextSignature) {
-        window.location.reload();
-        return;
+        document.dispatchEvent(new CustomEvent("workspace:state-change"));
       }
 
       initialized = true;

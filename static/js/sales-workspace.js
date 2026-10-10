@@ -145,12 +145,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const syncOrderFromResponse = (html) => {
     const responseDocument = new DOMParser().parseFromString(html, "text/html");
+    const incomingRevision = Number(responseDocument.querySelector("[data-order-revision]")?.value);
+    const currentRevision = Number(workspace.querySelector("[data-order-revision]")?.value);
+    if (
+      Number.isFinite(incomingRevision)
+      && Number.isFinite(currentRevision)
+      && incomingRevision < currentRevision
+    ) return;
     [".sales-order-panel", ".mobile-order-dock", ".mobile-pos-appbar"].forEach((selector) => {
       const current = workspace.querySelector(selector);
       const replacement = responseDocument.querySelector(selector);
       if (current && replacement) current.replaceWith(replacement);
     });
-    const revision = responseDocument.querySelector("[data-quick-add] input[name='expected_revision']")?.value;
+    const revision = responseDocument.querySelector("[data-order-revision]")?.value
+      || responseDocument.querySelector("input[name='expected_revision']")?.value;
     if (revision) workspace.querySelectorAll("input[name='expected_revision']").forEach((input) => { input.value = revision; });
     const dock = workspace.querySelector(".mobile-order-dock");
     if (dock) {
@@ -160,6 +168,79 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     document.dispatchEvent(new CustomEvent("workspace:mutation"));
   };
+
+  const isRevisionConflict = (message) => /đơn đã thay đổi|revision|stale/i.test(message || "");
+  const refreshOrderRevision = async () => {
+    const response = await fetch(window.location.href, {
+      headers: {"X-Requested-With": "XMLHttpRequest", "X-Order-Fragment": "1"},
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+    if (!response.ok) throw new Error(`Không thể đồng bộ order (HTTP ${response.status}).`);
+    syncOrderFromResponse(await response.text());
+    return workspace.querySelector("[data-order-revision]")?.value;
+  };
+  const submitOrderAction = async (form) => {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await fetch(form.action, {
+        method: "POST",
+        body: new FormData(form),
+        credentials: "same-origin",
+        headers: {"X-Requested-With": "XMLHttpRequest", "X-Order-Fragment": "1"},
+      });
+      const contentType = response.headers.get("content-type") || "";
+      if (response.ok) return response.text();
+      const payload = contentType.includes("application/json") ? await response.json() : null;
+      const message = payload?.error || "Không thể cập nhật món lúc này.";
+      if (!isRevisionConflict(message) || attempt > 0) throw new Error(message);
+      const revision = await refreshOrderRevision();
+      if (!revision) throw new Error(message);
+      form.querySelectorAll("input[name='expected_revision']").forEach((input) => { input.value = revision; });
+    }
+    throw new Error("Không thể cập nhật món lúc này.");
+  };
+
+  let refreshInProgress = false;
+  let refreshPending = false;
+  let workspaceBusy = false;
+  const refreshSelectedOrder = async () => {
+    if (workspaceBusy) {
+      refreshPending = true;
+      return;
+    }
+    if (refreshInProgress) {
+      refreshPending = true;
+      return;
+    }
+    if (!workspace.classList.contains("has-selected-order")) return;
+    refreshInProgress = true;
+    try {
+      const response = await fetch(window.location.href, {
+        headers: {"X-Requested-With": "XMLHttpRequest", "X-Order-Fragment": "1"},
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+      if (!response.ok) throw new Error(`Không thể đồng bộ order (HTTP ${response.status}).`);
+      syncOrderFromResponse(await response.text());
+    } catch (error) {
+      showFeedback(error.message);
+    } finally {
+      refreshInProgress = false;
+      if (refreshPending) {
+        refreshPending = false;
+        refreshSelectedOrder();
+      }
+    }
+  };
+
+  document.addEventListener("workspace:state-change", refreshSelectedOrder);
+  document.addEventListener("workspace:busy", (event) => {
+    workspaceBusy = event.detail ? true : false;
+    if (!workspaceBusy && refreshPending) {
+      refreshPending = false;
+      refreshSelectedOrder();
+    }
+  });
 
   workspace.addEventListener("submit", async (event) => {
     const form = event.target.closest("[data-order-item-form]");
@@ -171,18 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
     form.querySelectorAll("button").forEach((button) => { button.disabled = true; });
     document.dispatchEvent(new CustomEvent("workspace:busy", {detail: true}));
     try {
-      const response = await fetch(form.action, {
-        method: "POST",
-        body: new FormData(form),
-        credentials: "same-origin",
-        headers: {"X-Requested-With": "XMLHttpRequest", "X-Order-Fragment": "1"},
-      });
-      const contentType = response.headers.get("content-type") || "";
-      if (!response.ok) {
-        const payload = contentType.includes("application/json") ? await response.json() : null;
-        throw new Error(payload?.error || "Không thể cập nhật món lúc này.");
-      }
-      syncOrderFromResponse(await response.text());
+      syncOrderFromResponse(await submitOrderAction(form));
     } catch (error) {
       form.classList.add("is-add-error");
       showFeedback(error.message);
@@ -195,7 +265,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  workspace.querySelectorAll("[data-quick-add]").forEach((form) => form.addEventListener("submit", async (event) => {
+  workspace.addEventListener("submit", async (event) => {
+    const form = event.target.closest("[data-quick-add]");
+    if (!form) return;
     event.preventDefault();
     if (form.dataset.loading === "true") return;
     const button = form.querySelector(".dish-quick-add");
@@ -204,18 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (button) button.disabled = true;
     document.dispatchEvent(new CustomEvent("workspace:busy", {detail: true}));
     try {
-      const response = await fetch(form.action, {
-        method: "POST",
-        body: new FormData(form),
-        credentials: "same-origin",
-        headers: {"X-Requested-With": "XMLHttpRequest", "X-Order-Fragment": "1"},
-      });
-      const contentType = response.headers.get("content-type") || "";
-      if (!response.ok) {
-        const payload = contentType.includes("application/json") ? await response.json() : null;
-        throw new Error(payload?.error || "Không thể thêm món lúc này.");
-      }
-      syncOrderFromResponse(await response.text());
+      syncOrderFromResponse(await submitOrderAction(form));
       form.classList.add("is-added");
       const note = form.querySelector("input[name='note']");
       if (note) note.value = "";
@@ -233,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (button) button.disabled = false;
       document.dispatchEvent(new CustomEvent("workspace:busy", {detail: false}));
     }
-  }));
+  });
 
   workspace.querySelectorAll("[data-checkout-form]").forEach((form) => {
     const options = form.querySelector("[data-checkout-options]");

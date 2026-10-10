@@ -68,6 +68,8 @@
   tabs.forEach((tab) => tab.addEventListener("click", () => selectTab(tab.dataset.kitchenTab)));
   if (window.location.hash === "#pending") selectTab("pending");
 
+  document.addEventListener("workspace:state-change", () => window.location.reload());
+
   workspace.addEventListener("submit", async (event) => {
     const form = event.target.closest("[data-kitchen-transition]");
     if (!form) return;

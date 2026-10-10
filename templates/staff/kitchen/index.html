@@ -7,4 +7,4 @@
 <section class="kitchen-column is-cooking" data-kitchen-panel="cooking"><h2><span>Đang chế biến</span><strong>{{ cooking|length }}</strong></h2>{% for item in cooking %}{% include 'staff/kitchen/item_card.html' with target='READY' button='Hoàn thành' %}{% empty %}<p class="empty-state">Chưa có món đang làm.</p>{% endfor %}</section>
 <section class="kitchen-column is-ready" data-kitchen-panel="ready"><h2><span>Hoàn thành</span><strong>{{ ready|length }}</strong></h2>{% for item in ready %}{% include 'staff/kitchen/item_card.html' with target='' button='' %}{% empty %}<p class="empty-state">Chưa có món hoàn thành.</p>{% endfor %}</section>
 </div></section>{% endblock %}
-{% block extra_js %}<script src="{% static 'js/staff-polling.js' %}?v=2" defer></script><script src="{% static 'js/kitchen-workspace.js' %}?v=1" defer></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/staff-polling.js' %}?v=3" defer></script><script src="{% static 'js/kitchen-workspace.js' %}?v=2" defer></script>{% endblock %}
