@@ -1,5 +1,5 @@
-from django.contrib import messages
 import logging
+from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.conf import settings
 from django.core.cache import cache
@@ -98,15 +98,15 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             selected_order.promotion_discount = preview["promotion_discount"]
             selected_order.payment_discount = preview["discount"]
             selected_order.payment_due = preview["due"]
+            invoice = getattr(selected_order, "invoice", None)
+            if invoice is not None and invoice.paid_amount > 0:
+                selected_order.payment_due = invoice.remaining
             live_items = [item for item in selected_order.items.all() if item.status != OrderItem.Status.CANCELLED]
             context["selected_has_drafts"] = any(item.status == OrderItem.Status.DRAFT for item in live_items)
             context["selected_can_cancel"] = all(item.status == OrderItem.Status.DRAFT for item in live_items)
             context["selected_can_request_payment"] = bool(live_items) and all(
                 item.status == OrderItem.Status.SERVED for item in live_items
             )
-            invoice = getattr(selected_order, "invoice", None)
-            context["selected_can_full_payment"] = invoice is None or invoice.paid_amount == 0
-            context["selected_invoice_remaining"] = invoice.remaining if invoice else preview["due"]
             context["guest_seats"] = range(1, selected_order.guest_count + 1)
             root_id = selected_order.split_root_id or selected_order.pk
             context["selected_split_group"] = list(
@@ -116,9 +116,6 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             )
         if is_order_fragment:
             can_collect_payment = has_order_permission(self.request.user, "collect_payment")
-            can_collect_selected_payment = can_collect_payment and (
-                selected_order is None or context.get("selected_can_full_payment", True)
-            )
             context.update(
                 areas=Area.objects.none(),
                 categories=Category.objects.none(),
@@ -130,10 +127,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
                 qr_requests=[],
                 qr_service_requests=[],
                 can_manage_order=has_order_permission(self.request.user, "manage_order"),
-                can_collect_payment=can_collect_selected_payment,
-                can_continue_partial_payment=can_collect_payment and bool(
-                    selected_order and not context.get("selected_can_full_payment", True)
-                ),
+                can_collect_payment=can_collect_payment,
                 vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
                 available_tables=DiningTable.objects.filter(
                     status=DiningTable.Status.AVAILABLE,
@@ -184,9 +178,6 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             .order_by("created_at", "pk")
         )
         can_collect_payment = has_order_permission(self.request.user, "collect_payment")
-        can_collect_selected_payment = can_collect_payment and (
-            selected_order is None or context.get("selected_can_full_payment", True)
-        )
         context.update(
             areas=Area.objects.filter(is_active=True).prefetch_related(Prefetch("tables", queryset=tables)),
             tables=tables,
@@ -201,10 +192,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             qr_requests=qr_requests,
             qr_service_requests=qr_service_requests,
             can_manage_order=has_order_permission(self.request.user, "manage_order"),
-            can_collect_payment=can_collect_selected_payment,
-            can_continue_partial_payment=can_collect_payment and bool(
-                selected_order and not context.get("selected_can_full_payment", True)
-            ),
+            can_collect_payment=can_collect_payment,
             vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
             is_manager=can_manage_accounts(self.request.user),
             available_tables=DiningTable.objects.filter(status=DiningTable.Status.AVAILABLE, is_active=True, area__is_active=True).exclude(pk=selected_order.table_id if selected_order else None),

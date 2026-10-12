@@ -320,3 +320,96 @@ textarea.form-control { min-height: auto; }
 @media (max-width: 767.98px) {
     .action-dialog::backdrop { backdrop-filter: none; }
 }
+
+/* ==========================================================================
+   Toast Notifications & Audio Indicator Component
+   ========================================================================== */
+.qlnh-toast-container {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 1099;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    pointer-events: none;
+    max-width: min(92vw, 380px);
+}
+.qlnh-toast {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.15rem;
+    border-radius: 0.85rem;
+    color: var(--app-text, #0f172a);
+    background: var(--app-surface, #ffffff);
+    border: 1px solid var(--app-border, #e2e8f0);
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.16);
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+    font-size: 0.88rem;
+    font-weight: 650;
+}
+.qlnh-toast.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+.qlnh-toast .toast-icon {
+    font-size: 1.35rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.qlnh-toast .toast-text {
+    flex: 1;
+    line-height: 1.4;
+}
+.qlnh-toast-warning {
+    border-left: 4px solid #f59e0b;
+    background: color-mix(in srgb, #f59e0b 8%, var(--app-surface, #ffffff));
+}
+.qlnh-toast-success {
+    border-left: 4px solid #10b981;
+    background: color-mix(in srgb, #10b981 8%, var(--app-surface, #ffffff));
+}
+.qlnh-toast-primary {
+    border-left: 4px solid #3b82f6;
+    background: color-mix(in srgb, #3b82f6 8%, var(--app-surface, #ffffff));
+}
+.qlnh-toast-info {
+    border-left: 4px solid #06b6d4;
+    background: color-mix(in srgb, #06b6d4 8%, var(--app-surface, #ffffff));
+}
+
+.audio-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border: 1px solid var(--app-border, #cbd5e1);
+    background: var(--app-surface, #ffffff);
+    color: var(--app-text, #334155);
+    text-decoration: none;
+    line-height: 1.2;
+}
+.audio-toggle-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+.audio-toggle-btn.is-active {
+    color: #15803d;
+    border-color: #86efac;
+    background: color-mix(in srgb, #22c55e 10%, var(--app-surface, #ffffff));
+}
+.audio-toggle-btn.is-muted {
+    color: var(--app-muted, #94a3b8);
+    border-color: var(--app-border, #e2e8f0);
+    background: var(--app-surface-muted, #f8fafc);
+}
+

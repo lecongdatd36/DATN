@@ -433,42 +433,29 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.assertFalse(child.items.exists())
         self.assertFalse(PaymentRequest.objects.filter(order=child, status=PaymentRequest.Status.WAITING).exists())
 
-    def test_one_check_accepts_multiple_payment_methods_before_closing_table(self):
+    def test_one_check_requires_a_full_payment_before_closing_table(self):
         order = self.ready_order_for_payment()
-        first_invoice = services.record_payment(
-            actor=self.users["CASHIER"], order_id=order.pk,
-            expected_revision=self.revision(order), amount=Decimal("30000"), payment_method=Payment.Method.CASH,
-        )
-        order.refresh_from_db()
-        self.table.refresh_from_db()
-        self.assertEqual(first_invoice.status, Invoice.Status.UNPAID)
-        self.assertEqual(first_invoice.total, Decimal("95000"))
-        self.assertEqual(first_invoice.remaining, Decimal("65000"))
-        self.assertEqual(order.status, Order.Status.PAYMENT_REQUESTED)
-        self.assertEqual(self.table.status, DiningTable.Status.OCCUPIED)
+        with self.assertRaisesMessage(ValidationError, "thanh toán đủ một lần"):
+            services.record_payment(
+                actor=self.users["CASHIER"], order_id=order.pk,
+                expected_revision=self.revision(order), amount=Decimal("30000"), payment_method=Payment.Method.CASH,
+            )
+        self.assertFalse(Invoice.objects.filter(order=order).exists())
         self.client.force_login(self.users["CASHIER"])
         workspace = self.client.get(reverse("sales:workspace"), {"order": order.pk})
-        self.assertTrue(workspace.context["can_continue_partial_payment"])
-        self.assertFalse(workspace.context["can_collect_payment"])
-        self.assertContains(workspace, reverse("orders:payment", args=[order.pk]))
-        with self.assertRaisesMessage(ValidationError, "thu một phần"):
-            services.process_payment(actor=self.users["CASHIER"], order_id=order.pk, payment_method="CASH")
-        with self.assertRaisesMessage(ValidationError, "phát sinh giao dịch"):
-            services.split_order(
-                actor=self.users["CASHIER"], order_id=order.pk,
-                expected_revision=order.revision, quantities={order.items.get().pk: 1},
-            )
+        self.assertTrue(workspace.context["can_collect_payment"])
+        self.assertNotContains(workspace, "Chia tiền / thu nhiều phương thức")
 
-        final_invoice = services.record_payment(
+        invoice = services.record_payment(
             actor=self.users["CASHIER"], order_id=order.pk,
-            expected_revision=order.revision, amount=Decimal("65000"), payment_method=Payment.Method.CARD,
+            expected_revision=self.revision(order), payment_method=Payment.Method.CARD,
         )
         order.refresh_from_db()
         self.table.refresh_from_db()
         self.customer.refresh_from_db()
-        self.assertEqual(final_invoice.status, Invoice.Status.PAID)
-        self.assertEqual(final_invoice.payments.count(), 2)
-        self.assertEqual(set(final_invoice.payments.values_list("method", flat=True)), {Payment.Method.CASH, Payment.Method.CARD})
+        self.assertEqual(invoice.status, Invoice.Status.PAID)
+        self.assertEqual(invoice.payments.count(), 1)
+        self.assertEqual(invoice.payments.get().method, Payment.Method.CARD)
         self.assertEqual(order.status, Order.Status.COMPLETED)
         self.assertEqual(self.table.status, DiningTable.Status.CLEANING)
         self.assertEqual(self.customer.total_spending, Decimal("95000"))

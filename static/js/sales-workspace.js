@@ -233,7 +233,66 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  document.addEventListener("workspace:state-change", refreshSelectedOrder);
+  let lastSalesState = workspace.__qlnhLiveState || null;
+  let workspaceRefreshTimer = null;
+
+  const refreshTablesAfterStateChange = (hasNotification) => {
+    const isTablesTab = workspace.querySelector("#sales-tables.active") || !workspace.classList.contains("has-selected-order");
+    if (!isTablesTab || workspaceBusy || workspace.querySelector("input:focus")) return;
+    window.clearTimeout(workspaceRefreshTimer);
+    // Let the preloaded notification finish before replacing the page.  A
+    // fast reload used to stop the newly-created Audio element almost at once.
+    workspaceRefreshTimer = window.setTimeout(
+      () => window.location.reload(),
+      hasNotification ? 1800 : 450,
+    );
+  };
+
+  const handleSalesStateChange = (event) => {
+    const data = event?.detail;
+    let hasNotification = false;
+    if (data && lastSalesState) {
+      const newPay = Number(data.payment_requests?.count || 0);
+      const prevPay = Number(lastSalesState.payment_requests?.count || 0);
+      if (newPay > prevPay) {
+        hasNotification = true;
+        window.QLNHAudio?.play("payment");
+        window.QLNHAudio?.toast("Có yêu cầu thanh toán mới!", "💰", "success");
+      }
+
+      const newService = Number(data.qr_service_requests?.count || 0);
+      const prevService = Number(lastSalesState.qr_service_requests?.count || 0);
+      if (newService > prevService) {
+        hasNotification = true;
+        window.QLNHAudio?.play("service");
+        window.QLNHAudio?.toast("Khách quét QR gọi phục vụ!", "🙋", "info");
+      }
+
+      const newCheckIn = Number(data.qr_check_ins?.count || 0);
+      const prevCheckIn = Number(lastSalesState.qr_check_ins?.count || 0);
+      if (newCheckIn > prevCheckIn) {
+        hasNotification = true;
+        window.QLNHAudio?.play("service");
+        window.QLNHAudio?.toast("Khách quét QR yêu cầu nhận bàn!", "📱", "info");
+      }
+
+      const newQROrder = Number(data.qr_orders?.count || 0);
+      const prevQROrder = Number(lastSalesState.qr_orders?.count || 0);
+      if (newQROrder > prevQROrder) {
+        hasNotification = true;
+        window.QLNHAudio?.play("order");
+        window.QLNHAudio?.toast("Có yêu cầu gọi món QR mới!", "🛒", "primary");
+      }
+    }
+    if (data) lastSalesState = data;
+    refreshSelectedOrder();
+    refreshTablesAfterStateChange(hasNotification);
+  };
+
+  document.addEventListener("workspace:state-ready", (event) => {
+    if (event.detail) lastSalesState = event.detail;
+  });
+  document.addEventListener("workspace:state-change", handleSalesStateChange);
   document.addEventListener("workspace:busy", (event) => {
     workspaceBusy = event.detail ? true : false;
     if (!workspaceBusy && refreshPending) {

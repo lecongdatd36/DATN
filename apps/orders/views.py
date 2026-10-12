@@ -387,9 +387,7 @@ class OrderPaymentView(OrderPermissionMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        invoice = Invoice.objects.filter(order=self.order).first()
-        remaining = invoice.remaining if invoice else services.payment_preview(self.order)["due"]
-        kwargs["initial"] = {"expected_revision": self.order.revision, "amount": remaining, "payment_method": "CASH"}
+        kwargs["initial"] = {"expected_revision": self.order.revision, "payment_method": "CASH"}
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -397,11 +395,11 @@ class OrderPaymentView(OrderPermissionMixin, FormView):
         remaining = invoice.remaining if invoice else services.payment_preview(self.order)["due"]
         return super().get_context_data(
             order=self.order,
-            title=self.title,
+            title="Thanh toán hóa đơn",
             back_url=f'{reverse("sales:workspace")}?order={self.order.pk}',
             remaining=remaining,
             action="payment",
-            submit_label="Ghi nhận lần thu",
+            submit_label="Thanh toán & trả bàn",
             **kwargs,
         )
 
@@ -411,17 +409,13 @@ class OrderPaymentView(OrderPermissionMixin, FormView):
                 actor=self.request.user,
                 order_id=self.order.pk,
                 expected_revision=form.cleaned_data["expected_revision"],
-                amount=form.cleaned_data["amount"],
                 payment_method=form.cleaned_data["payment_method"],
                 reference=form.cleaned_data["reference"],
             )
         except ValidationError as error:
             add_service_errors(form, error)
             return self.form_invalid(form)
-        if invoice.status == Invoice.Status.PAID:
-            messages.success(self.request, f"Đã thanh toán đủ hóa đơn {invoice.invoice_code}.")
-        else:
-            messages.success(self.request, f"Đã thu một phần. Hóa đơn {invoice.invoice_code} còn {invoice.remaining:.0f} đồng.")
+        messages.success(self.request, f"Đã thanh toán hóa đơn {invoice.invoice_code}.")
         return HttpResponseRedirect(self.order.get_absolute_url())
 
 

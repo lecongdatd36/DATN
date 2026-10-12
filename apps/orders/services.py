@@ -880,6 +880,18 @@ def process_payment(*, actor, order_id, payment_method, transaction_code="", pro
     items = list(order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED))
     if not items:
         raise ValidationError("Đơn không có món để thanh toán.")
+    invoice = Invoice.objects.select_for_update().filter(order=order).first()
+    if invoice is not None and invoice.paid_amount > 0:
+        # Existing data from before one-step checkout is settled by collecting
+        # the exact remaining balance, without recalculating its locked terms.
+        return record_payment(
+            actor=actor,
+            order_id=order.pk,
+            expected_revision=order.revision,
+            payment_method=payment_method,
+            reference=transaction_code,
+            amount=invoice.remaining,
+        )
     preview = payment_preview(order, promotion_code=promotion_code)
     _store_promotion(order, preview)
     subtotal = preview["subtotal"]
@@ -914,7 +926,7 @@ def _complete_payment(*, order, subtotal, discount_percent, discount_amount, tot
     if invoice.status == Invoice.Status.PAID:
         raise ValidationError("Hóa đơn đã được thanh toán.")
     if invoice.paid_amount > 0:
-        raise ValidationError("Hóa đơn đã thu một phần. Hãy tiếp tục bằng chức năng thu nhiều phương thức.")
+        raise ValidationError("Hóa đơn có khoản đã thu trước đó; hãy thanh toán số còn lại.")
     now = timezone.now()
     invoice.customer = customer
     invoice.subtotal = subtotal
@@ -1180,7 +1192,7 @@ def _send_items_to_kitchen(*, actor, order, items):
     from apps.inventory.services import consume_order_items
     consume_order_items(actor=actor, items=items)
     now = timezone.now()
-    order.items.filter(pk__in=[item.pk for item in items]).update(status=OrderItem.Status.PENDING, sent_at=now)
+    order.items.filter(pk__in=[item.pk for item in items]).update(status=OrderItem.Status.PENDING, sent_at=now, updated_at=now)
     order.status = Order.Status.IN_PROGRESS
     _save(actor, order, "Gửi Bếp", "; ".join(f"#{item.pk} {item}" for item in items))
     return order
@@ -1267,19 +1279,21 @@ def change_order_status(*, actor, order_id, expected_revision, target, reason=""
 
 
 @transaction.atomic
-def record_payment(*, actor, order_id, expected_revision, amount, payment_method="CASH", reference=""):
+def record_payment(*, actor, order_id, expected_revision, payment_method="CASH", reference="", amount=None):
+    """Settle an invoice in one payment; ``amount`` only guards legacy callers."""
     actor = _lock_actor(actor, "collect_payment")
     order = _order(order_id, expected_revision, require_open=False)
     if order.status != Order.Status.PAYMENT_REQUESTED:
         raise ValidationError("Chỉ thanh toán cho đơn đang ở trạng thái chờ thanh toán.")
 
-    try:
-        amount_decimal = Decimal(str(amount))
-    except Exception as exc:  # pragma: no cover - defensive conversion
-        raise ValidationError({"amount": "Số tiền thanh toán không hợp lệ."}) from exc
-
-    if not amount_decimal.is_finite() or amount_decimal != amount_decimal.to_integral_value() or amount_decimal <= 0:
-        raise ValidationError({"amount": "Số tiền thanh toán phải là số nguyên lớn hơn 0."})
+    requested_amount = None
+    if amount is not None:
+        try:
+            requested_amount = Decimal(str(amount))
+        except Exception as exc:  # pragma: no cover - defensive conversion
+            raise ValidationError({"amount": "Số tiền thanh toán không hợp lệ."}) from exc
+        if not requested_amount.is_finite() or requested_amount != requested_amount.to_integral_value() or requested_amount <= 0:
+            raise ValidationError({"amount": "Số tiền thanh toán phải là số nguyên lớn hơn 0."})
 
     if payment_method not in (Payment.Method.CASH, Payment.Method.CARD, Payment.Method.BANK_TRANSFER, Payment.Method.OTHER):
         raise ValidationError({"payment_method": "Phương thức thanh toán không hợp lệ."})
@@ -1315,8 +1329,11 @@ def record_payment(*, actor, order_id, expected_revision, amount, payment_method
         raise ValidationError("Hóa đơn đã bị hủy, không thể thu thêm tiền.")
 
     remaining = invoice.total - invoice.paid_amount
-    if amount_decimal > remaining:
-        raise ValidationError({"amount": f"Số tiền thanh toán vượt quá số tiền còn lại ({remaining})."})
+    if remaining <= 0:
+        raise ValidationError("Hóa đơn đã được thanh toán.")
+    if requested_amount is not None and requested_amount != remaining:
+        raise ValidationError({"amount": f"Hóa đơn phải thanh toán đủ một lần: {remaining:.0f} đồng."})
+    amount_decimal = remaining
 
     payment = Payment.objects.create(
         invoice=invoice,
@@ -1329,22 +1346,17 @@ def record_payment(*, actor, order_id, expected_revision, amount, payment_method
 
     invoice.paid_amount += amount_decimal
     invoice.payment_method = payment_method
-    invoice.status = Invoice.Status.PAID if invoice.paid_amount >= invoice.total else Invoice.Status.UNPAID
-    if invoice.status == Invoice.Status.PAID:
-        now = timezone.now()
-        invoice.closed_at = now
+    invoice.status = Invoice.Status.PAID
+    now = timezone.now()
+    invoice.closed_at = now
     invoice.save(update_fields=("total", "paid_amount", "status", "payment_method", "updated_at", "closed_at"))
-    description = f"Thu {amount_decimal} đồng bằng {payment.get_method_display()}. Hóa đơn còn lại {invoice.total - invoice.paid_amount} đồng."
+    description = f"Thanh toán đủ {amount_decimal} đồng bằng {payment.get_method_display()}."
     _log(actor, order, "Thanh toán", description)
-    if invoice.status == Invoice.Status.PAID:
-        customer = Customer.objects.select_for_update().filter(pk=order.customer_id).first()
-        return _finalize_paid_invoice(
-            order=order, invoice=invoice, customer=customer, actor=actor,
-            actor_snapshot=actor.username, now=now,
-        )
-    order.revision += 1
-    order.save(update_fields=("subtotal", "discount_amount", "promotion_code_snapshot", "promotion_discount_amount", "total_amount", "revision", "updated_at"))
-    return invoice
+    customer = Customer.objects.select_for_update().filter(pk=order.customer_id).first()
+    return _finalize_paid_invoice(
+        order=order, invoice=invoice, customer=customer, actor=actor,
+        actor_snapshot=actor.username, now=now,
+    )
 
 
 @transaction.atomic

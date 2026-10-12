@@ -52,14 +52,14 @@
   };
 
   const syncEmptyStates = () => {
-    panels.forEach((panel) => {
+    workspace.querySelectorAll("[data-kitchen-panel]").forEach((panel) => {
       const name = panel.dataset.kitchenPanel;
       const hasTickets = Boolean(panel.querySelector("[data-kitchen-ticket]"));
       panel.querySelectorAll(":scope > .empty-state").forEach((node) => node.remove());
       if (!hasTickets) {
         const empty = document.createElement("p");
         empty.className = "empty-state";
-        empty.textContent = emptyMessages[name];
+        empty.textContent = emptyMessages[name] || "Không có món.";
         panel.append(empty);
       }
     });
@@ -68,7 +68,85 @@
   tabs.forEach((tab) => tab.addEventListener("click", () => selectTab(tab.dataset.kitchenTab)));
   if (window.location.hash === "#pending") selectTab("pending");
 
-  document.addEventListener("workspace:state-change", () => window.location.reload());
+  // Track số lượng món PENDING hiện tại trong bộ nhớ
+  let currentPending = Number(workspace.querySelector('[data-kitchen-panel="pending"] > h2 strong')?.textContent || 0);
+
+  // Cập nhật ngầm DOM bảng bếp mà KHÔNG reload trang (giữ audio không bị ngắt)
+  let isRefreshingBoard = false;
+  const refreshKitchenBoard = async () => {
+    if (isRefreshingBoard) return;
+    isRefreshingBoard = true;
+    try {
+      const response = await fetch(window.location.href, {
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+      if (!response.ok) return;
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+
+      // Cập nhật từng cột (pending, cooking, ready)
+      ["pending", "cooking", "ready"].forEach((name) => {
+        const newPanel = doc.querySelector(`[data-kitchen-panel="${name}"]`);
+        const oldPanel = workspace.querySelector(`[data-kitchen-panel="${name}"]`);
+        if (newPanel && oldPanel) {
+          const wasActive = oldPanel.classList.contains("active");
+          oldPanel.innerHTML = newPanel.innerHTML;
+          oldPanel.classList.toggle("active", wasActive);
+        }
+      });
+
+      // Cập nhật tabs đếm số trên mobile
+      const newTabs = doc.querySelector(".kitchen-mobile-tabs");
+      const oldTabs = workspace.querySelector(".kitchen-mobile-tabs");
+      if (newTabs && oldTabs) {
+        const currentActive = oldTabs.querySelector("button.active")?.dataset.kitchenTab;
+        oldTabs.querySelectorAll("button").forEach((btn) => {
+          const tabName = btn.dataset.kitchenTab;
+          const newBtn = newTabs.querySelector(`button[data-kitchen-tab="${tabName}"]`);
+          if (newBtn) {
+            btn.innerHTML = newBtn.innerHTML;
+          }
+          if (currentActive) {
+            btn.classList.toggle("active", tabName === currentActive);
+          }
+        });
+      }
+
+      // Cập nhật lại số PENDING từ DOM mới
+      currentPending = Number(workspace.querySelector('[data-kitchen-panel="pending"] > h2 strong')?.textContent || 0);
+
+      refreshClocks();
+      syncEmptyStates();
+    } catch (err) {
+      console.warn("[Kitchen] Lỗi làm mới bảng bếp ngầm:", err);
+    } finally {
+      isRefreshingBoard = false;
+    }
+  };
+
+  // Lắng nghe trạng thái thay đổi từ bộ polling dùng chung.
+  document.addEventListener("workspace:state-change", (event) => {
+    const counts = event?.detail?.counts;
+    if (counts && typeof counts.PENDING === "number") {
+      if (counts.PENDING > currentPending) {
+        const diff = counts.PENDING - currentPending;
+        // PHÁT ÂM THANH CHUÔNG BẾP HOÀN CHỈNH
+        window.QLNHAudio?.play("order");
+        window.QLNHAudio?.toast(`Có ${diff} món mới vừa gửi xuống bếp!`, "👨‍🍳", "warning");
+      }
+      currentPending = counts.PENDING;
+    }
+    // Làm mới bảng bếp AJAX không reload trang
+    refreshKitchenBoard();
+  });
+
+  document.addEventListener("workspace:state-ready", (event) => {
+    const pending = event?.detail?.counts?.PENDING;
+    if (typeof pending === "number") currentPending = pending;
+  });
 
   workspace.addEventListener("submit", async (event) => {
     const form = event.target.closest("[data-kitchen-transition]");
@@ -119,6 +197,7 @@
       targetPanel?.append(ticket);
       refreshClock(ticket);
       updateCounts(payload.counts);
+      currentPending = payload.counts.PENDING ?? currentPending;
       syncEmptyStates();
       document.dispatchEvent(new CustomEvent("workspace:mutation"));
       showFeedback("Đã cập nhật trạng thái món.", "success");

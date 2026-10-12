@@ -1,6 +1,6 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Count, Max
 from django.http import JsonResponse
@@ -99,6 +99,7 @@ class KitchenStateView(KitchenAccessMixin, View):
         queue = _queue_queryset()
         payload = {
             "ui_version": "kitchen-2026-10-09.1",
+            "counts": _queue_counts(),
             "queue": queue.aggregate(count=Count("pk"), latest=Max("updated_at")),
         }
         return conditional_json_response(request, payload)

@@ -277,11 +277,11 @@ class OrderTests(TestCase):
 
         response = self.client.get(self.url("payment", self.order.pk))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Thu tiền")
+        self.assertContains(response, "Thanh toán hóa đơn")
+        self.assertNotContains(response, "Chia 2")
 
         response = self.client.post(self.url("payment", self.order.pk), {
             "expected_revision": self.revision(),
-            "amount": "170000",
             "payment_method": "CASH",
             "reference": "Mã test",
         })

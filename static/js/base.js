@@ -182,19 +182,6 @@
     });
 
     document.addEventListener("click", (event) => {
-        const button = event.target.closest("[data-payment-fraction]");
-        if (!button) return;
-        const panel = button.closest("[data-payment-split]");
-        const amount = document.querySelector("#id_amount");
-        const parts = Number(button.dataset.paymentFraction);
-        const remaining = Number(panel?.dataset.remaining);
-        if (!amount || !Number.isFinite(parts) || parts < 1 || !Number.isFinite(remaining)) return;
-        amount.value = String(Math.floor(remaining / parts));
-        amount.focus();
-        amount.select?.();
-    });
-
-    document.addEventListener("click", (event) => {
         const trigger = event.target.closest("[data-confirm-action]");
         if (!trigger) return;
         event.preventDefault();
