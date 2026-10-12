@@ -543,6 +543,26 @@ class OrderTests(TestCase):
         self.assertRedirects(self.client.post(self.url("transition_item", self.order.pk, item.pk, "SERVED"), {"expected_revision": self.revision()}), self.order.get_absolute_url())
         self.assertEqual(self.client.get(self.url("transition_item", self.order.pk, item.pk, "BAD")).status_code, 404)
 
+    def test_served_transition_returns_json_for_ajax_detail_update(self):
+        item = self.add()
+        self.send()
+        self.transition(item, "COOKING", actor=self.kitchen)
+        self.transition(item, "READY", actor=self.kitchen)
+        self.client.force_login(self.waiter)
+
+        response = self.client.post(
+            self.url("transition_item", self.order.pk, item.pk, "SERVED"),
+            {"expected_revision": self.revision()},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["item_id"], item.pk)
+        self.assertEqual(payload["item_status"], OrderItem.Status.SERVED)
+        self.assertEqual(payload["order_revision"], self.revision())
+
     def test_csrf_get_and_escaped_notes(self):
         item = self.add(note="<script>alert(1)</script>")
         client = Client(enforce_csrf_checks=True)

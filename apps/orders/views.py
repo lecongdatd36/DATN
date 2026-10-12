@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Prefetch, Q
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
@@ -494,20 +494,47 @@ class ItemTransitionView(OrderActionView):
             context["back_url"] = reverse("orders:kitchen")
         return context
 
+    def is_async(self):
+        return self.request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+    def form_invalid(self, form):
+        if self.is_async():
+            errors = " ".join(str(error) for field_errors in form.errors.values() for error in field_errors)
+            return JsonResponse({"ok": False, "error": errors or "Dữ liệu thao tác không hợp lệ."}, status=400)
+        return super().form_invalid(form)
+
     def save(self, data):
         services.transition_item(actor=self.request.user, order_id=self.order.pk, item_id=self.item.pk, target=self.target, **data)
 
     def form_valid(self, form):
-        response = super().form_valid(form)
-        if isinstance(response, HttpResponseRedirect) and self.order_permission == "work_kitchen":
+        try:
+            self.save(form.cleaned_data)
+        except ValidationError as error:
+            add_service_errors(form, error)
+            return self.form_invalid(form)
+        except (Order.DoesNotExist, OrderItem.DoesNotExist) as error:
+            raise Http404("Đơn hoặc món không còn tồn tại.") from error
+
+        if self.is_async():
+            self.order.refresh_from_db(fields=("revision",))
+            self.item.refresh_from_db(fields=("status",))
+            return JsonResponse({
+                "ok": True,
+                "item_id": self.item.pk,
+                "item_status": self.item.status,
+                "item_status_label": self.item.get_status_display(),
+                "order_revision": self.order.revision,
+            })
+
+        messages.success(self.request, "Đã cập nhật đơn hàng.")
+        if self.order_permission == "work_kitchen":
             return HttpResponseRedirect(reverse("orders:kitchen"))
         if (
-            isinstance(response, HttpResponseRedirect)
-            and self.target == OrderItem.Status.CANCELLED
+            self.target == OrderItem.Status.CANCELLED
             and self.request.GET.get("next") == "add"
         ):
             return HttpResponseRedirect(reverse("orders:add_item", args=[self.order.pk]))
-        return response
+        return HttpResponseRedirect(self.order.get_absolute_url())
 
 
 class KitchenView(OrderPermissionMixin, ListView):

@@ -35,6 +35,8 @@
 
     function closeActionDialog() {
         if (actionDialog?.open) actionDialog.close();
+        const confirmButton = actionDialog?.querySelector("[data-dialog-confirm]");
+        if (confirmButton) confirmButton.disabled = false;
         pendingAction = null;
     }
 
@@ -56,25 +58,77 @@
         (needsReason ? reason : actionDialog.querySelector("[data-dialog-confirm]")).focus();
     }
 
-    function submitPendingAction() {
+    function isInlineServedTransition(trigger, actionUrl) {
+        try {
+            const path = new URL(actionUrl, window.location.origin).pathname;
+            return /^\/don-hang\/\d+\/mon\/\d+\/SERVED\/$/.test(path);
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function updateInlineServedTransition(trigger, payload) {
+        const row = trigger.closest("tr");
+        const statusCell = row?.querySelector("td:nth-child(5)");
+        if (statusCell) statusCell.textContent = payload.item_status_label;
+        row?.classList.add("is-updated");
+        const actionGroup = trigger.closest(".d-flex");
+        trigger.remove();
+        if (actionGroup && !actionGroup.children.length) actionGroup.textContent = "—";
+        document.querySelectorAll("[data-confirm-action][data-revision]").forEach((item) => {
+            item.dataset.revision = String(payload.order_revision);
+        });
+    }
+
+    async function submitPendingAction() {
         if (!pendingAction) return;
+        const trigger = pendingAction;
         const reason = actionDialog.querySelector("[data-dialog-reason]");
-        const needsReason = pendingAction.dataset.confirmReason === "true";
+        const needsReason = trigger.dataset.confirmReason === "true";
         if (needsReason && !reason.value.trim()) {
             actionDialog.querySelector("[data-dialog-reason-error]").hidden = false;
             reason.focus();
             return;
         }
-        const form = document.createElement("form");
-        form.method = "post";
-        form.action = pendingAction.dataset.actionUrl || pendingAction.getAttribute("href") || pendingAction.getAttribute("formaction");
+        const actionUrl = trigger.dataset.actionUrl || trigger.getAttribute("href") || trigger.getAttribute("formaction");
         const fields = {
             csrfmiddlewaretoken: csrfToken(),
-            expected_revision: pendingAction.dataset.revision || "",
-            expected_status: pendingAction.dataset.status || "",
-            order_id: pendingAction.dataset.orderId || "",
-            reason: needsReason ? reason.value.trim() : (pendingAction.dataset.reason || ""),
+            expected_revision: trigger.dataset.revision || "",
+            expected_status: trigger.dataset.status || "",
+            order_id: trigger.dataset.orderId || "",
+            reason: needsReason ? reason.value.trim() : (trigger.dataset.reason || ""),
         };
+        const confirmButton = actionDialog.querySelector("[data-dialog-confirm]");
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Đang xử lý...";
+
+        if (isInlineServedTransition(trigger, actionUrl)) {
+            const data = new FormData();
+            Object.entries(fields).forEach(([name, value]) => {
+                if (value) data.append(name, value);
+            });
+            try {
+                const response = await fetch(actionUrl, {
+                    method: "POST",
+                    body: data,
+                    credentials: "same-origin",
+                    headers: {"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"},
+                });
+                const payload = await response.json().catch(() => null);
+                if (!response.ok || !payload?.ok) throw new Error(payload?.error || "Không thể cập nhật trạng thái món.");
+                updateInlineServedTransition(trigger, payload);
+                closeActionDialog();
+            } catch (error) {
+                actionDialog.querySelector("[data-dialog-message]").textContent = error.message;
+                confirmButton.disabled = false;
+                confirmButton.textContent = trigger.dataset.confirmLabel || "Thử lại";
+            }
+            return;
+        }
+
+        const form = document.createElement("form");
+        form.method = "post";
+        form.action = actionUrl;
         Object.entries(fields).forEach(([name, value]) => {
             if (!value) return;
             const input = document.createElement("input");
@@ -83,9 +137,6 @@
             input.value = value;
             form.append(input);
         });
-        const confirmButton = actionDialog.querySelector("[data-dialog-confirm]");
-        confirmButton.disabled = true;
-        confirmButton.textContent = "Đang xử lý...";
         document.body.append(form);
         form.submit();
     }
