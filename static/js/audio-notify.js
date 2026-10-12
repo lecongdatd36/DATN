@@ -7,6 +7,8 @@
   let isEnabled = localStorage.getItem(STORAGE_KEY) !== "false"; // Mặc định: Bật
   let audioCtx = null;
   let audioUnlocked = false;
+  let isPriming = false;
+  const activeAudio = new Set();
 
   // Đường dẫn các file âm thanh chuẩn
   const audioFiles = {
@@ -16,6 +18,21 @@
     payment: "/static/audio/payment.wav",
     test: "/static/audio/order.wav",
     ready: "/static/audio/order.wav",
+  };
+
+  const retainUntilFinished = (audio) => {
+    activeAudio.add(audio);
+    const release = () => activeAudio.delete(audio);
+    audio.addEventListener("ended", release, { once: true });
+    audio.addEventListener("error", release, { once: true });
+  };
+
+  const preloadAudio = () => {
+    [...new Set(Object.values(audioFiles))].forEach((url) => {
+      const audio = new Audio(url);
+      audio.preload = "auto";
+      audio.load();
+    });
   };
 
   // Khởi tạo AudioContext
@@ -44,11 +61,33 @@
         audioUnlocked = true;
       }).catch(() => {});
     }
-    // Kích hoạt nhẹ HTML5 Audio bằng âm vô thanh để vượt qua chính sách Autoplay
+    // Prime a real, muted project sound within the user gesture.  A synthetic
+    // data URL does not reliably grant autoplay permission in Chromium.
+    if (audioUnlocked || isPriming) return;
     try {
-      const silent = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
-      silent.play().catch(() => {});
-    } catch (_) {}
+      isPriming = true;
+      const primer = new Audio(audioFiles.test);
+      primer.preload = "auto";
+      primer.muted = true;
+      retainUntilFinished(primer);
+      const primerPromise = primer.play();
+      if (primerPromise !== undefined) {
+        primerPromise.then(() => {
+          audioUnlocked = true;
+          primer.pause();
+          primer.currentTime = 0;
+          activeAudio.delete(primer);
+        }).catch(() => {
+          activeAudio.delete(primer);
+        }).finally(() => {
+          isPriming = false;
+        });
+      } else {
+        isPriming = false;
+      }
+    } catch (_) {
+      isPriming = false;
+    }
   };
 
   ["click", "touchstart", "keydown", "pointerdown"].forEach((evt) => {
@@ -99,11 +138,16 @@
     const soundUrl = audioFiles[type] || audioFiles.order;
     try {
       const audio = new Audio(soundUrl);
+      audio.preload = "auto";
       audio.volume = 0.9;
+      retainUntilFinished(audio);
       const playPromise = audio.play();
 
       if (playPromise !== undefined) {
-        playPromise.catch((err) => {
+        playPromise.then(() => {
+          audioUnlocked = true;
+        }).catch((err) => {
+          activeAudio.delete(audio);
           console.warn("[QLNH Audio] HTML5 Audio play error, chuyển sang Web Audio API:", err);
           synthFallback(type === "payment" ? [523.25, 659.25, 783.99] : [659.25, 880.00]);
         });
@@ -188,6 +232,7 @@
 
   // Khởi tạo và gắn sự kiện
   document.addEventListener("DOMContentLoaded", () => {
+    preloadAudio();
     updateButtons();
 
     document.querySelectorAll("[data-audio-toggle]").forEach((btn) => {

@@ -143,6 +143,11 @@
     refreshKitchenBoard();
   });
 
+  document.addEventListener("workspace:state-ready", (event) => {
+    const pending = event?.detail?.counts?.PENDING;
+    if (typeof pending === "number") currentPending = pending;
+  });
+
   workspace.addEventListener("submit", async (event) => {
     const form = event.target.closest("[data-kitchen-transition]");
     if (!form) return;

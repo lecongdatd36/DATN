@@ -6,6 +6,7 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 
 const source = readFileSync(join(__dirname, "../static/js/staff-polling.js"), "utf8");
+const salesSource = readFileSync(join(__dirname, "../static/js/sales-workspace.js"), "utf8");
 
 class TestCustomEvent {
   constructor(type, options = {}) {
@@ -91,6 +92,8 @@ test("uses ETag polling every five seconds without EventSource", async () => {
   assert.equal(p.requests.length, 1);
   assert.equal(p.requests[0].url, "/sales/state/");
   assert.equal(p.requests[0].options.headers["X-Requested-With"], "XMLHttpRequest");
+  assert.equal(p.dispatched[0].type, "workspace:state-ready");
+  assert.equal(p.dispatched[0].detail.tables.count, 1);
   assert.match(p.badge.innerHTML, /5 giây/);
   assert.ok(p.hasTimer(5000));
 
@@ -133,4 +136,10 @@ test("backs off after a network failure", async () => {
   }]);
   await p.settle();
   assert.ok(p.hasTimer(10000));
+});
+
+test("POS consumes the initial state before comparing later notifications", () => {
+  assert.match(salesSource, /workspace\.__qlnhLiveState/);
+  assert.match(salesSource, /workspace:state-ready/);
+  assert.match(salesSource, /hasNotification \? 1800 : 450/);
 });

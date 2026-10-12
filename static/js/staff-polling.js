@@ -77,7 +77,14 @@
       } catch (_) {}
 
       const nextSignature = nextEtag || text;
-      if (initialized && signature !== nextSignature) {
+      if (!initialized && payload) {
+        // Consumers that load after this request can still read the baseline
+        // from the workspace element.  This lets the first new QR/payment
+        // request be recognised as a notification instead of a baseline.
+        root.__qlnhLiveState = payload;
+        document.dispatchEvent(new CustomEvent("workspace:state-ready", { detail: payload }));
+      } else if (initialized && signature !== nextSignature) {
+        root.__qlnhLiveState = payload;
         document.dispatchEvent(new CustomEvent("workspace:state-change", { detail: payload }));
       }
 

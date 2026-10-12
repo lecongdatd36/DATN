@@ -165,7 +165,6 @@ class ReasonForm(RevisionForm):
 
 
 class PaymentForm(RevisionForm):
-    amount = forms.DecimalField(label="Số tiền thu lần này", min_value=1, max_digits=12, decimal_places=0)
     payment_method = forms.ChoiceField(label="Phương thức thanh toán", choices=[
         (Payment.Method.CASH, "Tiền mặt"),
         (Payment.Method.BANK_TRANSFER, "Chuyển khoản"),
@@ -173,7 +172,7 @@ class PaymentForm(RevisionForm):
         (Payment.Method.OTHER, "Khác"),
     ])
     reference = forms.CharField(label="Ghi chú / mã giao dịch", max_length=100, required=False)
-    field_order = ("amount", "payment_method", "reference", "expected_revision")
+    field_order = ("payment_method", "reference", "expected_revision")
 
 
 class SplitOrderForm(BootstrapFormMixin, forms.Form):

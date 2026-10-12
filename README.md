@@ -335,7 +335,7 @@ Từ Giai đoạn 6, ngừng khu vực/bàn, chuyển khu vực hoặc giảm s�
 
 Tại thẻ bàn có khách, chi tiết lượt khách hoặc chi tiết đơn, chọn **Chuyển bàn**. Hệ thống chỉ hiển thị bàn đang hoạt động, đủ số chỗ, không có khách và không vướng lịch trong thời gian phục vụ còn lại; lượt quá giờ dùng thêm khoảng an toàn 30 phút để tránh chiếm bàn sắp có khách. Khi xác nhận, bàn cũ được giải phóng, bàn mới sáng trạng thái có khách, còn đơn hàng, món, hóa đơn và thanh toán giữ nguyên. Nhật ký lưu rõ bàn cũ, bàn mới, thời gian và nhân viên thực hiện.
 
-Nếu khách đã nhận bàn nhưng đổi ý, chọn **Hủy bàn**, nhập lý do và xác nhận. Hệ thống hủy các món/đơn chưa thanh toán, chuyển lượt khách sang **Đã hủy** và giải phóng bàn trong một thao tác. Không cho hủy khi đã thu một phần hoặc toàn bộ; món đã bắt đầu làm, đã xong hay đã phục vụ chỉ Quản lí được hủy. Nhật ký đơn và lượt khách đều lưu lý do; Báo cáo tính lượt này vào nhóm hủy thay vì hoàn tất.
+Nếu khách đã nhận bàn nhưng đổi ý, chọn **Hủy bàn**, nhập lý do và xác nhận. Hệ thống hủy các món/đơn chưa thanh toán, chuyển lượt khách sang **Đã hủy** và giải phóng bàn trong một thao tác. Không cho hủy khi đã phát sinh thanh toán; món đã bắt đầu làm, đã xong hay đã phục vụ chỉ Quản lí được hủy. Nhật ký đơn và lượt khách đều lưu lý do; Báo cáo tính lượt này vào nhóm hủy thay vì hoàn tất.
 
 ## Thực đơn
 
@@ -358,15 +358,15 @@ Vào **Thực đơn** hoặc `/thuc-don/`.
 2. **Thêm món** mở giao diện POS dạng lưới ảnh: tìm tức thời theo tên/mã món, lọc nhóm món, chạm để tích nhiều món, chỉnh số lượng bằng `+ / −` và nhập ghi chú riêng cho từng món. Một lần xác nhận thêm toàn bộ món đã chọn vào đơn. Có thể sửa số lượng/ghi chú khi chưa gửi Bếp; mỗi lần gọi thêm vẫn tạo dòng riêng và giữ giá tại thời điểm gọi, kể cả giá thực đơn thay đổi sau đó.
 3. **Gửi Bếp**: xem lại danh sách món rồi xác nhận gửi tất cả dòng chưa gửi. Kiểm tra lại món/danh mục còn phục vụ; nếu một món không hợp lệ thì chưa gửi cả đợt.
 4. **Bếp** xem hàng đợi theo giờ gửi, bàn, món, số lượng và ghi chú; chọn **Bắt đầu làm → Đã xong**. Phục vụ tại chi tiết đơn chọn **Đã phục vụ** khi giao cho khách. Trang Bếp/đơn có nút cập nhật thủ công.
-5. Sau khi phục vụ xong tất cả món chưa hủy, chuyển đơn **Chờ thanh toán**. Nếu chưa thu khoản nào có thể **Tiếp tục gọi món**; sau khi đã thu một phần, đơn bị khóa gọi thêm để giữ nguyên tổng hóa đơn.
+5. Sau khi phục vụ xong tất cả món chưa hủy, chuyển đơn **Chờ thanh toán** và chốt toàn bộ hóa đơn trong một lần.
 6. Thu ngân hoặc Quản lí thu tiền mặt/chuyển khoản xác nhận tại quầy, hoặc chuyển khách sang cổng VNPAY. Với VNPAY, trình duyệt quay về chỉ hiển thị kết quả; hệ thống chỉ chốt hóa đơn khi nhận IPN có terminal, chữ ký HMAC-SHA512 và số tiền hợp lệ. IPN lặp không cộng doanh thu hay tích lũy lần hai.
 7. Chỉ hoàn tất lượt khách và giải phóng bàn khi đơn đã hủy hợp lệ hoặc đơn cùng hóa đơn đều ở trạng thái **Đã thanh toán**.
 
-Tại trang **Bàn**, mỗi bàn có đơn đang hoạt động hiển thị nút **Thanh toán nhanh bàn ...** cho Thu ngân/Quản lí. Hộp thoại cho nhập mã giảm giá, chọn tiền mặt/chuyển khoản và chốt theo đúng bàn; hệ thống từ chối nếu còn món chưa phục vụ. Quản lí tạo mã tại menu **Mã giảm giá**, gồm giảm theo phần trăm hoặc số tiền, đơn tối thiểu, mức giảm tối đa và thời hạn. Ưu đãi hạng được tính trước, mã giảm giá tính trên phần tiền còn lại và cả hai được snapshot riêng trên hóa đơn.
+Tại trang **Bàn**, mỗi bàn có đơn đang hoạt động hiển thị nút **Thanh toán nhanh bàn ...** cho Thu ngân/Quản lí. Hộp thoại cho nhập mã giảm giá, chọn tiền mặt/chuyển khoản và chốt theo đúng bàn; hệ thống từ chối nếu còn món chưa phục vụ. Quản lí tạo mã tại menu **Mã giảm giá**, gồm giảm theo phần trăm hoặc số tiền, đơn tối thiểu, mức giảm tối đa và thời hạn. Ưu đãi hạng được tính trước, mã giảm giá tính trên tổng cần thu và cả hai được snapshot riêng trên hóa đơn.
 
 Khi đơn đã chờ thanh toán, Thu ngân/Quản lí có thể chọn **Tách hóa đơn theo món**, nhập số lượng của từng món cần chuyển và tạo hóa đơn con để thu riêng. Có thể tách tiếp, chuyển nhanh giữa các hóa đơn cùng bàn hoặc ghép hóa đơn con chưa phát sinh giao dịch về hóa đơn gốc. Mã giảm giá được xóa khi tách/ghép để từng hóa đơn tính lại minh bạch; ưu đãi hạng khách vẫn được tính trên từng phần. Thanh toán một hóa đơn con không đóng bàn nếu còn hóa đơn khác chưa trả; lượt khách và bàn chỉ hoàn tất sau hóa đơn cuối cùng.
 
-Màn hình **Thu nhiều phương thức** cho ghi nhận nhiều lần thu trên cùng hóa đơn bằng tiền mặt, chuyển khoản, thẻ hoặc phương thức khác. Có nút chia nhanh số tiền còn lại thành 2, 3 hoặc 4 phần. Sau lần thu đầu tiên, hệ thống khóa thay đổi mã giảm giá, tách/ghép và VNPAY để giữ nguyên tổng hóa đơn; chỉ lần thu đủ cuối cùng mới cộng tích lũy khách, hoàn tất đơn và cập nhật trạng thái bàn.
+Mỗi hóa đơn được thanh toán đủ trong một lần bằng phương thức đã chọn. Khi xác nhận thành công, hệ thống cộng tích lũy khách, hoàn tất đơn và cập nhật trạng thái bàn.
 
 - Quản lí/Superuser có toàn bộ quyền; Phục vụ/Thu ngân mở đơn, gọi/sửa món chưa gửi, gửi Bếp và xác nhận phục vụ. Chỉ Thu ngân/Quản lí có quyền thu tiền. Bếp chỉ xem hàng đợi và cập nhật tiến độ làm món; Kho chưa có quyền đơn hàng.
 - Hủy món luôn cần lý do. Phục vụ/Thu ngân hủy món chưa gửi hoặc đã gửi nhưng chưa bắt đầu làm; món đang làm/đã xong/đã phục vụ chỉ Quản lí hủy. Món hủy giữ lịch sử và không cộng tiền tạm tính.
@@ -392,7 +392,7 @@ Vào **Báo cáo** hoặc `/bao-cao/`. Chỉ Superuser và nhóm Quản lí đư
 
 ### Thanh toán nhiều bàn
 
-Từ **Bàn → Thanh toán bàn**, Thu ngân hoặc Quản lí có thể lọc theo khu vực, chọn một hay nhiều bàn rồi bấm **Thanh toán & trả bàn**. Hệ thống chỉ cho chọn bàn có đơn còn tiền cần thu và toàn bộ món chưa hủy đã phục vụ xong. Một thao tác sẽ tạo mã thanh toán chung `TT...`, chốt hóa đơn riêng của từng bàn, ghi phiếu thu, hoàn tất lượt khách, giải phóng bàn và cập nhật Báo cáo. Hóa đơn từng bàn vẫn được giữ riêng để không mất lịch sử món, khách và hiệu suất bàn; mã `TT...` liên kết các hóa đơn đã thu cùng lúc. Thanh toán một phần vẫn thực hiện tại chi tiết đơn như trước.
+Từ **Bàn → Thanh toán bàn**, Thu ngân hoặc Quản lí có thể lọc theo khu vực, chọn một hay nhiều bàn rồi bấm **Thanh toán & trả bàn**. Hệ thống chỉ cho chọn bàn có đơn còn tiền cần thu và toàn bộ món chưa hủy đã phục vụ xong. Một thao tác sẽ tạo mã thanh toán chung `TT...`, chốt hóa đơn riêng của từng bàn, ghi phiếu thu, hoàn tất lượt khách, giải phóng bàn và cập nhật Báo cáo. Hóa đơn từng bàn vẫn được giữ riêng để không mất lịch sử món, khách và hiệu suất bàn; mã `TT...` liên kết các hóa đơn đã thu cùng lúc.
 
 ## Kiểm tra và chạy ứng dụng
 
@@ -418,7 +418,7 @@ python manage.py runserver 127.0.0.1:8000
 
 Mở [http://127.0.0.1:8000/](http://127.0.0.1:8000/) để kiểm tra trang nền tảng. Dừng server bằng `Ctrl+C`.
 
-`check` kiểm tra cấu hình Django. Chạy riêng phần khách hàng và thanh toán bằng `python scripts/run_tests.py apps.customers apps.orders`. Bộ kiểm thử này bao gồm giảm giá theo hạng, thanh toán tại quầy, chữ ký/số tiền IPN VNPAY và chống xử lý trùng. Có thêm các kiểm thử logic tự cập nhật không cần thư viện ngoài: `node --test scripts/test_table_live.cjs scripts/test_staff_polling.cjs`. Bộ này kiểm tra cả polling ETag cho POS/Bếp (5 giây ở tab đang dùng, 30 giây ở nền và backoff khi lỗi mạng), nhưng không thay thế kiểm tra bố cục trên trình duyệt.
+`check` kiểm tra cấu hình Django. Chạy riêng phần khách hàng và thanh toán bằng `python scripts/run_tests.py apps.customers apps.orders`. Bộ kiểm thử này bao gồm giảm giá theo hạng, thanh toán tại quầy, chữ ký/số tiền IPN VNPAY và chống xử lý trùng. Có thêm các kiểm thử logic tự cập nhật không cần thư viện ngoài: `node --test scripts/test_table_live.cjs scripts/test_staff_polling.cjs scripts/test_audio_notify.cjs`. Bộ này kiểm tra polling ETag cho POS/Bếp (5 giây ở tab đang dùng, 30 giây ở nền và backoff khi lỗi mạng) cùng điểm vào chuông thông báo, nhưng không thay thế kiểm tra bố cục trên trình duyệt.
 
 `scripts/run_tests.py` tạo database kiểm thử PostgreSQL với tên UUID riêng mỗi lần chạy, chạy toàn bộ migration từ đầu và dọn database khi hoàn tất. Tài khoản PostgreSQL cần quyền tạo database. Lệnh chuẩn `manage.py test` vẫn dùng tên mặc định `test_QLNH_DB`; nếu tên đó tồn tại mà không rõ nguồn gốc, không chấp nhận yêu cầu xóa của test runner.
 
