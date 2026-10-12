@@ -127,7 +127,7 @@
     }
   };
 
-  // Lắng nghe sự kiện trạng thái thay đổi từ SSE / Polling
+  // Lắng nghe trạng thái thay đổi từ bộ polling dùng chung.
   document.addEventListener("workspace:state-change", (event) => {
     const counts = event?.detail?.counts;
     if (counts && typeof counts.PENDING === "number") {

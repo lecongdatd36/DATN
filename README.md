@@ -418,7 +418,7 @@ python manage.py runserver 127.0.0.1:8000
 
 Mở [http://127.0.0.1:8000/](http://127.0.0.1:8000/) để kiểm tra trang nền tảng. Dừng server bằng `Ctrl+C`.
 
-`check` kiểm tra cấu hình Django. Chạy riêng phần khách hàng và thanh toán bằng `python scripts/run_tests.py apps.customers apps.orders`. Bộ kiểm thử này bao gồm giảm giá theo hạng, thanh toán tại quầy, chữ ký/số tiền IPN VNPAY và chống xử lý trùng. Có thêm 6 kiểm thử logic tự cập nhật bằng Node: `node --test scripts/test_table_live.cjs`; không cần cài thêm thư viện và không thay thế kiểm tra bố cục trên trình duyệt.
+`check` kiểm tra cấu hình Django. Chạy riêng phần khách hàng và thanh toán bằng `python scripts/run_tests.py apps.customers apps.orders`. Bộ kiểm thử này bao gồm giảm giá theo hạng, thanh toán tại quầy, chữ ký/số tiền IPN VNPAY và chống xử lý trùng. Có thêm các kiểm thử logic tự cập nhật không cần thư viện ngoài: `node --test scripts/test_table_live.cjs scripts/test_staff_polling.cjs`. Bộ này kiểm tra cả polling ETag cho POS/Bếp (5 giây ở tab đang dùng, 30 giây ở nền và backoff khi lỗi mạng), nhưng không thay thế kiểm tra bố cục trên trình duyệt.
 
 `scripts/run_tests.py` tạo database kiểm thử PostgreSQL với tên UUID riêng mỗi lần chạy, chạy toàn bộ migration từ đầu và dọn database khi hoàn tất. Tài khoản PostgreSQL cần quyền tạo database. Lệnh chuẩn `manage.py test` vẫn dùng tên mặc định `test_QLNH_DB`; nếu tên đó tồn tại mà không rõ nguồn gốc, không chấp nhận yêu cầu xóa của test runner.
 

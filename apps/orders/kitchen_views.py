@@ -1,11 +1,9 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Count, Max
-import json
-import time
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -105,38 +103,6 @@ class KitchenStateView(KitchenAccessMixin, View):
             "queue": queue.aggregate(count=Count("pk"), latest=Max("updated_at")),
         }
         return conditional_json_response(request, payload)
-
-
-class KitchenStreamView(KitchenAccessMixin, View):
-    """Server-Sent Events (SSE) streaming endpoint for Kitchen KDS."""
-
-    def get(self, request):
-        def event_stream():
-            last_signature = None
-            start_time = time.time()
-            # Stream for up to 25 seconds then exit gracefully (EventSource auto-reconnects)
-            while time.time() - start_time < 25:
-                queue = _queue_queryset()
-                summary = queue.aggregate(count=Count("pk"), latest=Max("updated_at"))
-                counts = _queue_counts()
-                latest_iso = summary["latest"].isoformat() if summary["latest"] else ""
-                signature = f"{summary['count']}:{latest_iso}:{counts.get('PENDING', 0)}:{counts.get('COOKING', 0)}:{counts.get('READY', 0)}"
-                if signature != last_signature:
-                    last_signature = signature
-                    payload = {
-                        "ui_version": "kitchen-2026-10-09.1",
-                        "counts": counts,
-                        "queue": summary,
-                    }
-                    data = json.dumps(payload, ensure_ascii=False, default=str)
-                    yield f"data: {data}\n\n"
-                time.sleep(1)
-
-        response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
-        response["Cache-Control"] = "no-cache, no-transform"
-        response["X-Accel-Buffering"] = "no"
-        return response
-
 
 
 class KitchenTransitionView(KitchenAccessMixin, View):

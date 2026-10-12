@@ -2,47 +2,56 @@
   const root = document.querySelector("[data-live-workspace]");
   if (!root?.dataset.stateUrl) return;
 
-  const normalDelay = 3500;
-  let retryDelay = normalDelay;
+  // Polling is deliberately used instead of a database-polled SSE stream.
+  // A regular ETag request is inexpensive for this project and, unlike a
+  // long-lived synchronous stream, does not reserve a web worker per screen.
+  const foregroundDelay = 5000;
+  const backgroundDelay = 30000;
+  const requestTimeout = 6000;
+  const maxRetryDelay = 60000;
+  let retryDelay = foregroundDelay;
   let signature = null;
   let etag = null;
   let initialized = false;
   let timer = null;
   let controller = null;
-  let mutationReset = false;
   let suspended = false;
   let busyCount = 0;
-  let eventSource = null;
+  let isPolling = false;
 
   const liveBadge = root.querySelector(".sales-live") || document.querySelector(".sales-live");
 
-  const updateLiveIndicator = (mode) => {
+  const currentDelay = () => (document.hidden ? backgroundDelay : foregroundDelay);
+
+  const updateLiveIndicator = () => {
     if (!liveBadge) return;
-    if (mode === "sse") {
-      liveBadge.innerHTML = `<span aria-hidden="true" style="background:#10b981;box-shadow:0 0 0 .25rem rgba(16,185,129,.2)"></span>Thời gian thực (SSE)`;
-      liveBadge.classList.add("is-sse-connected");
-    } else {
-      liveBadge.innerHTML = `<span aria-hidden="true"></span>Tự cập nhật mỗi 3.5 giây`;
-      liveBadge.classList.remove("is-sse-connected");
-    }
+    const seconds = currentDelay() / 1000;
+    liveBadge.innerHTML = `<span aria-hidden="true"></span>Tự cập nhật mỗi ${seconds} giây`;
+    liveBadge.classList.remove("is-sse-connected");
   };
 
-  const schedule = (delay = normalDelay) => {
+  const schedule = (delay = currentDelay()) => {
     window.clearTimeout(timer);
+    if (suspended) return;
     timer = window.setTimeout(poll, delay);
   };
 
   const poll = async () => {
-    mutationReset = false;
     if (suspended) return;
-    if (document.hidden) {
-      // Khi tab chạy ngầm, giãn chu kỳ sang 6s nhưng vẫn tiếp tục poll
-      schedule(6000);
+    if (isPolling) {
+      schedule(250);
+      return;
     }
+    isPolling = true;
 
-    controller?.abort();
-    controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 6000);
+    const requestController = new AbortController();
+    controller = requestController;
+    let timedOut = false;
+    let scheduleAfterRequest = true;
+    const timeout = window.setTimeout(() => {
+      timedOut = true;
+      requestController.abort();
+    }, requestTimeout);
     const headers = {"X-Requested-With": "XMLHttpRequest"};
     if (etag) headers["If-None-Match"] = etag;
 
@@ -51,13 +60,11 @@
         headers,
         cache: "no-store",
         credentials: "same-origin",
-        signal: controller.signal,
+        signal: requestController.signal,
       });
-      window.clearTimeout(timeout);
 
       if (response.status === 304) {
-        retryDelay = normalDelay;
-        schedule();
+        retryDelay = currentDelay();
         return;
       }
       if (!response.ok) throw new Error(`Polling HTTP ${response.status}`);
@@ -77,74 +84,26 @@
       initialized = true;
       signature = nextSignature;
       etag = nextEtag;
-      retryDelay = normalDelay;
-      schedule();
+      retryDelay = currentDelay();
     } catch (error) {
+      // An abort triggered by a user action, a modal, or a visibility change
+      // is already followed by an explicit schedule in that event handler.
+      if (error.name === "AbortError" && !timedOut) {
+        scheduleAfterRequest = false;
+        return;
+      }
+      retryDelay = Math.min(Math.max(retryDelay * 2, foregroundDelay), maxRetryDelay);
+    } finally {
       window.clearTimeout(timeout);
-      if (error.name === "AbortError" && (mutationReset || suspended)) return;
-      if (error.name !== "AbortError") retryDelay = Math.min(retryDelay * 2, 30000);
-      schedule(retryDelay);
+      if (controller === requestController) controller = null;
+      isPolling = false;
+      if (scheduleAfterRequest) schedule(retryDelay);
     }
-  };
-
-  // Thiết lập Server-Sent Events (SSE) nếu có streamUrl
-  const startSSE = () => {
-    const streamUrl = root.dataset.streamUrl;
-    if (!streamUrl || typeof window.EventSource === "undefined") {
-      updateLiveIndicator("poll");
-      poll();
-      return;
-    }
-
-    try {
-      eventSource = new EventSource(streamUrl);
-
-      eventSource.onopen = () => {
-        updateLiveIndicator("sse");
-      };
-
-      eventSource.onmessage = (event) => {
-        if (!event.data) return;
-        try {
-          const payload = JSON.parse(event.data);
-          const nextSignature = JSON.stringify(payload);
-          if (initialized && signature !== nextSignature) {
-            document.dispatchEvent(new CustomEvent("workspace:state-change", { detail: payload }));
-          }
-          initialized = true;
-          signature = nextSignature;
-        } catch (err) {
-          console.warn("[QLNH Realtime] Lỗi đọc dữ liệu SSE:", err);
-        }
-      };
-
-      eventSource.onerror = () => {
-        // SSE bị ngắt, đóng và chuyển sang polling dự phòng
-        if (eventSource) {
-          eventSource.close();
-          eventSource = null;
-        }
-        updateLiveIndicator("poll");
-        schedule(1500);
-      };
-    } catch (err) {
-      console.warn("[QLNH Realtime] Không thể kết nối SSE, dùng polling dự phòng:", err);
-      updateLiveIndicator("poll");
-      poll();
-      return;
-    }
-
-    // Luôn chạy song song một polling heartbeat nhẹ mỗi 4 giây để bảo đảm không bị nghẽn
-    schedule(4000);
   };
 
   document.addEventListener("workspace:mutation", () => {
-    mutationReset = true;
     controller?.abort();
-    initialized = false;
-    signature = null;
-    etag = null;
-    retryDelay = normalDelay;
+    retryDelay = foregroundDelay;
     schedule(250);
   });
 
@@ -155,20 +114,18 @@
       window.clearTimeout(timer);
       controller?.abort();
     } else {
+      retryDelay = currentDelay();
       schedule(250);
     }
   });
 
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      if (!eventSource && root.dataset.streamUrl) {
-        startSSE();
-      } else {
-        schedule(100);
-      }
-    }
+    updateLiveIndicator();
+    controller?.abort();
+    retryDelay = currentDelay();
+    schedule(document.hidden ? backgroundDelay : 100);
   });
 
-  // Khởi động SSE ưu tiên, tự động fallback về Polling
-  startSSE();
+  updateLiveIndicator();
+  poll();
 })();
