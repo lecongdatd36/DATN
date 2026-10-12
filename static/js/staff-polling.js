@@ -5,7 +5,9 @@
   // Polling is deliberately used instead of a database-polled SSE stream.
   // A regular ETag request is inexpensive for this project and, unlike a
   // long-lived synchronous stream, does not reserve a web worker per screen.
-  const foregroundDelay = 5000;
+  // Staff need to see a new order promptly, while background tabs still
+  // remain inexpensive for the database and the device battery.
+  const foregroundDelay = 3000;
   const backgroundDelay = 30000;
   const requestTimeout = 6000;
   const maxRetryDelay = 60000;

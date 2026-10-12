@@ -302,7 +302,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   workspace.addEventListener("submit", async (event) => {
-    const form = event.target.closest("[data-order-item-form]");
+    // Sending draft items to the kitchen follows the same fragment update as
+    // editing an item. This avoids a full POS navigation after every send.
+    const form = event.target.closest("[data-order-item-form], form[action$='/action/send/']");
     if (!form) return;
     event.preventDefault();
     if (form.dataset.loading === "true") return;

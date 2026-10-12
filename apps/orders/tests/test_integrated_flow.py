@@ -353,6 +353,27 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.assertContains(fragment, self.dish.name)
         self.assertNotContains(fragment, "data-quick-add")
 
+    def test_waiter_can_send_to_kitchen_without_page_reload(self):
+        order = services.open_table(actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2)
+        services.add_item(
+            actor=self.users["WAITER"], order_id=order.pk,
+            expected_revision=self.revision(order), dish_id=self.dish.pk, quantity=1,
+        )
+        self.client.force_login(self.users["WAITER"])
+
+        response = self.client.post(
+            reverse("sales:action", args=["send"]),
+            {"order_id": order.pk, "expected_revision": self.revision(order)},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            HTTP_X_ORDER_FRAGMENT="1",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data-order-revision")
+        item = OrderItem.objects.get(order=order)
+        self.assertEqual(item.status, OrderItem.Status.PENDING)
+        self.assertEqual(list(get_messages(response.wsgi_request)), [])
+
     def test_cashier_can_pay_in_one_step_from_sales_workspace(self):
         order = self.ready_order_for_payment(request_payment=False)
         self.client.force_login(self.users["CASHIER"])

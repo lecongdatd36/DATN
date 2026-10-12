@@ -79,7 +79,7 @@ function page(initialResponses = []) {
   };
 }
 
-test("uses ETag polling every five seconds without EventSource", async () => {
+test("uses ETag polling every three seconds without EventSource", async () => {
   assert.doesNotMatch(source, /EventSource|data-stream-url|streamUrl/);
   const p = page([{
     ok: true,
@@ -94,12 +94,12 @@ test("uses ETag polling every five seconds without EventSource", async () => {
   assert.equal(p.requests[0].options.headers["X-Requested-With"], "XMLHttpRequest");
   assert.equal(p.dispatched[0].type, "workspace:state-ready");
   assert.equal(p.dispatched[0].detail.tables.count, 1);
-  assert.match(p.badge.innerHTML, /5 giây/);
-  assert.ok(p.hasTimer(5000));
+  assert.match(p.badge.innerHTML, /3 giây/);
+  assert.ok(p.hasTimer(3000));
 
-  await p.tick(5000);
+  await p.tick(3000);
   assert.equal(p.requests[1].options.headers["If-None-Match"], '"v1"');
-  assert.ok(p.hasTimer(5000));
+  assert.ok(p.hasTimer(3000));
 });
 
 test("refreshes promptly after a state change and slows to thirty seconds in background", async () => {
@@ -117,7 +117,7 @@ test("refreshes promptly after a state change and slows to thirty seconds in bac
     headers: { get: () => '"v2"' },
     text: async () => JSON.stringify({ tables: { count: 2 } }),
   });
-  await p.tick(5000);
+  await p.tick(3000);
   assert.equal(p.dispatched.at(-1).type, "workspace:state-change");
   assert.equal(p.dispatched.at(-1).detail.tables.count, 2);
 
@@ -135,11 +135,15 @@ test("backs off after a network failure", async () => {
     text: async () => "",
   }]);
   await p.settle();
-  assert.ok(p.hasTimer(10000));
+  assert.ok(p.hasTimer(6000));
 });
 
 test("POS consumes the initial state before comparing later notifications", () => {
   assert.match(salesSource, /workspace\.__qlnhLiveState/);
   assert.match(salesSource, /workspace:state-ready/);
   assert.match(salesSource, /hasNotification \? 1800 : 450/);
+});
+
+test("sends draft items with the same fragment update path as item edits", () => {
+  assert.match(salesSource, /form\[action\$='\/action\/send\/'\]/);
 });

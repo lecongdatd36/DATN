@@ -129,7 +129,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
                 can_manage_order=has_order_permission(self.request.user, "manage_order"),
                 can_collect_payment=can_collect_payment,
                 vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
-                available_tables=DiningTable.objects.filter(
+                available_tables=DiningTable.objects.select_related("area").filter(
                     status=DiningTable.Status.AVAILABLE,
                     is_active=True,
                     area__is_active=True,
@@ -195,7 +195,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             can_collect_payment=can_collect_payment,
             vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
             is_manager=can_manage_accounts(self.request.user),
-            available_tables=DiningTable.objects.filter(status=DiningTable.Status.AVAILABLE, is_active=True, area__is_active=True).exclude(pk=selected_order.table_id if selected_order else None),
+            available_tables=DiningTable.objects.select_related("area").filter(status=DiningTable.Status.AVAILABLE, is_active=True, area__is_active=True).exclude(pk=selected_order.table_id if selected_order else None),
         )
         return context
 
