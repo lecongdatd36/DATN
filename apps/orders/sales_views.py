@@ -357,6 +357,12 @@ class SalesActionView(SalesAccessMixin, View):
             request.headers.get("X-Requested-With") == "XMLHttpRequest"
             or request.headers.get("X-Order-Fragment") == "1"
         )
+        # Opening a table needs the complete POS workspace (tables, menu and
+        # selected order), not the small order-only fragment used by edits.
+        # Keep this opt-in so non-JavaScript users retain the normal redirect.
+        is_open_workspace_request = (
+            action == "open" and request.headers.get("X-Open-Workspace") == "1"
+        )
         try:
             # Customer creation and opening the table must either both succeed
             # or both roll back, preventing orphan customer records.
@@ -370,7 +376,7 @@ class SalesActionView(SalesAccessMixin, View):
             return redirect(request.POST.get("next") or reverse("sales:workspace"))
         if not is_async:
             messages.success(request, "Đã cập nhật bán hàng.")
-        if is_async and action != "open":
+        if is_open_workspace_request or (is_async and action != "open"):
             order_id = request.POST.get("order_id") or getattr(result, "order_id", None) or getattr(result, "pk", None)
             if order_id:
                 request.GET = request.GET.copy()

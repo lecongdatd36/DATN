@@ -353,6 +353,23 @@ class IntegratedRestaurantFlowTests(TestCase):
         self.assertContains(fragment, self.dish.name)
         self.assertNotContains(fragment, "data-quick-add")
 
+    def test_waiter_can_open_table_without_page_redirect(self):
+        self.client.force_login(self.users["WAITER"])
+
+        response = self.client.post(
+            reverse("sales:action", args=["open"]),
+            {"table_id": self.table.pk, "guest_count": 2},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            HTTP_X_OPEN_WORKSPACE="1",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        order = Order.objects.get(table=self.table)
+        self.assertContains(response, f'data-selected-order-id="{order.pk}"')
+        self.assertContains(response, f'name="order_id" value="{order.pk}"')
+        self.assertContains(response, "data-quick-add")
+        self.assertEqual(list(get_messages(response.wsgi_request)), [])
+
     def test_waiter_can_send_to_kitchen_without_page_reload(self):
         order = services.open_table(actor=self.users["WAITER"], table_id=self.table.pk, guest_count=2)
         services.add_item(

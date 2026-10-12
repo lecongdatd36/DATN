@@ -2,13 +2,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const workspace = document.querySelector(".sales-workspace");
   if (!workspace) return;
 
-  const search = workspace.querySelector("[data-dish-search]");
-  const categoryButtons = [...workspace.querySelectorAll("[data-category-filter] button")];
-  const cards = [...workspace.querySelectorAll("[data-dish-grid] .dish-card")];
-  const empty = workspace.querySelector("[data-dish-empty]");
+  let search;
+  let categoryButtons = [];
+  let cards = [];
+  let empty;
   const feedback = workspace.querySelector("[data-sales-feedback]");
   const phoneQuery = window.matchMedia("(max-width: 767.98px)");
   let category = "all";
+  let searchTimer;
 
   const showFeedback = (message, tone = "danger") => {
     if (!feedback) return;
@@ -48,16 +49,23 @@ document.addEventListener("DOMContentLoaded", () => {
     if (empty) empty.hidden = visible !== 0;
   };
 
-  let searchTimer;
-  search?.addEventListener("input", () => {
-    window.clearTimeout(searchTimer);
-    searchTimer = window.setTimeout(filterDishes, 280);
-  });
-  categoryButtons.forEach((button) => button.addEventListener("click", () => {
-    category = button.dataset.category || "all";
-    categoryButtons.forEach((item) => item.classList.toggle("active", item === button));
-    filterDishes();
-  }));
+  const bindMenuControls = () => {
+    search = workspace.querySelector("[data-dish-search]");
+    categoryButtons = [...workspace.querySelectorAll("[data-category-filter] button")];
+    cards = [...workspace.querySelectorAll("[data-dish-grid] .dish-card")];
+    empty = workspace.querySelector("[data-dish-empty]");
+    category = "all";
+    search?.addEventListener("input", () => {
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(filterDishes, 280);
+    });
+    categoryButtons.forEach((button) => button.addEventListener("click", () => {
+      category = button.dataset.category || "all";
+      categoryButtons.forEach((item) => item.classList.toggle("active", item === button));
+      filterDishes();
+    }));
+  };
+  bindMenuControls();
 
   workspace.addEventListener("click", (event) => {
     const orderToggle = event.target.closest("[data-mobile-order-toggle]");
@@ -166,6 +174,51 @@ document.addEventListener("DOMContentLoaded", () => {
       window.requestAnimationFrame(() => dock.classList.add("is-updated"));
       window.setTimeout(() => dock.classList.remove("is-updated"), 500);
     }
+    bindCheckoutControls();
+    bindGuestPreviews();
+    document.dispatchEvent(new CustomEvent("workspace:mutation"));
+  };
+
+  const replaceWorkspaceElement = (responseDocument, selector) => {
+    const current = workspace.querySelector(selector);
+    const replacement = responseDocument.querySelector(selector);
+    if (current && replacement) {
+      current.replaceWith(replacement);
+    } else if (replacement) {
+      workspace.querySelector(".sales-grid")?.before(replacement);
+    } else {
+      current?.remove();
+    }
+  };
+
+  const syncWorkspaceFromResponse = (html) => {
+    const responseDocument = new DOMParser().parseFromString(html, "text/html");
+    const incomingWorkspace = responseDocument.querySelector(".sales-workspace");
+    if (!incomingWorkspace) throw new Error("Không thể nhận dữ liệu bàn vừa mở.");
+
+    workspace.classList.toggle("has-selected-order", incomingWorkspace.classList.contains("has-selected-order"));
+    workspace.dataset.selectedOrderId = incomingWorkspace.dataset.selectedOrderId || "";
+    [".sales-mobile-tabs", "#sales-tables", "#sales-menu", ".sales-order-panel"].forEach((selector) => {
+      const current = workspace.querySelector(selector);
+      const replacement = responseDocument.querySelector(selector);
+      if (current && replacement) current.replaceWith(replacement);
+    });
+    replaceWorkspaceElement(responseDocument, ".mobile-pos-appbar");
+    replaceWorkspaceElement(responseDocument, ".mobile-order-dock");
+    bindMenuControls();
+    bindCheckoutControls();
+    bindGuestPreviews();
+    document.dispatchEvent(new CustomEvent("workspace:content-replaced", {detail: {scope: workspace}}));
+    document.dispatchEvent(new CustomEvent("workspace:mutation"));
+  };
+
+  const syncTablesFromResponse = (html) => {
+    const responseDocument = new DOMParser().parseFromString(html, "text/html");
+    const current = workspace.querySelector("#sales-tables");
+    const replacement = responseDocument.querySelector("#sales-tables");
+    if (!current || !replacement) throw new Error("Không thể đồng bộ danh sách bàn.");
+    current.replaceWith(replacement);
+    document.dispatchEvent(new CustomEvent("workspace:content-replaced", {detail: {scope: workspace}}));
     document.dispatchEvent(new CustomEvent("workspace:mutation"));
   };
 
@@ -203,6 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let refreshInProgress = false;
   let refreshPending = false;
   let workspaceBusy = false;
+  let tablesRefreshInProgress = false;
   const refreshSelectedOrder = async () => {
     if (workspaceBusy) {
       refreshPending = true;
@@ -233,6 +287,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  const refreshTables = async () => {
+    if (tablesRefreshInProgress || workspaceBusy) return;
+    tablesRefreshInProgress = true;
+    try {
+      const response = await fetch(window.location.href, {
+        headers: {"X-Requested-With": "XMLHttpRequest", "X-POS-Tables-Refresh": "1"},
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+      if (!response.ok) throw new Error(`Không thể đồng bộ bàn (HTTP ${response.status}).`);
+      syncTablesFromResponse(await response.text());
+    } catch (error) {
+      showFeedback(error.message);
+    } finally {
+      tablesRefreshInProgress = false;
+    }
+  };
+
   let lastSalesState = workspace.__qlnhLiveState || null;
   let workspaceRefreshTimer = null;
 
@@ -240,10 +312,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const isTablesTab = workspace.querySelector("#sales-tables.active") || !workspace.classList.contains("has-selected-order");
     if (!isTablesTab || workspaceBusy || workspace.querySelector("input:focus")) return;
     window.clearTimeout(workspaceRefreshTimer);
-    // Let the preloaded notification finish before replacing the page.  A
-    // fast reload used to stop the newly-created Audio element almost at once.
+    // Keep the sound audible, then replace only the table panel.  Reloading
+    // the whole page here interrupted active POS work and felt sluggish.
     workspaceRefreshTimer = window.setTimeout(
-      () => window.location.reload(),
+      refreshTables,
       hasNotification ? 1800 : 450,
     );
   };
@@ -298,6 +370,56 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!workspaceBusy && refreshPending) {
       refreshPending = false;
       refreshSelectedOrder();
+    }
+  });
+
+  workspace.addEventListener("submit", async (event) => {
+    const form = event.target.closest(".open-table-modal");
+    if (!form) return;
+    event.preventDefault();
+    if (form.dataset.loading === "true") return;
+    form.dataset.loading = "true";
+    form.classList.add("is-updating");
+    form.querySelectorAll("button").forEach((button) => { button.disabled = true; });
+    document.dispatchEvent(new CustomEvent("workspace:busy", {detail: true}));
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        body: new FormData(form),
+        credentials: "same-origin",
+        headers: {"X-Requested-With": "XMLHttpRequest", "X-Open-Workspace": "1"},
+      });
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type") || "";
+        const payload = contentType.includes("application/json") ? await response.json() : null;
+        throw new Error(payload?.error || "Không thể mở bàn lúc này.");
+      }
+      const modal = form.closest(".modal");
+      window.bootstrap?.Modal.getInstance(modal)?.hide();
+      document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("padding-right");
+      syncWorkspaceFromResponse(await response.text());
+      const orderId = workspace.dataset.selectedOrderId;
+      if (!orderId) throw new Error("Không tìm thấy order của bàn vừa mở.");
+      const target = new URL(window.location.href);
+      target.searchParams.delete("open_table");
+      target.searchParams.set("order", orderId);
+      target.hash = "sales-menu";
+      window.history.replaceState({}, "", `${target.pathname}${target.search}${target.hash}`);
+      if (phoneQuery.matches) {
+        showMobileMenu();
+      } else {
+        const menuTab = workspace.querySelector('[data-bs-target="#sales-menu"]');
+        if (menuTab && window.bootstrap) window.bootstrap.Tab.getOrCreateInstance(menuTab).show();
+      }
+    } catch (error) {
+      showFeedback(error.message);
+    } finally {
+      form.dataset.loading = "false";
+      form.classList.remove("is-updating");
+      form.querySelectorAll("button").forEach((button) => { button.disabled = false; });
+      document.dispatchEvent(new CustomEvent("workspace:busy", {detail: false}));
     }
   });
 
@@ -357,7 +479,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  workspace.querySelectorAll("[data-checkout-form]").forEach((form) => {
+  const bindCheckoutControls = () => workspace.querySelectorAll("[data-checkout-form]").forEach((form) => {
+    if (form.dataset.checkoutBound === "true") return;
+    form.dataset.checkoutBound = "true";
     const options = form.querySelector("[data-checkout-options]");
     const transactionField = form.querySelector("[data-transaction-field]");
     const syncPaymentFields = () => {
@@ -370,10 +494,17 @@ document.addEventListener("DOMContentLoaded", () => {
     syncPaymentFields();
   });
 
-  workspace.querySelectorAll("input[name='guest_count']").forEach((input) => input.addEventListener("input", () => {
-    const preview = input.closest("form")?.querySelector("[data-guest-preview]");
-    if (preview) preview.textContent = input.value || "1";
-  }));
+  const bindGuestPreviews = () => workspace.querySelectorAll("input[name='guest_count']").forEach((input) => {
+    if (input.dataset.guestPreviewBound === "true") return;
+    input.dataset.guestPreviewBound = "true";
+    input.addEventListener("input", () => {
+      const preview = input.closest("form")?.querySelector("[data-guest-preview]");
+      if (preview) preview.textContent = input.value || "1";
+    });
+  });
+
+  bindCheckoutControls();
+  bindGuestPreviews();
 
   if (phoneQuery.matches && workspace.classList.contains("has-selected-order")) {
     if (window.location.hash === "#sales-menu") showMobileMenu();

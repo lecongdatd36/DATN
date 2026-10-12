@@ -3,7 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!workspace) return;
   const lookupUrl = workspace.dataset.customerLookupUrl;
 
-  document.querySelectorAll("[data-customer-lookup-form]").forEach((form) => {
+  const bindCustomerLookup = (form) => {
+    if (form.dataset.customerLookupBound === "true") return;
+    form.dataset.customerLookupBound = "true";
     const phoneInput = form.querySelector("[data-customer-phone]");
     const searchButton = form.querySelector("[data-customer-search]");
     const result = form.querySelector("[data-customer-result]");
@@ -78,5 +80,14 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("reset", reset);
     modeButtons.forEach((button) => button.addEventListener("click", () => setMode(button.dataset.customerModeButton)));
     setMode(form.dataset.customerMode || "new");
+  };
+
+  const bindCustomerLookups = (scope = document) => {
+    scope.querySelectorAll("[data-customer-lookup-form]").forEach(bindCustomerLookup);
+  };
+
+  bindCustomerLookups();
+  document.addEventListener("workspace:content-replaced", (event) => {
+    bindCustomerLookups(event.detail?.scope || document);
   });
 });
