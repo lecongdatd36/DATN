@@ -99,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (addButton) addButton.disabled = frozen;
             card.classList.toggle("has-quantity", quantity > 0);
         });
+        document.dispatchEvent(new CustomEvent("qr:cart-change", {detail: {ids: Object.keys(cart), frozen: frozen || isSubmitting}}));
         if (!itemsElement) return;
         itemsElement.innerHTML = "";
         const entries = Object.values(cart);

@@ -1,0 +1,2020 @@
+{
+  "schema_version": 1,
+  "algorithm": "Apriori",
+  "data_source": "application_export",
+  "created_at": "2026-10-29T15:55:31.840803+00:00",
+  "versions": {
+    "mlxtend": "0.23.4",
+    "pandas": "2.3.3",
+    "numpy": "2.2.6"
+  },
+  "input_sha256": "9d4ac563be9e0365cf6d69a188a250449af3240e16c7e57ac1d4a9d362c8596a",
+  "parameters": {
+    "min_support": 0.04,
+    "min_confidence": 0.3,
+    "min_lift": 1.05,
+    "max_len": 3,
+    "max_rules": 500,
+    "test_fraction": 0.2,
+    "k": 3
+  },
+  "training": {
+    "baskets": 17,
+    "holdout_baskets": 8,
+    "holdout_start_business_day": "2026-10-12",
+    "rule_count": 162,
+    "train_start": "2026-09-24T06:33:32.227881+00:00",
+    "train_end": "2026-10-10T17:00:54.729443+00:00"
+  },
+  "limitations": [
+    "Dữ liệu synthetic_demo có các cặp món được tạo chủ ý, chỉ dùng kiểm tra quy trình.",
+    "application_export xác nhận nguồn ứng dụng, không xác nhận đây là dữ liệu kinh doanh thực.",
+    "Support/confidence/lift đo liên hệ trong tập train, không phải độ chính xác ngoài thực tế.",
+    "Chọn ngưỡng trước khi xem holdout; thử nhiều ngưỡng trên holdout làm kết quả mang tính thăm dò.",
+    "Khi tích hợp web phải lọc lại món còn bán bằng trạng thái hiện tại của hệ thống."
+  ],
+  "catalog": [
+    {
+      "dish_id": "1",
+      "dish_code": "KV01",
+      "dish_name": "Gỏi cuốn tôm thịt"
+    },
+    {
+      "dish_id": "10",
+      "dish_code": "RAU02",
+      "dish_name": "Rau củ luộc kho quẹt"
+    },
+    {
+      "dish_id": "11",
+      "dish_code": "DU01",
+      "dish_name": "Cà phê sữa đá"
+    },
+    {
+      "dish_id": "12",
+      "dish_code": "DU02",
+      "dish_name": "Trà chanh"
+    },
+    {
+      "dish_id": "13",
+      "dish_code": "DU03",
+      "dish_name": "Nước ngọt Coca"
+    },
+    {
+      "dish_id": "14",
+      "dish_code": "DU04",
+      "dish_name": "Bia lon Sài Gòn Lager"
+    },
+    {
+      "dish_id": "16",
+      "dish_code": "TM02",
+      "dish_name": "Chè khúc bạch"
+    },
+    {
+      "dish_id": "2",
+      "dish_code": "KV02",
+      "dish_name": "Chả giò hải sản"
+    },
+    {
+      "dish_id": "3",
+      "dish_code": "MC01",
+      "dish_name": "Cơm sườn nướng"
+    },
+    {
+      "dish_id": "4",
+      "dish_code": "MC02",
+      "dish_name": "Cơm gà xối mỡ"
+    },
+    {
+      "dish_id": "5",
+      "dish_code": "MC03",
+      "dish_name": "Phở bò đặc biệt"
+    },
+    {
+      "dish_id": "6",
+      "dish_code": "MC04",
+      "dish_name": "Bún chả Hà Nội"
+    },
+    {
+      "dish_id": "7",
+      "dish_code": "MC05",
+      "dish_name": "Tôm rang me"
+    },
+    {
+      "dish_id": "8",
+      "dish_code": "MC06",
+      "dish_name": "Trứng chiên thịt"
+    },
+    {
+      "dish_id": "9",
+      "dish_code": "RAU01",
+      "dish_name": "Rau muống xào tỏi"
+    }
+  ],
+  "evaluation": {
+    "protocol": "chronological_business_days_then_hide_one_item_sha256_basket_id",
+    "k": 3,
+    "test_baskets": 8,
+    "eligible_baskets": 4,
+    "single_item_baskets_skipped": 4,
+    "hit_rate_at_k": 0.25,
+    "recommendation_coverage": 1.0,
+    "popularity_baseline_hit_rate_at_k": 0.75,
+    "note": "Giấu một món trong giỏ hoàn tất để kiểm tra; không phải đánh giá thứ tự chọn món thực tế."
+  },
+  "rules": [
+    {
+      "antecedents": [
+        "10",
+        "14"
+      ],
+      "consequents": [
+        "6"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 17.0
+    },
+    {
+      "antecedents": [
+        "10",
+        "7"
+      ],
+      "consequents": [
+        "6"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 17.0
+    },
+    {
+      "antecedents": [
+        "11",
+        "9"
+      ],
+      "consequents": [
+        "8"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 17.0
+    },
+    {
+      "antecedents": [
+        "14",
+        "7"
+      ],
+      "consequents": [
+        "6"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 17.0
+    },
+    {
+      "antecedents": [
+        "2",
+        "4"
+      ],
+      "consequents": [
+        "16"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "10",
+        "14"
+      ],
+      "consequents": [
+        "7"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "10",
+        "6"
+      ],
+      "consequents": [
+        "7"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "11",
+        "13"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "11",
+        "2"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "11",
+        "8"
+      ],
+      "consequents": [
+        "9"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "12",
+        "13"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "12",
+        "2"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "12",
+        "3"
+      ],
+      "consequents": [
+        "9"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "12",
+        "9"
+      ],
+      "consequents": [
+        "3"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "13",
+        "4"
+      ],
+      "consequents": [
+        "16"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "14",
+        "4"
+      ],
+      "consequents": [
+        "16"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "14",
+        "6"
+      ],
+      "consequents": [
+        "10"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "14",
+        "6"
+      ],
+      "consequents": [
+        "7"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "14",
+        "7"
+      ],
+      "consequents": [
+        "10"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "6"
+      ],
+      "consequents": [
+        "10"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "6"
+      ],
+      "consequents": [
+        "7"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "6",
+        "7"
+      ],
+      "consequents": [
+        "10"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "8"
+      ],
+      "consequents": [
+        "9"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "16"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "16"
+      ],
+      "consequents": [
+        "4"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "16",
+        "2"
+      ],
+      "consequents": [
+        "4"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "16",
+        "4"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "1",
+        "11"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "1",
+        "12"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "1",
+        "14"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "11",
+        "13"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "12",
+        "13"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "13",
+        "16"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "13",
+        "16"
+      ],
+      "consequents": [
+        "4"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "13",
+        "4"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "13",
+        "7"
+      ],
+      "consequents": [
+        "5"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "14",
+        "16"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "14",
+        "16"
+      ],
+      "consequents": [
+        "4"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "14",
+        "4"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "1"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "12",
+        "14"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "14",
+        "2"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "1",
+        "11"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "1",
+        "12"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "1",
+        "12"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "1",
+        "14"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "1",
+        "14"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "1",
+        "2"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "1",
+        "2"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "1",
+        "5"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "11",
+        "2"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "12",
+        "13"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "12",
+        "2"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "12",
+        "2"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "14",
+        "16"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "14",
+        "4"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "5",
+        "7"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "8"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "8",
+        "9"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 3.4
+    },
+    {
+      "antecedents": [
+        "1",
+        "11"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "1",
+        "14"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "1",
+        "2"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "11",
+        "13"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "11",
+        "2"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "3",
+        "9"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "13",
+        "2"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "1",
+        "11"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "1",
+        "12"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "1",
+        "2"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "10",
+        "6"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "10",
+        "7"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "11",
+        "13"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "11",
+        "2"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "12",
+        "13"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "12",
+        "2"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "13",
+        "16"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "13",
+        "4"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "6"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "6",
+        "7"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 1.0,
+      "lift": 2.428571428571429
+    },
+    {
+      "antecedents": [
+        "2"
+      ],
+      "consequents": [
+        "16"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "4"
+      ],
+      "consequents": [
+        "16"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 5.666666666666666
+    },
+    {
+      "antecedents": [
+        "13",
+        "14"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 3.7777777777777772
+    },
+    {
+      "antecedents": [
+        "2"
+      ],
+      "consequents": [
+        "4"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 3.7777777777777772
+    },
+    {
+      "antecedents": [
+        "4"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 3.7777777777777772
+    },
+    {
+      "antecedents": [
+        "2"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 2.2666666666666666
+    },
+    {
+      "antecedents": [
+        "5"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 2.2666666666666666
+    },
+    {
+      "antecedents": [
+        "11",
+        "14"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 1.8888888888888886
+    },
+    {
+      "antecedents": [
+        "11",
+        "12"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 1.619047619047619
+    },
+    {
+      "antecedents": [
+        "2"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.6666666666666666,
+      "lift": 1.619047619047619
+    },
+    {
+      "antecedents": [
+        "11"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.17647058823529413,
+      "confidence": 0.6,
+      "lift": 1.6999999999999997
+    },
+    {
+      "antecedents": [
+        "11"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.17647058823529413,
+      "confidence": 0.6,
+      "lift": 1.457142857142857
+    },
+    {
+      "antecedents": [
+        "13"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.17647058823529413,
+      "confidence": 0.6,
+      "lift": 1.457142857142857
+    },
+    {
+      "antecedents": [
+        "10"
+      ],
+      "consequents": [
+        "6"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "7"
+      ],
+      "consequents": [
+        "6"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "9"
+      ],
+      "consequents": [
+        "8"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 8.5
+    },
+    {
+      "antecedents": [
+        "10"
+      ],
+      "consequents": [
+        "7"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "12",
+        "14"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "13",
+        "2"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "13",
+        "2"
+      ],
+      "consequents": [
+        "16"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "13",
+        "5"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "13",
+        "5"
+      ],
+      "consequents": [
+        "7"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "14",
+        "2"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "14",
+        "2"
+      ],
+      "consequents": [
+        "16"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "3"
+      ],
+      "consequents": [
+        "9"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "7"
+      ],
+      "consequents": [
+        "10"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "9"
+      ],
+      "consequents": [
+        "3"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 4.25
+    },
+    {
+      "antecedents": [
+        "1"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "1"
+      ],
+      "consequents": [
+        "5"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "1",
+        "13"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "1",
+        "13"
+      ],
+      "consequents": [
+        "5"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "10"
+      ],
+      "consequents": [
+        "4"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "12",
+        "14"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "13",
+        "2"
+      ],
+      "consequents": [
+        "4"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "14",
+        "2"
+      ],
+      "consequents": [
+        "4"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "7"
+      ],
+      "consequents": [
+        "5"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "12"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.17647058823529413,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "1"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "1",
+        "13"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "12",
+        "14"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "13",
+        "2"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "14",
+        "2"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "16"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "16",
+        "2"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "16",
+        "4"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "2",
+        "4"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "7"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "9"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.7
+    },
+    {
+      "antecedents": [
+        "1"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.4166666666666665
+    },
+    {
+      "antecedents": [
+        "1",
+        "13"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.4166666666666665
+    },
+    {
+      "antecedents": [
+        "13",
+        "2"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.4166666666666665
+    },
+    {
+      "antecedents": [
+        "14",
+        "2"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.4166666666666665
+    },
+    {
+      "antecedents": [
+        "3"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.4166666666666665
+    },
+    {
+      "antecedents": [
+        "9"
+      ],
+      "consequents": [
+        "12"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.4166666666666665
+    },
+    {
+      "antecedents": [
+        "1"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.2142857142857144
+    },
+    {
+      "antecedents": [
+        "1",
+        "13"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.2142857142857144
+    },
+    {
+      "antecedents": [
+        "10"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.2142857142857144
+    },
+    {
+      "antecedents": [
+        "16"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.2142857142857144
+    },
+    {
+      "antecedents": [
+        "16",
+        "2"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.2142857142857144
+    },
+    {
+      "antecedents": [
+        "16",
+        "4"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.2142857142857144
+    },
+    {
+      "antecedents": [
+        "2",
+        "4"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.2142857142857144
+    },
+    {
+      "antecedents": [
+        "7"
+      ],
+      "consequents": [
+        "14"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.5,
+      "lift": 1.2142857142857144
+    },
+    {
+      "antecedents": [
+        "14"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.17647058823529413,
+      "confidence": 0.42857142857142855,
+      "lift": 1.457142857142857
+    },
+    {
+      "antecedents": [
+        "14"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.17647058823529413,
+      "confidence": 0.42857142857142855,
+      "lift": 1.457142857142857
+    },
+    {
+      "antecedents": [
+        "13"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.4,
+      "lift": 3.4000000000000004
+    },
+    {
+      "antecedents": [
+        "13"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.4,
+      "lift": 2.2666666666666666
+    },
+    {
+      "antecedents": [
+        "13"
+      ],
+      "consequents": [
+        "5"
+      ],
+      "support": 0.11764705882352941,
+      "confidence": 0.4,
+      "lift": 2.2666666666666666
+    },
+    {
+      "antecedents": [
+        "11",
+        "12"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "11",
+        "14"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "13",
+        "14"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "13",
+        "14"
+      ],
+      "consequents": [
+        "16"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "2"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "4"
+      ],
+      "consequents": [
+        "10"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "5"
+      ],
+      "consequents": [
+        "1"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "5"
+      ],
+      "consequents": [
+        "7"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 2.833333333333333
+    },
+    {
+      "antecedents": [
+        "11",
+        "12"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 1.8888888888888886
+    },
+    {
+      "antecedents": [
+        "11",
+        "14"
+      ],
+      "consequents": [
+        "2"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 1.8888888888888886
+    },
+    {
+      "antecedents": [
+        "13",
+        "14"
+      ],
+      "consequents": [
+        "4"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 1.8888888888888886
+    },
+    {
+      "antecedents": [
+        "11",
+        "12"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 1.1333333333333333
+    },
+    {
+      "antecedents": [
+        "11",
+        "14"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 1.1333333333333333
+    },
+    {
+      "antecedents": [
+        "13",
+        "14"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 1.1333333333333333
+    },
+    {
+      "antecedents": [
+        "2"
+      ],
+      "consequents": [
+        "11"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 1.1333333333333333
+    },
+    {
+      "antecedents": [
+        "4"
+      ],
+      "consequents": [
+        "13"
+      ],
+      "support": 0.058823529411764705,
+      "confidence": 0.3333333333333333,
+      "lift": 1.1333333333333333
+    }
+  ],
+  "data_provenance": "test_orders_confirmed_by_owner",
+  "model_use": "dish_recommendations"
+}

@@ -36,9 +36,13 @@ async function waitUntil(callback,timeout=45000) {
     await writeFile(path.join(output,'live-checks.txt'),report,'utf8');
     if(!report.includes('LIVE CHECKS PASSED'))throw Error(report);
     await page.call('Emulation.setDeviceMetricsOverride',{width:500,height:932,deviceScaleFactor:1,mobile:false});
-    for(const name of ['tables','payments','open','menu','order','checkout','receipt']){
+    for(const name of ['tables','payments','open','menu','order','checkout','receipt','qr']){
       await page.call('Page.navigate',{url:baseUrl+'/__mobile_test__/capture/'+name});
-      await waitUntil(()=>evaluate(`document.querySelector('iframe')?.contentDocument?.readyState==='complete' && Boolean(document.querySelector('iframe')?.contentDocument?.querySelector('.m-header'))`),10000);
+      await waitUntil(()=>evaluate(`document.querySelector('iframe')?.contentDocument?.readyState==='complete' && Boolean(document.querySelector('iframe')?.contentDocument?.querySelector('${name==='qr'?'[data-qr-menu-page]':'.m-header'}'))`),10000);
+      if(name==='qr'){
+        await evaluate(`(()=>{const doc=document.querySelector('iframe').contentDocument;doc.querySelector('[data-qr-cart-open]').click();const row=[...doc.querySelectorAll('.customer-qr-cart-item')].find(node=>node.textContent.includes('Trà chanh gợi ý'));row?.querySelector('[data-qr-decrease]').click();})()`);
+        await waitUntil(()=>evaluate(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-menu-recommendations]') && !document.querySelector('iframe').contentDocument.querySelector('[data-menu-recommendations]').hidden)`),10000);
+      }
       const screenshot=await page.call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
       await writeFile(path.join(output,name+'-live.png'),Buffer.from(screenshot.data,'base64'));
       if(name==='open'){

@@ -1,0 +1,5 @@
+# Optional Colab/offline training dependencies; not installed by the web deploy.
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.7.2
+mlxtend==0.23.4

@@ -1,10 +1,12 @@
 from django.urls import path
 
 from . import views
+from .recommendation_views import menu_recommendations
 
 app_name = "customer_portal"
 
 urlpatterns = [
+    path("recommendations/", menu_recommendations, name="recommendations"),
     path("", views.CustomerMenuView.as_view(), name="menu"),
     path("table/<uuid:token>/check-in/", views.CustomerQRCheckInRequestView.as_view(), name="qr_check_in"),
     path("table/<uuid:token>/state/data/", views.CustomerQRTableStateView.as_view(), name="qr_table_state"),

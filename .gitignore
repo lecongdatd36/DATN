@@ -16,6 +16,7 @@ htmlcov/
 
 # Generated files and uploads
 artifacts/staff-mobile/
+artifacts/ai/
 media/
 staticfiles/
 *.log
@@ -28,3 +29,4 @@ staticfiles/
 .vscode/
 .DS_Store
 Thumbs.db
+/ai_tools/*.zip

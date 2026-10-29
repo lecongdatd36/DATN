@@ -20,6 +20,25 @@
     assert(Boolean(doc().querySelector('[data-notification-count="payments"]')),'Cashier menu includes the pending payment count');
     assert(frame.contentWindow.getComputedStyle(doc().querySelector('.m-header')).backgroundColor==='rgb(255, 255, 255)','Header follows the white preview design: '+frame.contentWindow.getComputedStyle(doc().querySelector('.m-header')).backgroundColor);
     assert(frame.contentWindow.getComputedStyle(doc().querySelector('.m-table-grid')).gridTemplateColumns.split(' ').length===2,'Table board follows the two-column preview');
+    const existingOrder=new URL(doc().querySelector('.m-table.occupied a').href).searchParams.get('order');
+    await loaded('/sales/mobile/?page=menu&order='+existingOrder);await at('menu');
+    await wait(()=>!doc().querySelector('[data-menu-recommendations]')?.hidden,'staff recommendations');
+    assert(doc().querySelector('[data-recommendation-items]').textContent.includes('Trà chanh gợi ý'),'Staff menu shows recommendations from the real API');
+    click('[data-recommendation-items] button');
+    await wait(()=>[...doc().querySelectorAll('[data-inline-add]')].some(form=>form.dataset.name.includes('MB02')&&form.querySelector('[data-dish-count]').textContent==='1')&&!page().inert,'add recommended dish');
+    assert(true,'Recommended dish uses the existing staff add-item action');
+    click('.m-dock a');await at('order');
+    const extraLine=[...doc().querySelectorAll('.m-line')].find(line=>line.textContent.includes('Trà chanh gợi ý'));
+    extraLine.querySelector('details.m-cancel').open=true;
+    extraLine.querySelector('[name=reason]').value='Hoàn tất kiểm tra nút gợi ý';
+    extraLine.querySelector('form[action*="cancel-item"]').requestSubmit();await confirmed();
+    await wait(()=>[...doc().querySelectorAll('.m-line.cancelled')].some(line=>line.textContent.includes('Trà chanh gợi ý'))&&!page().inert,'remove recommendation test item');
+    await loaded('/sales/?desktop=1&order='+existingOrder);
+    await wait(()=>doc()?.querySelector('[data-recommendation-mode="pos"]'),'desktop menu');
+    click('[data-bs-target="#sales-menu"]');
+    await wait(()=>!doc().querySelector('[data-recommendation-mode="pos"]').hidden,'desktop recommendations');
+    assert(doc().querySelector('[data-recommendation-mode="pos"]').textContent.includes('Trà chanh gợi ý'),'POS also displays the trained recommendation');
+    await loaded('/sales/mobile/');await at('tables');
     click('a[href*="page=payments"]');await at('payments');
     assert(Boolean(doc().querySelector('.m-payment-card a[href*="page=checkout"]')),'Cashier queue links eligible orders directly to checkout');
     click('.m-nav a[href="/sales/mobile/"]');await at('tables');
@@ -98,6 +117,17 @@
     for(const width of [320,360,390,430]){
       frame.width=width;assert(doc().documentElement.scrollWidth<=width,'Order fits '+width+'px');
     }
+    const qrFrame=document.createElement('iframe');qrFrame.width=390;qrFrame.height=844;qrFrame.src='__AI_QR_URL__';document.body.appendChild(qrFrame);
+    const qr=()=>qrFrame.contentDocument;
+    await wait(()=>qr()?.readyState==='complete'&&qr()?.querySelector('[data-qr-dish]'),'QR menu');
+    qr().querySelector('[data-qr-add]').click();
+    await wait(()=>qr().querySelector('[data-menu-recommendations]')&&!qr().querySelector('[data-menu-recommendations]').hidden,'QR recommendations');
+    assert(qr().querySelector('[data-recommendation-items]').textContent.includes('Trà chanh gợi ý'),'QR cart displays trained dish recommendations');
+    qr().querySelector('[data-recommendation-items] button').click();
+    await wait(()=>qr().querySelector('[data-qr-count]').textContent==='2','QR add recommendation');
+    assert(qr().querySelectorAll('.customer-qr-cart-item').length===2,'Adding a QR recommendation reuses the existing local cart');
+    await wait(()=>qr().querySelector('[data-menu-recommendations]').hidden,'selected recommendation removed');
+    assert(true,'Selected recommendations disappear from the suggestion list');
     document.querySelector('#result').textContent=checks.join('\n')+'\nALL '+checks.length+' LIVE CHECKS PASSED';
   }catch(error){document.querySelector('#result').textContent=checks.join('\n')+'\nFAIL '+error.message+'\nFrame: '+frame.contentWindow.location.href+'\n'+(doc()?.body?.textContent||'').trim().slice(0,900);}
 })();

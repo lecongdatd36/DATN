@@ -1,0 +1,5 @@
+<section class="menu-recommendations" data-menu-recommendations data-recommendation-mode="{{ recommendation_mode }}" data-recommendation-url="{% url 'customer_portal:recommendations' %}" aria-label="Gợi ý món" hidden>
+  <div class="menu-recommendations-heading"><div><h2>Gợi ý gọi thêm</h2><p>Các món thường được gọi cùng món bạn đã chọn.</p></div></div>
+  <div class="menu-recommendations-items" data-recommendation-items></div>
+  {% if selected_order and recommendation_mode != 'pos' %}<div hidden>{% for item in selected_order.items.all %}{% if item.status != 'CANCELLED' %}<span data-recommendation-seed="{{ item.dish_id }}"></span>{% endif %}{% endfor %}</div>{% endif %}
+</section>

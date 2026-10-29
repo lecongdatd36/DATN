@@ -124,6 +124,7 @@ LOGGING = {
 }
 
 ROOT_URLCONF = "QLNH.urls"
+APRIORI_MODEL_PATH = Path(os.environ.get("APRIORI_MODEL_PATH", str(BASE_DIR / "fixtures/ai/apriori_model.json")))
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
