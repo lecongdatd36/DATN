@@ -15,7 +15,7 @@
 | Giao diện | Django Templates, HTML5, CSS3, Bootstrap 5.3.8, JavaScript |
 | Ngôn ngữ và thời gian | `vi`, `Asia/Ho_Chi_Minh`, `USE_I18N=True`, `USE_TZ=True` |
 
-Phiên bản dependency cụ thể được cố định trong `requirements.txt`. `tzdata` 2026.4 cung cấp dữ liệu múi giờ cho môi trường Windows. Bộ xuất giỏ món và notebook Colab Apriori đã có tại [hướng dẫn AI](docs/ai-apriori.md); thư viện huấn luyện cài riêng qua `requirements-ai.txt`.
+Phiên bản dependency cụ thể được cố định trong `requirements.txt`. `tzdata` 2026.4 cung cấp dữ liệu múi giờ cho môi trường Windows. Bộ xuất giỏ món, notebook Colab Apriori và gợi ý gọi thêm trên giỏ QR/menu nhân viên/POS đã có tại [hướng dẫn AI](docs/ai-apriori.md). Thư viện huấn luyện cài riêng qua `requirements-ai.txt`; web suy luận bằng Python chuẩn.
 
 Giao diện quản lý dùng bộ layout tự xây trên Bootstrap: sidebar theo quyền có thể thu gọn, topbar tài khoản, chế độ sáng/tối, menu mobile và dashboard thao tác nhanh. Thiết kế tham khảo phong cách admin dashboard hiện đại nhưng không sao chép hoặc phụ thuộc tài nguyên của template bên ngoài; toàn bộ CSS, JavaScript và SVG icon nằm trong mã nguồn dự án để dễ bảo trì.
 

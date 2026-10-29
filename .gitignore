@@ -29,3 +29,4 @@ staticfiles/
 .vscode/
 .DS_Store
 Thumbs.db
+/ai_tools/*.zip

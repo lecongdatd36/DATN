@@ -16,7 +16,7 @@ def cell(kind, source):
 
 def embedded(name):
     lines = (BASE / "ai_tools" / name).read_text(encoding="utf-8").splitlines(keepends=True)
-    return "".join(line for line in lines if not line.startswith("from ai_tools.schema import "))
+    return "".join(line for line in lines if not line.startswith("from ai_tools."))
 
 
 def main():
@@ -40,10 +40,11 @@ kiểm tra trên holdout mới hơn → so sánh món phổ biến → lưu lu�
         cell("markdown", """
 ## Mã xử lý
 
-Ba ô dưới đây được tạo từ `ai_tools/schema.py`, `demo.py`, `apriori.py` và được kiểm thử
+Bốn ô dưới đây được tạo từ `ai_tools/schema.py`, `inference.py`, `demo.py`, `apriori.py` và được kiểm thử
 cùng mã CLI. Chạy lần lượt; thông thường bạn chỉ cần sửa ô cấu hình bên dưới.
 """),
         cell("code", embedded("schema.py")),
+        cell("code", embedded("inference.py")),
         cell("code", embedded("demo.py")),
         cell("code", embedded("apriori.py")),
         cell("markdown", """

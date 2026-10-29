@@ -14,6 +14,7 @@ from mlxtend.frequent_patterns import apriori, association_rules
 from mlxtend.preprocessing import TransactionEncoder
 
 from ai_tools.schema import DATA_SOURCES, SCHEMA_VERSION, TRANSACTION_FIELDS
+from ai_tools.inference import recommend
 
 
 def load_transactions(path):
@@ -89,20 +90,6 @@ def fit_rules(baskets, *, min_support=0.04, min_confidence=0.3, min_lift=1.05, m
     } for row in discovered.itertuples()]
     rules.sort(key=lambda rule: (-rule["confidence"], -rule["lift"], -rule["support"], rule["antecedents"], rule["consequents"]))
     return rules[:max_rules], frequent
-
-
-def recommend(cart, rules, *, k=3):
-    if k < 1:
-        raise ValueError("k phải dương.")
-    selected, suggestions = set(cart), []
-    for rule in rules:
-        if set(rule["antecedents"]) <= selected:
-            for item in rule["consequents"]:
-                if item not in selected and item not in suggestions:
-                    suggestions.append(item)
-                    if len(suggestions) == k:
-                        return suggestions
-    return suggestions
 
 
 def evaluate_rules(train, test, rules, *, k=3):

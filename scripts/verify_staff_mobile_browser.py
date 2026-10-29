@@ -3,6 +3,7 @@
 The session/fixture endpoints below only exist in this temporary WSGI wrapper;
 they are never registered in the application URL configuration.
 """
+import json
 import mimetypes
 import os
 from pathlib import Path
@@ -30,6 +31,9 @@ from apps.orders import services
 from apps.orders.models import Invoice, Order, OrderItem, Payment, PromotionCode
 from apps.orders.tests.test_mobile import MobileStaffTests
 from django.utils import timezone
+from django.urls import reverse
+from apps.menu.models import Dish
+from apps.seating.models import DiningTableQRToken
 from datetime import timedelta
 
 
@@ -52,6 +56,16 @@ def main():
         MobileStaffTests.setUpTestData()
         fixture = MobileStaffTests()
         fixture.ready_to_pay()
+        suggestion = Dish.objects.create(code="MB02", name="Trà chanh gợi ý", category=fixture.category, unit=fixture.unit, price=15000)
+        qr_token = DiningTableQRToken.objects.create(table=fixture.table)
+        model_path = BASE / "artifacts/staff-mobile/recommendation_browser_model.json"
+        model_path.parent.mkdir(parents=True, exist_ok=True)
+        model_path.write_text(json.dumps({
+            "schema_version": 1, "algorithm": "Apriori", "data_source": "application_export",
+            "catalog": [{"dish_id": "train-main", "dish_code": fixture.dish.code, "dish_name": fixture.dish.name},
+                        {"dish_id": "train-extra", "dish_code": suggestion.code, "dish_name": suggestion.name}],
+            "rules": [{"antecedents": ["train-main"], "consequents": ["train-extra"], "support": 0.4, "confidence": 0.8, "lift": 1.6}],
+        }, ensure_ascii=False), encoding="utf-8")
         now = timezone.now()
         PromotionCode.objects.create(code="MOBILE10", name="UI test discount", discount_type="PERCENT", value=10, minimum_order=0,
                                      starts_at=now-timedelta(days=1), ends_at=now+timedelta(days=1))
@@ -76,7 +90,7 @@ def main():
             if path == "/favicon.ico":
                 return respond(start_response, "", status="204 No Content")
             if path == "/__mobile_test__/":
-                return respond(start_response, (BASE / "scripts/staff_mobile_browser_harness.html").read_bytes(), role="cashier")
+                return respond(start_response, (BASE / "scripts/staff_mobile_browser_harness.html").read_text(encoding="utf-8").replace("__AI_QR_URL__", reverse("customer_portal:qr_table", args=[qr_token.token])), role="cashier")
             if path.startswith("/__mobile_test__/role/"):
                 role = path.rstrip("/").split("/")[-1]
                 return respond(start_response, "OK", role=role if role in sessions else None)
@@ -102,7 +116,8 @@ def main():
                     params += f"&invoice={invoice.pk}"
                 elif page == "open":
                     params += f"&table={fixture.table.pk}"
-                html = f'<!doctype html><meta charset="utf-8"><body style="margin:0;background:#e5ece6;display:grid;justify-content:center;padding:25px 0"><iframe title="Mobile thực tế" src="/sales/mobile/?{params}" width="390" height="844" style="border:6px solid #204636;border-radius:18px;background:white"></iframe>'
+                target_url = reverse("customer_portal:qr_table", args=[qr_token.token]) if page == "qr" else "/sales/mobile/?" + params
+                html = f'<!doctype html><meta charset="utf-8"><body style="margin:0;background:#e5ece6;display:grid;justify-content:center;padding:25px 0"><iframe title="Mobile thực tế" src="{target_url}" width="390" height="844" style="border:6px solid #204636;border-radius:18px;background:white"></iframe>'
                 connections.close_all()
                 return respond(start_response, html, role="cashier")
             if path.startswith("/static/"):
@@ -143,5 +158,6 @@ def main():
 if __name__ == "__main__":
     with override_settings(DEBUG=True, ALLOWED_HOSTS=["127.0.0.1", "localhost", "testserver"],
                            SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False,
-                           X_FRAME_OPTIONS="SAMEORIGIN"):
+                           X_FRAME_OPTIONS="SAMEORIGIN",
+                           APRIORI_MODEL_PATH=BASE / "artifacts/staff-mobile/recommendation_browser_model.json"):
         main()

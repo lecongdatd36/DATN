@@ -8,7 +8,7 @@ def build_easy_notebook(base):
         return "".join(line for line in (base / path).read_text(encoding="utf-8").splitlines(keepends=True)
                        if not line.startswith("from ai_tools."))
 
-    worker = "\n\n".join(embed("ai_tools/" + name) for name in ("schema.py", "demo.py", "apriori.py", "notebook_job.py"))
+    worker = "\n\n".join(embed("ai_tools/" + name) for name in ("schema.py", "inference.py", "demo.py", "apriori.py", "notebook_job.py"))
     requirements = dict(line.split("==", 1) for line in (base / "requirements-ai.txt").read_text().splitlines()
                         if line.strip() and not line.startswith("#"))
     source = '''# @title ▶ BẤM NÚT NÀY ĐỂ CHẠY AI { display-mode: "form" }

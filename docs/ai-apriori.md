@@ -1,7 +1,7 @@
 # Chuẩn bị dữ liệu và chạy Apriori trên Google Colab
 
-Phạm vi hiện tại là bộ xuất CSV, dữ liệu mô phỏng, notebook và đánh giá gợi ý món.
-Gợi ý trên giao diện nhà hàng và mô hình dự báo số đơn là các bước tiếp theo.
+Đã có bộ xuất CSV, notebook Apriori và phần **Gợi ý gọi thêm** trên giỏ QR, menu nhân viên mobile và POS.
+Mô hình dự báo số đơn theo ngày là phần tiếp theo của đề cương.
 
 ## Chạy nhanh bằng Colab — bản dễ dùng v2
 
@@ -109,15 +109,33 @@ không đưa trực tiếp các khóa món đó vào gợi ý cho database nhà 
 Support/confidence/lift là quan hệ trong train, không phải độ chính xác triển khai. Dữ liệu mô phỏng
 hoặc dữ liệu ít chỉ chứng minh quy trình; bài kiểm tra giấu món không đo thứ tự chọn món thực tế.
 
-## Kết quả và bước tích hợp sau
+## Kết quả và tích hợp vào web
 
 `apriori_model.json` chứa luật, nguồn dữ liệu, danh mục món, ngưỡng, phiên bản thư viện, hash CSV,
 thời điểm chia tập và chỉ số đánh giá. Ngoài ra có `evaluation.json`, `association_rules.csv`,
-`frequent_itemsets.csv`, `train_baskets.csv`, `holdout_baskets.csv`. Bản Colab còn có `suggestions.json` cho giỏ đang chọn. Notebook đóng gói thành ZIP;
-CLI để nguyên các file trong thư mục kết quả. Không dùng pickle để trao đổi mô hình.
+`frequent_itemsets.csv`, `train_baskets.csv`, `holdout_baskets.csv`. Colab còn có `suggestions.json`.
 
-Khi đưa vào Django cần kiểm tra nguồn và mapping dish_id, lọc món còn bán tại thời điểm yêu cầu,
-giới hạn số gợi ý và xử lý trường hợp không có luật phù hợp. Đây là bước riêng sau khi chốt dữ liệu/thí nghiệm.
+Ứng dụng đọc bộ luật tại `fixtures/ai/apriori_model.json`, có thể đổi đường dẫn bằng biến môi trường
+`APRIORI_MODEL_PATH`. File được kiểm tra schema, catalog, các vế luật và các chỉ số hữu hạn trước khi dùng.
+Phần suy luận dùng Python chuẩn; máy chủ web không cần cài pandas, NumPy hay mlxtend.
+
+Bộ luật hiện tại học từ 25 giỏ đã thanh toán trong database ứng dụng. Chủ dự án xác nhận các đơn là đơn test;
+metadata ghi `data_provenance = test_orders_confirmed_by_owner`. Giao diện hiển thị chức năng gọi món bình thường,
+không đưa các chỉ số đánh giá nhỏ mẫu vào lời giới thiệu cho khách.
+
+Cách thử:
+
+1. Mobile nhân viên: mở bàn → Gọi món → thêm một món. Mục **Gợi ý gọi thêm** xuất hiện khi có luật phù hợp.
+2. POS desktop: chọn order → Món → thêm món; gợi ý cập nhật theo các món còn hiệu lực trong order.
+3. Khách QR: chọn món vào giỏ → mở giỏ hàng → bấm **Thêm món** ở gợi ý để thêm bằng luồng giỏ hiện có.
+
+Ví dụ với danh mục hiện tại: chọn **Cơm sườn nướng** có thể nhận **Rau muống xào tỏi**, **Trà chanh**,
+tùy trạng thái bán hàng lúc truy vấn. Gợi ý không đưa lại món đã chọn, chỉ lấy món AVAILABLE có nhóm và đơn vị
+còn hoạt động. Không có luật phù hợp thì ẩn mục gợi ý. Trạng thái món vẫn được kiểm tra lại khi lưu order/gửi bếp.
+
+Endpoint đọc `GET /menu/recommendations/?dish=<id>&dish=<id>` trả tối đa 3 món kèm tên, giá và ID hiện tại.
+Mapping bộ luật dùng mã món để dùng được khi PK khác giữa các database. File nguồn `synthetic_demo` không được
+áp vào menu ứng dụng. ZIP gốc và giỏ dữ liệu thô được giữ local; repository chỉ chứa bộ luật/catalog cần chạy.
 
 ## Kiểm tra và cập nhật notebook
 
@@ -125,6 +143,9 @@ giới hạn số gợi ý và xử lý trường hợp không có luật phù h
 $env:DJANGO_SETTINGS_MODULE='QLNH.test_settings'
 .venv/Scripts/python.exe scripts/run_tests.py apps.orders.tests.test_ai_export
 artifacts/ai/venv/Scripts/python.exe -m unittest discover -s ai_tools/tests -v
+.venv/Scripts/python.exe scripts/run_tests.py apps.customer_portal.tests.test_recommendations
+node --test scripts/test_menu_recommendations.cjs
+.venv/Scripts/python.exe scripts/verify_staff_mobile_browser.py
 .venv/Scripts/python.exe scripts/build_apriori_notebook.py
 artifacts/ai/venv/Scripts/python.exe scripts/verify_apriori_notebook.py
 artifacts/ai/venv/Scripts/python.exe scripts/verify_apriori_notebook.py --csv artifacts/ai/transactions.csv

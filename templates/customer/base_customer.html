@@ -8,6 +8,7 @@
     <title>{% block title %}QLNH · Nhà hàng Việt{% endblock %}</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{% static 'customer/css/customer.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/menu-recommendations.css' %}?v=1">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="customer-layout {% block body_class %}{% endblock %}">
@@ -64,6 +65,7 @@
         </div>
     </footer>
     <script src="{% static 'customer/js/customer.js' %}?v=2" defer></script>
+    <script src="{% static 'js/menu-recommendations.js' %}?v=1" defer></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

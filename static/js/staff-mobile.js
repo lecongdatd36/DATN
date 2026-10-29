@@ -60,6 +60,7 @@
     filterTables();
     filterDishes();
     paymentFields();
+    document.dispatchEvent(new CustomEvent("mobile:page-ready"));
     for (const [attribute, current] of [["data-area", area], ["data-table-status", tableStatus]]) {
       app.querySelectorAll(`[${attribute}]`).forEach(button => {
         const active = button.getAttribute(attribute) === current;
