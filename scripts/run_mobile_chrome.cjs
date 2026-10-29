@@ -41,6 +41,13 @@ async function waitUntil(callback,timeout=45000) {
       await waitUntil(()=>evaluate(`document.querySelector('iframe')?.contentDocument?.readyState==='complete' && Boolean(document.querySelector('iframe')?.contentDocument?.querySelector('.m-header'))`),10000);
       const screenshot=await page.call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
       await writeFile(path.join(output,name+'-live.png'),Buffer.from(screenshot.data,'base64'));
+      if(name==='open'){
+        await evaluate(`(()=>{const doc=document.querySelector('iframe').contentDocument,input=doc.querySelector('[data-customer-phone]');input.value='0901234567';input.dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));doc.querySelector('[data-customer-find]').click();})()`);
+        await waitUntil(()=>evaluate(`Boolean(document.querySelector('iframe')?.contentDocument?.querySelector('[data-open-form]')?.dataset.verifiedPhone)`),10000);
+        await evaluate(`document.querySelector('iframe').contentDocument.querySelector('[data-customer-phone]').focus()`);
+        const customerScreenshot=await page.call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+        await writeFile(path.join(output,'open-customer-live.png'),Buffer.from(customerScreenshot.data,'base64'));
+      }
     }
     process.stdout.write(report+'\n');
   }finally{
