@@ -63,6 +63,13 @@
     fill('[name=guest_count]','2');fill('[name=customer_phone]','+84 90 123 45 67');click('[data-customer-find]');
     await wait(()=>doc().querySelector('[data-open-form]').dataset.verifiedPhone==='0901234567','customer lookup');
     assert(doc().querySelector('[data-customer-result]').textContent.includes('Khách kiểm thử mobile'),'Lookup uses actual customer data');
+    for(const width of [320,390,430]){
+      frame.width=width;doc().querySelector('[data-customer-phone]').focus();
+      const row=doc().querySelector('.m-input-row').getBoundingClientRect(),result=doc().querySelector('[data-customer-result]');
+      assert(result.getBoundingClientRect().top-row.bottom>=10,'Customer lookup text stays clear of the focused phone field at '+width+'px');
+      assert(result.scrollWidth<=result.clientWidth+1,'Customer lookup details wrap within the card at '+width+'px');
+    }
+    frame.width=390;
     fill('[name=note]','Có trẻ em - UI integration');doc().querySelector('[data-open-form]').requestSubmit();await at('menu');
     assert(doc().querySelector('.m-customer').textContent.includes('Khách kiểm thử mobile'),'Customer follows new order into menu');
     assert(frame.contentWindow.getComputedStyle(doc().querySelector('.m-dish-grid')).display==='block','Menu follows the preview list layout');
