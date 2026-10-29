@@ -3,19 +3,25 @@
 Phạm vi hiện tại là bộ xuất CSV, dữ liệu mô phỏng, notebook và đánh giá gợi ý món.
 Gợi ý trên giao diện nhà hàng và mô hình dự báo số đơn là các bước tiếp theo.
 
-## Chạy nhanh bằng Colab
+## Chạy nhanh bằng Colab — bản dễ dùng v2
 
-1. Vào [Google Colab](https://colab.research.google.com/), chọn **File → Upload notebook** và mở
-   `notebooks/01_apriori_goi_y_mon.ipynb` trong repository này.
-2. Giữ `DATA_MODE = "demo"`, chọn **Runtime → Run all** để chạy thử với 2.000 giỏ mô phỏng.
-3. Xem nguồn dữ liệu, số giỏ train/holdout, luật và kết quả so với món phổ biến. Cuối notebook
-   tải file ZIP chứa JSON/CSV. Đây là thí nghiệm mô phỏng, không phải chất lượng thực tế.
-4. Để thử dữ liệu ứng dụng, xuất CSV bằng lệnh bên dưới, đổi `DATA_MODE = "csv"` rồi chạy lại.
-   Colab sẽ mở hộp chọn CSV nếu file chưa có tại `CSV_PATH`.
+1. Mở `notebooks/01_apriori_goi_y_mon.ipynb` trên Colab. Bản mới có đúng **một ô chạy**,
+   tiêu đề **▶ BẤM NÚT NÀY ĐỂ CHẠY AI**. Nếu đang dùng bản cũ đã sao chép vào Drive, mở lại bản mới từ GitHub.
+2. Giữ `DATA_MODE = demo`, nhập tên món ở `MON_DANG_CHON`, ví dụ **Cơm trắng, Rau xào**.
+3. Bấm **▶ bên trái chính ô đó**. Đợi tiến độ 1/4 → 4/4. Lần đầu cần cài thư viện nên có thể mất vài phút.
+4. Đọc dòng **ĐANG CHỌN / GỢI Ý** ngay dưới ô. Đổi tên món rồi bấm lại ▶ để thử tiếp.
+   Có thể nhập tên, mã món hoặc dish_id, cách nhau bằng dấu phẩy; để trống sẽ lấy một ví dụ từ luật đã tìm được.
+5. File ZIP kết quả được tải xuống. Nguồn `synthetic_demo` là dữ liệu mô phỏng, chỉ dùng kiểm tra quy trình.
+6. Chọn `DATA_MODE = csv` để tải CSV xuất từ ứng dụng lên. Sau khi chạy, mở **Danh mục món để thử tiếp**
+   để xem tên/mã hợp lệ. Tên không tồn tại hoặc trùng nhiều món sẽ được báo rõ, không tự đổi sang món khác.
 
 Notebook tự chứa mã xử lý, không cần tài khoản database, `.env`, mật khẩu hoặc clone repo.
-Cài thư viện ở ô đầu tiên trước khi chạy các ô xử lý. Nếu Colab yêu cầu khởi động lại runtime
-sau khi đổi phiên bản thư viện, thực hiện restart rồi chạy tiếp từ các ô mã xử lý.
+Ô chạy tự kiểm tra/cài thư viện và chạy thuật toán trong một tiến trình Python mới, tránh dùng các thư viện
+đã được nạp từ phiên Colab trước đó. Nếu bước chuẩn bị hoặc huấn luyện lỗi, thông báo hiện ngay tại bước đó;
+không cần chạy tiếp các ô phụ thuộc `MODEL`.
+
+Bản nhiều ô để đọc/giải thích mã nguồn được giữ ở `notebooks/02_apriori_giai_thich_code.ipynb`.
+Dữ liệu ứng dụng xuất ra không tự xác nhận đó là dữ liệu kinh doanh thực; các đơn test vẫn là dữ liệu test.
 
 ## Xuất dữ liệu từ ứng dụng
 
@@ -107,7 +113,7 @@ hoặc dữ liệu ít chỉ chứng minh quy trình; bài kiểm tra giấu mó
 
 `apriori_model.json` chứa luật, nguồn dữ liệu, danh mục món, ngưỡng, phiên bản thư viện, hash CSV,
 thời điểm chia tập và chỉ số đánh giá. Ngoài ra có `evaluation.json`, `association_rules.csv`,
-`frequent_itemsets.csv`, `train_baskets.csv`, `holdout_baskets.csv`. Notebook đóng gói thành ZIP;
+`frequent_itemsets.csv`, `train_baskets.csv`, `holdout_baskets.csv`. Bản Colab còn có `suggestions.json` cho giỏ đang chọn. Notebook đóng gói thành ZIP;
 CLI để nguyên các file trong thư mục kết quả. Không dùng pickle để trao đổi mô hình.
 
 Khi đưa vào Django cần kiểm tra nguồn và mapping dish_id, lọc món còn bán tại thời điểm yêu cầu,
@@ -124,9 +130,9 @@ artifacts/ai/venv/Scripts/python.exe scripts/verify_apriori_notebook.py
 artifacts/ai/venv/Scripts/python.exe scripts/verify_apriori_notebook.py --csv artifacts/ai/transactions.csv
 ```
 
-Sau khi sửa `ai_tools/schema.py`, `demo.py` hoặc `apriori.py`, chạy builder để notebook chứa đúng mã đã kiểm thử.
-Notebook lưu không có output dữ liệu. Script kiểm tra chạy các ô xử lý thật bằng thư viện đã cài;
-ô `%pip` được bỏ qua vì môi trường kiểm tra đã được chuẩn bị riêng.
+Sau khi sửa mã trong `ai_tools`, chạy builder để hai notebook chứa đúng mã đã kiểm thử.
+Notebook lưu không có output dữ liệu. Script kiểm tra chạy ô duy nhất từ một namespace trống và kiểm tra cả
+worker Python độc lập; không cần tạo `MODEL`, `Path` hoặc các hàm ở ô khác trước.
 
 Tham khảo: [Apriori](https://rasbt.github.io/mlxtend/user_guide/frequent_patterns/apriori/)
 và [Association rules](https://rasbt.github.io/mlxtend/user_guide/frequent_patterns/association_rules/) của mlxtend.

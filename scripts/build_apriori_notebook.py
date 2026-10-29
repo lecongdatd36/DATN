@@ -1,6 +1,7 @@
 """Build a Colab notebook containing the same tested code as ai_tools."""
 
 import json
+from build_easy_apriori_notebook import build_easy_notebook
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
@@ -176,12 +177,13 @@ Phạm vi notebook này: đề xuất món bằng Apriori. Phần dự báo số
     for index, entry in enumerate(cells):
         entry["id"] = f"qlnh-apriori-{index:02d}"
     notebook = {"cells": cells, "nbformat": 4, "nbformat_minor": 5,
-                "metadata": {"colab": {"name": "01_apriori_goi_y_mon.ipynb", "provenance": []},
+                "metadata": {"colab": {"name": "02_apriori_giai_thich_code.ipynb", "provenance": []},
                              "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
                              "language_info": {"name": "python", "version": "3.12"}}}
-    path = BASE / "notebooks/01_apriori_goi_y_mon.ipynb"
+    path = BASE / "notebooks/02_apriori_giai_thich_code.ipynb"
     path.write_text(json.dumps(notebook, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(path)
+    build_easy_notebook(BASE)
 
 
 if __name__ == "__main__":
