@@ -102,7 +102,7 @@ test("uses ETag polling every three seconds without EventSource", async () => {
   assert.ok(p.hasTimer(3000));
 });
 
-test("refreshes promptly after a state change and slows to thirty seconds in background", async () => {
+test("pauses in background and refreshes promptly when visible again", async () => {
   const p = page([{
     ok: true,
     status: 200,
@@ -123,8 +123,17 @@ test("refreshes promptly after a state change and slows to thirty seconds in bac
 
   p.document.hidden = true;
   p.handlers.visibilitychange();
-  assert.match(p.badge.innerHTML, /30 giây/);
-  assert.ok(p.hasTimer(30000));
+  assert.equal(p.hasTimer(30000), false);
+  assert.equal(p.hasTimer(3000), false);
+  const count = p.requests.length;
+  p.handlers["workspace:mutation"]();
+  assert.equal(p.hasTimer(250), false);
+  assert.equal(p.requests.length, count);
+  p.document.hidden = false;
+  p.handlers.visibilitychange();
+  await p.tick(100);
+  assert.equal(p.requests.length, count + 1);
+  assert.ok(p.hasTimer(3000));
 });
 
 test("backs off after a network failure", async () => {
@@ -136,6 +145,32 @@ test("backs off after a network failure", async () => {
   }]);
   await p.settle();
   assert.ok(p.hasTimer(6000));
+});
+
+test("overlapping staff actions keep polling paused until both finish", async () => {
+  const p = page();
+  await p.settle();
+  p.handlers["workspace:busy"]({ detail: true });
+  p.handlers["workspace:busy"]({ detail: true });
+  assert.equal(p.hasTimer(3000), false);
+  p.handlers["workspace:busy"]({ detail: false });
+  assert.equal(p.hasTimer(250), false);
+  p.handlers["workspace:busy"]({ detail: false });
+  await p.tick(250);
+  assert.equal(p.requests.length, 2);
+  assert.ok(p.hasTimer(3000));
+});
+
+test("finishing an action in background does not restart polling", async () => {
+  const p = page();
+  await p.settle();
+  p.document.hidden = true;
+  p.handlers.visibilitychange();
+  const count = p.requests.length;
+  p.handlers["workspace:busy"]({ detail: true });
+  p.handlers["workspace:busy"]({ detail: false });
+  assert.equal(p.hasTimer(250), false);
+  assert.equal(p.requests.length, count);
 });
 
 test("POS consumes the initial state before comparing later notifications", () => {

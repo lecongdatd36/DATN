@@ -6,8 +6,10 @@ from django.urls import include, path
 from apps.customer_portal.views import CustomerHomeView
 
 from apps.accounts.admin import admin_site
+from core.notification_views import notification_state
 
 urlpatterns = [
+    path("notifications/state/", notification_state, name="notification_state"),
     path("", CustomerHomeView.as_view(), name="home"),
     path("menu/", include("apps.customer_portal.urls")),
     path("reservations/", include("apps.customer_portal.reservation_urls")),

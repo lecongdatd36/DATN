@@ -1,0 +1,5 @@
+<nav class="m-flow" aria-label="Quy trình phục vụ">
+  <a href="{% url 'sales:mobile' %}" data-mobile-link><span>01</span> Bàn</a>
+  <a class="{% if mobile_page == 'menu' %}active{% endif %}" href="{% url 'sales:mobile' %}?page=menu&amp;order={{ selected_order.pk }}" data-mobile-link {% if mobile_page == 'menu' %}aria-current="step"{% endif %}><span>02</span> Gọi món</a>
+  <a class="{% if mobile_page == 'order' or mobile_page == 'checkout' %}active{% endif %}" href="{% url 'sales:mobile' %}?page=order&amp;order={{ selected_order.pk }}" data-mobile-link {% if mobile_page == 'order' %}aria-current="step"{% endif %}><span>03</span> Order</a>
+</nav>

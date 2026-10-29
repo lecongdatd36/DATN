@@ -1,0 +1,5 @@
+<details class="m-card m-notification-list" id="m-notifications">
+  <summary>Thông báo {% include 'includes/notification_badge.html' with key='total' count=nav_notifications.counts.total %}</summary>
+  <p class="m-empty compact" data-notification-empty {% if nav_notifications.counts.total %}hidden{% endif %}>Không có việc đang chờ.</p>
+  {% for entry in nav_notifications.entries %}<a href="{{ entry.url }}" data-notification-entry="{{ entry.key }}" {% if not entry.count %}hidden{% endif %}><span>{{ entry.label }}</span>{% include 'includes/notification_badge.html' with key=entry.key count=entry.count %}</a>{% endfor %}
+</details>

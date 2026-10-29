@@ -1,0 +1,6 @@
+<header class="m-header {% if not mobile_in_order and not opening_table %}m-header-home{% endif %}">
+  {% if mobile_in_order or opening_table %}<a class="m-back" href="{% url 'sales:mobile' %}" data-mobile-link aria-label="Về sơ đồ bàn">‹</a>{% endif %}
+  <div>{% if not mobile_in_order and not opening_table %}<span class="m-kicker">QLNH / {% if can_collect_payment %}THU NGÂN{% else %}PHỤC VỤ{% endif %}</span>{% endif %}<h1>{{ heading }}</h1><p>{% if mobile_in_order and selected_order %}Bàn {{ selected_order.table.code }} · {{ selected_order.table.area.name }} · {{ selected_order.guest_count }} khách{% elif opening_table %}Bàn {{ opening_table.code }} · {{ opening_table.area.name }}{% else %}<i class="m-live-dot"></i> {{ user.get_full_name|default:user.username }} · Đang làm việc{% endif %}</p></div>
+  <a class="m-avatar" href="{% url 'sales:mobile' %}?page=personal" data-mobile-link aria-label="Tài khoản cá nhân">{{ user.username|first|upper }}</a>
+</header>
+{% include 'staff/mobile/notifications.html' %}

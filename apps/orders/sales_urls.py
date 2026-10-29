@@ -1,10 +1,14 @@
 from django.urls import path
 
 from .sales_views import CustomerLookupView, EstimatePrintView, FinishCleaningView, InvoicePrintView, PaymentActionView, PromotionActionView, PromotionCreateView, PromotionListView, PromotionUpdateView, QRCheckInActionView, QRRequestActionView, QRServiceRequestActionView, SalesActionView, SalesStateView, SalesWorkspaceView, VnpayIpnView, VnpayReturnView
+from .mobile_views import MobileActionView, MobileQuoteView, MobileWorkspaceView
 
 app_name = "sales"
 urlpatterns = [
     path("", SalesWorkspaceView.as_view(), name="workspace"),
+    path("mobile/", MobileWorkspaceView.as_view(), name="mobile"),
+    path("mobile/quote/", MobileQuoteView.as_view(), name="mobile_quote"),
+    path("mobile/action/<str:action>/", MobileActionView.as_view(), name="mobile_action"),
     path("state/", SalesStateView.as_view(), name="state"),
     path("qr-check-ins/<int:request_id>/<str:action>/", QRCheckInActionView.as_view(), name="qr_check_in_action"),
     path("qr-requests/<int:request_id>/<str:action>/", QRRequestActionView.as_view(), name="qr_request_action"),

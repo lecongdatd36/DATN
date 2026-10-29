@@ -1,0 +1,48 @@
+/* Loaded after workspace styles so mobile behavior has one consistent baseline. */
+:root {
+    --mobile-nav-space: calc(68px + env(safe-area-inset-bottom, 0px));
+}
+
+body { -webkit-text-size-adjust: 100%; }
+.admin-main { min-width: 0; transition: none; }
+.admin-content { padding-bottom: calc(var(--mobile-nav-space) + 1rem); }
+.admin-topbar { padding-top: env(safe-area-inset-top, 0px); }
+.admin-topbar, .mobile-app-nav, .mobile-pos-appbar {
+    background: var(--app-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+.mobile-app-nav { box-shadow: none; }
+.mobile-app-nav a, .mobile-nav-more > button { min-height: 52px; font-size: .69rem; }
+.mobile-more-menu { max-height: min(60dvh, 420px); overscroll-behavior: contain; }
+.admin-sidebar, .sidebar-scroll, .modal-body { overscroll-behavior: contain; }
+
+/* Avoid input focus zoom on phones and make frequent controls easy to tap. */
+.staff-layout input.form-control, .staff-layout textarea.form-control,
+.staff-layout select.form-select { font-size: 16px; }
+.staff-layout :is(a, button, input, select, textarea, summary) { touch-action: manipulation; }
+.staff-layout .btn { min-height: 44px; }
+.staff-layout .btn:hover, .staff-layout .quick-card:hover { transform: none; }
+
+/* Keep long menus cheap to paint without changing their document height. */
+@supports (content-visibility: auto) {
+    .dish-grid .dish-card { content-visibility: auto; contain-intrinsic-size: auto 104px; }
+}
+.staff-layout .dish-card, .staff-layout .order-line,
+.staff-layout .table-tile, .staff-layout .kitchen-ticket,
+.staff-layout .customer-summary, .staff-layout .bill-summary,
+.staff-layout .table[data-mobile-ready="true"] tbody tr {
+    box-shadow: none;
+}
+.mobile-pos-appbar { padding-top: max(.8rem, env(safe-area-inset-top, 0px)); }
+.has-selected-order.is-mobile-menu-open .mobile-order-dock {
+    bottom: var(--mobile-nav-space);
+    box-shadow: none;
+}
+.is-mobile-checkout-open .mobile-order-cta-row { bottom: var(--mobile-nav-space); }
+body:has([data-mobile-pos-page]) .admin-content {
+    padding-bottom: calc(var(--mobile-nav-space) + 1rem);
+}
+.is-mobile-menu-open .dish-grid { padding-bottom: 6rem; }
+.sales-order-panel .order-line-title { min-width: 0; }
+.sales-order-panel .order-line-title strong { white-space: normal; overflow-wrap: anywhere; }

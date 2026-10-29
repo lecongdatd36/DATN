@@ -15,6 +15,7 @@ htmlcov/
 *.egg-info/
 
 # Generated files and uploads
+artifacts/staff-mobile/
 media/
 staticfiles/
 *.log

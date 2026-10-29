@@ -1,0 +1,97 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>Mobile staff integration checks</title>
+<link rel="icon" href="data:,"><iframe id="app" title="Ứng dụng mobile thật" src="/sales/mobile/" width="390" height="844" style="border:0"></iframe><pre id="result">RUNNING</pre>
+<script>
+(async()=>{
+  const frame=document.querySelector('#app'),checks=[];
+  const doc=()=>frame.contentDocument;
+  const assert=(condition,message)=>{if(!condition)throw Error(message);checks.push('PASS '+message);};
+  const wait=async(predicate,message)=>{for(let i=0;i<500;i++){if(predicate())return;await new Promise(resolve=>setTimeout(resolve,40));}throw Error('Timeout: '+message);};
+  const click=selector=>{const node=doc().querySelector(selector);if(!node)throw Error('Missing '+selector);node.click();};
+  const fill=(selector,value)=>{const node=doc().querySelector(selector);if(!node)throw Error('Missing '+selector);node.value=value;node.dispatchEvent(new frame.contentWindow.Event('input',{bubbles:true}));};
+  const page=()=>doc()?.querySelector('#mobile-page');
+  const at=async name=>wait(()=>page()?.dataset.page===name&&!page().inert,'page '+name);
+  const confirmed=async()=>{await wait(()=>doc().querySelector('[data-confirm-dialog]')?.open,'confirmation');click('[data-confirm-dialog] [value="confirm"]');};
+  const loaded=url=>new Promise(resolve=>{frame.addEventListener('load',resolve,{once:true});frame.src=url;});
+  try{
+    await at('tables');
+    assert(!doc().documentElement.scrollWidth||doc().documentElement.scrollWidth<=390,'Tables fit phone viewport');
+    await wait(()=>doc().readyState==='complete','styles and document loaded');
+    assert(Boolean(doc().querySelector('[data-notification-count="total"]')),'Mobile menu includes a notification total');
+    assert(Boolean(doc().querySelector('[data-notification-count="payments"]')),'Cashier menu includes the pending payment count');
+    assert(frame.contentWindow.getComputedStyle(doc().querySelector('.m-header')).backgroundColor==='rgb(255, 255, 255)','Header follows the white preview design: '+frame.contentWindow.getComputedStyle(doc().querySelector('.m-header')).backgroundColor);
+    assert(frame.contentWindow.getComputedStyle(doc().querySelector('.m-table-grid')).gridTemplateColumns.split(' ').length===2,'Table board follows the two-column preview');
+    click('a[href*="page=payments"]');await at('payments');
+    assert(Boolean(doc().querySelector('.m-payment-card a[href*="page=checkout"]')),'Cashier queue links eligible orders directly to checkout');
+    click('.m-nav a[href="/sales/mobile/"]');await at('tables');
+    click('.m-table.occupied a');await at('order');
+    assert(doc().querySelector('.m-customer').textContent.includes('Khách kiểm thử mobile'),'Actual order shows linked customer');
+    click('a[href*="page=checkout"]');await at('checkout');
+    assert(doc().querySelectorAll('[name=payment_method]').length===2,'Only cash and transfer are offered');
+    click('[name=payment_method][value=BANK_TRANSFER]');
+    assert(doc().querySelector('[name=received_transfer]').required,'Transfer requires funds received check');
+    doc().querySelector('[data-payment-form]').requestSubmit();
+    assert(!doc().querySelector('[data-confirm-dialog]').open,'Unchecked transfer cannot reach confirmation');
+    click('[name=payment_method][value=CASH]');fill('[name=cash_received]','90000');doc().querySelector('[data-payment-form]').requestSubmit();
+    assert(!doc().querySelector('[data-confirm-dialog]').open,'Insufficient cash is blocked in browser');
+    click('[name=payment_method][value=BANK_TRANSFER]');click('[name=received_transfer]');
+    assert(doc().querySelector('[data-payment-form]').checkValidity(),'Inactive cash field does not block transfer validation');
+    click('[name=payment_method][value=CASH]');
+    fill('[name=cash_received]','100000');
+    assert(doc().querySelector('[data-change]').textContent==='5.000đ','Change is calculated from actual backend quote');
+    doc().querySelector('[data-payment-form]').requestSubmit();await wait(()=>doc().querySelector('[data-confirm-dialog]').open,'cash confirmation');
+    assert(doc().querySelector('[data-confirm-copy]').textContent.includes('5.000đ'),'Cash confirmation displays change');
+    click('[data-confirm-dialog] [value=cancel]');await wait(()=>!doc().querySelector('[data-confirm-dialog]').open,'cancel');
+    assert(page().dataset.page==='checkout','Cancelling does not collect money');
+    const promoDetails=doc().querySelector('[data-payment-form] details');promoDetails.open=true;
+    fill('[name=promotion_code]','MOBILE10');click('[data-apply-promotion]');
+    await wait(()=>doc().querySelector('[name=reviewed_total]').value==='85500','promotion quote');
+    assert(doc().querySelector('[data-change]').textContent==='14.500đ','Actual promotion endpoint updates change');
+    fill('[name=promotion_code]','');click('[data-apply-promotion]');await wait(()=>doc().querySelector('[name=reviewed_total]').value==='95000','clear promotion');
+    doc().querySelector('[data-payment-form]').requestSubmit();await confirmed();await at('receipt');
+    assert(doc().querySelector('#mobile-page').textContent.includes('95.000'),'Payment reaches real paid invoice');
+    assert(doc().querySelector('a[target=_blank]')?.href.includes('/print/'),'Paid invoice has print route');
+    click('.m-nav a[href*="page=invoices"]');await at('invoices');
+    assert(doc().querySelectorAll('.m-invoice-link').length===1,'Invoice list contains exactly one collected invoice');
+    assert(doc().querySelector('.m-nav [data-notification-count="tables"]').textContent==='1','Completed payment shows one table awaiting cleaning in the menu');
+    click('.m-nav a[href="/sales/mobile/"]');await at('tables');
+    assert(Boolean(doc().querySelector('.m-table.cleaning')),'Paid table awaits cleaning');
+    click('.m-table.cleaning button');await confirmed();await wait(()=>!doc().querySelector('.m-table.cleaning')&&!page().inert,'table cleaning');
+    assert(doc().querySelectorAll('.m-table.available').length===2,'Cleaning returns table to available');
+    assert(doc().querySelector('.m-nav [data-notification-count="tables"]').hidden,'Cleaning hides the cleared menu count');
+    const freeLinks=[...doc().querySelectorAll('.m-table.available a')];freeLinks[1].click();await at('open');
+    assert(!doc().querySelector('[data-customer-mode]'),'Reception has no customer classification step');
+    fill('[name=guest_count]','2');fill('[name=customer_phone]','+84 90 123 45 67');click('[data-customer-find]');
+    await wait(()=>doc().querySelector('[data-open-form]').dataset.verifiedPhone==='0901234567','customer lookup');
+    assert(doc().querySelector('[data-customer-result]').textContent.includes('Khách kiểm thử mobile'),'Lookup uses actual customer data');
+    fill('[name=note]','Có trẻ em - UI integration');doc().querySelector('[data-open-form]').requestSubmit();await at('menu');
+    assert(doc().querySelector('.m-customer').textContent.includes('Khách kiểm thử mobile'),'Customer follows new order into menu');
+    assert(frame.contentWindow.getComputedStyle(doc().querySelector('.m-dish-grid')).display==='block','Menu follows the preview list layout');
+    assert(Boolean(doc().querySelector('.m-dish-image')),'Menu has thumbnail or empty-image placeholder');
+    const add=doc().querySelector('[data-inline-add] button[type=submit]');add.click();add.click();
+    await wait(()=>doc().querySelector('[data-dish-count]')?.textContent==='1'&&!page().inert,'inline add');
+    assert(page().dataset.page==='menu','Adding keeps menu and scroll context');
+    assert(doc().querySelector('[data-dish-count]').textContent==='1','Rapid duplicate click adds only once');
+    click('.m-dock a[href*="page=order"]');await at('order');
+    assert(doc().querySelector('.m-item-note')===null,'Visit note is not copied into dish preparation note');
+    click('.m-dock button[type=submit]');await confirmed();await wait(()=>doc().querySelector('.m-status.pending')&&!page().inert,'send kitchen');
+    const orderId=page().dataset.order;
+    const ready=await fetch('/__mobile_test__/ready/',{method:'POST'});assert(ready.ok,'Test kitchen advances real order items');
+    await wait(()=>doc().querySelector('[data-notification-count="ready"]')?.textContent==='1','live ready notification');
+    assert(!doc().querySelector('[data-notification-entry="ready"]').hidden,'New kitchen completion updates notification numbers while the page is open');
+    await loaded('/sales/mobile/?page=order&order='+orderId);await at('order');
+    assert(Boolean(doc().querySelector('.m-status.ready')),'Kitchen-ready status is visible on same order');
+    await fetch('/__mobile_test__/role/waiter');await loaded('/sales/mobile/?page=order&order='+orderId);await at('order');
+    click('.m-lines form[action*="/served/"] button');await confirmed();await wait(()=>doc().querySelector('.m-status.served')&&!page().inert,'served');
+    assert(Boolean(doc().querySelector('.m-dock form[action*="/request-payment/"]')),'Waiter gets request-payment instead of collect');
+    click('.m-dock form button');await confirmed();await wait(()=>doc().querySelector('.m-dock').textContent.includes('Đang chờ thu ngân')&&!page().inert,'request payment');
+    assert(!doc().querySelector('[data-payment-form]'),'Waiter cannot collect on the order screen');
+    await fetch('/__mobile_test__/role/cashier');await loaded('/sales/mobile/?page=order&order='+orderId);await at('order');
+    assert(Boolean(doc().querySelector('.m-dock a[href*="page=checkout"]')),'Cashier continues same order directly to checkout');
+    assert(doc().querySelector('[data-notification-count="payments"]').textContent==='1','Cashier sees one pending payment in the menu');
+    for(const width of [320,360,390,430]){
+      frame.width=width;assert(doc().documentElement.scrollWidth<=width,'Order fits '+width+'px');
+    }
+    document.querySelector('#result').textContent=checks.join('\n')+'\nALL '+checks.length+' LIVE CHECKS PASSED';
+  }catch(error){document.querySelector('#result').textContent=checks.join('\n')+'\nFAIL '+error.message+'\nFrame: '+frame.contentWindow.location.href+'\n'+(doc()?.body?.textContent||'').trim().slice(0,900);}
+})();
+</script></html>

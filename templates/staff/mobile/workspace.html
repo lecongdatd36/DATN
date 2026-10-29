@@ -1,0 +1,25 @@
+{% load static %}
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light"><title>QLNH · Phục vụ theo bàn</title><link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{% static 'css/staff-mobile.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=1">
+  <script src="{% static 'js/nav-notifications.js' %}?v=1" defer></script>
+  <script src="{% static 'js/staff-mobile.js' %}?v=1" defer></script>
+  <script src="{% static 'js/staff-polling.js' %}?v=16" defer></script>
+</head>
+<body class="staff-mobile" data-notification-url="{% url 'notification_state' %}">
+{% include 'includes/icon_sprite.html' %}
+<div class="m-shell" data-mobile-app data-live-workspace data-state-url="{% url 'sales:state' %}" data-lookup-url="{% url 'sales:customer_lookup' %}" data-quote-url="{% url 'sales:mobile_quote' %}">
+  <a class="m-skip" href="#mobile-page">Đến nội dung chính</a>
+  <div class="m-feedback" id="mobile-feedback" role="status" aria-live="polite" hidden></div>
+  <button class="m-update" type="button" data-refresh hidden>Có thay đổi mới · Cập nhật</button>
+  <main id="mobile-page" class="m-page" data-page="{{ mobile_page }}" data-order="{{ selected_order.pk|default:'' }}">
+    {% if messages %}<div class="m-messages">{% for message in messages %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
+    {% include mobile_template %}
+  </main>
+</div>
+<dialog class="m-dialog" data-confirm-dialog aria-labelledby="m-confirm-title"><form method="dialog"><h2 id="m-confirm-title">Xác nhận thao tác</h2><p data-confirm-copy></p><div class="m-dialog-actions"><button class="m-button secondary" value="cancel">Kiểm tra lại</button><button class="m-button" value="confirm">Xác nhận</button></div></form></dialog>
+</body></html>
