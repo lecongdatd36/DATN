@@ -5,9 +5,21 @@ document.addEventListener("DOMContentLoaded", () => {
   let search;
   let categoryButtons = [];
   let cards = [];
+  const searchNames = new WeakMap();
   let empty;
   const feedback = workspace.querySelector("[data-sales-feedback]");
   const phoneQuery = window.matchMedia("(max-width: 767.98px)");
+  if (phoneQuery.matches && workspace.dataset.mobileUrl && new URLSearchParams(location.search).get("desktop") !== "1") {
+    const destination = new URL(workspace.dataset.mobileUrl, location.origin);
+    const current = new URLSearchParams(location.search);
+    for (const key of ["order", "table"]) if (current.has(key)) destination.searchParams.set(key, current.get(key));
+    if (current.has("open_table")) {
+      destination.searchParams.set("table", current.get("open_table"));destination.searchParams.set("page", "open");
+    } else if (current.has("order") || current.has("table")) {
+      destination.searchParams.set("page", location.hash === "#sales-menu" ? "menu" : "order");
+    }
+    location.replace(destination.href);return;
+  }
   let category = "all";
   let searchTimer;
 
@@ -33,18 +45,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const title = workspace.querySelector("[data-mobile-pos-title]");
     if (title) title.textContent = "Thêm món";
     window.scrollTo({top: 0, behavior: "smooth"});
-    window.setTimeout(() => search?.focus({preventScroll: true}), 180);
   };
 
-  const normalize = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const normalize = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "d").toLowerCase().trim();
   const filterDishes = () => {
     const query = normalize(search?.value || "");
     let visible = 0;
     cards.forEach((card) => {
       const categoryMatches = category === "all" || card.dataset.category === category;
-      const textMatches = !query || normalize(card.dataset.dishName || "").includes(query);
-      card.hidden = !(categoryMatches && textMatches);
-      if (!card.hidden) visible += 1;
+      const textMatches = !query || searchNames.get(card).includes(query);
+      const hidden = !(categoryMatches && textMatches);
+      if (card.hidden !== hidden) card.hidden = hidden;
+      if (!hidden) visible += 1;
     });
     if (empty) empty.hidden = visible !== 0;
   };
@@ -53,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     search = workspace.querySelector("[data-dish-search]");
     categoryButtons = [...workspace.querySelectorAll("[data-category-filter] button")];
     cards = [...workspace.querySelectorAll("[data-dish-grid] .dish-card")];
+    cards.forEach((card) => searchNames.set(card, normalize(card.dataset.dishName || "")));
     empty = workspace.querySelector("[data-dish-empty]");
     category = "all";
     search?.addEventListener("input", () => {
@@ -151,7 +164,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  const syncOrderFromResponse = (html) => {
+  const lineMarkup = (line) => {
+    const copy = line.cloneNode(true);
+    copy.querySelectorAll("input[name='csrfmiddlewaretoken'], input[name='expected_revision']")
+      .forEach((input) => input.removeAttribute("value"));
+    return copy.outerHTML;
+  };
+
+  const syncOrderFromResponse = (html, notifyMutation = true) => {
     const responseDocument = new DOMParser().parseFromString(html, "text/html");
     const incomingRevision = Number(responseDocument.querySelector("[data-order-revision]")?.value);
     const currentRevision = Number(workspace.querySelector("[data-order-revision]")?.value);
@@ -160,6 +180,30 @@ document.addEventListener("DOMContentLoaded", () => {
       && Number.isFinite(currentRevision)
       && incomingRevision < currentRevision
     ) return;
+    // Reuse unchanged rows, including their decoded images, instead of
+    // rebuilding every item when just one quantity or status changes.
+    const oldLines = new Map([...workspace.querySelectorAll("[data-order-item-id]")]
+      .map((line) => [line.dataset.orderItemId, line]));
+    responseDocument.querySelectorAll("[data-order-item-id]").forEach((line) => {
+      const previous = oldLines.get(line.dataset.orderItemId);
+      if (previous && lineMarkup(previous) === lineMarkup(line)) line.replaceWith(previous);
+    });
+    const checkout = workspace.querySelector("[data-checkout-form]");
+    const nextCheckout = responseDocument.querySelector("[data-checkout-form]");
+    if (checkout && nextCheckout) {
+      // Typed payment details belong to this device, not to the refresh HTML.
+      checkout.querySelectorAll("input:not([type='hidden']), select, textarea").forEach((field) => {
+        const target = [...nextCheckout.elements].find((candidate) =>
+          candidate.name === field.name && candidate.type === field.type
+          && (!['radio', 'checkbox'].includes(field.type) || candidate.value === field.value));
+        if (!target) return;
+        if (['radio', 'checkbox'].includes(field.type)) target.checked = field.checked;
+        else target.value = field.value;
+      });
+      const options = checkout.querySelector("[data-checkout-options]");
+      const nextOptions = nextCheckout.querySelector("[data-checkout-options]");
+      if (options && nextOptions) nextOptions.open = options.open;
+    }
     [".sales-order-panel", ".mobile-order-dock", ".mobile-pos-appbar"].forEach((selector) => {
       const current = workspace.querySelector(selector);
       const replacement = responseDocument.querySelector(selector);
@@ -176,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     bindCheckoutControls();
     bindGuestPreviews();
-    document.dispatchEvent(new CustomEvent("workspace:mutation"));
+    if (notifyMutation) document.dispatchEvent(new CustomEvent("workspace:mutation"));
   };
 
   const replaceWorkspaceElement = (responseDocument, selector) => {
@@ -219,7 +263,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!current || !replacement) throw new Error("Không thể đồng bộ danh sách bàn.");
     current.replaceWith(replacement);
     document.dispatchEvent(new CustomEvent("workspace:content-replaced", {detail: {scope: workspace}}));
-    document.dispatchEvent(new CustomEvent("workspace:mutation"));
   };
 
   const isRevisionConflict = (message) => /đơn đã thay đổi|revision|stale/i.test(message || "");
@@ -256,9 +299,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let refreshInProgress = false;
   let refreshPending = false;
   let workspaceBusy = false;
+  let workspaceBusyCount = 0;
   let tablesRefreshInProgress = false;
+  const isEditingOrder = () => workspace.querySelector(
+    ".sales-order-panel input:focus, .sales-order-panel textarea:focus, .sales-order-panel select:focus, .is-note-editing"
+  );
   const refreshSelectedOrder = async () => {
-    if (workspaceBusy) {
+    if (workspaceBusy || isEditingOrder() || document.hidden) {
       refreshPending = true;
       return;
     }
@@ -267,6 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     if (!workspace.classList.contains("has-selected-order")) return;
+    refreshPending = false;
     refreshInProgress = true;
     try {
       const response = await fetch(window.location.href, {
@@ -275,17 +323,28 @@ document.addEventListener("DOMContentLoaded", () => {
         credentials: "same-origin",
       });
       if (!response.ok) throw new Error(`Không thể đồng bộ order (HTTP ${response.status}).`);
-      syncOrderFromResponse(await response.text());
+      const html = await response.text();
+      if (workspaceBusy || isEditingOrder() || document.hidden) refreshPending = true;
+      else syncOrderFromResponse(html, false);
     } catch (error) {
       showFeedback(error.message);
     } finally {
       refreshInProgress = false;
-      if (refreshPending) {
+      if (refreshPending && !workspaceBusy && !isEditingOrder() && !document.hidden) {
         refreshPending = false;
         refreshSelectedOrder();
       }
     }
   };
+
+  workspace.addEventListener("focusout", () => {
+    window.setTimeout(() => {
+      if (refreshPending && !isEditingOrder()) refreshSelectedOrder();
+    }, 0);
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && refreshPending) refreshSelectedOrder();
+  });
 
   const refreshTables = async () => {
     if (tablesRefreshInProgress || workspaceBusy) return;
@@ -366,7 +425,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.addEventListener("workspace:state-change", handleSalesStateChange);
   document.addEventListener("workspace:busy", (event) => {
-    workspaceBusy = event.detail ? true : false;
+    workspaceBusyCount = event.detail ? workspaceBusyCount + 1 : Math.max(0, workspaceBusyCount - 1);
+    workspaceBusy = workspaceBusyCount > 0;
     if (!workspaceBusy && refreshPending) {
       refreshPending = false;
       refreshSelectedOrder();

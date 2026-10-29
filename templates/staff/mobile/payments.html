@@ -1,0 +1,11 @@
+{% load menu_money %}{% include 'staff/mobile/header.html' with heading='Chờ thanh toán' %}
+<section class="m-content">
+  <div class="m-section-heading"><h2>Hóa đơn chưa thu</h2><small>{{ mobile_checks|length }} hóa đơn</small></div>
+  {% for check in mobile_checks %}<article class="m-card m-payment-card">
+    <div class="m-section-heading"><h3>Bàn {{ check.table.code }}</h3><span class="m-status {% if check.mobile_can_pay %}ready{% else %}pending{% endif %}">{% if check.mobile_can_pay %}Có thể thu tiền{% else %}Chưa đủ điều kiện{% endif %}</span></div>
+    <h3>{{ check.customer.full_name|default:'Khách vãng lai' }}</h3><p>{{ check.customer.phone|default:'Không liên kết hồ sơ' }}<br>{{ check.mobile_quantity }} phần · {{ check.mobile_due|dong }}đ</p>
+    {% if check.mobile_pending %}<div class="m-error">Đang có giao dịch chờ xác nhận. Kiểm tra kết quả trước khi thu thêm.</div>{% elif check.mobile_unserved %}<div class="m-payment-warning">Món chưa phục vụ: {% for item in check.mobile_unserved %}{{ item.quantity }} × {{ item.dish_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% elif not check.mobile_quantity %}<div class="m-payment-warning">Order chưa có món để thanh toán.</div>{% endif %}
+    {% if check.mobile_can_pay %}<a class="m-button full" href="{% url 'sales:mobile' %}?page=checkout&amp;order={{ check.pk }}" data-mobile-link>Kiểm tra & thu tiền</a>{% else %}<a class="m-button secondary full" href="{% url 'sales:mobile' %}?page=order&amp;order={{ check.pk }}" data-mobile-link>Xem order cần xử lý</a>{% endif %}
+  </article>{% empty %}<div class="m-empty">Chưa có hóa đơn đang mở cần thu tiền.</div>{% endfor %}
+  <a class="m-button secondary full" href="{% url 'sales:mobile' %}?page=tasks" data-mobile-link>Xem yêu cầu & món chờ mang ra</a>
+</section>{% include 'staff/mobile/nav.html' %}

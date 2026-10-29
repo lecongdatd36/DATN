@@ -8,10 +8,13 @@ from apps.menu.permissions import has_menu_permission
 from apps.orders.permissions import has_order_permission
 from apps.reports.permissions import has_report_permission
 from apps.inventory.permissions import has_inventory_permission
+from django.utils.functional import SimpleLazyObject
+
+from core.notifications import notification_snapshot
 
 
 def access_policy(request):
-    return {
+    context = {
         "access": {
             "can_manage_accounts": can_manage_accounts(request.user),
             "can_access_admin": can_access_admin(request.user),
@@ -46,3 +49,5 @@ def access_policy(request):
             "can_manage_inventory": has_inventory_permission(request.user, "manage_inventory"),
         }
     }
+    context["nav_notifications"] = SimpleLazyObject(lambda: notification_snapshot(context["access"]))
+    return context

@@ -5,6 +5,12 @@
     const themeKey = "qlnh.colorTheme";
     const desktopQuery = window.matchMedia("(min-width: 992px)");
     const mobileTableQuery = window.matchMedia("(max-width: 767.98px)");
+    const mobileLogin = document.querySelector("[data-mobile-login]");
+    if (mobileLogin) {
+        const syncMobileLogin = () => { mobileLogin.value = mobileTableQuery.matches ? "1" : "0"; };
+        syncMobileLogin();
+        mobileTableQuery.addEventListener?.("change", syncMobileLogin);
+    }
     const body = document.body;
     const sidebarToggle = document.querySelector("[data-sidebar-toggle]");
     const sidebarClosers = document.querySelectorAll("[data-sidebar-close]");
@@ -244,11 +250,29 @@
 
     const contentRoot = document.querySelector(".admin-content");
     if (contentRoot) {
+        const pendingRoots = new Set();
+        let tableFrame = null;
         new MutationObserver((mutations) => {
             if (!mobileTableQuery.matches) return;
             mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
-                if (node.nodeType === Node.ELEMENT_NODE) enhanceMobileTables(node.matches?.("table") ? node.parentElement : node);
+                if (node.nodeType !== Node.ELEMENT_NODE) return;
+                const table = node.closest("table.table");
+                if (table) {
+                    // A live refresh can insert rows into an existing table.
+                    delete table.dataset.mobileReady;
+                    pendingRoots.add(table.parentElement);
+                } else if (node.querySelector("table.table")) {
+                    pendingRoots.add(node);
+                }
             }));
+            if (!pendingRoots.size || tableFrame !== null) return;
+            tableFrame = window.requestAnimationFrame(() => {
+                tableFrame = null;
+                pendingRoots.forEach((root) => {
+                    if (root.isConnected) enhanceMobileTables(root);
+                });
+                pendingRoots.clear();
+            });
         }).observe(contentRoot, {childList: true, subtree: true});
     }
     const enhanceAfterResize = () => enhanceMobileTables(document);

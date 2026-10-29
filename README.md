@@ -354,6 +354,8 @@ Vào **Thực đơn** hoặc `/thuc-don/`.
 
 ## Gọi món, đơn hàng và Bếp
 
+Giao diện mobile nội bộ đã tích hợp tại **`/sales/mobile/`**. Phục vụ và thu ngân dùng chung luồng **Bàn → Gọi món → Order**; phục vụ gửi yêu cầu thanh toán, người có quyền thu tiền chốt trực tiếp bằng **tiền mặt/chuyển khoản**. Khách đặt trước, món chờ mang ra và yêu cầu QR được gom vào **Việc cần làm**. Đăng nhập từ điện thoại đưa phục vụ/thu ngân vào mobile; desktop vẫn giữ bố cục hiện tại. Xem [hướng dẫn và kiểm tra mobile](docs/staff-mobile.md).
+
 1. Khách đặt trước: chọn **Nhận khách & gọi món**, hệ thống tự nhận bàn, mở đơn và chuyển thẳng tới chọn món. Khách trực tiếp: tại **Bàn → Nhận khách & gọi món** hoặc **Đơn hàng → Khách không đặt trước**; nhập bàn, số khách và thời lượng dự kiến, tên/số điện thoại không bắt buộc. Hệ thống kiểm tra lịch, nhận khách và mở đơn trong cùng luồng.
 2. **Thêm món** mở giao diện POS dạng lưới ảnh: tìm tức thời theo tên/mã món, lọc nhóm món, chạm để tích nhiều món, chỉnh số lượng bằng `+ / −` và nhập ghi chú riêng cho từng món. Một lần xác nhận thêm toàn bộ món đã chọn vào đơn. Có thể sửa số lượng/ghi chú khi chưa gửi Bếp; mỗi lần gọi thêm vẫn tạo dòng riêng và giữ giá tại thời điểm gọi, kể cả giá thực đơn thay đổi sau đó.
 3. **Gửi Bếp**: xem lại danh sách món rồi xác nhận gửi tất cả dòng chưa gửi. Kiểm tra lại món/danh mục còn phục vụ; nếu một món không hợp lệ thì chưa gửi cả đợt.

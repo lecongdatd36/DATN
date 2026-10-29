@@ -3,20 +3,22 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="description" content="Ứng dụng quản lý nhà hàng QLNH.">
     <title>{% block title %}QLNH · Quản lý nhà hàng{% endblock %}</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=1">
     {% block extra_css %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'css/mobile.css' %}?v=1" media="(max-width: 767.98px)">
 </head>
 <body class="{% if user.is_authenticated %}staff-layout{% else %}public-layout d-flex flex-column min-vh-100{% endif %}">
     {% include 'includes/icon_sprite.html' %}
     <a class="visually-hidden-focusable skip-link" href="#main-content">Chuyển đến nội dung chính</a>
 
     {% if user.is_authenticated %}
-    <div class="admin-shell">
+    <div class="admin-shell" data-notification-url="{% url 'notification_state' %}">
         <button class="sidebar-backdrop" type="button" data-sidebar-close aria-label="Đóng menu"></button>
         <aside class="admin-sidebar" id="admin-sidebar" aria-label="Menu quản lý">
             <div class="sidebar-header">
@@ -36,10 +38,11 @@
         <div class="admin-main">
             <header class="admin-topbar">
                 <div class="topbar-left">
-                    <button class="icon-button sidebar-toggle" type="button" data-sidebar-toggle aria-controls="admin-sidebar" aria-expanded="true" aria-label="Thu gọn menu"><svg class="app-icon" aria-hidden="true"><use href="#icon-menu"></use></svg></button>
+                    <button class="icon-button sidebar-toggle" type="button" data-sidebar-toggle aria-controls="admin-sidebar" aria-expanded="true" aria-label="Thu gọn menu"><svg class="app-icon" aria-hidden="true"><use href="#icon-menu"></use></svg>{% include 'includes/notification_badge.html' with key='total' count=nav_notifications.counts.total %}</button>
                     <div class="topbar-title"><strong data-page-title>Không gian quản lý</strong><small data-live-date>Vận hành nhà hàng tập trung</small></div>
                 </div>
                 <div class="topbar-actions">
+                    {% include 'includes/notifications.html' %}
                     <nav class="topbar-shortcuts d-none d-lg-flex" aria-label="Truy cập nhanh">
                         {% if access.can_view_orders %}<a href="{% url 'sales:workspace' %}" title="Mở Bán hàng"><svg class="app-icon" aria-hidden="true"><use href="#icon-wallet"></use></svg><span>Bán hàng</span></a>{% endif %}
                         {% if access.can_view_tables %}<a href="{% url 'seating:table_list' %}" title="Mở sơ đồ bàn"><svg class="app-icon" aria-hidden="true"><use href="#icon-table"></use></svg><span>Bàn</span></a>{% endif %}
@@ -103,7 +106,8 @@
     {% endif %}
 
     <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}" defer></script>
-    <script src="{% static 'js/base.js' %}?v=6" defer></script>
+    <script src="{% static 'js/base.js' %}?v=8" defer></script>
+    {% if user.is_authenticated %}<script src="{% static 'js/nav-notifications.js' %}?v=1" defer></script>{% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -8,7 +8,6 @@
   // Staff need to see a new order promptly, while background tabs still
   // remain inexpensive for the database and the device battery.
   const foregroundDelay = 3000;
-  const backgroundDelay = 30000;
   const requestTimeout = 6000;
   const maxRetryDelay = 60000;
   let retryDelay = foregroundDelay;
@@ -23,7 +22,7 @@
 
   const liveBadge = root.querySelector(".sales-live") || document.querySelector(".sales-live");
 
-  const currentDelay = () => (document.hidden ? backgroundDelay : foregroundDelay);
+  const currentDelay = () => foregroundDelay;
 
   const updateLiveIndicator = () => {
     if (!liveBadge) return;
@@ -34,12 +33,12 @@
 
   const schedule = (delay = currentDelay()) => {
     window.clearTimeout(timer);
-    if (suspended) return;
+    if (suspended || document.hidden) return;
     timer = window.setTimeout(poll, delay);
   };
 
   const poll = async () => {
-    if (suspended) return;
+    if (suspended || document.hidden) return;
     if (isPolling) {
       schedule(250);
       return;
@@ -132,7 +131,7 @@
     updateLiveIndicator();
     controller?.abort();
     retryDelay = currentDelay();
-    schedule(document.hidden ? backgroundDelay : 100);
+    schedule(100);
   });
 
   updateLiveIndicator();

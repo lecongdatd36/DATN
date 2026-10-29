@@ -73,7 +73,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
     template_name = "staff/sales/index.html"
 
     def get_context_data(self, **kwargs):
-        is_order_fragment = self.request.headers.get("X-Order-Fragment") == "1"
+        is_order_fragment = self.request.headers.get("X-Order-Fragment") == "1" or getattr(self, "compact_workspace", False)
         if not is_order_fragment:
             expire_overdue_bookings()
             services.expire_qr_check_in_requests()
@@ -111,6 +111,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             root_id = selected_order.split_root_id or selected_order.pk
             context["selected_split_group"] = list(
                 Order.objects.filter(Q(pk=root_id) | Q(split_root_id=root_id))
+                .select_related("invoice", "customer__membership_tier")
                 .prefetch_related("items")
                 .order_by("pk")
             )

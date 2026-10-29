@@ -57,6 +57,8 @@ class LoginView(auth_views.LoginView):
         if "INVENTORY" in groups:
             return str(reverse_lazy("inventory:workspace"))
         if groups.intersection({"WAITER", "CASHIER"}):
+            if self.request.POST.get("mobile_view") == "1":
+                return str(reverse_lazy("sales:mobile"))
             return str(reverse_lazy("sales:workspace"))
         return str(reverse_lazy("accounts:workspace"))
 

@@ -1,0 +1,13 @@
+.nav-notification-badge{display:inline-flex;min-width:21px;height:21px;align-items:center;justify-content:center;flex:0 0 auto;padding:0 6px;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.nav-notification-badge[hidden],.notification-entry[hidden],.notification-empty[hidden]{display:none!important}
+.sidebar-link{position:relative}.sidebar-link>.nav-notification-badge{margin-left:auto}.sidebar-link .nav-text{min-width:0}
+body.sidebar-mini .sidebar-link>.nav-notification-badge{position:absolute;top:2px;right:2px;margin:0;min-width:18px;height:18px;font-size:10px}
+body.sidebar-mini .sidebar-link>.nav-text{position:absolute}
+.notification-toggle,[data-sidebar-toggle],.mobile-app-nav>a,.mobile-nav-more>button,.m-nav>a{position:relative}
+.notification-toggle>.nav-notification-badge,[data-sidebar-toggle]>.nav-notification-badge{position:absolute;top:-6px;right:-6px;border:2px solid var(--app-surface,#fff)}
+.notification-menu{width:min(360px,calc(100vw - 24px));max-height:70vh;overflow:auto;padding:.65rem;border:1px solid var(--app-border,#e4e7ec);border-radius:.9rem;box-shadow:var(--app-shadow)}
+.notification-heading{display:flex;justify-content:space-between;gap:1rem;padding:.5rem .65rem}.notification-heading>span{color:var(--app-danger,#dc2626)}
+.notification-entry{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem .65rem;border-radius:.5rem;font-size:.85rem;white-space:normal}.notification-empty{margin:0;padding:.75rem;color:var(--app-muted,#667085);font-size:.85rem}
+.mobile-app-nav>a>.nav-notification-badge,.mobile-nav-more>button>.nav-notification-badge,.m-nav>a>.nav-notification-badge{position:absolute;top:2px;right:calc(50% - 28px)}
+.mobile-more-menu .nav-notification-badge{margin-left:.5rem}.m-notification-link{position:relative;display:inline-flex;align-items:center;gap:.4rem;color:inherit;font-size:.8rem;font-weight:700;text-decoration:none}
+.m-notification-list{margin:10px 14px;padding:0}.m-notification-list summary{padding:.8rem;cursor:pointer;font-size:.85rem;font-weight:700}.m-notification-list a{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem;color:inherit;font-size:.85rem;text-decoration:none}

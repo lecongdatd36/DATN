@@ -1,0 +1,7 @@
+{% load menu_money %}{% include 'staff/mobile/header.html' with heading='Tách / Ghép hóa đơn' %}
+<section class="m-content">{% include 'staff/mobile/customer.html' %}<p class="m-help">Chỉ tách hóa đơn chưa thu. Hóa đơn gốc phải còn ít nhất một món.</p>
+{% if selected_order.status == 'PAYMENT_REQUESTED' and not mobile_payment_pending %}
+<form class="m-form m-card" method="post" action="{% url 'sales:mobile_action' 'split' %}" data-confirm="Tạo hóa đơn riêng cho số lượng món đã chọn?">{% include 'staff/mobile/order_fields.html' %}{% for item in selected_order.items.all %}{% if item.status != 'CANCELLED' %}<label class="m-split-row"><span>{{ item.dish_name }}<small>{{ item.quantity }} món · {{ item.unit_price|dong }}đ / món</small></span><input name="quantity_{{ item.pk }}" type="number" min="0" max="{{ item.quantity }}" value="0" required aria-label="Số lượng tách {{ item.dish_name }}"></label>{% endif %}{% endfor %}<button class="m-button full" type="submit">Tạo hóa đơn tách</button></form>
+{% else %}<p class="m-error">Hóa đơn chưa ở trạng thái có thể tách hoặc đang có giao dịch chờ.</p>{% endif %}
+{% if selected_order.split_root_id %}<form class="m-card" method="post" action="{% url 'sales:mobile_action' 'merge' %}" data-confirm="Ghép toàn bộ hóa đơn này về hóa đơn gốc cùng bàn?">{% include 'staff/mobile/order_fields.html' %}<button class="m-button secondary full" type="submit">Ghép về hóa đơn gốc</button></form>{% endif %}
+{% include 'staff/mobile/group.html' %}</section>

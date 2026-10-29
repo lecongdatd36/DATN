@@ -9,6 +9,7 @@
         <form method="post" action="{% url 'accounts:login' %}">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ next }}">
+            <input type="hidden" name="mobile_view" value="0" data-mobile-login>
             {% include 'includes/form_fields.html' %}
             <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
         </form>

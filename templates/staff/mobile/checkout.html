@@ -1,0 +1,15 @@
+{% load menu_money l10n %}{% include 'staff/mobile/header.html' with heading='Thanh toán' %}
+<section class="m-content">{% include 'staff/mobile/customer.html' %}
+{% if not mobile_can_pay %}<div class="m-error">{% if mobile_payment_pending %}Hóa đơn đang có giao dịch chờ xác nhận. Không thu thêm tiền cho đến khi có kết quả.{% else %}Còn món chưa phục vụ xong. Kiểm tra order trước khi thu tiền.{% endif %}</div><a class="m-button" href="{% url 'sales:mobile' %}?page=order&amp;order={{ selected_order.pk }}" data-mobile-link>Xem order</a>
+{% else %}
+  <details class="m-options"><summary>Kiểm tra món và số lượng</summary>{% for item in selected_order.items.all %}{% if item.status != 'CANCELLED' %}<div class="m-receipt-row"><span>{{ item.quantity }} × {{ item.dish_name }}</span><strong>{{ item.subtotal|dong }}đ</strong></div>{% endif %}{% endfor %}</details>
+  {% include 'staff/mobile/bill.html' %}
+  <form class="m-form" method="post" action="{% url 'sales:mobile_action' 'pay' %}" data-payment-form data-due="{{ mobile_quote.due|unlocalize }}" data-confirm="Xác nhận đã nhận đủ tiền cho hóa đơn này?">{% include 'staff/mobile/order_fields.html' %}<input type="hidden" name="reviewed_total" value="{{ mobile_quote.due|unlocalize }}">
+    <details class="m-options"><summary>Mã giảm giá (nếu có)</summary><label for="m-promo">Mã giảm giá</label><div class="m-input-row"><input id="m-promo" name="promotion_code" maxlength="30" value="{{ mobile_quote.promotion_code }}" {% if mobile_quote.locked %}readonly{% endif %}><button class="m-button secondary" type="button" data-apply-promotion {% if mobile_quote.locked %}disabled{% endif %}>Áp dụng</button></div><p class="m-help">Ưu đãi được hệ thống kiểm tra lại trước khi chốt.</p><p data-promotion-feedback role="status"></p></details>
+    <fieldset class="m-methods"><legend>Phương thức thanh toán</legend><label><input type="radio" name="payment_method" value="CASH" checked> Tiền mặt</label><label><input type="radio" name="payment_method" value="BANK_TRANSFER"> Chuyển khoản</label></fieldset>
+    <div class="m-card" data-cash-fields><label for="m-cash">Tiền khách đưa</label><input id="m-cash" name="cash_received" type="number" min="{{ mobile_quote.due|unlocalize }}" step="1" inputmode="numeric" placeholder="Nhập số tiền đã nhận" data-preserve><div class="m-change">Tiền thừa <strong data-change>0đ</strong></div></div>
+    <div class="m-card" data-bank-fields><label for="m-reference">Mã giao dịch / tham chiếu (nếu có)</label><input id="m-reference" name="transaction_code" maxlength="100" placeholder="Mã đối chiếu" data-preserve><label class="m-check"><input type="checkbox" name="received_transfer" value="yes"> Đã kiểm tra và nhận đủ tiền vào tài khoản nhà hàng.</label></div>
+    <footer class="m-dock"><span>Cần thu<strong data-order-due>{{ mobile_quote.due|dong }}đ</strong></span><button class="m-button" type="submit">Xác nhận thu tiền</button></footer>
+  </form>
+  <a class="m-button secondary full" href="{% url 'sales:mobile' %}?page=order&amp;order={{ selected_order.pk }}" data-mobile-link>Quay lại order / Tách hóa đơn</a>
+{% endif %}</section>
