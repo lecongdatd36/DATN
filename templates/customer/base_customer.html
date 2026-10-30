@@ -1,43 +1,25 @@
-{% load static %}
+{% load static customer_site %}
+{% customer_site as storefront %}
 <!doctype html>
 <html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Nhà hàng QLNH - trải nghiệm ẩm thực Việt đương đại.">
-    <title>{% block title %}QLNH · Nhà hàng Việt{% endblock %}</title>
-    <link rel="icon" href="data:,">
+    <meta name="description" content="{{ restaurant_public.name }} — vị nhà, tình quê. Khám phá thực đơn món Việt và đặt bàn trực tuyến.">
+    <title>{% block title %}{{ restaurant_public.name }} · Nhà hàng Việt{% endblock %}</title>
+    <link rel="icon" href="{% static 'customer/images/com-que-mark.svg' %}" type="image/svg+xml">
     <link rel="stylesheet" href="{% static 'customer/css/customer.css' %}?v=3">
     <link rel="stylesheet" href="{% static 'css/menu-recommendations.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'customer/css/home.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'customer/css/storefront.css' %}?v=1">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="customer-layout {% block body_class %}{% endblock %}">
+<body class="customer-layout cq-page {% block body_class %}{% endblock %}">
     <a class="customer-skip-link" href="#customer-main">Chuyển đến nội dung chính</a>
-    <header class="customer-header" data-customer-header>
-        <div class="customer-container customer-nav-wrap">
-            <a class="customer-brand" href="{% url 'home' %}" aria-label="QLNH - Trang chủ">
-                <span class="customer-brand-mark" aria-hidden="true">Q</span>
-                <span class="customer-brand-copy"><strong>QLNH</strong><small>Nhà hàng Việt</small></span>
-            </a>
-            <button class="customer-menu-toggle" type="button" data-customer-menu-toggle aria-controls="customer-navigation" aria-expanded="false" aria-label="Mở menu">
-                <span></span><span></span><span></span>
-            </button>
-            <nav class="customer-navigation" id="customer-navigation" aria-label="Điều hướng chính">
-                <a href="{% url 'home' %}">Trang chủ</a>
-                <a href="{% url 'customer_portal:menu' %}">Thực đơn</a>
-                <a href="{% url 'customer_reservations:create' %}">Đặt bàn</a>
-                <a href="{% url 'customer_reservations:lookup' %}">Tra cứu</a>
-                {% if user.is_authenticated %}
-                <a class="customer-nav-login" href="{% url 'accounts:workspace' %}">Không gian quản lý</a>
-                {% else %}
-                <a class="customer-nav-login" href="{% url 'accounts:login' %}">Đăng nhập</a>
-                {% endif %}
-                <a class="customer-nav-cta" href="{% url 'customer_reservations:create' %}">Đặt bàn <span aria-hidden="true">↗</span></a>
-            </nav>
-        </div>
-    </header>
+    {% block customer_header %}{% include 'customer/includes/site_header.html' %}{% endblock %}
 
     <main id="customer-main">
+        {% if messages %}<div class="customer-container cq-flash-messages" role="status">{% for message in messages %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
         {% block content %}{% endblock %}
     </main>
 
@@ -45,8 +27,8 @@
         <div class="customer-container customer-footer-grid">
             <div>
                 <a class="customer-brand customer-brand-footer" href="{% url 'home' %}">
-                    <span class="customer-brand-mark" aria-hidden="true">Q</span>
-                    <span class="customer-brand-copy"><strong>QLNH</strong><small>Nhà hàng Việt</small></span>
+                    <img src="{% static 'customer/images/com-que-mark.svg' %}" width="46" height="46" alt="">
+                    <span class="customer-brand-copy"><strong>{{ restaurant_public.name }}</strong><small>Vị nhà · Tình quê</small></span>
                 </a>
                 <p class="customer-footer-note">Một bữa ăn ngon bắt đầu từ sự chu đáo trong từng chi tiết.</p>
             </div>
@@ -60,11 +42,11 @@
             </div>
         </div>
         <div class="customer-container customer-footer-bottom">
-            <span>© {% now 'Y' %} QLNH</span>
+            <span>© {% now 'Y' %} {{ restaurant_public.name }}</span>
             <span>Ẩm thực Việt, kể bằng sự tử tế.</span>
         </div>
     </footer>
-    <script src="{% static 'customer/js/customer.js' %}?v=2" defer></script>
+    <script src="{% static 'customer/js/customer.js' %}?v=3" defer></script>
     <script src="{% static 'js/menu-recommendations.js' %}?v=1" defer></script>
     {% block extra_js %}{% endblock %}
 </body>

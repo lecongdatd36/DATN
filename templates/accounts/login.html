@@ -1,19 +1,24 @@
-{% extends 'base.html' %}
-{% block title %}Đăng nhập · QLNH{% endblock %}
+{% extends 'customer/base_customer.html' %}
+{% block title %}Đăng nhập · {{ restaurant_public.name }}{% endblock %}
 {% block content %}
-<section class="container px-3 pb-5 pt-3 pt-md-4">
-    <div class="auth-card project-card p-4 p-md-5 mx-auto">
-        <p class="eyebrow mb-3">QLNH · TÀI KHOẢN</p>
-        <h1 class="h3 mb-2">Đăng nhập</h1>
-        <p class="text-secondary mb-4">Chào mừng trở lại không gian làm việc của bạn.</p>
-        <form method="post" action="{% url 'accounts:login' %}">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ next }}">
-            <input type="hidden" name="mobile_view" value="0" data-mobile-login>
-            {% include 'includes/form_fields.html' %}
-            <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
-        </form>
-        <p class="small text-secondary mt-4 mb-0">Nếu quên mật khẩu hoặc không đăng nhập được, vui lòng liên hệ quản lý nhà hàng.</p>
+<section class="cq-auth-page">
+    <div class="customer-container cq-booking-layout">
+        <aside class="cq-booking-visual">
+            {% include 'customer/includes/dish_photo.html' with dish=storefront.primary_dish photo_class='cq-booking-photo' full_size=True eager=True decorative=True %}
+            <div class="cq-booking-visual-copy"><span class="cq-eyebrow cq-eyebrow-light">CƠM QUÊ · VỊ NHÀ, TÌNH QUÊ</span><h2>Bữa ngon bắt đầu<br>từ những điều<br><em>thật chu đáo.</em></h2><p>Cùng chăm chút từng cuộc hẹn,<br>để mỗi vị khách đều thấy như về nhà.</p><a href="{% url 'home' %}">Về trang chủ <span aria-hidden="true">↗</span></a></div>
+        </aside>
+        <div class="cq-booking-content customer-form-page">
+            <span class="customer-section-label">KHÔNG GIAN LÀM VIỆC</span><h1>Đăng nhập</h1>
+            <p class="customer-form-intro">Chào mừng trở lại. Cùng chuẩn bị cho những bữa cơm ngon hôm nay.</p>
+            <form class="customer-form-card cq-login-form" method="post" action="{% url 'accounts:login' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}">
+                <input type="hidden" name="mobile_view" value="0" data-mobile-login>
+                {% include 'customer/includes/form_fields.html' with form=form %}
+                <button class="customer-button" type="submit">Đăng nhập <span aria-hidden="true">→</span></button>
+            </form>
+            <p class="cq-auth-help">Nếu quên mật khẩu hoặc không đăng nhập được, vui lòng liên hệ quản lý nhà hàng.</p>
+        </div>
     </div>
 </section>
 {% endblock %}

@@ -2,6 +2,7 @@
     "use strict";
     const root = document.querySelector("[data-customer-chat]");
     if (!root) return;
+    const restaurantName = root.dataset.restaurantName || "nhà hàng";
     const toggle = root.querySelector("[data-chat-toggle]");
     const panel = root.querySelector(".customer-chat-panel");
     const close = root.querySelector("[data-chat-close]");
@@ -32,7 +33,7 @@
         bubble.dataset.role = role;
         const label = document.createElement("span");
         label.className = "customer-chat-message-label";
-        label.textContent = role === "user" ? "Bạn" : "Trợ lý QLNH";
+        label.textContent = role === "user" ? "Bạn" : `Trợ lý ${restaurantName}`;
         bubble.append(label, document.createTextNode(text));
         function addDish(dish) {
             const item = document.createElement("span");
@@ -108,18 +109,18 @@
         }
     }
 
-    toggle.setAttribute("aria-label", "Mở trò chuyện với QLNH");
+    toggle.setAttribute("aria-label", `Mở trò chuyện với ${restaurantName}`);
     toggle.addEventListener("click", async () => {
         const opening = panel.hidden;
         panel.hidden = !opening;
         toggle.setAttribute("aria-expanded", String(opening));
-        toggle.setAttribute("aria-label", opening ? "Thu gọn trò chuyện với QLNH" : "Mở trò chuyện với QLNH");
+        toggle.setAttribute("aria-label", opening ? `Thu gọn trò chuyện với ${restaurantName}` : `Mở trò chuyện với ${restaurantName}`);
         if (opening) { close.focus(); if (!loaded) await load(); }
     });
     function hide() {
         panel.hidden = true;
         toggle.setAttribute("aria-expanded", "false");
-        toggle.setAttribute("aria-label", "Mở trò chuyện với QLNH");
+        toggle.setAttribute("aria-label", `Mở trò chuyện với ${restaurantName}`);
         toggle.focus();
     }
     close.addEventListener("click", hide);

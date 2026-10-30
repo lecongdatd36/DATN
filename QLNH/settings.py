@@ -152,7 +152,7 @@ CACHES["chatbot"] = {
     "OPTIONS": {"MAX_ENTRIES": 1000000},
 }
 RESTAURANT_PUBLIC_INFO = {
-    "name": "QLNH",
+    "name": "CƠM QUÊ",
     "address": os.environ.get("RESTAURANT_ADDRESS", "").strip()[:500],
     "opening_hours": os.environ.get("RESTAURANT_OPENING_HOURS", "").strip()[:500],
     "phone": os.environ.get("RESTAURANT_PHONE", "").strip()[:100],

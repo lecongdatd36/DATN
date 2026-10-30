@@ -1,0 +1,194 @@
+/* Shared CƠM QUÊ storefront. Loaded after the existing functional components. */
+.cq-page {
+    --customer-bg: #fffdfa;
+    --customer-accent: #b71932;
+    --customer-accent-dark: #941328;
+    --customer-green: #846a42;
+    --customer-radius: 4px;
+    background: #fffdfa !important;
+}
+.cq-page #customer-main { min-height: 48vh; }
+.cq-page .customer-container { width: min(1280px, calc(100% - 88px)); }
+.cq-page .cq-header { margin-top: 0; border-bottom: 0; backdrop-filter: none; }
+.cq-page .cq-mainbar { width: min(1380px, 100%); margin-inline: auto; }
+.cq-page .cq-topline { padding-inline: max(40px, calc((100vw - 1300px) / 2)); }
+.cq-home-page .cq-discover, .cq-home-page .cq-menu-section { padding-inline: max(44px, calc((100vw - 1280px) / 2)); }
+.cq-home-page .cq-story { padding-inline: max(65px, calc((100vw - 1228px) / 2)); }
+.cq-home-page .cq-reserve { max-width: 1280px; margin-inline: auto; }
+.cq-page .customer-section-label { color: var(--customer-accent); font-size: 10px; font-weight: 800; letter-spacing: .17em; }
+.cq-page .customer-button { min-height: 46px; padding: 13px 23px; border: 1px solid var(--customer-accent); border-radius: 3px; background: var(--customer-accent); color: #fff; font: 700 12px "Segoe UI", sans-serif; text-decoration: none; cursor: pointer; }
+.cq-page .customer-button:hover { background: var(--customer-accent-dark); }
+.cq-page input:focus-visible, .cq-page select:focus-visible, .cq-page textarea:focus-visible { outline: 2px solid #b7193270; outline-offset: 2px; }
+.cq-page-banner { position: relative; isolation: isolate; overflow: hidden; color: #fff; background: #38281c; }
+.cq-page-banner-photo { position: absolute; z-index: -2; inset: 0; }
+.cq-page-banner-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 55%; }
+.cq-page-banner::after { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, #24180deb, #24180d9c 60%, #24180d60); }
+.cq-page-banner-copy { padding-block: 45px 32px; }
+.cq-page .cq-page-banner h1 { margin: 12px 0 13px; font-size: clamp(31px, 3.5vw, 49px); letter-spacing: -.045em; }
+.cq-page-banner-copy > p { margin: 0; color: #f0dfc7; font-size: 13px; }
+.cq-breadcrumb { display: flex; gap: 12px; margin-top: 27px; color: #dccbb3; font-size: 10px; }
+.cq-breadcrumb a { color: #fff; text-decoration: none; }
+.cq-page .cq-catalog { padding: 44px 0 65px; background: #fffdfa; }
+.cq-catalog-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); align-items: start; gap: 30px; }
+.cq-catalog-sidebar { border: 1px solid #eadfd1; background: #fff; }
+.cq-catalog-sidebar .cq-sidebar-title { justify-content: space-between; background: #2f261f; color: #fff2dc; padding: 18px; }
+.cq-catalog-sidebar .cq-sidebar-title > span:last-child { color: #d6ac69; font-size: 25px; line-height: 1; }
+.cq-page .cq-catalog-sidebar .customer-menu-filters { display: flex; flex-direction: column; gap: 0; margin: 0; padding: 9px 15px; overflow: visible; }
+.cq-page .cq-catalog-sidebar .customer-menu-filters a { display: flex; justify-content: space-between; gap: 12px; padding: 13px 7px; border: 0; border-bottom: 1px solid #f0e6d9; border-radius: 0; color: #796c5d; font-size: 12px; }
+.cq-page .cq-catalog-sidebar .customer-menu-filters a:last-child { border-bottom: 0; }
+.cq-page .cq-catalog-sidebar .customer-menu-filters a.is-selected, .cq-page .cq-catalog-sidebar .customer-menu-filters a:hover { background: transparent; color: var(--customer-accent); font-weight: 700; }
+.cq-catalog-note { margin: 12px; padding: 22px 17px; background: #f8f0e1; }
+.cq-catalog-note > span { color: #c49c62; font-size: 29px; }
+.cq-page .cq-catalog-note h2 { margin: 8px 0 12px; font-size: 23px; line-height: 1.35; }
+.cq-catalog-note p { color: #917c64; font-size: 11px; }
+.cq-catalog-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.cq-catalog-toolbar > p { margin: 0; color: #55483a; font-size: 13px; font-weight: 700; }
+.cq-catalog-toolbar > p > span { display: block; margin-top: 5px; color: #998977; font-size: 10px; font-weight: 400; }
+.cq-page .customer-search { min-width: min(290px, 100%); border-radius: 3px; background: #fff; box-shadow: none; }
+.cq-page .customer-search input { min-width: 0; font-size: 12px; }
+.cq-page .customer-search button { border-radius: 2px; }
+.cq-catalog-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 21px; }
+.cq-page .cq-catalog-grid .customer-menu-card { border: 1px solid #ebdfcf; border-radius: 3px; box-shadow: none; }
+.cq-page .cq-catalog-grid .cq-dish-image-link { margin: 9px 9px 0; }
+.cq-page .cq-catalog-grid h2 { margin: 7px 0 0; font-size: 17px; line-height: 1.4; letter-spacing: -.035em; }
+.cq-page .cq-catalog-grid h2 a { text-decoration: none; }
+.cq-page .cq-catalog-grid h2 a:hover { color: var(--customer-accent); }
+.cq-page .cq-catalog-grid .cq-dish-content > p { min-height: 0; margin: 9px 0 15px; font-size: 11px; }
+.cq-page .customer-empty-state { border-radius: 3px; background: #faf3e8; }
+.cq-page .customer-empty-state strong { font: 700 22px "Segoe UI", sans-serif; }
+.cq-page .customer-detail-page { padding: 34px 0 55px; }
+.cq-page .customer-back-link { margin-bottom: 30px; font-size: 12px; }
+.cq-page .customer-detail-grid { gap: 60px; }
+.cq-page .customer-detail-image-wrap { padding: 11px; border: 1px solid #eadbc5; border-radius: 3px; background: #fff; }
+.cq-page .customer-detail-image { aspect-ratio: 1.13; border-radius: 1px; }
+.cq-page .customer-detail-copy h1 { font-size: clamp(30px, 3.6vw, 48px); line-height: 1.2; letter-spacing: -.045em; }
+.cq-page .customer-detail-price { margin: 22px 0 15px; font: 800 29px "Segoe UI", sans-serif; }
+.cq-page .customer-detail-price small { font-size: 12px; font-weight: 400; color: #99816b; }
+.cq-page .customer-detail-description { margin-top: 23px; font-size: 14px; line-height: 1.9; }
+.cq-page .customer-detail-note { border-color: #c5a16a; color: #8c7050; background: #faf3e8; font-size: 12px; }
+.cq-detail-actions { display: flex; gap: 25px; align-items: center; flex-wrap: wrap; margin-top: 27px; }
+.cq-detail-actions .cq-text-link { margin: 0; }
+.cq-page .customer-suggestions { padding: 35px 0 50px; border-top: 1px solid #eee0ce; background: #f9f2e7; }
+.cq-page .customer-suggestions h2 { font-size: 29px; }
+.cq-page .customer-suggestion-list a { align-items: center; gap: 12px; border-radius: 3px; background: #fff; font-size: 13px; }
+.cq-suggestion-photo { width: 65px; height: 65px; flex-shrink: 0; object-fit: cover; border-radius: 2px; }
+.customer-suggestion-list span { flex: 1; }
+.customer-suggestion-list small { display: block; color: #99816b; font-size: 10px; }
+.cq-booking-page { padding: 28px 0 65px; background: linear-gradient(180deg, #fffdfa, #f9f3ea); }
+.cq-booking-nav { display: flex; gap: 35px; margin-bottom: 27px; padding-bottom: 19px; border-bottom: 1px solid #ecdfcf; }
+.cq-booking-nav a { display: flex; gap: 9px; align-items: center; color: #b29d84; font-size: 10px; text-decoration: none; }
+.cq-booking-nav a span { color: #7f715f; font-size: 12px; }
+.cq-booking-nav a:hover, .cq-booking-nav a.is-current, .cq-booking-nav a.is-current span { color: var(--customer-accent); font-weight: 700; }
+.cq-booking-layout { display: grid; grid-template-columns: .85fr 1.15fr; gap: 45px; align-items: start; }
+.cq-booking-visual { position: sticky; top: 24px; min-height: 620px; overflow: hidden; isolation: isolate; border-radius: 3px; color: #fff; background: #38281c; }
+.cq-booking-photo { position: absolute; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.cq-booking-visual::after { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(0deg, #231609ee, #23160940); }
+.cq-booking-visual-copy { position: absolute; inset: auto 35px 40px; }
+.cq-page .cq-booking-visual h2 { margin: 16px 0 18px; font-size: clamp(28px, 3vw, 43px); line-height: 1.3; letter-spacing: -.04em; }
+.cq-booking-visual h2 em { color: #ffe0a1; font-style: normal; }
+.cq-booking-visual p { margin-bottom: 25px; color: #e7d2b7; font-size: 13px; line-height: 1.9; }
+.cq-booking-visual a { display: inline-flex; gap: 24px; padding-bottom: 8px; border-bottom: 1px solid #fff5; font-size: 11px; text-decoration: none; }
+.cq-page .cq-booking-content { min-width: 0; min-height: 0; padding: 12px 0 0; }
+.cq-page .cq-booking-content h1 { margin: 12px 0 0; font-size: clamp(29px, 3vw, 41px); line-height: 1.2; letter-spacing: -.045em; }
+.cq-page .customer-form-intro { margin: 16px 0 24px; font-size: 13px; line-height: 1.9; }
+.cq-page .customer-form-helper { margin: -9px 0 22px; font-size: 11px; }
+.cq-page .customer-form-card, .cq-page .customer-status-card, .cq-page .customer-result-card { padding: 25px; border-radius: 3px; box-shadow: 0 8px 25px #6b462508; background: #fff; }
+.cq-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.cq-form-grid .customer-form-field { min-width: 0; margin-bottom: 0; }
+.cq-form-grid .cq-field-wide, .cq-form-grid .customer-form-errors, .cq-form-grid > button { grid-column: 1 / -1; }
+.cq-form-grid > button { justify-self: start; }
+.cq-page .customer-form-field label { color: #55483c; font-size: 11px; }
+.cq-page .customer-form-field input, .cq-page .customer-form-field select, .cq-page .customer-form-field textarea { min-width: 0; min-height: 46px; border-radius: 3px; font-size: 13px; background: #fffdfa; }
+.cq-page .customer-form-field small { font-size: 10px; }
+.cq-required { color: var(--customer-accent); }
+.cq-page .customer-success-card { padding: 30px; border-radius: 3px; background: #fff; box-shadow: none; }
+.cq-page .customer-success-card > p { font-size: 13px; }
+.cq-page .customer-success-mark { background: #f5e7d3; color: var(--customer-accent); }
+.cq-page .customer-booking-code { border-radius: 3px; color: var(--customer-accent); background: #fbf3e5; font-size: 30px; overflow-wrap: anywhere; }
+.cq-page .customer-booking-summary { gap: 13px; font-size: 12px; }
+.cq-page .customer-booking-summary dd { overflow-wrap: anywhere; }
+.cq-page .customer-status-heading { flex-wrap: wrap; gap: 8px; }
+.cq-page .customer-status-heading strong { font: 700 22px "Segoe UI", sans-serif; }
+.cq-page .customer-timeline { font-size: 13px; }
+.cq-page .customer-timeline li.is-done { color: var(--customer-accent); }
+.cq-page .customer-timeline li.is-done span { border-color: var(--customer-accent); background: var(--customer-accent); }
+.cq-page .customer-qr-appbar { top: 0; }
+.cq-page .customer-qr-status-card, .cq-page .customer-qr-status-empty, .cq-page .customer-qr-ready-card { border-radius: 4px; }
+.cq-page .customer-status-page-heading h1, .cq-page .customer-qr-heading h1 { font-size: clamp(28px, 4vw, 43px); }
+.cq-page .customer-qr-add, .cq-page .customer-qr-cart-bar, .cq-page .customer-qr-submit { background: var(--customer-accent); }
+@media (max-width: 1050px) {
+    .cq-page .customer-container { width: calc(100% - 48px); }
+    .cq-catalog-layout { grid-template-columns: 180px minmax(0, 1fr); gap: 22px; }
+    .cq-catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .cq-booking-layout { grid-template-columns: .8fr 1.2fr; gap: 25px; }
+    .cq-booking-visual-copy { inset-inline: 24px; }
+    .cq-page .cq-booking-visual h2 { font-size: 31px; }
+    .cq-page .customer-detail-grid { gap: 30px; }
+    .cq-page .customer-suggestion-list { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+    .cq-page .customer-container { width: calc(100% - 36px); }
+    .cq-page .cq-topline { padding-inline: 16px; }
+    .cq-home-page .cq-discover, .cq-home-page .cq-menu-section { padding-inline: 20px; }
+    .cq-home-page .cq-story { padding-inline: 27px; }
+    .cq-home-page .cq-reserve { margin-inline: 20px; }
+    .cq-page-banner-copy { padding-block: 32px 25px; }
+    .cq-page-banner-copy > p { font-size: 11px; }
+    .cq-page .cq-catalog { padding-block: 25px 40px; }
+    .cq-catalog-layout { display: block; }
+    .cq-catalog-sidebar { border: 0; background: transparent; }
+    .cq-catalog-sidebar .cq-sidebar-title, .cq-catalog-note { display: none; }
+    .cq-page .cq-catalog-sidebar .customer-menu-filters { flex-direction: row; overflow-x: auto; gap: 8px; padding: 0 0 12px; margin-bottom: 15px; }
+    .cq-page .cq-catalog-sidebar .customer-menu-filters a { padding: 8px 12px; border: 1px solid #e8dac6; border-radius: 3px; font-size: 11px; }
+    .cq-page .cq-catalog-sidebar .customer-menu-filters a.is-selected { color: #fff; background: var(--customer-accent); border-color: var(--customer-accent); }
+    .cq-catalog-sidebar .customer-menu-filters a > span { display: none; }
+    .cq-catalog-toolbar { align-items: stretch; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+    .cq-catalog-grid { gap: 12px; }
+    .cq-page .cq-catalog-grid .cq-dish-image-link { margin: 6px 6px 0; }
+    .cq-page .cq-catalog-grid h2 { font-size: 14px; }
+    .cq-page .cq-catalog-grid .cq-dish-content > p { font-size: 10px; }
+    .cq-page .cq-catalog-grid .cq-dish-content { padding: 10px; }
+    .cq-page .customer-detail-page { padding-block: 23px 35px; }
+    .cq-page .customer-detail-grid { grid-template-columns: 1fr; gap: 25px; }
+    .cq-page .customer-detail-copy h1 { font-size: 32px; }
+    .cq-page .customer-suggestions h2 { font-size: 25px; }
+    .cq-booking-page { padding-block: 22px 35px; }
+    .cq-booking-nav { justify-content: space-between; gap: 12px; padding-bottom: 15px; margin-bottom: 20px; }
+    .cq-booking-nav a { gap: 5px; font-size: 8px; }
+    .cq-booking-nav a span { font-size: 10px; }
+    .cq-booking-layout { display: flex; flex-direction: column; gap: 22px; }
+    .cq-booking-visual { position: relative; top: auto; min-height: 210px; width: 100%; }
+    .cq-booking-visual-copy { inset: 23px 24px; }
+    .cq-page .cq-booking-visual h2 { margin: 10px 0 0; font-size: 26px; line-height: 1.2; }
+    .cq-booking-visual h2 br:first-child { display: none; }
+    .cq-booking-visual p, .cq-booking-visual a { display: none; }
+    .cq-booking-content { width: 100%; }
+    .cq-page .cq-booking-content h1 { font-size: 28px; }
+    .cq-page .customer-form-card, .cq-page .customer-status-card, .cq-page .customer-result-card { padding: 20px; }
+    .cq-form-grid { grid-template-columns: 1fr; gap: 16px; }
+    .cq-page .customer-success-card { padding: 22px 18px; }
+}
+@media (max-width: 380px) {
+    .cq-home-page .cq-discover, .cq-home-page .cq-menu-section { padding-inline: 14px; }
+    .cq-page .customer-container { width: calc(100% - 28px); }
+    .cq-catalog-grid { gap: 9px; }
+    .cq-page .cq-catalog-grid .cq-dish-content { padding: 8px; }
+    .cq-page .cq-catalog-grid h2 { font-size: 12px; }
+    .cq-page .cq-catalog-grid .cq-dish-bottom > strong { font-size: 14px; }
+}
+
+.cq-auth-page { padding: 45px 0 60px; background: #fcf6ed; }
+.cq-auth-page .cq-booking-layout { align-items: center; gap: 80px; }
+.cq-auth-page .cq-booking-visual { position: relative; top: auto; min-height: 540px; }
+.cq-auth-page .cq-booking-content { max-width: 520px; }
+.cq-login-form .customer-button { width: 100%; justify-content: space-between; }
+.cq-auth-help { max-width: 480px; margin-top: 22px; color: #94826d; font-size: 11px; line-height: 1.9; }
+.cq-flash-messages { padding-block: 15px; }
+.cq-flash-messages p { padding: 12px 17px; border: 1px solid #e8d7bd; background: #fcf4e7; color: #7a5c37; font-size: 13px; }
+.cq-page .customer-qr-service-actions button:hover, .cq-page .customer-qr-service-actions button.is-requested { border-color: var(--customer-accent); background: var(--customer-accent); }
+@media (max-width: 760px) {
+    .cq-auth-page { padding-block: 23px 35px; }
+    .cq-auth-page .cq-booking-layout { gap: 23px; }
+    .cq-auth-page .cq-booking-visual { min-height: 205px; }
+    .cq-auth-page .cq-booking-content { max-width: none; }
+}

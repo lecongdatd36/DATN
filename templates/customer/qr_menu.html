@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block title %}Menu tại bàn · QLNH{% endblock %}
+{% block title %}Menu tại bàn · CƠM QUÊ{% endblock %}
 {% block body_class %}customer-qr-app-body{% endblock %}
 
 {% block content %}
@@ -45,7 +45,7 @@
                         {% for dish in category.customer_dishes %}
                         <article class="customer-qr-dish" data-qr-dish data-category="{{ dish.category_id }}" data-id="{{ dish.pk }}" data-name="{{ dish.name }}" data-search="{{ dish.name }} {{ dish.code }} {{ category.name }}" data-price="{{ dish.price }}" data-available="{% if dish.status == 'AVAILABLE' %}true{% else %}false{% endif %}">
                             {% if dish.thumbnail or dish.image %}<img src="{% if dish.thumbnail %}{{ dish.thumbnail.url }}{% else %}{{ dish.image.url }}{% endif %}" alt="{{ dish.name }}" loading="lazy">{% else %}<img src="{% static 'images/dish-placeholder.svg' %}" alt="Chưa có ảnh cho {{ dish.name }}" loading="lazy">{% endif %}
-                            <div class="customer-qr-dish-copy"><span>{{ category.name }}</span><h3>{{ dish.name }}</h3><p>{{ dish.description|default:'Món ăn được chuẩn bị chỉn chu từ căn bếp QLNH.'|truncatewords:12 }}</p><strong>{{ dish.price|floatformat:0 }}đ</strong></div>
+                            <div class="customer-qr-dish-copy"><span>{{ category.name }}</span><h3>{{ dish.name }}</h3><p>{{ dish.description|default:'Món ăn được chuẩn bị chỉn chu từ căn bếp CƠM QUÊ.'|truncatewords:12 }}</p><strong>{{ dish.price|floatformat:0 }}đ</strong></div>
                             {% if dish.status == 'AVAILABLE' %}<button class="customer-qr-add" type="button" data-qr-add aria-label="Thêm {{ dish.name }}"><span aria-hidden="true">+</span><b data-qr-card-quantity hidden>0</b></button>{% else %}<span class="customer-qr-sold">Hết món</span>{% endif %}
                         </article>
                         {% endfor %}

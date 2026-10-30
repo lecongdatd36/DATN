@@ -1,18 +1,16 @@
-{% extends 'customer/base_customer.html' %}
+{% extends 'customer/reservation_base.html' %}
 
-{% block title %}Tra cứu đặt bàn · QLNH{% endblock %}
+{% block title %}Tra cứu đặt bàn · CƠM QUÊ{% endblock %}
 
-{% block content %}
-<section class="customer-form-page" aria-labelledby="lookup-title">
-    <div class="customer-container customer-narrow-content">
+{% block reservation_content %}
+
         <span class="customer-section-label">Theo dõi yêu cầu</span>
         <h1 id="lookup-title">Tra cứu đặt bàn</h1>
         <p class="customer-form-intro">Nhập cả mã đặt bàn và số điện thoại đã dùng khi đặt để xem thông tin.</p>
-        <form class="customer-form-card" method="post">
+        <form class="customer-form-card cq-form-grid" method="post">
             {% csrf_token %}
             {% include 'customer/includes/form_fields.html' with form=form %}
             <button class="customer-button" type="submit">Tra cứu <span aria-hidden="true">→</span></button>
         </form>
-    </div>
-</section>
+
 {% endblock %}

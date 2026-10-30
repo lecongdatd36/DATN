@@ -31,7 +31,7 @@ def policy_reply(message):
     private_topic = any(word in query for word in ("doanh thu", "ton kho", "kho noi bo", "tai khoan noi bo", "danh sach tai khoan", "mat khau", "nhan vien nao", "danh sach nhan vien", "khach hang khac", "api key", "api_key", "system prompt", "system instruction"))
     # A question about a concept is different from a request for this restaurant's data.
     general_definition = any(phrase in query for phrase in ("la gi", "dinh nghia", "khai niem"))
-    specific_access = any(phrase in query for phrase in ("nha hang", "qlnh", "noi bo", "cua toi", "dang dung", "hom nay", "thang nay", "cho xem", "in ra", "liet ke", "tat ca", "toan bo"))
+    specific_access = any(phrase in query for phrase in ("nha hang", "qlnh", "com que", "noi bo", "cua toi", "dang dung", "hom nay", "thang nay", "cho xem", "in ra", "liet ke", "tat ca", "toan bo"))
     if private_topic and (not general_definition or specific_access):
         return "Mình có thể trò chuyện và giải thích thông tin công khai, nhưng không cung cấp dữ liệu nội bộ, tài khoản hoặc thông tin của người khác."
     if any(word in query for word in ("hang cua toi", "toi dang hang", "toi thuoc hang", "toi hang gi", "toi o hang", "hang theo so dien thoai", "tra hang theo")):
