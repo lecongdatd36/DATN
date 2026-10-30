@@ -2,6 +2,8 @@
 Django==5.2.17
 psycopg[binary]==3.3.5
 python-dotenv==1.2.3
+google-genai==2.34.0
+httpx==0.28.1
 
 # Pinned transitive dependencies for reproducible installation.
 asgiref==3.12.1

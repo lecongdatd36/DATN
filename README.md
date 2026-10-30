@@ -17,6 +17,8 @@
 
 Phiên bản dependency cụ thể được cố định trong `requirements.txt`. `tzdata` 2026.4 cung cấp dữ liệu múi giờ cho môi trường Windows. Bộ xuất giỏ món, notebook Colab Apriori và gợi ý gọi thêm trên giỏ QR/menu nhân viên/POS đã có tại [hướng dẫn AI](docs/ai-apriori.md). Thư viện huấn luyện cài riêng qua `requirements-ai.txt`; web suy luận bằng Python chuẩn.
 
+Xem [README giải thích toàn bộ phần AI đã thực hiện](docs/README-AI.md) để biết dữ liệu đã dùng, từng bước xử lý, ý nghĩa các file, kết quả đánh giá và cách tự thử trên ứng dụng hoặc Colab.
+
 Giao diện quản lý dùng bộ layout tự xây trên Bootstrap: sidebar theo quyền có thể thu gọn, topbar tài khoản, chế độ sáng/tối, menu mobile và dashboard thao tác nhanh. Thiết kế tham khảo phong cách admin dashboard hiện đại nhưng không sao chép hoặc phụ thuộc tài nguyên của template bên ngoài; toàn bộ CSS, JavaScript và SVG icon nằm trong mã nguồn dự án để dễ bảo trì.
 
 ## Cấu trúc hiện tại
@@ -444,3 +446,11 @@ Repository Git đã có lịch sử commit. `.gitignore` loại trừ `.env`, `.
 Phạm vi hiện tại đã gồm **Hóa đơn, Thanh toán, Kho/Công thức và Báo cáo quản trị**. Giá nhập được tính bình quân gia quyền; định lượng nguyên liệu tự động xuất kho khi gửi món xuống Bếp; món hủy trước chế biến được hoàn đúng lượng đã xuất. Giá vốn được chụp tại thời điểm bán để báo cáo doanh thu, giá vốn, lãi gộp và biên lãi không thay đổi khi giá nhập về sau thay đổi.
 
 Lịch sử: [Giai đoạn 1](docs/stage-1-report.md), [Giai đoạn 2](docs/stage-2-report.md), [Giai đoạn 3](docs/stage-3-report.md), [Giai đoạn 4](docs/stage-4-report.md), [Giai đoạn 5](docs/stage-5-report.md), [Giai đoạn 6](docs/stage-6-report.md), [Giai đoạn 7](docs/stage-7-report.md), [Giai đoạn 8](docs/stage-8-report.md), [Giai đoạn 9](docs/stage-9-report.md). Hiện trạng vận hành mới nhất được mô tả trực tiếp trong README này.
+
+## Dự báo số đơn hằng ngày
+
+Đã có luồng cập nhật offline, công bố kết quả nguyên tử và script lịch Windows 07:00 giờ Việt Nam. Xem [hướng dẫn chạy, lịch, log và kiểm thử](docs/forecast-daily.md). Hiện mặc định là demo dữ liệu mô phỏng, chưa chứng minh chất lượng trên dữ liệu bán hàng thực tế.
+
+## Chatbot trang chủ khách hàng
+
+Nút Hỏi QLNH trên trang chủ tư vấn thực đơn công khai qua Gemini, hỗ trợ hội thoại trong phiên và dẫn đến form đặt bàn. Xem [cấu hình Gemini, cache, cách chạy và kết quả kiểm thử](docs/chatbot-gemini.md). Không tự tạo nghiệp vụ hoặc bật billing; API chưa khả dụng vẫn giữ các chức năng chính hoạt động.

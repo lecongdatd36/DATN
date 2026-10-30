@@ -1,6 +1,5 @@
 import csv
 from datetime import datetime, time, timedelta
-
 from django.contrib.auth.mixins import AccessMixin
 from django.http import HttpResponse
 from django.utils import timezone
@@ -8,6 +7,7 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from .forms import ReportFilterForm
+from .forecast import get_order_forecast
 from .permissions import has_report_permission
 from .selectors import paid_invoices_for_export, report_data
 
@@ -40,6 +40,7 @@ class ReportDashboardView(ReportPermissionMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         form = _filter_form(self.request)
         context["filter_form"] = form
+        context["order_forecast"] = get_order_forecast()
         if self.request.GET:
             if not form.is_valid():
                 return context

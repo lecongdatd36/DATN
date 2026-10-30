@@ -71,6 +71,7 @@ class CustomerMenuView(ListView):
         return context
 
 
+@method_decorator(ensure_csrf_cookie, name="dispatch")
 class CustomerHomeView(TemplateView):
     template_name = "home.html"
 

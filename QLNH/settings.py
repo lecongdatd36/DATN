@@ -125,6 +125,40 @@ LOGGING = {
 
 ROOT_URLCONF = "QLNH.urls"
 APRIORI_MODEL_PATH = Path(os.environ.get("APRIORI_MODEL_PATH", str(BASE_DIR / "fixtures/ai/apriori_model.json")))
+
+# Public homepage chat. Keys remain on the server; never expose this configuration
+# through a template context processor or log it.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "").strip() or "gemini-3.1-flash-lite"
+CHATBOT_PROVIDER = os.environ.get("CHATBOT_PROVIDER", "gemini").strip().lower() or "gemini"
+if CHATBOT_PROVIDER not in {"groq", "gemini"}:
+    raise ImproperlyConfigured("CHATBOT_PROVIDER must be groq or gemini.")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "").strip() or "qwen/qwen3.8-27b"
+CHATBOT_TIMEOUT_SECONDS = positive_int_env("CHATBOT_TIMEOUT_SECONDS", 20)
+CHATBOT_MAX_OUTPUT_TOKENS = min(positive_int_env("CHATBOT_MAX_OUTPUT_TOKENS", 1000), 1200)
+CHATBOT_MAX_TURNS = min(positive_int_env("CHATBOT_MAX_TURNS", 12), 20)
+CHATBOT_CONTEXT_CHARS = min(positive_int_env("CHATBOT_CONTEXT_CHARS", 24000), 40000)
+CHATBOT_SESSION_RPM = positive_int_env("CHATBOT_SESSION_RPM", 4)
+CHATBOT_IP_RPM = positive_int_env("CHATBOT_IP_RPM", 8)
+CHATBOT_GLOBAL_RPM = positive_int_env("CHATBOT_GLOBAL_RPM", 10)
+CHATBOT_GLOBAL_RPD = positive_int_env("CHATBOT_GLOBAL_RPD", 100)
+# A shared DB cache works across Windows/Linux web processes. Bootstrap using
+# manage.py createcachetable qlnh_chatbot_cache. No business models/migrations change.
+CACHES["chatbot"] = {
+    "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+    "LOCATION": "qlnh_chatbot_cache",
+    "TIMEOUT": 7200,
+    "OPTIONS": {"MAX_ENTRIES": 1000000},
+}
+RESTAURANT_PUBLIC_INFO = {
+    "name": "QLNH",
+    "address": os.environ.get("RESTAURANT_ADDRESS", "").strip()[:500],
+    "opening_hours": os.environ.get("RESTAURANT_OPENING_HOURS", "").strip()[:500],
+    "phone": os.environ.get("RESTAURANT_PHONE", "").strip()[:100],
+    "email": os.environ.get("RESTAURANT_EMAIL", "").strip()[:200],
+    "policy": os.environ.get("RESTAURANT_PUBLIC_POLICY", "").strip()[:1000],
+}
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -136,6 +170,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.access_policy",
+                "apps.customer_portal.chatbot_data.public_restaurant",
             ],
         },
     },
@@ -183,6 +218,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "vi"
 TIME_ZONE = "Asia/Ho_Chi_Minh"
+
+# Offline daily order forecasts; each source has its own publication pointer.
+ORDER_FORECAST_ROOT = Path(os.environ.get("ORDER_FORECAST_ROOT", str(BASE_DIR / "artifacts/ai/forecast")))
+ORDER_FORECAST_SOURCE = os.environ.get("ORDER_FORECAST_SOURCE", "mo_phong")
+if ORDER_FORECAST_SOURCE not in {"mo_phong", "application_export"}:
+    raise ImproperlyConfigured("ORDER_FORECAST_SOURCE must be mo_phong or application_export.")
 USE_I18N = True
 USE_TZ = True
 

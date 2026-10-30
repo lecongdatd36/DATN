@@ -1,0 +1,83 @@
+﻿<section class="project-card p-3 p-md-4 mb-4"
+         aria-labelledby="order-forecast-title">
+    <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+        <h2 id="order-forecast-title" class="h5 mb-0">
+            AI dự báo số đơn theo ngày
+        </h2>
+        {% if order_forecast.is_demo %}
+            <span class="badge text-bg-warning">Dữ liệu mô phỏng</span>
+        {% else %}
+            <span class="badge text-bg-info">Dữ liệu ứng dụng</span>
+        {% endif %}
+    </div>
+
+    {% if order_forecast.ready %}
+        <p class="small text-secondary">
+            Dữ liệu học đến {{ order_forecast.trained_until|date:"d/m/Y" }}.
+            Kỳ dự báo:
+            {{ order_forecast.date_from|date:"d/m/Y" }} –
+            {{ order_forecast.date_to|date:"d/m/Y" }}.
+            Kỳ này độc lập với bộ lọc báo cáo bên dưới.
+        </p>
+
+        {% if order_forecast.is_stale %}
+            <div class="alert alert-warning">
+                Kỳ dự báo chưa được cập nhật cho hôm nay (giờ Việt Nam).
+                Đang hiển thị bộ kết quả thành công trước đó; các ngày và số đơn bên dưới thuộc kỳ đã ghi.
+            </div>
+        {% endif %}
+        {% if order_forecast.last_update_failed %}
+            <div class="alert alert-warning">
+                Lần cập nhật gần nhất thất bại. Hệ thống đang giữ bộ dự báo thành công trước đó.
+            </div>
+        {% endif %}
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Ngày dự báo</th>
+                        <th scope="col" class="text-end">
+                            Số đơn dự kiến
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in order_forecast.rows %}
+                        <tr>
+                            <td>{{ row.day|date:"d/m/Y" }}</td>
+                            <td class="text-end fw-semibold">
+                                {{ row.orders }} đơn
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p class="small mb-1">
+            Sai số MAE trên 28 ngày kiểm tra:
+            <strong>{{ order_forecast.mae|floatformat:2 }}</strong>
+            đơn/ngày.
+            Cách lấy cùng thứ tuần trước:
+            {{ order_forecast.baseline_mae|floatformat:2 }} đơn/ngày.
+        </p>
+        <p class="small text-secondary mb-0">
+            {% if order_forecast.is_demo %}
+            Mô hình Random Forest học từ dữ liệu mô phỏng.
+            Kết quả dùng trình diễn, chưa chứng minh hiệu quả
+            trên dữ liệu bán hàng thực tế.
+            {% else %}
+            Mô hình Random Forest học từ dữ liệu ứng dụng đã xuất riêng.
+            Chất lượng cần được đánh giá thêm trên dữ liệu bán hàng thực tế.
+            {% endif %}
+        </p>
+        <p class="small text-secondary mt-1 mb-0">
+            Cập nhật thành công: {{ order_forecast.published_at|date:"d/m/Y H:i" }} (giờ Việt Nam).
+        </p>
+    {% else %}
+        <p class="text-secondary mb-0">
+            Chưa có kết quả dự báo hợp lệ để hiển thị.
+        </p>
+    {% endif %}
+</section>

@@ -1,0 +1,38 @@
+.customer-chat { position: fixed; right: 24px; bottom: max(24px, env(safe-area-inset-bottom)); z-index: 40; font: 14px/1.5 "Segoe UI", Arial, sans-serif; }
+.customer-chat [hidden] { display: none !important; }
+.customer-chat button, .customer-chat textarea { font: inherit; }
+.customer-chat button { cursor: pointer; }
+.customer-chat button:disabled { cursor: wait; opacity: .6; }
+.customer-chat button:focus-visible, .customer-chat a:focus-visible, .customer-chat textarea:focus-visible { outline: 3px solid var(--customer-accent); outline-offset: 3px; }
+.customer-chat-launch { display: flex; align-items: center; gap: 9px; padding: 13px 18px; border: 1px solid var(--customer-accent-dark); border-radius: 30px; background: var(--customer-accent-dark); color: #fff; box-shadow: 0 5px 24px #30292233; font-weight: 600 !important; }
+.customer-chat-panel { position: absolute; right: 0; bottom: 68px; width: 390px; max-width: calc(100vw - 40px); height: 620px; max-height: calc(100dvh - 120px); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--customer-border); border-radius: 20px; background: var(--customer-surface); box-shadow: 0 14px 55px #30292230; }
+.customer-chat-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; background: var(--customer-accent-dark); color: #fff; }
+.customer-chat-header strong { display: block; font-size: 17px; }
+.customer-chat-header small { display: block; margin-top: 2px; color: #f7e9df; }
+.customer-chat-icon { min-width: 40px; min-height: 40px; border: 1px solid #ffffff66; border-radius: 50%; color: #fff; background: transparent; font-size: 26px !important; line-height: 1; }
+.customer-chat-scroll { flex: 1; min-height: 60px; overflow-y: auto; overscroll-behavior: contain; padding: 16px; }
+.customer-chat-welcome { margin: 0 0 12px; color: var(--customer-muted); }
+.customer-chat-suggestions { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+.customer-chat-suggestions button { text-align: left; background: transparent; border: 1px solid var(--customer-border); border-radius: 12px; padding: 8px 11px; color: var(--customer-accent-dark); }
+.customer-chat-message { margin: 12px 0; padding: 10px 13px; max-width: 95%; border-radius: 12px; overflow-wrap: anywhere; white-space: pre-wrap; background: var(--customer-surface-deep); }
+.customer-chat-message[data-role="user"] { margin-left: auto; background: var(--customer-accent-dark); color: #fff; }
+.customer-chat-message-label { display: block; margin-bottom: 4px; font-size: 11px; font-weight: 700; opacity: .85; }
+.customer-chat-dish { display: block; padding: 9px 0; border-top: 1px solid var(--customer-border); white-space: normal; }
+.customer-chat-dish small { display: block; color: var(--customer-muted); }
+.customer-chat-apriori { display: block; margin-top: 9px; font-size: 12px; color: var(--customer-green); }
+.customer-chat-navigation { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 8px 16px; border-top: 1px solid var(--customer-border); font-size: 12px; color: var(--customer-accent-dark); }
+.customer-chat-status { min-height: 24px; margin: 0; padding: 0 16px 5px; font-size: 12px; color: var(--customer-accent-dark); }
+.customer-chat-form { display: flex; align-items: flex-end; gap: 8px; padding: 0 14px 10px; }
+.customer-chat-form textarea { min-width: 0; width: 100%; resize: none; max-height: 120px; padding: 9px 10px; border: 1px solid var(--customer-border); border-radius: 10px; color: var(--customer-text); background: #fff; }
+.customer-chat-form button { min-height: 44px; padding: 10px 14px; border: 0; border-radius: 10px; background: var(--customer-accent-dark); color: #fff; }
+.customer-chat-footer { display: flex; align-items: center; gap: 10px; padding: 0 14px 12px; }
+.customer-chat-footer p { flex: 1; margin: 0; font-size: 10px; color: var(--customer-muted); }
+.customer-chat-footer button { flex-shrink: 0; padding: 7px 0; border: 0; background: transparent; font-size: 11px; text-decoration: underline; color: var(--customer-accent-dark); }
+.customer-chat-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 575px) {
+    .customer-chat { right: 12px; bottom: max(14px, env(safe-area-inset-bottom)); }
+    .customer-chat-launch { padding: 12px; }
+    .customer-chat-launch span { display: none; }
+    .customer-chat-panel { bottom: 62px; width: calc(100vw - 24px); max-width: none; max-height: calc(100dvh - 100px); border-radius: 16px; }
+    .customer-chat-form textarea { font-size: 16px; }
+}

@@ -1,0 +1,16 @@
+{
+  "data_source": "mo_phong",
+  "target": "so_don_theo_ngay",
+  "seed": 42,
+  "horizon_days": 7,
+  "evaluation_days": 28,
+  "evaluation_method": "4 rolling origins, retrain before each 7-day forecast",
+  "mae_ai": 5.641890593964698,
+  "mae_baseline": 7.535714285714286,
+  "rmse_ai": 7.384541907715697,
+  "metrics_use_unrounded_predictions": true,
+  "final_model_refitted_on_all_days": true,
+  "training_last_date": "2026-10-29",
+  "sklearn_version": "1.9.1",
+  "limitation": "Du lieu mo phong; chua chung minh hieu qua thuc te."
+}

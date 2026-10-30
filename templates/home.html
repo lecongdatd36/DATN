@@ -3,6 +3,9 @@
 
 {% block title %}QLNH · Nhà hàng Việt{% endblock %}
 
+{% block extra_css %}<link rel="stylesheet" href="{% static 'customer/css/chatbot.css' %}?v=1">{% endblock %}
+{% block extra_js %}<script src="{% static 'customer/js/chatbot.js' %}?v=1" defer></script>{% endblock %}
+
 {% block content %}
 <section class="customer-hero" aria-labelledby="customer-hero-title">
     <div class="customer-container customer-hero-grid">
@@ -73,7 +76,8 @@
             <p>Chọn ngày, chọn giờ, phần còn lại để QLNH chăm sóc. Yêu cầu của bạn sẽ được xác nhận bởi nhân viên nhà hàng.</p>
             <div class="customer-actions"><a class="customer-button" href="{% url 'customer_reservations:create' %}">Đặt bàn ngay <span aria-hidden="true">↗</span></a><a class="customer-button customer-button-light" href="{% url 'customer_reservations:check' %}">Kiểm tra bàn trước</a></div>
         </div>
-        <div class="customer-reservation-aside"><strong>Thứ Hai – Chủ Nhật</strong><span>10:00 – 22:00<br>Nhận khách cuối lúc 21:00</span></div>
+        <div class="customer-reservation-aside"><strong>Giờ đón khách</strong><span>{{ restaurant_public.opening_hours|default:"Giờ mở cửa chưa được cập nhật." }}</span></div>
     </div>
 </section>
+{% include "customer/includes/chatbot.html" %}
 {% endblock %}

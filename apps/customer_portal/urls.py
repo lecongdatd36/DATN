@@ -2,10 +2,12 @@ from django.urls import path
 
 from . import views
 from .recommendation_views import menu_recommendations
+from .chatbot_views import customer_chat
 
 app_name = "customer_portal"
 
 urlpatterns = [
+    path("chat/", customer_chat, name="chat"),
     path("recommendations/", menu_recommendations, name="recommendations"),
     path("", views.CustomerMenuView.as_view(), name="menu"),
     path("table/<uuid:token>/check-in/", views.CustomerQRCheckInRequestView.as_view(), name="qr_check_in"),

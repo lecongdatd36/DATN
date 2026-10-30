@@ -52,11 +52,11 @@
             </div>
             <div class="customer-footer-column">
                 <h2>Ghé thăm</h2>
-                <p>12 Nguyễn Huệ<br>Quận 1, Thành phố Hồ Chí Minh</p>
+                <p>{{ restaurant_public.address|default:"Địa chỉ chưa được cập nhật." }}</p>
             </div>
             <div class="customer-footer-column">
                 <h2>Liên hệ</h2>
-                <p>028 1234 5678<br>hello@qlnh.vn</p>
+                <p>{{ restaurant_public.phone|default:"Số điện thoại chưa được cập nhật." }}<br>{{ restaurant_public.email|default:"Email chưa được cập nhật." }}</p>
             </div>
         </div>
         <div class="customer-container customer-footer-bottom">
