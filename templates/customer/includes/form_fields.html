@@ -1,2 +1,10 @@
-{% if form.non_field_errors %}<div class="customer-form-errors">{{ form.non_field_errors }}</div>{% endif %}
-{% for field in form %}{% if not field.is_hidden %}<div class="customer-form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="customer-field-error">{{ error }}</span>{% endfor %}</div>{% endif %}{% endfor %}
+{% if form.non_field_errors %}<div class="customer-form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+{% for field in form.visible_fields %}
+<div class="customer-form-field{% if field.name == 'note' %} cq-field-wide{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="cq-required" aria-hidden="true">*</span>{% endif %}</label>
+    {{ field }}
+    {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+    {% for error in field.errors %}<span class="customer-field-error">{{ error }}</span>{% endfor %}
+</div>
+{% endfor %}

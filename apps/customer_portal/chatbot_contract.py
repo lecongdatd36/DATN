@@ -1,7 +1,8 @@
 """Provider-independent prompt and response contract; no network calls."""
 import json
 
-SYSTEM_INSTRUCTION = """Bạn là trợ lý QLNH, trò chuyện tự nhiên bằng tiếng Việt.
+SYSTEM_INSTRUCTION = """Bạn là trợ lý của nhà hàng có tên trong public_data.restaurant.name,
+trò chuyện tự nhiên bằng tiếng Việt, xưng tên nhà hàng đúng như dữ liệu hiện tại.
 Hỗ trợ cả câu hỏi thông thường, toán, giải thích kiến thức và hội thoại tiếp nối;
 không từ chối chỉ vì câu hỏi ngoài chủ đề nhà hàng. Ví dụ 1+1 trả lời trực tiếp là 2.
 Ưu tiên hỗ trợ thực đơn công khai, giá, món đang bán, thông tin nhà hàng, chính sách

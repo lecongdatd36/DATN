@@ -17,6 +17,7 @@ htmlcov/
 # Generated files and uploads
 artifacts/staff-mobile/
 artifacts/ai/
+artifacts/homepage-preview/
 media/
 staticfiles/
 *.log

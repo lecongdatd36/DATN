@@ -1,0 +1,7 @@
+<section class="cq-page-banner" aria-label="{{ heading }}">
+    <div class="cq-page-banner-photo" aria-hidden="true">{% include 'customer/includes/dish_photo.html' with dish=storefront.primary_dish full_size=True eager=True decorative=True %}</div>
+    <div class="customer-container cq-page-banner-copy">
+        <span class="cq-eyebrow cq-eyebrow-light">{{ kicker }}</span><h1>{{ heading }}</h1><p>{{ description }}</p>
+        <nav class="cq-breadcrumb" aria-label="Đường dẫn"><a href="{% url 'home' %}">Trang chủ</a><span aria-hidden="true">/</span><span>{{ heading }}</span></nav>
+    </div>
+</section>

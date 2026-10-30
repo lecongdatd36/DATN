@@ -1,10 +1,9 @@
-{% extends 'customer/base_customer.html' %}
+{% extends 'customer/reservation_base.html' %}
 
-{% block title %}Đặt bàn thành công · QLNH{% endblock %}
+{% block title %}Đặt bàn thành công · CƠM QUÊ{% endblock %}
 
-{% block content %}
-<section class="customer-form-page" aria-labelledby="success-title">
-    <div class="customer-container customer-narrow-content">
+{% block reservation_content %}
+
         <div class="customer-success-card">
             <span class="customer-success-mark" aria-hidden="true">✓</span>
             <span class="customer-section-label">Đã gửi yêu cầu</span>
@@ -14,6 +13,5 @@
             <dl class="customer-booking-summary"><div><dt>Trạng thái</dt><dd>{{ success.status }}</dd></div><div><dt>Thời gian</dt><dd>{{ success.starts_at|slice:':16' }}</dd></div><div><dt>Số khách</dt><dd>{{ success.party_size }}</dd></div><div><dt>Khu vực</dt><dd>{{ success.area_name }}</dd></div></dl>
             <a class="customer-button" href="{% url 'customer_reservations:lookup' %}">Tra cứu đặt bàn</a>
         </div>
-    </div>
-</section>
+
 {% endblock %}

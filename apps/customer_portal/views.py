@@ -22,6 +22,7 @@ from apps.orders.services import (
 from apps.seating.models import DiningTableQRToken
 from core.http import conditional_json_response
 
+from .home import homepage_context
 from .selectors import customer_categories, customer_dish_detail, customer_dishes
 
 
@@ -77,10 +78,7 @@ class CustomerHomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        dishes = customer_dishes()
-        context["featured_dishes"] = dishes[:3]
-        context["hero_dishes"] = dishes.filter(image__gt="")[:8]
-        context["menu_categories"] = customer_categories()
+        context.update(homepage_context())
         return context
 
 

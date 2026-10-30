@@ -1,4 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
+    const mobileLogin = document.querySelector("[data-mobile-login]");
+    if (mobileLogin) {
+        const mobileQuery = window.matchMedia("(max-width: 767.98px)");
+        const syncLogin = () => { mobileLogin.value = mobileQuery.matches ? "1" : "0"; };
+        syncLogin();
+        mobileQuery.addEventListener("change", syncLogin);
+    }
     const toggle = document.querySelector("[data-customer-menu-toggle]");
     const navigation = document.querySelector("#customer-navigation");
 

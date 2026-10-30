@@ -1,0 +1,28 @@
+{% load static %}
+<header class="customer-header cq-header" data-customer-header>
+    <div class="cq-topline"><span>Vị nhà, tình quê — Hẹn nhau một bữa cơm ngon.</span><a href="{% url 'customer_reservations:lookup' %}">Tra cứu đặt bàn <span aria-hidden="true">↗</span></a></div>
+    <div class="cq-mainbar">
+        <a class="cq-brand" href="{% url 'home' %}" aria-label="{{ restaurant_public.name }} - Trang chủ">
+            <img src="{% static 'customer/images/com-que-mark.svg' %}" width="53" height="53" alt="">
+            <strong>{{ restaurant_public.name }}</strong><small>VỊ NHÀ · TÌNH QUÊ</small>
+        </a>
+        <button class="customer-menu-toggle cq-menu-toggle" type="button" data-customer-menu-toggle aria-controls="customer-navigation" aria-expanded="false" aria-label="Mở menu"><span></span><span></span><span></span></button>
+        <nav class="customer-navigation cq-navigation" id="customer-navigation" aria-label="Điều hướng chính">
+            <a class="{% if request.resolver_match.url_name == 'home' %}is-current{% endif %}" href="{% url 'home' %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Trang chủ</a>
+            <a href="{% url 'home' %}#cau-chuyen">Giới thiệu</a>
+            <a href="{% url 'customer_portal:menu' %}"{% if request.resolver_match.namespace == 'customer_portal' %} class="is-current" aria-current="page"{% endif %}>Thực đơn</a>
+            <span class="cq-navigation-space" aria-hidden="true"></span>
+            <a href="{% url 'customer_reservations:create' %}"{% if request.resolver_match.namespace == 'customer_reservations' %} class="is-current" aria-current="page"{% endif %}>Đặt bàn</a>
+            <a href="#customer-footer">Liên hệ</a>
+            {% if user.is_authenticated %}<a href="{% url 'accounts:workspace' %}">Quản lý <span aria-hidden="true">↗</span></a>{% else %}<a href="{% url 'accounts:login' %}">Đăng nhập <span aria-hidden="true">↗</span></a>{% endif %}
+        </nav>
+    </div>
+    <nav class="cq-categories" aria-label="Khám phá nhóm món">
+        {% for category in storefront.home_categories %}
+        <a href="{% url 'customer_portal:menu' %}?category={{ category.id }}">
+            {% include 'customer/includes/dish_photo.html' with dish=category.cover photo_class='cq-category-photo' decorative=True %}
+            <span>{{ category.name }}</span>
+        </a>
+        {% empty %}<a href="{% url 'customer_portal:menu' %}"{% if request.resolver_match.namespace == 'customer_portal' %} class="is-current" aria-current="page"{% endif %}>Khám phá thực đơn</a>{% endfor %}
+    </nav>
+</header>

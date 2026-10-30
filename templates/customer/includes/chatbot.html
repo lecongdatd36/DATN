@@ -1,14 +1,15 @@
 <aside class="customer-chat" data-customer-chat
+       data-restaurant-name="{{ restaurant_public.name }}"
        data-endpoint="{% url 'customer_portal:chat' %}"
        data-menu-url="{% url 'customer_portal:menu' %}"
        data-reservation-url="{% url 'customer_reservations:create' %}">
     <button class="customer-chat-launch" type="button" data-chat-toggle aria-expanded="false" aria-controls="customer-chat-panel">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-2 2V11.5a9.5 9.5 0 1 1 19 0Z"/><path d="M7 11h10M7 15h6"/></svg>
-        <span>Hỏi QLNH</span>
+        <span>Hỏi CƠM QUÊ</span>
     </button>
-    <section class="customer-chat-panel" id="customer-chat-panel" role="dialog" aria-label="Trò chuyện với trợ lý QLNH" hidden>
+    <section class="customer-chat-panel" id="customer-chat-panel" role="dialog" aria-label="Trò chuyện với trợ lý CƠM QUÊ" hidden>
         <header class="customer-chat-header">
-            <div><strong>Trợ lý QLNH</strong><small>Hỏi đáp · Thực đơn · Ưu đãi</small></div>
+            <div><strong>Trợ lý CƠM QUÊ</strong><small>Hỏi đáp · Thực đơn · Ưu đãi</small></div>
             <button type="button" class="customer-chat-icon" data-chat-close aria-label="Đóng trò chuyện">×</button>
         </header>
         <div class="customer-chat-scroll" data-chat-scroll>
@@ -29,7 +30,7 @@
         <p class="customer-chat-status" data-chat-status role="status" aria-live="polite"></p>
         <form class="customer-chat-form" data-chat-form>
             {% csrf_token %}
-            <label class="customer-chat-sr" for="customer-chat-input">Câu hỏi cho trợ lý QLNH</label>
+            <label class="customer-chat-sr" for="customer-chat-input">Câu hỏi cho trợ lý CƠM QUÊ</label>
             <textarea id="customer-chat-input" name="message" maxlength="1000" rows="2" placeholder="Bạn muốn hỏi điều gì?" required></textarea>
             <button type="submit" aria-label="Gửi câu hỏi">Gửi</button>
         </form>
