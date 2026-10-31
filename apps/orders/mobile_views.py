@@ -136,6 +136,10 @@ class MobileWorkspaceView(SalesWorkspaceView):
         if page == "tasks":
             context["ready_items"] = OrderItem.objects.filter(status=OrderItem.Status.READY, order__status__in=(Order.Status.OPEN, Order.Status.IN_PROGRESS)).select_related("order__table__area", "dish").order_by("ready_at", "pk")
             context["mobile_bookings"] = Booking.objects.filter(is_walk_in=False, starts_at__date=timezone.localdate(), status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED)).select_related("table__area", "customer") if context["mobile_can_book"] else []
+            if context["mobile_can_book"] and self.request.GET.get("bookings") == "pending":
+                from core.notifications import pending_booking_requests
+                context["mobile_bookings"] = pending_booking_requests().select_related("table__area", "customer").order_by("starts_at", "pk")
+                context["mobile_pending_bookings"] = True
         if page == "invoices":
             invoices = Invoice.objects.filter(status=Invoice.Status.PAID).select_related("order__table", "customer").order_by("-closed_at", "-pk")
             query = self.request.GET.get("q", "").strip()

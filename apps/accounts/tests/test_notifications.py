@@ -121,3 +121,33 @@ class NotificationTests(TestCase):
         response = self.client.get(reverse("sales:mobile") + "?page=personal")
         self.assertContains(response, 'data-notification-count="total"')
         self.assertContains(response, 'data-notification-entry="bookings"')
+
+    def test_mobile_panel_is_persistent_and_uses_permitted_links(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("sales:mobile") + "?page=personal")
+        self.assertContains(response, 'id="mobile-notification-panel"', count=1)
+        self.assertContains(response, 'data-mobile-notification-open')
+        self.assertContains(response, 'data-audio-toggle')
+        self.assertContains(response, 'staff-mobile-theme.css')
+        self.assertContains(response, 'mobile-notifications.js')
+        payload = self.client.get(reverse("notification_state"), {"mobile": "1"}).json()
+        entries = {entry["key"]: entry for entry in payload["entries"]}
+        self.assertEqual(entries["tables"]["url"], reverse("sales:mobile"))
+        self.assertEqual(entries["bookings"]["url"], reverse("sales:mobile") + "?page=tasks&bookings=pending#m-bookings")
+        self.assertEqual(entries["payments"]["url"], reverse("sales:mobile") + "?page=tasks#m-payments")
+        self.client.force_login(self.limited)
+        payload = self.client.get(reverse("notification_state"), {"mobile": "1"}).json()
+        self.assertEqual([entry["key"] for entry in payload["entries"]], ["bookings"])
+        self.assertEqual(payload["entries"][0]["url"], reverse("bookings:list") + "?status=PENDING")
+
+    def test_mobile_booking_notification_shows_future_pending_requests(self):
+        self.client.force_login(self.manager)
+        future = timezone.now() + timedelta(days=3)
+        booking = Booking.objects.create(
+            customer=self.customer, table=self.table, customer_name="Future notification guest",
+            party_size=2, starts_at=future, ends_at=future + timedelta(hours=2),
+        )
+        response = self.client.get(reverse("sales:mobile"), {"page": "tasks", "bookings": "pending"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, booking.booking_code)
+        self.assertContains(response, "Future notification guest")

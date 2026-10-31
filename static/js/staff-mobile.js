@@ -100,6 +100,8 @@
     history[replace ? "replaceState" : "pushState"]({}, "", url);
     uncertain = false;feedback("");document.querySelector("[data-refresh]").hidden = true;
     init();window.scrollTo({top: keepScroll ? scroll : 0, behavior: "instant"});
+    const hash = new URL(url, location.href).hash.slice(1);
+    if (hash) document.getElementById(decodeURIComponent(hash))?.scrollIntoView({block: "start"});
   }
   const navigateSafely = (url, options) => {
     pendingNavigation++;
@@ -259,7 +261,7 @@
     if (document.hidden) return;
     // A background refresh must not replace the destination of a menu click.
     if (pendingNavigation) return;
-    if (busy || dialog.open || root().dataset.dirty === "true" || root().dataset.page === "checkout" || app.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
+    if (busy || document.querySelector("dialog[open]") || root().dataset.dirty === "true" || root().dataset.page === "checkout" || app.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
       document.querySelector("[data-refresh]").hidden = false;return;
     }
     navigateSafely(location.href, {replace: true, keepScroll: true});

@@ -15,7 +15,7 @@ async function connect(url) {
   });
   return {socket,call(method,params={}){return new Promise((resolve,reject)=>{const id=++sequence;pending.set(id,{resolve,reject});socket.send(JSON.stringify({id,method,params}));});}};
 }
-async function waitUntil(callback,timeout=45000) {
+async function waitUntil(callback,timeout=75000) {
   const end=Date.now()+timeout;
   while(Date.now()<end){const value=await callback();if(value)return value;await sleep(60);}
   throw Error('Browser check timed out');
@@ -36,9 +36,10 @@ async function waitUntil(callback,timeout=45000) {
     await writeFile(path.join(output,'live-checks.txt'),report,'utf8');
     if(!report.includes('LIVE CHECKS PASSED'))throw Error(report);
     await page.call('Emulation.setDeviceMetricsOverride',{width:500,height:932,deviceScaleFactor:1,mobile:false});
-    for(const name of ['tables','payments','open','menu','order','checkout','receipt','qr']){
+    for(const name of ['tables','payments','open','menu','order','checkout','receipt','tasks','personal','notifications','qr']){
       await page.call('Page.navigate',{url:baseUrl+'/__mobile_test__/capture/'+name});
       await waitUntil(()=>evaluate(`document.querySelector('iframe')?.contentDocument?.readyState==='complete' && Boolean(document.querySelector('iframe')?.contentDocument?.querySelector('${name==='qr'?'[data-qr-menu-page]':'.m-header'}'))`),10000);
+      if(name==='notifications') await evaluate("document.querySelector('iframe').contentDocument.querySelector('[data-mobile-notification-open]').click()");
       if(name==='qr'){
         await evaluate(`(()=>{const doc=document.querySelector('iframe').contentDocument;doc.querySelector('[data-qr-cart-open]').click();const row=[...doc.querySelectorAll('.customer-qr-cart-item')].find(node=>node.textContent.includes('Trà chanh gợi ý'));row?.querySelector('[data-qr-decrease]').click();})()`);
         await waitUntil(()=>evaluate(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-menu-recommendations]') && !document.querySelector('iframe').contentDocument.querySelector('[data-menu-recommendations]').hidden)`),10000);

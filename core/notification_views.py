@@ -12,4 +12,7 @@ from core.notifications import notification_snapshot
 def notification_state(request):
     if not request.user.is_active:
         return HttpResponseForbidden()
-    return conditional_json_response(request, notification_snapshot(access_policy(request)["access"]))
+    payload = notification_snapshot(
+        access_policy(request)["access"], mobile=request.GET.get("mobile") == "1"
+    )
+    return conditional_json_response(request, payload)

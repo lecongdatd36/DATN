@@ -28,7 +28,7 @@ from django.db import connection, connections
 from django.test import Client, override_settings
 from django.test.runner import DiscoverRunner
 from apps.orders import services
-from apps.orders.models import Invoice, Order, OrderItem, Payment, PromotionCode
+from apps.orders.models import Invoice, Order, OrderItem, Payment, PromotionCode, QRServiceRequest
 from apps.orders.tests.test_mobile import MobileStaffTests
 from django.utils import timezone
 from django.urls import reverse
@@ -55,7 +55,7 @@ def main():
         connection.settings_dict["CONN_MAX_AGE"] = 0
         MobileStaffTests.setUpTestData()
         fixture = MobileStaffTests()
-        fixture.ready_to_pay()
+        fixture.order = fixture.ready_to_pay()
         suggestion = Dish.objects.create(code="MB02", name="Trà chanh gợi ý", category=fixture.category, unit=fixture.unit, price=15000)
         qr_token = DiningTableQRToken.objects.create(table=fixture.table)
         model_path = BASE / "artifacts/staff-mobile/recommendation_browser_model.json"
@@ -74,6 +74,7 @@ def main():
             client = Client()
             client.force_login(fixture.users[role])
             sessions[role.lower()] = client.cookies[settings.SESSION_COOKIE_NAME].value
+        notification_test = {}
         application = get_wsgi_application()
 
         def respond(start_response, body, content_type="text/html; charset=utf-8", role=None, status="200 OK"):
@@ -94,6 +95,19 @@ def main():
             if path.startswith("/__mobile_test__/role/"):
                 role = path.rstrip("/").split("/")[-1]
                 return respond(start_response, "OK", role=role if role in sessions else None)
+            if path in ("/__mobile_test__/notifications/add/", "/__mobile_test__/notifications/clear/") and environ.get("REQUEST_METHOD") == "POST":
+                try:
+                    if path.endswith("/add/"):
+                        request = QRServiceRequest.objects.create(
+                            order=fixture.order, table=fixture.table,
+                            request_type=QRServiceRequest.RequestType.WATER,
+                        )
+                        notification_test["id"] = request.pk
+                    else:
+                        QRServiceRequest.objects.filter(pk=notification_test.get("id")).update(status=QRServiceRequest.Status.COMPLETED)
+                    return respond(start_response, "OK")
+                finally:
+                    connections.close_all()
             if path == "/__mobile_test__/ready/":
                 try:
                     order = Order.objects.order_by("-pk").first()
@@ -109,7 +123,7 @@ def main():
                 page = path.rstrip("/").split("/")[-1]
                 order = Order.objects.order_by("-pk").first()
                 invoice = Invoice.objects.filter(status=Invoice.Status.PAID).first()
-                params = f"page={page}"
+                params = "page=personal" if page == "notifications" else f"page={page}"
                 if page in ("order", "checkout", "menu"):
                     params += f"&order={order.pk}"
                 if page == "receipt":
@@ -136,7 +150,8 @@ def main():
         output.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="qlnh-mobile-ui-", ignore_cleanup_errors=True) as profile:
             result = subprocess.run(["node", str(BASE / "scripts/run_mobile_chrome.cjs"), url, profile, str(output)],
-                                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=65)
+                                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=110,
+                                    env={key: value for key, value in os.environ.items() if key.upper() in {"SYSTEMROOT", "WINDIR", "TEMP", "TMP", "PATH", "USERPROFILE", "LOCALAPPDATA", "APPDATA", "COMSPEC"}})
             report = result.stdout or result.stderr
             print(report)
             if result.returncode != 0 or "LIVE CHECKS PASSED" not in report:

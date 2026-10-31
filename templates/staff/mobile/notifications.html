@@ -1,5 +1,11 @@
-<details class="m-card m-notification-list" id="m-notifications">
-  <summary>Thông báo {% include 'includes/notification_badge.html' with key='total' count=nav_notifications.counts.total %}</summary>
-  <p class="m-empty compact" data-notification-empty {% if nav_notifications.counts.total %}hidden{% endif %}>Không có việc đang chờ.</p>
-  {% for entry in nav_notifications.entries %}<a href="{{ entry.url }}" data-notification-entry="{{ entry.key }}" {% if not entry.count %}hidden{% endif %}><span>{{ entry.label }}</span>{% include 'includes/notification_badge.html' with key=entry.key count=entry.count %}</a>{% endfor %}
-</details>
+<dialog class="m-notification-panel" id="mobile-notification-panel" data-mobile-notification-panel aria-labelledby="mobile-notification-title">
+  <header><div><span class="m-kicker">CÔNG VIỆC ĐANG CHỜ</span><h2 id="mobile-notification-title">Thông báo <span data-notification-total>{{ nav_notifications.counts.total }}</span></h2></div><button type="button" data-mobile-notification-close aria-label="Đóng thông báo">×</button></header>
+  <p class="m-notification-status" data-mobile-notification-status role="status">Tự cập nhật khi màn hình đang mở.</p>
+  <div class="m-notification-items" data-notification-items="mobile">
+    {% for entry in nav_notifications.entries %}<a class="notification-entry" href="{{ entry.url }}" data-notification-entry="{{ entry.key }}"{% if '/sales/mobile/' in entry.url %} data-mobile-link{% endif %}{% if not entry.count %} hidden{% endif %}><span>{{ entry.label }}</span>{% include 'includes/notification_badge.html' with key=entry.key count=entry.count %}</a>{% endfor %}
+  </div>
+  <p class="m-empty" data-notification-empty{% if nav_notifications.counts.total %} hidden{% endif %}>Đã xử lý hết công việc đang chờ.</p>
+  <div class="m-notification-audio"><button type="button" data-audio-toggle aria-pressed="true"><span class="audio-icon" aria-hidden="true">🔊</span><span class="audio-label">Chuông: Bật</span></button><button type="button" data-audio-test>Thử chuông</button></div>
+  <p class="m-notification-help">Chạm “Thử chuông” để kiểm tra âm thanh trên điện thoại. Thông báo hoạt động khi trang đang mở; không gửi khi đã đóng trình duyệt.</p>
+</dialog>
+<aside class="m-notification-toast" data-mobile-notification-toast hidden aria-label="Thông báo mới"><span role="status" aria-live="polite" data-mobile-notification-message></span><button type="button" data-mobile-notification-open>Xem</button><button type="button" data-mobile-notification-dismiss aria-label="Ẩn thông báo">×</button></aside>
