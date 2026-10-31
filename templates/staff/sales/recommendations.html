@@ -1,0 +1,7 @@
+<section class="sales-suggestion-widget" id="pos-menu-recommendations" data-menu-recommendations data-recommendation-mode="pos" data-recommendation-display="dialog" data-recommendation-url="{% url 'customer_portal:recommendations' %}" aria-label="Gợi ý ăn kèm">
+  <dialog class="sales-suggestions-dialog" id="pos-suggestions-dialog" data-recommendation-dialog aria-labelledby="pos-suggestions-title">
+    <header><div><h2 id="pos-suggestions-title">Gợi ý ăn kèm</h2><p>Món thường được gọi cùng những món trong order.</p></div><button type="button" data-recommendation-close aria-label="Đóng gợi ý">×</button></header>
+    <p class="sales-suggestions-status" data-recommendation-status>Chọn món để xem gợi ý.</p>
+    <div class="menu-recommendations-items" data-recommendation-items></div>
+  </dialog>
+</section>

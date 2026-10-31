@@ -1,0 +1,10 @@
+{% load menu_money %}
+<section class="m-menu-suggestion-widget" id="mobile-menu-recommendations" data-menu-recommendations data-recommendation-mode="staff" data-recommendation-display="dialog" data-recommendation-url="{% url 'customer_portal:recommendations' %}" aria-label="Gợi ý ăn kèm">
+  <dialog class="m-suggestions-dialog" id="mobile-suggestions-dialog" data-recommendation-dialog aria-labelledby="mobile-suggestions-title">
+    <header><div><span class="m-kicker">THÊM CHÚT NGON CHO BỮA ĂN</span><h2 id="mobile-suggestions-title">Gợi ý ăn kèm</h2></div><button type="button" data-recommendation-close aria-label="Đóng gợi ý">×</button></header>
+    <p class="m-suggestions-description">Món thường được gọi cùng những món đã chọn. Chọn “Thêm món” để đưa vào order.</p>
+    <p class="m-suggestions-status" data-recommendation-status>Chọn món để xem gợi ý ăn kèm.</p>
+    <div class="menu-recommendations-items" data-recommendation-items></div>
+  </dialog>
+  <div hidden>{% for item in selected_order.items.all %}{% if item.status != 'CANCELLED' %}<span data-recommendation-seed="{{ item.dish_id }}"></span>{% endif %}{% endfor %}</div>
+</section>

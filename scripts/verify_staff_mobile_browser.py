@@ -57,6 +57,8 @@ def main():
         fixture = MobileStaffTests()
         fixture.order = fixture.ready_to_pay()
         suggestion = Dish.objects.create(code="MB02", name="Trà chanh gợi ý", category=fixture.category, unit=fixture.unit, price=15000)
+        for index in range(10):
+            Dish.objects.create(code=f"SC{index:02}", name=f"ZZ scroll {index:02}", category=fixture.category, unit=fixture.unit, price=50000)
         qr_token = DiningTableQRToken.objects.create(table=fixture.table)
         model_path = BASE / "artifacts/staff-mobile/recommendation_browser_model.json"
         model_path.parent.mkdir(parents=True, exist_ok=True)
@@ -108,6 +110,16 @@ def main():
                     return respond(start_response, "OK")
                 finally:
                     connections.close_all()
+            if path == "/__mobile_test__/pos/clear-probe/" and environ.get("REQUEST_METHOD") == "POST":
+                try:
+                    order = Order.objects.get(pk=fixture.order.pk)
+                    item = order.items.get(dish__code="SC04", status=OrderItem.Status.SERVED)
+                    services.transition_item(actor=fixture.users["MANAGER"], order_id=order.pk, item_id=item.pk,
+                                             expected_revision=order.revision, target=OrderItem.Status.CANCELLED,
+                                             reason="Restore desktop browser test fixture")
+                    return respond(start_response, "OK")
+                finally:
+                    connections.close_all()
             if path == "/__mobile_test__/ready/":
                 try:
                     order = Order.objects.order_by("-pk").first()
@@ -150,7 +162,7 @@ def main():
         output.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="qlnh-mobile-ui-", ignore_cleanup_errors=True) as profile:
             result = subprocess.run(["node", str(BASE / "scripts/run_mobile_chrome.cjs"), url, profile, str(output)],
-                                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=110,
+                                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=140,
                                     env={key: value for key, value in os.environ.items() if key.upper() in {"SYSTEMROOT", "WINDIR", "TEMP", "TMP", "PATH", "USERPROFILE", "LOCALAPPDATA", "APPDATA", "COMSPEC"}})
             report = result.stdout or result.stderr
             print(report)

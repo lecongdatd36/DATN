@@ -15,7 +15,7 @@ async function connect(url) {
   });
   return {socket,call(method,params={}){return new Promise((resolve,reject)=>{const id=++sequence;pending.set(id,{resolve,reject});socket.send(JSON.stringify({id,method,params}));});}};
 }
-async function waitUntil(callback,timeout=75000) {
+async function waitUntil(callback,timeout=100000) {
   const end=Date.now()+timeout;
   while(Date.now()<end){const value=await callback();if(value)return value;await sleep(60);}
   throw Error('Browser check timed out');
@@ -32,7 +32,19 @@ async function waitUntil(callback,timeout=75000) {
     const target=await (await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(baseUrl+'/__mobile_test__/')}`,{method:'PUT'})).json();
     page=await connect(target.webSocketDebuggerUrl);await page.call('Page.enable');
     const evaluate=async expression=>(await page.call('Runtime.evaluate',{expression,returnByValue:true})).result?.value;
-    const report=await waitUntil(async()=>{const report=await evaluate('document.querySelector("#result")?.textContent || ""');return report?.includes('LIVE CHECKS PASSED')||report?.includes('FAIL ')?report:null;});
+    await page.call('Emulation.setDeviceMetricsOverride',{width:500,height:932,deviceScaleFactor:1,mobile:false});
+    const report=await waitUntil(async()=>{
+      const stage=await evaluate('document.body.dataset.captureReady');
+      if(['suggestions','scrolled-menu','pos-suggestions','pos-scrolled-menu'].includes(stage)){
+        await page.call('Emulation.setDeviceMetricsOverride',{width:stage.startsWith('pos-')?1600:500,height:stage.startsWith('pos-')?1040:932,deviceScaleFactor:1,mobile:false});
+        const image=await page.call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+        await writeFile(path.join(output,stage+'-live.png'),Buffer.from(image.data,'base64'));
+        await evaluate("document.body.dataset.captureReady='done'");
+        await page.call('Emulation.setDeviceMetricsOverride',{width:500,height:932,deviceScaleFactor:1,mobile:false});
+      }
+      const report=await evaluate('document.querySelector("#result")?.textContent || ""');
+      return report?.includes('LIVE CHECKS PASSED')||report?.includes('FAIL ')?report:null;
+    });
     await writeFile(path.join(output,'live-checks.txt'),report,'utf8');
     if(!report.includes('LIVE CHECKS PASSED'))throw Error(report);
     await page.call('Emulation.setDeviceMetricsOverride',{width:500,height:932,deviceScaleFactor:1,mobile:false});
