@@ -11,7 +11,7 @@
 
 Điều hướng phục vụ: **Bàn · Việc cần làm · Cá nhân**. Thu ngân: **Bàn · Chờ thanh toán · Hóa đơn · Cá nhân**, theo bản mẫu `?view=cashier`. Màn `/sales/mobile/?page=payments` đưa hóa đơn đủ điều kiện lên trước; hóa đơn còn món chưa phục vụ hoặc giao dịch online chờ chỉ có nút kiểm tra order. Việc cần làm vẫn truy cập từ sơ đồ bàn và danh sách thanh toán, gom món chờ mang, QR nhận bàn/gọi món/phục vụ, lịch đặt hôm nay. Yêu cầu phục vụ không phải bước bắt buộc trước gửi bếp.
 
-Giao diện dùng phong cách bản mẫu `design/staff-mobile`: header trắng, nền sáng, xanh ngọc, thẻ bo góc, bàn hai cột và danh sách món có ảnh. Không đưa bộ chọn vai trò, số liệu minh họa hoặc ca làm giả từ bản mẫu vào ứng dụng thật.
+Giao diện dùng nhận diện CƠM QUÊ như web khách hàng: đỏ đô, nền kem, logo bát cơm, header trắng, thẻ bo góc, bàn hai cột và danh sách món có ảnh. Không đưa bộ chọn vai trò, số liệu minh họa hoặc ca làm giả từ bản mẫu vào ứng dụng thật.
 
 Thu ngân có cả `manage_order` và `collect_payment`: vẫn nhận bàn/gọi món được. Các nút lấy từ quyền tài khoản thật; không có bộ chọn vai trò trong ứng dụng.
 
@@ -21,6 +21,17 @@ Thu ngân có cả `manage_order` và `collect_payment`: vẫn nhận bàn/gọi
 - Nếu mở `/sales/` trên điện thoại, giao diện bán hàng chuyển sang mobile, giữ bàn/order đang chọn.
 - Desktop tiếp tục dùng giao diện cũ. Cá nhân → Mở giao diện desktop dùng `/sales/?desktop=1` để chủ động xem bản desktop trên điện thoại.
 - Quản lý, bếp và kho vẫn giữ điểm vào làm việc hiện tại. Quản lý có thể mở mobile bán hàng bằng quyền được cấp.
+
+## Thông báo trên mobile nhân viên
+
+- Nút chuông ở đầu mỗi màn hình hiển thị tổng công việc đang chờ. Mở chuông để xem nhận bàn QR, gọi món QR, phục vụ, món chờ mang ra, thanh toán, lịch đặt hoặc bàn cần dọn theo quyền tài khoản.
+- Bộ đếm lấy cùng dữ liệu với web qua `/notifications/state/?mobile=1`, kiểm tra mỗi 5 giây bằng ETag. Tạm dừng khi tab ẩn, lùi nhịp khi mất mạng và xóa danh sách khi phiên hết hoặc quyền bị từ chối.
+- Khi số việc chờ của một nhóm tăng, mobile hiện thông báo nổi và gọi âm thanh phù hợp. Lần đầu mở trang, chuyển màn hoặc số đếm giảm không phát lại chuông cho trạng thái cũ.
+- Chạm **Chuông → Thử chuông** để cho trình duyệt mở âm thanh. Có nút bật/tắt; dùng cùng cài đặt âm thanh với web trên trình duyệt đó. Âm lượng và chế độ im lặng của điện thoại vẫn có tác dụng.
+- Bấm một thông báo đưa tới đúng phần việc trên mobile. Lịch đặt chờ xác nhận có cả những ngày tới; danh sách “hôm nay” mặc định vẫn giữ nguyên.
+- Panel thông báo nằm ngoài phần nội dung được thay thế khi chuyển màn. Việc cập nhật số đếm không thay nội dung đang nhập, ghi chú món hoặc biểu mẫu thanh toán.
+- Đây là thông báo **trong ứng dụng khi trang đang mở**, chưa phải push hệ điều hành khi khóa máy hoặc đóng trình duyệt.
+
 
 ## Thanh toán và an toàn dữ liệu
 
@@ -47,7 +58,7 @@ Thu ngân có cả `manage_order` và `collect_payment`: vẫn nhận bàn/gọi
 ```powershell
 $env:DJANGO_SETTINGS_MODULE='QLNH.test_settings'
 .venv/Scripts/python.exe scripts/run_tests.py apps.orders apps.accounts apps.bookings apps.customers
-node --test scripts/test_staff_polling.cjs scripts/test_table_live.cjs scripts/test_audio_notify.cjs
+node --test scripts/test_staff_polling.cjs scripts/test_table_live.cjs scripts/test_audio_notify.cjs scripts/test_mobile_notifications.cjs
 .venv/Scripts/python.exe scripts/verify_staff_mobile_browser.py
 ```
 

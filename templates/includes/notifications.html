@@ -6,8 +6,8 @@
     <div class="dropdown-menu dropdown-menu-end notification-menu">
         <strong class="notification-heading">Thông báo <span data-notification-total>{{ nav_notifications.counts.total }}</span></strong>
         <p class="notification-empty" data-notification-empty {% if nav_notifications.counts.total %}hidden{% endif %}>Không có việc đang chờ.</p>
-        {% for entry in nav_notifications.entries %}
+        <div data-notification-items="desktop">{% for entry in nav_notifications.entries %}
         <a class="dropdown-item notification-entry" href="{{ entry.url }}" data-notification-entry="{{ entry.key }}" {% if not entry.count %}hidden{% endif %}><span>{{ entry.label }}</span>{% include 'includes/notification_badge.html' with key=entry.key count=entry.count %}</a>
-        {% endfor %}
+        {% endfor %}</div>
     </div>
 </div>

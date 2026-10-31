@@ -49,5 +49,8 @@ def access_policy(request):
             "can_manage_inventory": has_inventory_permission(request.user, "manage_inventory"),
         }
     }
-    context["nav_notifications"] = SimpleLazyObject(lambda: notification_snapshot(context["access"]))
+    mobile = getattr(request.resolver_match, "view_name", "") == "sales:mobile"
+    context["nav_notifications"] = SimpleLazyObject(
+        lambda: notification_snapshot(context["access"], mobile=mobile)
+    )
     return context

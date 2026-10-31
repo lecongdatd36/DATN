@@ -14,22 +14,32 @@ from apps.orders.models import (
 from apps.seating.models import DiningTable
 
 
-def notification_snapshot(access):
+def pending_booking_requests():
+    now = timezone.now()
+    grace = BookingSettings.objects.values_list("no_show_grace_minutes", flat=True).get(pk=1)
+    return Booking.objects.filter(
+        is_walk_in=False, status=Booking.Status.PENDING, ends_at__gt=now,
+        starts_at__gt=now - timedelta(minutes=grace),
+    )
+
+
+def notification_snapshot(access, *, mobile=False):
     counts = dict.fromkeys(("bookings", "sales", "tasks", "payments", "kitchen", "inventory", "tables"), 0)
     entries = []
     now = timezone.now()
     active = (Order.Status.OPEN, Order.Status.IN_PROGRESS)
 
     def add(key, group, label, count, url):
+        if mobile:
+            if key == "bookings" and access.get("can_manage_bookings"):
+                url = reverse("sales:mobile") + "?page=tasks&bookings=pending#m-bookings"
+            elif key == "tables":
+                url = reverse("sales:mobile")
         entries.append({"key": key, "label": label, "count": count, "url": url})
         counts[group] += count
 
     if access["can_view_bookings"]:
-        grace = BookingSettings.objects.values_list("no_show_grace_minutes", flat=True).get(pk=1)
-        add("bookings", "bookings", "Đặt bàn chờ xác nhận", Booking.objects.filter(
-            is_walk_in=False, status=Booking.Status.PENDING, ends_at__gt=now,
-            starts_at__gt=now - timedelta(minutes=grace),
-        ).count(), reverse("bookings:list") + "?status=PENDING")
+        add("bookings", "bookings", "Đặt bàn chờ xác nhận", pending_booking_requests().count(), reverse("bookings:list") + "?status=PENDING")
 
     if access["can_view_orders"] and access["can_manage_orders"]:
         tasks_url = reverse("sales:mobile") + "?page=tasks"
