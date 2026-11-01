@@ -24,6 +24,9 @@ Ví dụ với bộ luật hiện tại: khi chọn **Cơm sườn nướng**, h
 
 Thuật toán chấm điểm và đề xuất bàn theo mục 3.5 của đề cương được mô tả trong [hướng dẫn chọn bàn](table-recommendations.md), gồm công thức, điều kiện hợp lệ, kiểm tra đồng thời và kết quả đánh giá. Đây là thuật toán best fit có giải thích, không cần huấn luyện mô hình.
 
+Notebook Random Forest cho mục 3.6: [`03_random_forest_du_bao_so_don.ipynb`](../notebooks/03_random_forest_du_bao_so_don.ipynb).
+Xem [hướng dẫn Colab](forecast-colab.md) để chọn nguồn CSV, chạy huấn luyện/đánh giá, xem 5 biểu đồ và tải ZIP kết quả.
+
 ## 2. AI này hoạt động như thế nào?
 
 Apriori tìm những món thường xuất hiện cùng nhau trong lịch sử các giỏ hàng. Từ đó, chương trình tạo luật dạng:
