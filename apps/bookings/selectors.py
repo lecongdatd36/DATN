@@ -7,6 +7,7 @@ from django.utils import timezone
 from apps.seating.models import DiningTable
 from apps.customers.validators import normalize_phone
 from .models import Booking, BookingSettings
+from .table_ranking import rank_tables
 
 
 BLOCKING_STATUSES = (Booking.Status.PENDING, Booking.Status.CONFIRMED, Booking.Status.SEATED)
@@ -50,6 +51,21 @@ def available_tables(*, starts_at, ends_at, party_size):
     if starts_at <= timezone.now():
         result = result.exclude(bookings__status=Booking.Status.SEATED)
     return result
+
+
+def recommended_tables(*, starts_at, ends_at, party_size, area_id=None):
+    """Read-only snapshot; booking services must recheck while holding the seating lock."""
+    if (starts_at is None or ends_at is None or timezone.is_naive(starts_at)
+            or timezone.is_naive(ends_at) or starts_at >= ends_at):
+        raise ValidationError("Khoảng thời gian tìm bàn không hợp lệ.")
+    # An overdue seated visit still occupies its table until staff close it.
+    occupied = Booking.objects.filter(status=Booking.Status.SEATED).values("table_id")
+    tables = available_tables(starts_at=starts_at, ends_at=ends_at, party_size=party_size).filter(
+        status__in=(DiningTable.Status.AVAILABLE, DiningTable.Status.RESERVED),
+    ).exclude(pk__in=occupied)
+    if area_id is not None:
+        tables = tables.filter(area_id=area_id)
+    return rank_tables(tables, party_size)
 
 
 def available_transfer_tables(booking, *, at=None):

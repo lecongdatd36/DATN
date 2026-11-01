@@ -93,6 +93,12 @@
 .cq-page .customer-form-intro { margin: 16px 0 24px; font-size: 13px; line-height: 1.9; }
 .cq-page .customer-form-helper { margin: -9px 0 22px; font-size: 11px; }
 .cq-page .customer-form-card, .cq-page .customer-status-card, .cq-page .customer-result-card { padding: 25px; border-radius: 3px; box-shadow: 0 8px 25px #6b462508; background: #fff; }
+.cq-table-recommendations { display: grid; gap: 12px; margin: 20px 0; padding: 0; list-style: none; }
+.cq-table-recommendation { padding: 16px; border: 1px solid #e8ded3; border-radius: 8px; }
+.cq-table-recommendation:first-child { border-color: #9d1231; background: #fff9f3; }
+.cq-table-recommendation-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.cq-table-recommendation-heading span { color: #9d1231; font-weight: 700; white-space: nowrap; }
+.cq-table-recommendation p { margin: 8px 0 0; }
 .cq-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .cq-form-grid .customer-form-field { min-width: 0; margin-bottom: 0; }
 .cq-form-grid .cq-field-wide, .cq-form-grid .customer-form-errors, .cq-form-grid > button { grid-column: 1 / -1; }
