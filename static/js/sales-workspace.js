@@ -166,12 +166,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const lineMarkup = (line) => {
     const copy = line.cloneNode(true);
+    copy.querySelectorAll(".is-note-editing").forEach(node => node.classList.remove("is-note-editing"));
     copy.querySelectorAll("input[name='csrfmiddlewaretoken'], input[name='expected_revision']")
       .forEach((input) => input.removeAttribute("value"));
     return copy.outerHTML;
   };
 
   const syncOrderFromResponse = (html, notifyMutation = true) => {
+    const scrollPosition = {x: window.scrollX, y: window.scrollY};
+    const panelPositions = new Map([".sales-order-panel", ".mobile-order-dock", ".mobile-pos-appbar"].map(selector => {
+      const panel = workspace.querySelector(selector);
+      return [selector, {top: panel?.scrollTop || 0, left: panel?.scrollLeft || 0}];
+    }));
+    const menu = workspace.querySelector("#sales-menu");
+    const menuBounds = menu?.getBoundingClientRect();
+    const menuAnchor = menu && [...menu.querySelectorAll("[data-quick-add]:not([hidden])")].find(card => {
+      const r = card.getBoundingClientRect();
+      return r.top >= menuBounds.top + 50 && r.top < menuBounds.bottom;
+    });
+    const anchorTop = menuAnchor?.getBoundingClientRect().top;
+    const active = document.activeElement;
+    const activeLine = active?.closest("[data-order-item-id]")?.dataset.orderItemId;
+    const focus = active?.closest(".sales-order-panel") && active.matches("input, textarea, select")
+      ? {element: active, line: activeLine, name: active.name, type: active.type, start: active.selectionStart, end: active.selectionEnd} : null;
     const responseDocument = new DOMParser().parseFromString(html, "text/html");
     const incomingRevision = Number(responseDocument.querySelector("[data-order-revision]")?.value);
     const currentRevision = Number(workspace.querySelector("[data-order-revision]")?.value);
@@ -207,7 +224,12 @@ document.addEventListener("DOMContentLoaded", () => {
     [".sales-order-panel", ".mobile-order-dock", ".mobile-pos-appbar"].forEach((selector) => {
       const current = workspace.querySelector(selector);
       const replacement = responseDocument.querySelector(selector);
-      if (current && replacement) current.replaceWith(replacement);
+      if (current && replacement) {
+        const {top, left} = panelPositions.get(selector);
+        for (const name of ["active", "show"]) replacement.classList.toggle(name, current.classList.contains(name));
+        current.replaceWith(replacement);
+        replacement.scrollTop = top; replacement.scrollLeft = left;
+      }
     });
     const revision = responseDocument.querySelector("[data-order-revision]")?.value
       || responseDocument.querySelector("input[name='expected_revision']")?.value;
@@ -220,7 +242,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     bindCheckoutControls();
     bindGuestPreviews();
+    const orderOpen = ["OPEN", "IN_PROGRESS"].includes(workspace.querySelector(".sales-order-panel")?.dataset.recommendationsOrderStatus);
+    workspace.querySelectorAll("[data-quick-add] button[type='submit']").forEach(button => { button.disabled = !orderOpen || button.closest("form").dataset.loading === "true"; });
+    if (focus) {
+      const line = [...workspace.querySelectorAll("[data-order-item-id]")].find(node => node.dataset.orderItemId === focus.line);
+      const target = focus.element.isConnected ? focus.element : [...(line || workspace.querySelector(".sales-order-panel")).querySelectorAll("input, textarea, select")].find(node => node.name === focus.name && node.type === focus.type);
+      target?.focus({preventScroll: true});
+      if (target && typeof focus.start === "number" && target.setSelectionRange) target.setSelectionRange(focus.start, focus.end);
+    }
     if (notifyMutation) document.dispatchEvent(new CustomEvent("workspace:mutation"));
+    window.scrollTo({left: scrollPosition.x, top: scrollPosition.y, behavior: "instant"});
+    const restoreMenuAnchor = () => {
+      if (menuAnchor?.isConnected) menu.scrollTop += menuAnchor.getBoundingClientRect().top - anchorTop;
+    };
+    restoreMenuAnchor();
+    const settledScroll = menu?.scrollTop;
+    window.requestAnimationFrame(() => {
+      if (menu?.isConnected && Math.abs(menu.scrollTop - settledScroll) < 2) restoreMenuAnchor();
+    });
   };
 
   const replaceWorkspaceElement = (responseDocument, selector) => {
@@ -486,7 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
   workspace.addEventListener("submit", async (event) => {
     // Sending draft items to the kitchen follows the same fragment update as
     // editing an item. This avoids a full POS navigation after every send.
-    const form = event.target.closest("[data-order-item-form], form[action$='/action/send/']");
+    const form = event.target.closest("[data-order-item-form], form[action$='/action/send/'], form[action$='/action/request-payment/']");
     if (!form) return;
     event.preventDefault();
     if (form.dataset.loading === "true") return;
@@ -534,7 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } finally {
       form.dataset.loading = "false";
       form.classList.remove("is-adding");
-      if (button) button.disabled = false;
+      if (button) button.disabled = !["OPEN", "IN_PROGRESS"].includes(workspace.querySelector(".sales-order-panel")?.dataset.recommendationsOrderStatus);
       document.dispatchEvent(new CustomEvent("workspace:busy", {detail: false}));
     }
   });

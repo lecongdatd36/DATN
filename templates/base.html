@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}?v=5">
     <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=1">
-    <link rel="stylesheet" href="{% static 'css/menu-recommendations.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/menu-recommendations.css' %}?v=2">
     {% block extra_css %}{% endblock %}
     <link rel="stylesheet" href="{% static 'css/mobile.css' %}?v=1" media="(max-width: 767.98px)">
 </head>
@@ -108,7 +108,7 @@
 
     <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}" defer></script>
     <script src="{% static 'js/base.js' %}?v=8" defer></script>
-    <script src="{% static 'js/menu-recommendations.js' %}?v=1" defer></script>
+    <script src="{% static 'js/menu-recommendations.js' %}?v=2" defer></script>
     {% if user.is_authenticated %}<script src="{% static 'js/nav-notifications.js' %}?v=2" defer></script>{% endif %}
     {% block extra_js %}{% endblock %}
 </body>

@@ -22,6 +22,25 @@ Thu ngân có cả `manage_order` và `collect_payment`: vẫn nhận bàn/gọi
 - Desktop tiếp tục dùng giao diện cũ. Cá nhân → Mở giao diện desktop dùng `/sales/?desktop=1` để chủ động xem bản desktop trên điện thoại.
 - Quản lý, bếp và kho vẫn giữ điểm vào làm việc hiện tại. Quản lý có thể mở mobile bán hàng bằng quyền được cấp.
 
+
+## Gọi món không bị nhảy vị trí
+
+- Gợi ý ăn kèm nằm trong nút **Gợi ý** cạnh **Xem order** ở thanh đáy. Có số món gợi ý; nhân viên chủ động mở, chọn món xong trở lại danh sách. Không tự chèn khối gợi ý vào đầu danh sách sau mỗi lần thêm món.
+- Thêm món cập nhật số lượng và tạm tính ngay trên màn đang chọn. Cập nhật nền không dựng lại màn menu. Nút cập nhật thủ công giữ từ khóa, danh mục, ghi chú chưa gửi và vị trí cuộn.
+- **Gửi bếp**, **Đã mang ra** và **Yêu cầu thanh toán** thực hiện bằng một lần bấm, vẫn khóa chống gửi trùng và kiểm tra phiên bản/quyền trên server.
+- Thanh toán thực thu, hủy món/order, chuyển bàn và các thao tác cần đối chiếu khác vẫn có xác nhận.
+
+
+
+## Web bán hàng: cập nhật tại chỗ
+
+- Gợi ý của POS mở bằng nút **Gợi ý** trong tiêu đề cột món; không chèn/ẩn khối nội dung ở đầu danh sách trong lúc gọi món.
+- Thêm món, sửa số lượng/ghi chú, gửi bếp, đánh dấu đã phục vụ và gửi yêu cầu thanh toán dùng fetch để cập nhật order tại chỗ.
+- Khi cập nhật, giữ vị trí cuộn các panel, dòng món đang nhìn, bộ lọc và ô nhập đang dùng. Món không đổi tiếp tục dùng lại node hiện có.
+- Chuyển tới màn hình khác hoặc mở/in hóa đơn vẫn là điều hướng theo chức năng đó; không đổi quy trình thu tiền.
+- Script kiểm tra trình duyệt so sánh document trước/sau thao tác trên cả POS và mobile, đo vị trí dòng món và kiểm tra sổ thu trên database thử nghiệm riêng.
+
+
 ## Thông báo trên mobile nhân viên
 
 - Nút chuông ở đầu mỗi màn hình hiển thị tổng công việc đang chờ. Mở chuông để xem nhận bàn QR, gọi món QR, phục vụ, món chờ mang ra, thanh toán, lịch đặt hoặc bàn cần dọn theo quyền tài khoản.

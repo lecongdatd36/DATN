@@ -55,13 +55,13 @@
     const given = Number(form.querySelector("[name=cash_received]").value || 0);
     form.querySelector("[data-change]").textContent = money(Math.max(0, given - Number(form.dataset.due)));
   }
-  function init() {
-    category = "all";
+  function init(menuCategory = "all") {
+    category = menuCategory === "all" || [...app.querySelectorAll("[data-category]")].some(button => button.dataset.category === menuCategory) ? menuCategory : "all";
     filterTables();
     filterDishes();
     paymentFields();
     document.dispatchEvent(new CustomEvent("mobile:page-ready"));
-    for (const [attribute, current] of [["data-area", area], ["data-table-status", tableStatus]]) {
+    for (const [attribute, current] of [["data-area", area], ["data-table-status", tableStatus], ["data-category", category]]) {
       app.querySelectorAll(`[${attribute}]`).forEach(button => {
         const active = button.getAttribute(attribute) === current;
         button.classList.toggle("active", active);button.setAttribute("aria-pressed", String(active));
@@ -73,7 +73,7 @@
     page.querySelectorAll("[data-preserve]").forEach(input => {
       if (input.value !== input.defaultValue) values.set(input.id || `${input.closest("[data-state-key]")?.dataset.stateKey}:${input.name}`, input.value);
     });
-    return {page: page.dataset.page, order: page.dataset.order, values, method: page.querySelector("[name=payment_method]:checked")?.value};
+    return {page: page.dataset.page, order: page.dataset.order, values, menu: page.dataset.page === "menu" ? {category, query: page.querySelector("[data-dish-search]")?.value || ""} : null, method: page.querySelector("[name=payment_method]:checked")?.value};
   }
   async function navigate(url, {replace = false, keepScroll = false, preserve = false} = {}) {
     navigation?.abort();lookup?.abort();quoteRequest?.abort();
@@ -87,7 +87,8 @@
     const next = new DOMParser().parseFromString(await response.text(), "text/html").querySelector("#mobile-page");
     if (!next) throw new Error("Phiên làm việc đã thay đổi. Hãy tải lại trang.");
     root().replaceWith(next);
-    if (saved && saved.page === next.dataset.page && saved.order === next.dataset.order) {
+    const samePage = saved && saved.page === next.dataset.page && saved.order === next.dataset.order;
+    if (samePage) {
       next.querySelectorAll("[data-preserve]").forEach(input => {
         const key = input.id || `${input.closest("[data-state-key]")?.dataset.stateKey}:${input.name}`;
         if (saved.values.has(key)) {
@@ -95,11 +96,13 @@
           if (input.value !== input.defaultValue) next.dataset.dirty = "true";
         }
       });
+      const search = next.querySelector("[data-dish-search]");
+      if (saved.menu && search) search.value = saved.menu.query;
       next.querySelectorAll("[name=payment_method]").forEach(input => {input.checked = input.value === saved.method;});
     }
     history[replace ? "replaceState" : "pushState"]({}, "", url);
     uncertain = false;feedback("");document.querySelector("[data-refresh]").hidden = true;
-    init();window.scrollTo({top: keepScroll ? scroll : 0, behavior: "instant"});
+    init(samePage && saved.menu ? saved.menu.category : "all");window.scrollTo({top: keepScroll ? scroll : 0, behavior: "instant"});
     const hash = new URL(url, location.href).hash.slice(1);
     if (hash) document.getElementById(decodeURIComponent(hash))?.scrollIntoView({block: "start"});
   }
@@ -148,7 +151,7 @@
         const badge = form.querySelector("[data-dish-count]");badge.textContent = Number(badge.textContent || 0) + Number(data.get("quantity") || 1);badge.hidden = false;
         form.elements.note.value = "";form.querySelector("details").open = false;
         const count = app.querySelector("[data-draft-count]");if (count) count.textContent = `${payload.draft_count} món mới chưa gửi`;
-        feedback("Đã thêm món. Tiếp tục chọn hoặc mở order để gửi bếp.");
+        feedback("");
       } else {
         await navigate(payload.url, {replace: true, keepScroll: ["edit", "served", "cancel-item"].includes(action), preserve: action === "edit"});
       }
@@ -261,7 +264,7 @@
     if (document.hidden) return;
     // A background refresh must not replace the destination of a menu click.
     if (pendingNavigation) return;
-    if (busy || document.querySelector("dialog[open]") || root().dataset.dirty === "true" || root().dataset.page === "checkout" || app.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
+    if (busy || document.querySelector("dialog[open]") || root().dataset.dirty === "true" || ["menu", "checkout"].includes(root().dataset.page) || app.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
       document.querySelector("[data-refresh]").hidden = false;return;
     }
     navigateSafely(location.href, {replace: true, keepScroll: true});

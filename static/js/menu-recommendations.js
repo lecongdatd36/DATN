@@ -13,6 +13,21 @@
     return form?.querySelector('button[type="submit"]');
   };
 
+  const presentation = (widget, available, text = "") => {
+    if (widget.dataset.recommendationDisplay !== "dialog") { widget.hidden = !available; return; }
+    widget.hidden = false;
+    const count = widget.querySelector("[data-recommendation-items]").children.length;
+    document.querySelectorAll("[data-recommendation-toggle]").forEach(button => {
+      if (button.dataset.recommendationTarget !== widget.id) return;
+      button.disabled = !available;
+      const badge = button.querySelector("[data-recommendation-count]");
+      badge.textContent = String(count); badge.hidden = !count;
+      button.setAttribute("aria-label", "Gợi ý ăn kèm: " + count + " món");
+    });
+    const status = widget.querySelector("[data-recommendation-status]");
+    status.textContent = text; status.hidden = available;
+  };
+
   const update = (widget, ids, frozen = false) => {
     let state = states.get(widget);
     if (!state) { state = {signature: null, controller: null, timer: null}; states.set(widget, state); }
@@ -24,7 +39,8 @@
     state.signature = signature;
     clearTimeout(state.timer);
     state.controller?.abort();
-    widget.hidden = true;
+    if (widget.dataset.recommendationDisplay === "dialog") widget.querySelector("[data-recommendation-items]").replaceChildren();
+    presentation(widget, false, selected.length ? "Đang tìm gợi ý phù hợp…" : "Chọn món để xem gợi ý ăn kèm.");
     if (!selected.length) return;
     state.timer = setTimeout(async () => {
       if (!widget.isConnected) return;
@@ -51,13 +67,17 @@
           button.disabled = state.frozen;
           button.addEventListener("click", () => {
             const target = addButton(widget, item.id);
-            if (target && !target.disabled && !state.frozen) target.click();
+            if (target && !target.disabled && !state.frozen) {
+              const panel = widget.querySelector("[data-recommendation-dialog]");
+              if (panel?.open) panel.close();
+              target.click();
+            }
           });
           card.append(name, price, button); list.appendChild(card);
         }
-        widget.hidden = !list.children.length;
+        presentation(widget, list.children.length > 0, "Chưa có gợi ý phù hợp với các món đã chọn.");
       } catch (error) {
-        if (state.controller === controller && state.signature === signature) { widget.hidden = true; state.signature = null; }
+        if (state.controller === controller && state.signature === signature) { presentation(widget, false, "Chưa tải được gợi ý. Bạn vẫn có thể chọn món bình thường."); state.signature = null; }
       } finally { clearTimeout(timeout); }
     }, 160);
   };
@@ -77,6 +97,21 @@
       update(widget, ids);
     });
   };
+
+  document.addEventListener("click", event => {
+    const toggle = event.target.closest("[data-recommendation-toggle]");
+    if (toggle && !toggle.disabled) {
+      const widget = document.getElementById(toggle.dataset.recommendationTarget);
+      const panel = widget?.querySelector("[data-recommendation-dialog]");
+      if (panel && !panel.open) panel.showModal();
+    }
+    const close = event.target.closest("[data-recommendation-close]");
+    if (close) close.closest("dialog").close();
+    if (event.target.matches("[data-recommendation-dialog]")) {
+      const r = event.target.getBoundingClientRect();
+      if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) event.target.close();
+    }
+  });
 
   document.addEventListener("qr:cart-change", event => {
     document.querySelectorAll('[data-menu-recommendations][data-recommendation-mode="qr"]').forEach(widget => {
