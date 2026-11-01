@@ -179,6 +179,7 @@ class OrderTests(TestCase):
         self.assertEqual(self.order.total, 350000)
 
     def test_recipe_deducts_stock_snapshots_cost_and_returns_before_cooking(self):
+        Dish.objects.filter(pk=self.dish.pk).update(tracks_inventory=True)
         ingredient = Ingredient.objects.create(
             code="GAO01", name="Gạo", unit="kg", stock_quantity=Decimal("10"),
             average_unit_cost=Decimal("50000"), low_stock_threshold=Decimal("1"),
@@ -215,6 +216,7 @@ class OrderTests(TestCase):
         )
 
     def test_sending_to_kitchen_rolls_back_when_recipe_stock_is_insufficient(self):
+        Dish.objects.filter(pk=self.dish.pk).update(tracks_inventory=True)
         ingredient = Ingredient.objects.create(
             code="THIT01", name="Thịt", unit="kg", stock_quantity=Decimal("0.100"),
             average_unit_cost=Decimal("120000"), low_stock_threshold=Decimal("0"),
@@ -230,6 +232,125 @@ class OrderTests(TestCase):
         self.assertEqual(item.status, OrderItem.Status.DRAFT)
         self.assertIsNone(item.inventory_deducted_at)
         self.assertFalse(InventoryTransaction.objects.filter(order_item_reference=item.pk).exists())
+
+    def test_untracked_recipe_does_not_deduct_or_return_stock(self):
+        ingredient = Ingredient.objects.create(
+            code="UNTRACKED", name="Untracked ingredient", unit="kg",
+            stock_quantity=10, average_unit_cost=50000,
+        )
+        RecipeIngredient.objects.create(dish=self.dish, ingredient=ingredient, quantity=Decimal("0.200"))
+        self.assertFalse(self.dish.tracks_inventory)
+        item = self.add(quantity=2)
+
+        self.send()
+
+        ingredient.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(item.status, OrderItem.Status.PENDING)
+        self.assertEqual(ingredient.stock_quantity, Decimal("10"))
+        self.assertEqual(item.unit_cost_snapshot, 0)
+        self.assertEqual(item.total_cost, 0)
+        self.assertIsNone(item.inventory_deducted_at)
+        self.assertFalse(InventoryTransaction.objects.filter(order_item_reference=item.pk).exists())
+
+        self.transition(item, OrderItem.Status.CANCELLED, reason="Cancel untracked item")
+        ingredient.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(ingredient.stock_quantity, Decimal("10"))
+        self.assertIsNone(item.inventory_returned_at)
+        self.assertFalse(InventoryTransaction.objects.filter(order_item_reference=item.pk).exists())
+
+    def test_untracked_recipe_can_send_with_empty_or_inactive_ingredient(self):
+        ingredient = Ingredient.objects.create(
+            code="EMPTY-UNTRACKED", name="Empty untracked ingredient", unit="kg", stock_quantity=0,
+        )
+        RecipeIngredient.objects.create(dish=self.dish, ingredient=ingredient, quantity=1)
+        for active in (True, False):
+            with self.subTest(ingredient_active=active):
+                ingredient.is_active = active
+                ingredient.save(update_fields=("is_active",))
+                item = self.add(quantity=1)
+                self.send()
+                item.refresh_from_db()
+                ingredient.refresh_from_db()
+                self.assertEqual(item.status, OrderItem.Status.PENDING)
+                self.assertEqual(ingredient.stock_quantity, 0)
+                self.assertIsNone(item.inventory_deducted_at)
+                self.assertFalse(InventoryTransaction.objects.filter(order_item_reference=item.pk).exists())
+
+    def test_mixed_send_consumes_only_tracked_dishes_sharing_an_ingredient(self):
+        ingredient = Ingredient.objects.create(
+            code="SHARED-STOCK", name="Shared ingredient", unit="kg",
+            stock_quantity=Decimal("0.400"), average_unit_cost=50000,
+        )
+        tracked = Dish.objects.create(
+            code="TRACKED", name="Tracked dish", category=self.category, unit=self.unit,
+            price=50000, tracks_inventory=True,
+        )
+        for dish in (self.dish, tracked):
+            RecipeIngredient.objects.create(dish=dish, ingredient=ingredient, quantity=Decimal("0.200"))
+        untracked_item = self.add(quantity=3)
+        tracked_item = self.add(dish_id=tracked.pk, quantity=2)
+
+        self.send()
+
+        ingredient.refresh_from_db()
+        tracked_item.refresh_from_db()
+        untracked_item.refresh_from_db()
+        tracked.refresh_from_db()
+        self.dish.refresh_from_db()
+        self.assertEqual(ingredient.stock_quantity, 0)
+        self.assertEqual(tracked_item.total_cost, 20000)
+        self.assertIsNotNone(tracked_item.inventory_deducted_at)
+        self.assertEqual(untracked_item.total_cost, 0)
+        self.assertIsNone(untracked_item.inventory_deducted_at)
+        self.assertEqual(tracked.status, Dish.Status.SOLD_OUT)
+        self.assertEqual(self.dish.status, Dish.Status.AVAILABLE)
+        self.assertEqual(list(InventoryTransaction.objects.values_list("order_item_reference", flat=True)), [tracked_item.pk])
+
+    def test_disabling_tracking_after_adding_item_applies_when_sending(self):
+        Dish.objects.filter(pk=self.dish.pk).update(tracks_inventory=True)
+        ingredient = Ingredient.objects.create(
+            code="DISABLED-STOCK", name="Disabled stock ingredient", unit="kg", stock_quantity=0,
+        )
+        RecipeIngredient.objects.create(dish=self.dish, ingredient=ingredient, quantity=1)
+        item = self.add(quantity=1)
+        Dish.objects.filter(pk=self.dish.pk).update(tracks_inventory=False)
+
+        self.send()
+
+        item.refresh_from_db()
+        self.assertEqual(item.status, OrderItem.Status.PENDING)
+        self.assertIsNone(item.inventory_deducted_at)
+        self.assertFalse(InventoryTransaction.objects.filter(order_item_reference=item.pk).exists())
+
+    def test_cancellation_after_disabling_tracking_returns_original_usage_once(self):
+        Dish.objects.filter(pk=self.dish.pk).update(tracks_inventory=True)
+        ingredient = Ingredient.objects.create(
+            code="RETURN-STOCK", name="Return stock ingredient", unit="kg", stock_quantity=10,
+        )
+        recipe = RecipeIngredient.objects.create(
+            dish=self.dish, ingredient=ingredient, quantity=Decimal("0.200"),
+        )
+        item = self.add(quantity=2)
+        self.send()
+        Dish.objects.filter(pk=self.dish.pk).update(tracks_inventory=False)
+        recipe.quantity = Decimal("0.800")
+        recipe.save(update_fields=("quantity",))
+
+        self.transition(item, OrderItem.Status.CANCELLED, reason="Cancel before cooking")
+
+        ingredient.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(ingredient.stock_quantity, Decimal("10"))
+        self.assertIsNotNone(item.inventory_returned_at)
+        returned = InventoryTransaction.objects.get(
+            transaction_type=InventoryTransaction.Type.SALE_RETURN, order_item_reference=item.pk,
+        )
+        self.assertEqual(returned.quantity, Decimal("0.400"))
+        with self.assertRaises(ValidationError):
+            self.transition(item, OrderItem.Status.CANCELLED, reason="Duplicate cancellation")
+        self.assertEqual(InventoryTransaction.objects.filter(transaction_type=InventoryTransaction.Type.SALE_RETURN).count(), 1)
 
     def test_invoice_is_created_and_payment_marks_order_paid(self):
         item = self.add(quantity=2)

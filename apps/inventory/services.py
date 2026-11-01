@@ -134,9 +134,14 @@ def record_inventory_transaction(*, actor, ingredient_id, transaction_type, quan
 
 
 def consume_order_items(*, actor, items):
-    """Atomically deduct recipe quantities and snapshot cost for draft order items."""
+    """Deduct recipes and snapshot cost only for dishes with inventory tracking enabled."""
     lock_menu()
-    items = [item for item in items if item.inventory_deducted_at is None]
+    # Sending already holds the menu lock before loading items and their dishes.
+    # Keeping a recipe on an untracked dish must not enforce or consume its stock.
+    items = [
+        item for item in items
+        if item.inventory_deducted_at is None and item.dish.tracks_inventory
+    ]
     if not items:
         return
     recipes = list(
