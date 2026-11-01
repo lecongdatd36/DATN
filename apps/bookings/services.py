@@ -13,7 +13,7 @@ from core.seating_lock import lock_seating_schedule
 from .models import Booking, BookingActivityLog, BookingSettings, BookingSettingsLog
 from .duration import planned_end
 from .permissions import has_booking_permission
-from .selectors import available_tables, available_transfer_tables, overlapping_bookings, default_duration_minutes
+from .selectors import available_tables, available_transfer_tables, overlapping_bookings, default_duration_minutes, recommended_tables
 
 
 TRANSITIONS = {
@@ -260,12 +260,10 @@ def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=No
             if customer is None:
                 raise error
 
-    tables = available_tables(starts_at=starts_at, ends_at=ends_at, party_size=party_size).filter(
-        status__in=(DiningTable.Status.AVAILABLE, DiningTable.Status.RESERVED)
+    recommendations = recommended_tables(
+        starts_at=starts_at, ends_at=ends_at, party_size=party_size, area_id=area_id,
     )
-    if area_id:
-        tables = tables.filter(area_id=area_id)
-    table = tables.order_by("capacity", "area__name", "code", "pk").first()
+    table = recommendations[0].table if recommendations else None
     if table is None:
         raise ValidationError({"starts_at": "Hiện không có bàn phù hợp trong thời gian này."})
     booking = Booking(
@@ -284,6 +282,8 @@ def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=No
     _reconcile_table_statuses(at=timezone.now(), table_ids=(table.pk,))
     note = " ".join(note.split()) if isinstance(note, str) else ""
     description = _snapshot(booking) + (f" Ghi chú khách: {note}." if note else "")
+    recommendation = recommendations[0]
+    description += f" Đề xuất bàn hạng 1, điểm {recommendation.score}/100: {recommendation.reason}"
     _log(None, booking, "Khách tạo đặt bàn online", description)
     return booking
 

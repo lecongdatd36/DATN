@@ -22,6 +22,8 @@ Ví dụ với bộ luật hiện tại: khi chọn **Cơm sườn nướng**, h
 
 **Phần dưới đây mô tả gợi ý món theo các món đang chọn.** Phần dự báo số đơn đã được triển khai thêm với luồng cập nhật hằng ngày; xem [hướng dẫn dự báo](forecast-daily.md). Dự báo hiện dùng dữ liệu mô phỏng để demo.
 
+Thuật toán chấm điểm và đề xuất bàn theo mục 3.5 của đề cương được mô tả trong [hướng dẫn chọn bàn](table-recommendations.md), gồm công thức, điều kiện hợp lệ, kiểm tra đồng thời và kết quả đánh giá. Đây là thuật toán best fit có giải thích, không cần huấn luyện mô hình.
+
 ## 2. AI này hoạt động như thế nào?
 
 Apriori tìm những món thường xuất hiện cùng nhau trong lịch sử các giỏ hàng. Từ đó, chương trình tạo luật dạng:

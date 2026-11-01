@@ -20,7 +20,7 @@ from .forms import (
 )
 from .models import Booking, BookingSettings, BookingSettingsLog
 from .permissions import has_booking_permission
-from .selectors import available_tables, booking_list, overdue_bookings, next_booking
+from .selectors import booking_list, overdue_bookings, next_booking, recommended_tables
 from .services import (
     TRANSITIONS, create_public_booking, expire_overdue_bookings, save_booking,
     transfer_table, transition_booking, update_booking_settings,
@@ -282,7 +282,11 @@ class AvailabilityView(BookingPermissionMixin, FormView):
                 form.add_error("starts_at", "Chọn giờ đến ở tương lai.")
                 return context
             context["searched"] = True
-            result = available_tables(**{key: form.cleaned_data[key] for key in ("starts_at", "ends_at", "party_size")})
+            recommendations = recommended_tables(**{key: form.cleaned_data[key] for key in ("starts_at", "ends_at", "party_size")})
+            for recommendation in recommendations:
+                recommendation.table.recommendation = recommendation
+            result = [recommendation.table for recommendation in recommendations]
+            context["best_recommendation"] = recommendations[0] if recommendations else None
             context["planned_start"] = form.cleaned_data["starts_at"]
             context["planned_end"] = form.cleaned_data["ends_at"]
             context["page_obj"] = Paginator(result, 20).get_page(self.request.GET.get("page"))
@@ -333,14 +337,22 @@ class PublicTableCheckView(FormView):
         context = super().get_context_data(**kwargs)
         form = context["form"]
         if form.is_bound and form.is_valid():
-            result = available_tables(
+            recommendations = recommended_tables(
                 starts_at=form.cleaned_data["starts_at"],
                 ends_at=form.cleaned_data["ends_at"],
                 party_size=form.cleaned_data["party_size"],
+                area_id=form.cleaned_data["area"].pk if form.cleaned_data.get("area") else None,
             )
+            context["table_recommendations"] = recommendations[:3]
+            context["available_areas"] = sorted({item.table.area.name for item in recommendations})
+            values = {
+                "starts_at": timezone.localtime(form.cleaned_data["starts_at"]).strftime("%Y-%m-%dT%H:%M"),
+                "duration_minutes": form.cleaned_data.get("duration_minutes") or form.default_minutes,
+                "party_size": form.cleaned_data["party_size"],
+            }
             if form.cleaned_data.get("area"):
-                result = result.filter(area=form.cleaned_data["area"])
-            context["available_areas"] = result.values("area__name").distinct().order_by("area__name")
+                values["area"] = form.cleaned_data["area"].pk
+            context["reservation_url"] = reverse("customer_reservations:create") + "?" + urlencode(values)
             context["searched"] = True
         return context
 
@@ -348,6 +360,13 @@ class PublicTableCheckView(FormView):
 class PublicReservationCreateView(FormView):
     form_class = PublicReservationForm
     template_name = "customer/reservation_form.html"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        for key in ("starts_at", "party_size", "duration_minutes", "area"):
+            if key in self.request.GET:
+                initial[key] = self.request.GET[key]
+        return initial
 
     def form_valid(self, form):
         try:
