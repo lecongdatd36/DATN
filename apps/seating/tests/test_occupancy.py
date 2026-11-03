@@ -52,7 +52,7 @@ class TableOccupancyTests(TestCase):
         self.assertEqual(booking.status, "SEATED")
 
     def test_actual_receiving_and_completion_update_table_page(self):
-        start = self.now + timedelta(hours=1)
+        start = timezone.localtime(self.now + timedelta(days=1)).replace(hour=12, minute=0)
         booking = save_booking(actor=self.waiter, customer_phone=self.customer.phone, table_id=self.table.pk,
                                party_size=2, starts_at=start, duration_minutes=120)
         booking = transition_booking(actor=self.waiter, booking_id=booking.pk, target="CONFIRMED", expected_status=booking.status, expected_revision=booking.revision)

@@ -22,7 +22,7 @@ class BookingConcurrencyTests(TransactionTestCase):
         self.area = Area.objects.create(name="Tầng 1")
         self.table = DiningTable.objects.create(code="B01", area=self.area, capacity=4)
         self.customer = Customer.objects.create(full_name="Khách", phone="0912345678")
-        self.start = timezone.now() + timedelta(days=1)
+        self.start = timezone.localtime(timezone.now() + timedelta(days=1)).replace(hour=12, minute=0, second=0, microsecond=0)
         self.end = self.start + timedelta(hours=1)
 
     def run_parallel(self, close_area=False):

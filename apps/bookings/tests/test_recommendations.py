@@ -30,7 +30,7 @@ class TableRecommendationTests(TestCase):
         cls.small = DiningTable.objects.create(code="Z04", area=cls.area, capacity=4)
         cls.large = DiningTable.objects.create(code="A08", area=cls.area, capacity=8)
         cls.customer = Customer.objects.create(full_name="Private customer", phone="0912345678")
-        cls.start = (timezone.now() + timedelta(days=2)).replace(second=0, microsecond=0)
+        cls.start = timezone.localtime(timezone.now() + timedelta(days=2)).replace(hour=12, minute=0, second=0, microsecond=0)
         cls.end = cls.start + timedelta(hours=2)
 
     def recommend(self, **kwargs):
@@ -167,7 +167,7 @@ class TableRecommendationTests(TestCase):
         next_page = self.client.get(response.context["reservation_url"])
         form = next_page.context["form"]
         self.assertEqual(str(form["party_size"].value()), "3")
-        self.assertEqual(str(form["duration_minutes"].value()), "120")
+        self.assertNotIn("duration_minutes", form.fields)
         self.assertEqual(str(form["area"].value()), str(self.area.pk))
         self.assertEqual(form["starts_at"].value(), self.params()["starts_at"])
         self.assertFalse(Booking.objects.exists())
@@ -206,7 +206,7 @@ class TableRecommendationConcurrencyTests(TransactionTestCase):
         BookingSettings.objects.get_or_create(pk=1, defaults={"default_duration_minutes": 120})
         self.area = Area.objects.create(name="Concurrency area")
         self.small = DiningTable.objects.create(code="CON04", area=self.area, capacity=4)
-        self.start = timezone.now() + timedelta(days=1)
+        self.start = timezone.localtime(timezone.now() + timedelta(days=1)).replace(hour=12, minute=0, second=0, microsecond=0)
 
     def allocate_parallel(self):
         barrier = Barrier(2)

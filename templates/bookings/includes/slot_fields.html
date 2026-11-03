@@ -2,10 +2,13 @@
 {% for field in form %}
     {% if field.is_hidden %}{{ field }}{% for error in field.errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
     {% elif field.name != 'duration_minutes' %}
-    <div class="mb-4"><label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+    <div class="mb-4" {% if field.name == 'customer_name' %}data-new-customer{% endif %}><label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        {% if field.name == 'customer_phone' %}<p class="small text-secondary mt-2" data-booking-customer-result role="status">Nhập số điện thoại để kiểm tra tên khách hàng.</p>{% endif %}
+        {% if field.name == 'table' %}<p class="small text-secondary mt-2" data-booking-tables-result role="status">Chọn giờ đến và số khách để tìm bàn phù hợp.</p>{% endif %}
+    </div>
     {% endif %}
 {% endfor %}
-<p class="text-secondary" data-duration-preview data-default-minutes="{{ form.default_minutes }}" aria-live="polite">Thời lượng dự kiến: {{ form.duration_minutes.value|default:form.default_minutes }} phút. Giờ kết thúc được tính tự động.</p>
+{% include 'bookings/includes/duration_preview.html' %}
 <details class="mb-4" {% if form.duration_minutes.errors %}open{% endif %}>
     <summary class="text-primary">Điều chỉnh thời lượng dự kiến</summary>
     <div class="mt-3"><label class="form-label" for="{{ form.duration_minutes.id_for_label }}">{{ form.duration_minutes.label }}</label>{{ form.duration_minutes }}

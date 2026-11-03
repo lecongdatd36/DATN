@@ -33,7 +33,7 @@ class BookingTests(TestCase):
         cls.table = DiningTable.objects.create(code="B01", area=cls.area, capacity=4)
         cls.other_table = DiningTable.objects.create(code="B02", area=cls.area, capacity=8)
         cls.customer = Customer.objects.create(full_name="Khách An", phone="0912345678")
-        cls.start = (timezone.now() + timedelta(days=1)).replace(second=0, microsecond=0)
+        cls.start = timezone.localtime(timezone.now() + timedelta(days=1)).replace(hour=12, minute=0, second=0, microsecond=0)
         cls.end = cls.start + timedelta(hours=2)
 
     def create(self, **kwargs):

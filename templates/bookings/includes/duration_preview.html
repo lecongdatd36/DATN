@@ -1,0 +1,6 @@
+<p class="text-secondary customer-form-helper" data-duration-preview
+   data-default-minutes="{{ form.default_minutes }}"
+   data-opening-time="{{ form.service_settings.opening_time|time:'H:i' }}"
+   data-closing-time="{{ form.service_settings.closing_time|time:'H:i' }}"
+   data-last-booking-time="{{ form.service_settings.last_booking_time|time:'H:i' }}"
+   aria-live="polite">Nhà hàng mở cửa {{ form.service_settings.opening_time|time:'H:i' }}–{{ form.service_settings.closing_time|time:'H:i' }}, nhận khách đặt bàn đến {{ form.service_settings.last_booking_time|time:'H:i' }}. Thời lượng mặc định {{ form.default_minutes }} phút; đến sát giờ đóng cửa sẽ dùng thời gian còn lại.</p>

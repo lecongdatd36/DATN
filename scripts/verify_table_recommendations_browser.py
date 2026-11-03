@@ -59,6 +59,16 @@ def main():
             "staff": reverse("bookings:availability") + "?" + urlencode(params),
             "public": reverse("customer_reservations:check") + "?" + urlencode(params),
             "empty": reverse("customer_reservations:check") + "?" + urlencode({**params, "party_size": 100}),
+            "booking": reverse("bookings:create") + "?" + urlencode({
+                **params, "starts_at": timezone.localtime(fixture.start).replace(hour=21).strftime("%Y-%m-%dT%H:%M"),
+                "customer_phone": fixture.customer.phone, "table": fixture.small.pk,
+            }),
+            "late": reverse("customer_reservations:create") + "?" + urlencode({
+                **params, "starts_at": timezone.localtime(fixture.start).replace(hour=21).strftime("%Y-%m-%dT%H:%M"),
+            }),
+            "midnight": reverse("customer_reservations:check") + "?" + urlencode({
+                **params, "starts_at": timezone.localtime(fixture.start).replace(hour=0).strftime("%Y-%m-%dT%H:%M"),
+            }),
         }
         application = get_wsgi_application()
 

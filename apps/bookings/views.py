@@ -3,16 +3,19 @@ from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
-from django.views.generic import DetailView, FormView, ListView
+from django.views.generic import DetailView, FormView, ListView, View
 
 from core.forms import add_service_errors, filter_query_string
 from apps.orders.permissions import has_order_permission
+from apps.customers.models import Customer
+from apps.customers.validators import normalize_phone
+from .scheduling import HOUR_FIELDS
 from .forms import (
     BookingFilterForm, BookingForm, SlotForm, TransitionForm, TransferTableForm,
     CancelSeatedVisitForm, BookingSettingsForm, PublicAvailabilityForm,
@@ -100,6 +103,38 @@ class BookingDetailView(BookingPermissionMixin, DetailView):
         if has_booking_permission(self.request.user, "view_bookingactivitylog"):
             context["log_page"] = Paginator(booking.activity_logs.all(), 20).get_page(self.request.GET.get("page"))
         return context
+
+
+class BookingCustomerLookupView(BookingPermissionMixin, View):
+    booking_permission = "manage_booking"
+
+    def get(self, request):
+        try:
+            phone = normalize_phone(request.GET.get("phone", ""))
+        except ValidationError as error:
+            return JsonResponse({"error": error.messages[0]}, status=400)
+        customer = Customer.objects.filter(phone=phone).first()
+        return JsonResponse({"found": customer is not None, "phone": phone,
+                             "name": customer.full_name if customer else ""})
+
+
+class BookingTableOptionsView(BookingPermissionMixin, View):
+    booking_permission = "manage_booking"
+
+    def get(self, request):
+        form = SlotForm(request.GET)
+        if not form.is_valid():
+            return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
+        booking_id = request.GET.get("booking_id") or None
+        if booking_id:
+            if not booking_id.isascii() or not booking_id.isdecimal() or len(booking_id) > 18:
+                return JsonResponse({"error": "Mã lịch đặt không hợp lệ."}, status=400)
+            booking = get_object_or_404(Booking, pk=booking_id)
+            if not booking.can_edit:
+                return JsonResponse({"error": "Lịch này không còn được sửa."}, status=400)
+            booking_id = booking.pk
+        rows = recommended_tables(**{key: form.cleaned_data[key] for key in ("starts_at", "ends_at", "party_size")}, exclude_id=booking_id)
+        return JsonResponse({"tables": [{"id": row.table.pk, "label": f"{row.table.code} — {row.table.area.name} ({row.table.capacity} chỗ)"} for row in rows]})
 
 
 class BookingFormView(BookingPermissionMixin, FormView):
@@ -305,6 +340,7 @@ class BookingSettingsView(BookingPermissionMixin, FormView):
     def get_initial(self):
         settings = BookingSettings.objects.get(pk=1)
         return {
+            **{name: getattr(settings, name) for name in HOUR_FIELDS},
             "default_duration_minutes": settings.default_duration_minutes,
             "no_show_grace_minutes": settings.no_show_grace_minutes,
             "expected_revision": settings.revision,
@@ -319,7 +355,7 @@ class BookingSettingsView(BookingPermissionMixin, FormView):
         except ValidationError as error:
             add_service_errors(form, error)
             return self.form_invalid(form)
-        messages.success(self.request, "Đã lưu cấu hình đặt bàn và thời gian chờ khách đến.")
+        messages.success(self.request, "Đã lưu cấu hình giờ phục vụ, thời lượng và thời gian chờ khách đến.")
         return HttpResponseRedirect(reverse("bookings:settings"))
 
 
@@ -347,7 +383,6 @@ class PublicTableCheckView(FormView):
             context["available_areas"] = sorted({item.table.area.name for item in recommendations})
             values = {
                 "starts_at": timezone.localtime(form.cleaned_data["starts_at"]).strftime("%Y-%m-%dT%H:%M"),
-                "duration_minutes": form.cleaned_data.get("duration_minutes") or form.default_minutes,
                 "party_size": form.cleaned_data["party_size"],
             }
             if form.cleaned_data.get("area"):
@@ -363,7 +398,7 @@ class PublicReservationCreateView(FormView):
 
     def get_initial(self):
         initial = super().get_initial()
-        for key in ("starts_at", "party_size", "duration_minutes", "area"):
+        for key in ("starts_at", "party_size", "area"):
             if key in self.request.GET:
                 initial[key] = self.request.GET[key]
         return initial
@@ -376,7 +411,6 @@ class PublicReservationCreateView(FormView):
                 starts_at=form.cleaned_data["starts_at"],
                 party_size=form.cleaned_data["party_size"],
                 area_id=form.cleaned_data["area"].pk if form.cleaned_data.get("area") else None,
-                duration_minutes=form.cleaned_data.get("duration_minutes"),
                 note=form.cleaned_data.get("note", ""),
             )
         except ValidationError as error:

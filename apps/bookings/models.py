@@ -1,3 +1,5 @@
+from datetime import time
+
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -82,6 +84,9 @@ class BookingActivityLog(models.Model):
 
 
 class BookingSettings(models.Model):
+    opening_time = models.TimeField("Giờ mở cửa", default=time(8))
+    closing_time = models.TimeField("Giờ đóng cửa", default=time(22))
+    last_booking_time = models.TimeField("Giờ nhận khách đặt bàn cuối", default=time(21))
     default_duration_minutes = models.PositiveSmallIntegerField(
         "Thời lượng mặc định (phút)", default=120, validators=[MinValueValidator(1), MaxValueValidator(1440)],
     )
@@ -100,10 +105,16 @@ class BookingSettings(models.Model):
             models.CheckConstraint(condition=models.Q(pk=1), name="booking_settings_singleton"),
             models.CheckConstraint(condition=models.Q(default_duration_minutes__gte=1, default_duration_minutes__lte=1440), name="booking_default_duration_range"),
             models.CheckConstraint(condition=models.Q(no_show_grace_minutes__gte=0, no_show_grace_minutes__lte=240), name="booking_no_show_grace_range"),
+            models.CheckConstraint(
+                condition=models.Q(opening_time__lte=models.F("last_booking_time"), last_booking_time__lt=models.F("closing_time")),
+                name="booking_service_hours_order",
+            ),
         ]
 
 
 class BookingSettingsLog(models.Model):
+    previous_hours = models.JSONField(default=dict, blank=True)
+    new_hours = models.JSONField(default=dict, blank=True)
     previous_minutes = models.PositiveSmallIntegerField()
     new_minutes = models.PositiveSmallIntegerField()
     previous_no_show_grace_minutes = models.PositiveSmallIntegerField(null=True, blank=True)

@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.bookings.forms import BookingForm, SlotForm
+from apps.bookings.duration import planned_end
 from apps.bookings.models import Booking, BookingSettings, BookingSettingsLog
 from apps.bookings.services import save_booking, transition_booking, update_booking_settings
 from apps.customers.models import Customer
@@ -27,7 +28,7 @@ class BookingDurationTests(TestCase):
         cls.area = Area.objects.create(name="Tầng 1")
         cls.table = DiningTable.objects.create(code="B01", area=cls.area, capacity=4)
         cls.customer = Customer.objects.create(full_name="Khách An", phone="0912345678")
-        cls.start = (timezone.now() + timedelta(days=1)).replace(hour=16, minute=30, second=0, microsecond=0)  # 23:30 Vietnam, crosses midnight.
+        cls.start = timezone.localtime(timezone.now() + timedelta(days=1)).replace(hour=16, minute=30, second=0, microsecond=0)
 
     def create(self, **changes):
         data = dict(actor=self.waiter, customer_phone=self.customer.phone, table_id=self.table.pk, party_size=2, starts_at=self.start)
@@ -89,7 +90,9 @@ class BookingDurationTests(TestCase):
 
     def test_derived_end_conflict_and_midnight_boundary(self):
         first = self.create(duration_minutes=120)
-        self.assertNotEqual(timezone.localtime(first.starts_at).date(), timezone.localtime(first.ends_at).date())
+        # Raw duration arithmetic supports midnight; reservation hours are checked separately.
+        midnight_start = self.start.replace(hour=23)
+        self.assertNotEqual(midnight_start.date(), planned_end(midnight_start, 120).date())
         with self.assertRaises(ValidationError):
             self.create(starts_at=self.start + timedelta(minutes=119), duration_minutes=90)
         second = self.create(starts_at=first.ends_at, duration_minutes=60)
