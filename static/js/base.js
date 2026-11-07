@@ -5,6 +5,11 @@
     const themeKey = "qlnh.colorTheme";
     const desktopQuery = window.matchMedia("(min-width: 992px)");
     const mobileTableQuery = window.matchMedia("(max-width: 767.98px)");
+    const canonicalTables = document.querySelector("[data-canonical-mobile-tables]");
+    if (canonicalTables && mobileTableQuery.matches && new URLSearchParams(location.search).get("desktop") !== "1") {
+        location.replace(canonicalTables.dataset.canonicalMobileTables);
+        return;
+    }
     const mobileLogin = document.querySelector("[data-mobile-login]");
     if (mobileLogin) {
         const syncMobileLogin = () => { mobileLogin.value = mobileTableQuery.matches ? "1" : "0"; };
@@ -19,16 +24,16 @@
     const actionDialog = document.querySelector("[data-action-dialog]");
     const liveClock = document.querySelector("[data-live-clock]");
     const liveDate = document.querySelector("[data-live-date]");
-    const pageTitle = document.querySelector("[data-page-title]");
+    const pageTitles = document.querySelectorAll("[data-page-title]");
     let pendingAction = null;
 
     function updateTopbar() {
         const now = new Date();
         if (liveClock) liveClock.textContent = new Intl.DateTimeFormat("vi-VN", {hour: "2-digit", minute: "2-digit"}).format(now);
         if (liveDate) liveDate.textContent = new Intl.DateTimeFormat("vi-VN", {weekday: "long", day: "2-digit", month: "2-digit", year: "numeric"}).format(now);
-        if (pageTitle) {
+        if (pageTitles.length) {
             const title = document.title.split("·")[0].trim();
-            if (title) pageTitle.textContent = title;
+            if (title) pageTitles.forEach(node => { node.textContent = title; });
         }
     }
 
@@ -182,8 +187,9 @@
     }
 
     function applyTheme(theme) {
-        document.documentElement.dataset.theme = theme;
-        document.documentElement.setAttribute("data-bs-theme", theme);
+        const displayTheme = mobileTableQuery.matches && body.classList.contains("staff-layout") ? "light" : theme;
+        document.documentElement.dataset.theme = displayTheme;
+        document.documentElement.setAttribute("data-bs-theme", displayTheme);
         storageSet(themeKey, theme);
         themeToggles.forEach((button) => {
             const next = theme === "dark" ? "sáng" : "tối";
@@ -275,7 +281,18 @@
             });
         }).observe(contentRoot, {childList: true, subtree: true});
     }
-    const enhanceAfterResize = () => enhanceMobileTables(document);
+    function syncDeviceLinks() {
+        document.querySelectorAll("[data-device-sales-link]").forEach((link) => {
+            link.dataset.desktopHref ||= link.getAttribute("href");
+            link.href = mobileTableQuery.matches ? link.dataset.mobileHref : link.dataset.desktopHref;
+        });
+    }
+    syncDeviceLinks();
+    const enhanceAfterResize = () => {
+        enhanceMobileTables(document);
+        syncDeviceLinks();
+        applyTheme(preferredTheme());
+    };
     if (mobileTableQuery.addEventListener) mobileTableQuery.addEventListener("change", enhanceAfterResize);
     else mobileTableQuery.addListener(enhanceAfterResize);
 

@@ -50,7 +50,9 @@
     try {
       const headers = {"X-Requested-With": "XMLHttpRequest"};
       if (etag) headers["If-None-Match"] = etag;
-      const response = await fetch(root.dataset.notificationUrl, {headers, credentials: "same-origin", cache: "no-store", signal: controller.signal});
+      const url = new URL(root.dataset.notificationUrl, location.href);
+      if (window.matchMedia("(max-width: 767.98px)").matches) url.searchParams.set("mobile", "1");
+      const response = await fetch(url.href, {headers, credentials: "same-origin", cache: "no-store", signal: controller.signal});
       if (response.redirected || response.status === 401 || response.status === 403) {
         stopped = true; render({counts: {total: 0}, entries: []}); emitStatus("expired"); return;
       }

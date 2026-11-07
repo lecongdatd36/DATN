@@ -1,13 +1,14 @@
 from django.urls import path
 
 from .views import (
-    IngredientFormView, InventoryWorkspaceView, PurchaseReceiptDetailView, PurchaseReceiptListView,
+    DailyIngredientUsageView, IngredientFormView, InventoryWorkspaceView, PurchaseReceiptDetailView, PurchaseReceiptListView,
     RecipeView, StocktakeDetailView, StocktakeListView, SupplierFormView, WasteRecordView,
 )
 
 app_name = "inventory"
 urlpatterns = [
     path("", InventoryWorkspaceView.as_view(), name="workspace"),
+    path("su-dung-hom-nay/", DailyIngredientUsageView.as_view(), name="daily_usage"),
     path("nguyen-lieu/them/", IngredientFormView.as_view(), name="ingredient_create"),
     path("nguyen-lieu/<int:pk>/sua/", IngredientFormView.as_view(), name="ingredient_update"),
     path("nha-cung-cap/them/", SupplierFormView.as_view(), name="supplier_create"),

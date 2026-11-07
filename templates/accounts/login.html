@@ -1,4 +1,7 @@
 {% extends 'customer/base_customer.html' %}
+{% load static %}
+{% block body_class %}staff-login-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/staff-mobile-system.css' %}?v=2" media="(max-width: 767.98px)">{% endblock %}
 {% block title %}Đăng nhập · {{ restaurant_public.name }}{% endblock %}
 {% block content %}
 <section class="cq-auth-page">
@@ -13,7 +16,7 @@
             <form class="customer-form-card cq-login-form" method="post" action="{% url 'accounts:login' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ next }}">
-                <input type="hidden" name="mobile_view" value="0" data-mobile-login>
+                <input type="hidden" name="mobile_view" value="" data-mobile-login>
                 {% include 'customer/includes/form_fields.html' with form=form %}
                 <button class="customer-button" type="submit">Đăng nhập <span aria-hidden="true">→</span></button>
             </form>

@@ -46,9 +46,11 @@ class LoginView(auth_views.LoginView):
     redirect_authenticated_user = True
 
     def get_success_url(self):
+        from core.devices import device_login_redirect, is_mobile_request
+
         explicit = self.get_redirect_url()
         if explicit:
-            return explicit
+            return device_login_redirect(self.request, explicit)
         groups = set(self.request.user.groups.values_list("name", flat=True))
         if "MANAGER" in groups or self.request.user.is_superuser:
             return str(reverse_lazy("accounts:workspace"))
@@ -57,7 +59,7 @@ class LoginView(auth_views.LoginView):
         if "INVENTORY" in groups:
             return str(reverse_lazy("inventory:workspace"))
         if groups.intersection({"WAITER", "CASHIER"}):
-            if self.request.POST.get("mobile_view") == "1":
+            if is_mobile_request(self.request):
                 return str(reverse_lazy("sales:mobile"))
             return str(reverse_lazy("sales:workspace"))
         return str(reverse_lazy("accounts:workspace"))

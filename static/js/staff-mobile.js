@@ -8,7 +8,10 @@
   const dialog = document.querySelector("[data-confirm-dialog]");
   let busy = false, uncertain = false, navigation = null, lookup = null, quoteRequest = null, searchTimer;
   let pendingNavigation = 0;
-  let area = "all", tableStatus = "all", category = "all";
+  const initialFilters = new URLSearchParams(location.search);
+  let area = initialFilters.get("area") || "all";
+  let tableStatus = ["AVAILABLE", "OCCUPIED", "RESERVED", "CLEANING", "payment"].includes(initialFilters.get("status")) ? initialFilters.get("status") : "all";
+  let tableQuery = initialFilters.get("q") || "", category = "all";
   const names = new WeakMap();
   const root = () => document.querySelector("#mobile-page");
   const feedback = message => {
@@ -22,9 +25,10 @@
   };
   function filterTables() {
     let count = 0;
+    const query = normalize(app.querySelector("[data-table-search]")?.value ?? tableQuery);
     app.querySelectorAll("[data-table-card]").forEach(card => {
       const statusMatches = tableStatus === "all" || (tableStatus === "payment" ? card.dataset.payment.includes("yes") : card.dataset.status === tableStatus);
-      card.hidden = !(statusMatches && (area === "all" || card.dataset.areaId === area));
+      card.hidden = !(statusMatches && (area === "all" || card.dataset.areaId === area) && normalize(card.textContent).includes(query));
       if (!card.hidden) count++;
     });
     const empty = app.querySelector("[data-no-tables]");
@@ -57,6 +61,8 @@
   }
   function init(menuCategory = "all") {
     category = menuCategory === "all" || [...app.querySelectorAll("[data-category]")].some(button => button.dataset.category === menuCategory) ? menuCategory : "all";
+    const tableSearch = app.querySelector("[data-table-search]");
+    if (tableSearch) tableSearch.value = tableQuery;
     filterTables();
     filterDishes();
     paymentFields();
@@ -244,6 +250,7 @@
   });
   document.addEventListener("input", event => {
     const input = event.target;
+    if (input.matches("[data-table-search]")) {tableQuery = input.value;filterTables();return;}
     if (input.matches("[data-dish-search]")) {clearTimeout(searchTimer);searchTimer = window.setTimeout(filterDishes, 120);return;}
     if (!input.closest("[data-mobile-app]")) return;
     root().dataset.dirty = "true";

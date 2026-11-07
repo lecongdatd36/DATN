@@ -8,11 +8,14 @@
     <title>{% block title %}QLNH · Quản lý nhà hàng{% endblock %}</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=7">
     <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/menu-recommendations.css' %}?v=2">
     {% block extra_css %}{% endblock %}
-    <link rel="stylesheet" href="{% static 'css/mobile.css' %}?v=1" media="(max-width: 767.98px)">
+    <link rel="stylesheet" href="{% static 'css/staff-mobile-theme.css' %}?v=4" media="(max-width: 767.98px)">
+    <link rel="stylesheet" href="{% static 'css/mobile.css' %}?v=3" media="(max-width: 767.98px)">
+    <link rel="stylesheet" href="{% static 'css/staff-mobile-system.css' %}?v=4" media="(max-width: 767.98px)">
+    {% if mobile_tables_url %}<script>if (matchMedia('(max-width: 767.98px)').matches && new URLSearchParams(location.search).get('desktop') !== '1') location.replace('{{ mobile_tables_url|escapejs }}');</script>{% endif %}
 </head>
 <body class="{% if user.is_authenticated %}staff-layout{% else %}public-layout d-flex flex-column min-vh-100{% endif %}">
     {% include 'includes/icon_sprite.html' %}
@@ -37,10 +40,12 @@
         </aside>
 
         <div class="admin-main">
+            <div class="management-mobile-header">{% include 'staff/mobile/header.html' with heading='Không gian làm việc' management_mobile=True %}</div>
             <header class="admin-topbar">
                 <div class="topbar-left">
+                    <a class="management-mobile-brand" href="{% url 'accounts:workspace' %}" aria-label="Trang quản lý"><img src="{% static 'customer/images/com-que-mark.svg' %}" width="32" height="32" alt=""></a>
                     <button class="icon-button sidebar-toggle" type="button" data-sidebar-toggle aria-controls="admin-sidebar" aria-expanded="true" aria-label="Thu gọn menu"><svg class="app-icon" aria-hidden="true"><use href="#icon-menu"></use></svg>{% include 'includes/notification_badge.html' with key='total' count=nav_notifications.counts.total %}</button>
-                    <div class="topbar-title"><strong data-page-title>Không gian quản lý</strong><small data-live-date>Vận hành nhà hàng tập trung</small></div>
+                    <div class="topbar-title"><span class="management-mobile-kicker">{{ restaurant_public.name }} / QUẢN LÝ</span><strong data-page-title>Không gian quản lý</strong><small data-live-date>Vận hành nhà hàng tập trung</small></div>
                 </div>
                 <div class="topbar-actions">
                     {% include 'includes/notifications.html' %}
@@ -79,13 +84,14 @@
     {% if user.is_authenticated %}
             <footer class="admin-footer"><span>QLNH · Quản lý nhà hàng</span><span>© {% now 'Y' %}</span></footer>
         </div>
-        {% include 'includes/mobile_nav.html' %}
+        {% include 'staff/mobile/nav.html' with management_mobile=True %}
     </div>
     {% else %}
     <footer class="public-footer"><div class="container py-3 d-flex flex-wrap justify-content-between gap-2"><span>QLNH · Quản lý nhà hàng</span><span>Đồ án tốt nghiệp · {% now 'Y' %}</span></div></footer>
     {% endif %}
 
     {% if user.is_authenticated %}
+    {% include 'staff/mobile/notifications.html' %}
     <dialog class="action-dialog" data-action-dialog aria-labelledby="action-dialog-title">
         <form method="dialog" class="action-dialog-card">
             {% csrf_token %}
@@ -107,9 +113,9 @@
     {% endif %}
 
     <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}" defer></script>
-    <script src="{% static 'js/base.js' %}?v=8" defer></script>
+    <script src="{% static 'js/base.js' %}?v=10" defer></script>
     <script src="{% static 'js/menu-recommendations.js' %}?v=2" defer></script>
-    {% if user.is_authenticated %}<script src="{% static 'js/nav-notifications.js' %}?v=2" defer></script>{% endif %}
+    {% if user.is_authenticated %}<script src="{% static 'js/mobile-notifications.js' %}?v=1" defer></script><script src="{% static 'js/nav-notifications.js' %}?v=3" defer></script>{% if request.resolver_match.app_name != 'kitchen' and request.resolver_match.app_name != 'sales' %}<script src="{% static 'js/audio-notify.js' %}?v=13" defer></script>{% endif %}{% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

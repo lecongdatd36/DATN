@@ -1,0 +1,34 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+{% block staff_title %}Sử dụng hôm nay · Kho{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=3">{% endblock %}
+{% block staff_content %}
+<section class="container-fluid px-3 pb-4 inventory-page">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div><p class="eyebrow mb-1">KHO · {{ usage_day|date:'d/m/Y' }}</p><h1 class="h3 mb-1">Sử dụng hôm nay</h1><p class="text-secondary mb-0">Nguyên liệu đã xuất theo món bán và xuất thủ công trong ngày, theo giờ Việt Nam.</p></div>
+    <a class="btn btn-outline-secondary" href="{% url 'inventory:workspace' %}">Về kho</a>
+  </div>
+  {% include 'staff/inventory/includes/nav.html' %}
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6"><div class="project-card p-3"><small class="text-secondary">Nguyên liệu đã xuất</small><strong class="d-block h3 mb-0">{{ used_ingredient_count }}</strong></div></div>
+    <div class="col-sm-6"><div class="project-card p-3"><small class="text-secondary">Giao dịch trong ngày</small><strong class="d-block h3 mb-0">{{ usage_transaction_count }}</strong></div></div>
+  </div>
+  <p class="text-secondary small">Sử dụng ròng = xuất theo món + xuất thủ công − hoàn do hủy món. Hao hụt được ghi riêng. Hoàn nguyên liệu đã xuất từ ngày trước có thể làm số ròng hôm nay âm.</p>
+  <div class="project-card table-responsive mb-4">
+    <table class="table align-middle"><thead><tr><th>Nguyên liệu</th><th>Đơn vị</th><th>Theo món bán</th><th>Xuất thủ công</th><th>Hoàn kho</th><th>Sử dụng ròng</th><th>Hao hụt</th></tr></thead><tbody>
+      {% for row in usage_rows %}<tr>
+        <td><div><strong>{{ row.ingredient__name }}</strong><small class="d-block text-secondary">{{ row.ingredient__code }}</small></div></td>
+        <td>{{ row.ingredient__unit }}</td><td>{{ row.sale_quantity|floatformat:'-3' }}</td><td>{{ row.export_quantity|floatformat:'-3' }}</td><td>{{ row.return_quantity|floatformat:'-3' }}</td><td><strong>{{ row.used_quantity|floatformat:'-3' }}</strong></td><td>{{ row.waste_quantity|floatformat:'-3' }}</td>
+      </tr>{% empty %}<tr><td colspan="7" class="text-center py-5">Hôm nay chưa có giao dịch sử dụng nguyên liệu.</td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+  <h2 class="h5 mb-3">Chi tiết giao dịch</h2>
+  <div class="project-card table-responsive">
+    <table class="table align-middle"><thead><tr><th>Thời gian</th><th>Nguyên liệu</th><th>Loại giao dịch</th><th>Số lượng</th><th>Ghi chú</th><th>Người ghi</th></tr></thead><tbody>
+      {% for entry in page_obj %}<tr><td>{{ entry.created_at|date:'H:i:s' }}</td><td>{{ entry.ingredient.name }}</td><td>{{ entry.get_transaction_type_display }}</td><td>{{ entry.quantity|floatformat:'-3' }} {{ entry.ingredient.unit }}</td><td>{{ entry.note|default:'—' }}</td><td>{{ entry.performed_by.username|default:'Hệ thống' }}</td></tr>
+      {% empty %}<tr><td colspan="6" class="text-center py-4">Chưa có giao dịch.</td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

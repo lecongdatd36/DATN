@@ -27,7 +27,7 @@ class BookingDurationTests(TestCase):
         cls.area = Area.objects.create(name="Tầng 1")
         cls.table = DiningTable.objects.create(code="B01", area=cls.area, capacity=4)
         cls.customer = Customer.objects.create(full_name="Khách An", phone="0912345678")
-        cls.start = (timezone.now() + timedelta(days=1)).replace(hour=16, minute=30, second=0, microsecond=0)  # 23:30 Vietnam, crosses midnight.
+        cls.start = timezone.localtime(timezone.now() + timedelta(days=1)).replace(hour=12, minute=0, second=0, microsecond=0)
 
     def create(self, **changes):
         data = dict(actor=self.waiter, customer_phone=self.customer.phone, table_id=self.table.pk, party_size=2, starts_at=self.start)
@@ -87,9 +87,9 @@ class BookingDurationTests(TestCase):
         with self.assertRaises(ValidationError):
             self.create(duration_minutes=120, ends_at=self.start + timedelta(hours=3))
 
-    def test_derived_end_conflict_and_midnight_boundary(self):
+    def test_derived_end_conflict_and_adjacent_boundary(self):
         first = self.create(duration_minutes=120)
-        self.assertNotEqual(timezone.localtime(first.starts_at).date(), timezone.localtime(first.ends_at).date())
+        self.assertEqual(timezone.localtime(first.starts_at).date(), timezone.localtime(first.ends_at).date())
         with self.assertRaises(ValidationError):
             self.create(starts_at=self.start + timedelta(minutes=119), duration_minutes=90)
         second = self.create(starts_at=first.ends_at, duration_minutes=60)
@@ -117,7 +117,7 @@ class BookingDurationTests(TestCase):
             listing = self.client.get(reverse("bookings:list"))
             if allowed:
                 self.assertContains(listing, url)
-                response = self.client.post(url, {"default_duration_minutes": 90, "expected_revision": BookingSettings.objects.get(pk=1).revision})
+                response = self.client.post(url, {"opening_time": "09:00", "closing_time": "22:00", "default_duration_minutes": 90, "expected_revision": BookingSettings.objects.get(pk=1).revision})
                 self.assertRedirects(response, url)
             else:
                 self.assertNotContains(listing, url)
