@@ -3,14 +3,14 @@
 {% block content %}
 <section class="container-fluid px-3 px-md-4 pb-5">
     <p class="eyebrow mb-2">ĐẶT BÀN</p><h1 class="h2 mb-3">Cấu hình đặt bàn</h1>
-    <p class="text-secondary mb-4">Thời lượng áp dụng cho lịch mới. Nếu khách chưa được nhận bàn sau thời gian chờ tính từ giờ hẹn, hệ thống tự chuyển lịch sang “Không đến” và giải phóng bàn.</p>
+    <p class="text-secondary mb-4">Giờ phục vụ áp dụng cho lịch mới và lịch được sửa, theo giờ Việt Nam. Thời gian dùng bàn phải kết thúc trước hoặc đúng giờ đóng cửa. Nếu khách chưa được nhận bàn sau thời gian chờ tính từ giờ hẹn, hệ thống tự chuyển lịch sang “Không đến” và giải phóng bàn.</p>
     <div class="row"><div class="col-lg-6"><form method="post" class="project-card p-4" novalidate>
         {% csrf_token %}{% include 'includes/form_fields.html' %}
         <button class="btn btn-primary" type="submit">Lưu cấu hình</button><a class="btn btn-outline-secondary" href="{% url 'bookings:list' %}">Quay lại</a>
     </form></div></div>
     <h2 class="h5 mt-4">Thay đổi gần đây</h2>
-    <div class="project-card table-responsive"><table class="table mb-0"><thead><tr><th>Thời gian</th><th>Người thực hiện</th><th>Thời lượng</th><th>Chờ khách đến</th></tr></thead><tbody>
-        {% for log in settings_logs %}<tr><td>{{ log.created_at|date:'d/m/Y H:i' }}</td><td>{{ log.actor_snapshot }}</td><td>{{ log.previous_minutes }} → {{ log.new_minutes }} phút</td><td>{% if log.previous_no_show_grace_minutes is not None %}{{ log.previous_no_show_grace_minutes }} → {{ log.new_no_show_grace_minutes }} phút{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="4">Chưa thay đổi cấu hình.</td></tr>{% endfor %}
+    <div class="project-card table-responsive"><table class="table mb-0"><thead><tr><th>Thời gian</th><th>Người thực hiện</th><th>Thời lượng</th><th>Chờ khách đến</th><th>Giờ phục vụ</th></tr></thead><tbody>
+        {% for log in settings_logs %}<tr><td>{{ log.created_at|date:'d/m/Y H:i' }}</td><td>{{ log.actor_snapshot }}</td><td>{{ log.previous_minutes }} → {{ log.new_minutes }} phút</td><td>{% if log.previous_no_show_grace_minutes is not None %}{{ log.previous_no_show_grace_minutes }} → {{ log.new_no_show_grace_minutes }} phút{% else %}—{% endif %}</td><td>{% if log.new_hours.opening_time %}{{ log.previous_hours.opening_time }}–{{ log.previous_hours.closing_time }} → {{ log.new_hours.opening_time }}–{{ log.new_hours.closing_time }}{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="5">Chưa thay đổi cấu hình.</td></tr>{% endfor %}
     </tbody></table></div>
 </section>
 {% endblock %}

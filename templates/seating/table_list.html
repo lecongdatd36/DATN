@@ -3,7 +3,7 @@
 {% block title %}Bàn · QLNH{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/seating.css' %}?v=7">{% endblock %}
 {% block content %}
-<section class="container-fluid px-3 px-md-4 pb-5" data-mobile-table-page data-table-live>
+<section class="container-fluid px-3 px-md-4 pb-5" data-mobile-table-page data-table-live {% if mobile_tables_url %}data-canonical-mobile-tables="{{ mobile_tables_url }}"{% endif %}>
     <header class="mobile-table-appbar"><a href="{% url 'accounts:workspace' %}" aria-label="Quay lại">‹</a><div><h1>Khu vực bàn</h1><p>{{ page_obj.paginator.count }} bàn đang hiển thị</p></div><button type="button" data-mobile-table-filter aria-label="Mở bộ lọc">☷</button></header>
     <div class="table-page-heading">
         <div><p class="eyebrow mb-2">SƠ ĐỒ PHỤC VỤ</p><h1 class="h2 mb-1">Bàn ăn</h1><p class="text-secondary mb-0">Chạm vào từng bàn để nhận khách, mở đơn hoặc xem lượt đang phục vụ.</p></div>

@@ -19,7 +19,7 @@ class CustomerReservationTests(TestCase):
         cls.table = DiningTable.objects.create(code="B01", area=cls.area, capacity=4, is_active=True)
 
     def starts_at(self, minutes=30):
-        return timezone.now() + timedelta(minutes=minutes)
+        return timezone.localtime(timezone.now() + timedelta(days=1)).replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
 
     def test_public_booking_creates_customer_and_stays_pending(self):
         booking = create_public_booking(

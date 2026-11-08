@@ -11,6 +11,7 @@ from django.views.decorators.cache import never_cache
 from django.views.generic import FormView, ListView, TemplateView
 
 from core.forms import add_service_errors, filter_query_string
+from core.devices import is_mobile_request, mobile_tables_url
 from apps.bookings.services import expire_overdue_bookings
 from apps.orders.models import Order
 from apps.orders import services as order_services
@@ -56,6 +57,15 @@ class TableListView(AreaListView):
     model = DiningTable
     selector = staticmethod(tables)
 
+    def get(self, request, *args, **kwargs):
+        from apps.orders.permissions import has_order_permission
+
+        if (is_mobile_request(request) and request.GET.get("desktop") != "1"
+                and request.headers.get("X-Table-Refresh") != "1"
+                and has_order_permission(request.user, "view_order")):
+            return HttpResponseRedirect(mobile_tables_url(request.GET))
+        return super().get(request, *args, **kwargs)
+
     def get_template_names(self):
         if self.request.headers.get("X-Table-Refresh") == "1":
             return ["seating/includes/table_results.html"]
@@ -76,6 +86,9 @@ class TableListView(AreaListView):
         context = super().get_context_data(status_checked_at=self.status_checked_at, **kwargs)
         context["service_areas"] = Area.objects.filter(is_active=True).order_by("name", "pk")
         context["selected_area_id"] = self.request.GET.get("area", "")
+        from apps.orders.permissions import has_order_permission
+        if has_order_permission(self.request.user, "view_order"):
+            context["mobile_tables_url"] = mobile_tables_url(self.request.GET)
         context["status_counts"] = table_status_counts(at=self.status_checked_at)
         page = context.get("page_obj")
         rows = page.object_list if page is not None else context.get("object_list", [])

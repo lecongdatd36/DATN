@@ -21,12 +21,12 @@ function harness() {
   let id = 0, queued = [], fail = false;
   const setTimeout = (fn, delay) => {timers.set(++id, {fn, delay}); return id;};
   const clearTimeout = id => timers.delete(id);
-  const window = {addEventListener(name, fn) {(handlers[name] ||= []).push(fn);}, QLNHAudio: {play: type => sounds.push(type)}};
+  const window = {matchMedia: () => ({matches: true}), addEventListener(name, fn) {(handlers[name] ||= []).push(fn);}, QLNHAudio: {play: type => sounds.push(type)}};
   const payload = count => ({counts: {total: count, tasks: count}, entries: [{key: "service", count, label: "Yêu cầu phục vụ", url: "/sales/mobile/?page=tasks#m-requests"}]});
   const response = (body, code=200) => ({status: code, ok: code===200, redirected: false, headers: {get: () => '"notifications-v1"'}, json: async() => body});
   queued.push(response(payload(1)));
   const context = {
-    document, window, location: {origin: "http://127.0.0.1"}, URL, AbortController, console, setTimeout, clearTimeout,
+    document, window, location: {origin: "http://127.0.0.1", href: "http://127.0.0.1/sales/mobile/"}, URL, AbortController, console, setTimeout, clearTimeout,
     CustomEvent: class {constructor(type, opts) {this.type = type; this.detail = opts?.detail;}},
     fetch: async (url, options) => {requests.push({url, options}); if (fail) throw Error("offline"); return queued.shift() || response(null, 304);}
   };

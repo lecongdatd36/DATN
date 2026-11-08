@@ -305,6 +305,8 @@ class BookingSettingsView(BookingPermissionMixin, FormView):
     def get_initial(self):
         settings = BookingSettings.objects.get(pk=1)
         return {
+            "opening_time": settings.opening_time,
+            "closing_time": settings.closing_time,
             "default_duration_minutes": settings.default_duration_minutes,
             "no_show_grace_minutes": settings.no_show_grace_minutes,
             "expected_revision": settings.revision,

@@ -1,0 +1,17 @@
+<div class="m-management-links" aria-label="Chức năng theo quyền tài khoản">
+  <a class="m-card" href="{% url 'accounts:workspace' %}"><svg aria-hidden="true"><use href="#icon-dashboard"></use></svg>Tổng quan</a>
+  {% if access.can_view_bookings %}<a class="m-card" href="{% url 'bookings:list' %}"><svg aria-hidden="true"><use href="#icon-calendar"></use></svg>Đặt bàn</a>{% endif %}
+  {% if access.can_view_menu %}<a class="m-card" href="{% url 'menu:dish_list' %}"><svg aria-hidden="true"><use href="#icon-menu-book"></use></svg>Thực đơn</a>{% endif %}
+  {% if access.can_view_customers %}<a class="m-card" href="{% url 'customers:customer_list' %}"><svg aria-hidden="true"><use href="#icon-customers"></use></svg>Khách hàng</a>{% endif %}
+  {% if access.can_work_kitchen %}<a class="m-card" href="{% url 'kitchen:workspace' %}"><svg aria-hidden="true"><use href="#icon-kitchen"></use></svg>Bếp</a>{% endif %}
+  {% if access.can_view_inventory %}<a class="m-card" href="{% url 'inventory:workspace' %}"><svg aria-hidden="true"><use href="#icon-area"></use></svg>Kho nguyên liệu</a><a class="m-card" href="{% url 'inventory:daily_usage' %}"><svg aria-hidden="true"><use href="#icon-clock"></use></svg>Sử dụng hôm nay</a>{% endif %}
+  {% if access.can_collect_payments %}<a class="m-card" href="{% url 'sales:mobile' %}?page=payments" data-mobile-link><svg aria-hidden="true"><use href="#icon-check"></use></svg>Chờ thanh toán</a><a class="m-card" href="{% url 'sales:mobile' %}?page=invoices" data-mobile-link><svg aria-hidden="true"><use href="#icon-receipt"></use></svg>Hóa đơn</a>{% endif %}
+  {% if access.can_view_reports %}<a class="m-card" href="{% url 'reports:dashboard' %}"><svg aria-hidden="true"><use href="#icon-chart"></use></svg>Báo cáo</a>{% endif %}
+  {% if access.can_manage_accounts %}<a class="m-card" href="{% url 'employees:employee_list' %}"><svg aria-hidden="true"><use href="#icon-employees"></use></svg>Nhân sự</a><a class="m-card" href="{% url 'accounts:account_list' %}"><svg aria-hidden="true"><use href="#icon-user"></use></svg>Tài khoản</a>{% endif %}
+  {% if access.can_manage_seating %}<a class="m-card" href="{% url 'seating:table_create' %}"><svg aria-hidden="true"><use href="#icon-table"></use></svg>Thêm bàn</a>{% endif %}
+  {% if access.can_view_areas %}<a class="m-card" href="{% url 'seating:area_list' %}"><svg aria-hidden="true"><use href="#icon-area"></use></svg>Khu vực</a>{% endif %}
+  {% if access.can_view_tables %}<a class="m-card" href="{% url 'seating:table_qr' %}"><svg aria-hidden="true"><use href="#icon-table"></use></svg>QR từng bàn</a>{% endif %}
+  {% if access.can_configure_bookings %}<a class="m-card" href="{% url 'bookings:settings' %}"><svg aria-hidden="true"><use href="#icon-clock"></use></svg>Cấu hình đặt bàn</a>{% endif %}
+  {% if access.can_view_membership_tiers %}<a class="m-card" href="{% url 'customers:membership_tier_list' %}"><svg aria-hidden="true"><use href="#icon-customers"></use></svg>Hạng khách hàng</a>{% endif %}
+  {% if access.can_view_promotions %}<a class="m-card" href="{% url 'sales:promotion_list' %}"><svg aria-hidden="true"><use href="#icon-wallet"></use></svg>Mã giảm giá</a>{% endif %}
+</div>

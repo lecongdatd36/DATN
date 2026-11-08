@@ -4,7 +4,9 @@ from django.utils import timezone
 from apps.accounts.forms import BootstrapFormMixin
 from apps.customers.validators import normalize_phone
 from apps.seating.models import Area, DiningTable
-from .models import Booking
+from .models import Booking, BookingSettings
+from .hours import booking_hours_help, validate_booking_hours
+from core.forms import add_service_errors
 from .duration import planned_end, MAX_DURATION_MINUTES
 from .selectors import available_transfer_tables, default_duration_minutes
 
@@ -27,6 +29,7 @@ class SlotForm(BootstrapFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
         self.default_minutes = default_duration_minutes()
         self.initial.setdefault("duration_minutes", self.default_minutes)
+        self.fields["starts_at"].help_text = booking_hours_help(BookingSettings.objects.get(pk=1))
 
     def clean_duration_minutes(self):
         return self.cleaned_data["duration_minutes"] if self.cleaned_data["duration_minutes"] is not None else self.default_minutes
@@ -36,9 +39,9 @@ class SlotForm(BootstrapFormMixin, forms.Form):
         if data.get("starts_at") and data.get("duration_minutes"):
             try:
                 data["ends_at"] = planned_end(data["starts_at"], data["duration_minutes"])
+                validate_booking_hours(data["starts_at"], data["ends_at"])
             except forms.ValidationError as error:
-                for message in error.messages:
-                    self.add_error("duration_minutes", message)
+                add_service_errors(self, error)
         return data
 
 
@@ -99,12 +102,20 @@ class BookingFilterForm(BootstrapFormMixin, forms.Form):
 
 
 class BookingSettingsForm(BootstrapFormMixin, forms.Form):
+    opening_time = forms.TimeField(label="Giờ mở cửa", widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
+    closing_time = forms.TimeField(label="Giờ đóng cửa", widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
     default_duration_minutes = forms.IntegerField(label="Thời lượng mặc định (phút)", min_value=1, max_value=MAX_DURATION_MINUTES)
     no_show_grace_minutes = forms.IntegerField(
         label="Tự động ghi nhận không đến sau (phút)", min_value=0, max_value=240, required=False,
         help_text="Tính từ giờ hẹn. Nhập 0 nếu muốn giải phóng bàn ngay khi quá giờ hẹn.",
     )
     expected_revision = forms.IntegerField(widget=forms.HiddenInput)
+
+    def clean(self):
+        data = super().clean()
+        if data.get("opening_time") and data.get("closing_time") and data["closing_time"] <= data["opening_time"]:
+            self.add_error("closing_time", "Giờ đóng cửa phải sau giờ mở cửa trong cùng ngày.")
+        return data
 
 
 class PublicReservationForm(forms.Form):
@@ -120,6 +131,7 @@ class PublicReservationForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.default_minutes = default_duration_minutes()
         self.initial.setdefault("duration_minutes", self.default_minutes)
+        self.fields["starts_at"].help_text = booking_hours_help(BookingSettings.objects.get(pk=1))
 
     def clean_full_name(self):
         name = " ".join(self.cleaned_data["full_name"].split())
@@ -139,8 +151,9 @@ class PublicReservationForm(forms.Form):
         if starts_at and duration:
             try:
                 data["ends_at"] = planned_end(starts_at, duration)
+                validate_booking_hours(starts_at, data["ends_at"])
             except forms.ValidationError as error:
-                self.add_error("duration_minutes", error.messages)
+                add_service_errors(self, error)
         return data
 
 
@@ -168,6 +181,7 @@ class PublicAvailabilityForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.default_minutes = default_duration_minutes()
         self.initial.setdefault("duration_minutes", self.default_minutes)
+        self.fields["starts_at"].help_text = booking_hours_help(BookingSettings.objects.get(pk=1))
 
     def clean(self):
         data = super().clean()
@@ -178,6 +192,7 @@ class PublicAvailabilityForm(forms.Form):
         if starts_at and duration:
             try:
                 data["ends_at"] = planned_end(starts_at, duration)
+                validate_booking_hours(starts_at, data["ends_at"])
             except forms.ValidationError as error:
-                self.add_error("duration_minutes", error.messages)
+                add_service_errors(self, error)
         return data

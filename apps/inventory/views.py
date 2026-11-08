@@ -2,6 +2,7 @@ from django.contrib import messages
 from decimal import Decimal
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, F, Q
 from django.http import HttpResponseRedirect
@@ -19,6 +20,7 @@ from .models import (
     Ingredient, InventoryTransaction, PurchaseReceipt, RecipeIngredient, Stocktake, Supplier, WasteRecord,
 )
 from .permissions import has_inventory_permission
+from .selectors import daily_ingredient_usage
 from .services import (
     add_purchase_line, cancel_purchase_receipt, cancel_stocktake, confirm_purchase_receipt,
     create_purchase_receipt, create_stocktake, delete_recipe_line, post_stocktake,
@@ -113,6 +115,16 @@ class InventoryWorkspaceView(InventoryPermissionMixin, TemplateView):
         context = self.get_context_data()
         context["transaction_form"] = form
         return self.render_to_response(context)
+
+
+class DailyIngredientUsageView(InventoryPermissionMixin, TemplateView):
+    template_name = "staff/inventory/daily_usage.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(daily_ingredient_usage())
+        context["page_obj"] = Paginator(context.pop("usage_transactions"), 25).get_page(self.request.GET.get("page"))
+        return context
 
 
 class InventoryCatalogFormView(InventoryPermissionMixin, FormView):
