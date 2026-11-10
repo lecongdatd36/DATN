@@ -269,6 +269,8 @@ class Payment(models.Model):
         CARD = "CARD", "Thẻ"
         BANK_TRANSFER = "BANK_TRANSFER", "Chuyển khoản"
         VNPAY = "VNPAY", "VNPAY"
+        ZALOPAY = "ZALOPAY", "ZaloPay Sandbox"
+        DEPOSIT = "DEPOSIT", "Khấu trừ cọc đã thu"
         OTHER = "OTHER", "Khác"
 
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name="payments")
@@ -311,6 +313,7 @@ class OnlinePayment(models.Model):
     order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="online_payments")
     txn_ref = models.CharField("Mã tham chiếu", max_length=100, unique=True)
     amount = models.DecimalField("Số tiền", max_digits=12, decimal_places=0, validators=[MinValueValidator(1)])
+    deposit_amount = models.DecimalField("Cọc dự kiến khấu trừ", max_digits=12, decimal_places=0, default=0)
     subtotal = models.DecimalField("Tạm tính", max_digits=12, decimal_places=0)
     discount_percent = models.DecimalField("Phần trăm giảm", max_digits=5, decimal_places=2, default=0)
     discount_amount = models.DecimalField("Tiền giảm", max_digits=12, decimal_places=0, default=0)
@@ -333,6 +336,41 @@ class OnlinePayment(models.Model):
 
     def __str__(self):
         return f"{self.txn_ref} — {self.get_status_display()}"
+
+
+class ZaloPayTransaction(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Chờ kết quả"
+        PAID = "PAID", "Đã thanh toán"
+        FAILED = "FAILED", "Thất bại"
+        REVIEW = "REVIEW", "Đã nhận tiền, cần đối soát"
+
+    token = models.UUIDField(default=uuid4, unique=True, editable=False)
+    app_id = models.PositiveIntegerField()
+    app_trans_id = models.CharField(max_length=40, unique=True)
+    order_payment = models.OneToOneField(OnlinePayment, on_delete=models.PROTECT, null=True, blank=True, related_name="zalopay_transaction")
+    deposit_payment = models.OneToOneField("reservations.DepositPayment", on_delete=models.PROTECT, null=True, blank=True, related_name="zalopay_transaction")
+    order_revision = models.PositiveIntegerField(default=0)
+    amount = models.DecimalField(max_digits=14, decimal_places=0)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING, db_index=True)
+    zp_trans_id = models.CharField(max_length=40, null=True, blank=True, unique=True)
+    order_url = models.URLField(max_length=2048, blank=True)
+    request_data = models.JSONField(default=dict)
+    response_data = models.JSONField(default=dict)
+    last_error = models.CharField(max_length=255, blank=True)
+    last_queried_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField()
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        constraints = [
+            models.CheckConstraint(condition=(models.Q(order_payment__isnull=False, deposit_payment__isnull=True) |
+                models.Q(order_payment__isnull=True, deposit_payment__isnull=False)), name="zalopay_exactly_one_target"),
+            models.CheckConstraint(condition=models.Q(amount__gt=0), name="zalopay_positive_amount"),
+        ]
 
 
 class OrderActivityLog(models.Model):

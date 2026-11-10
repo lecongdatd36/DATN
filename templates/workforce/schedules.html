@@ -1,0 +1,15 @@
+{% extends 'workforce/layout.html' %}
+{% block title %}Lịch phân ca · QLNH{% endblock %}
+{% block workforce_heading %}Lịch phân ca{% endblock %}
+{% block workforce_content %}
+{% include 'workforce/_filters.html' %}
+<div class="row g-4"><div class="col-xl-4"><div class="project-card p-4"><h2 class="h5">Phân ca mới</h2><p class="text-muted small">Lưu nháp để kiểm tra, sau đó công bố từng lịch. Các ca nháp cũng được kiểm tra trùng giờ.</p>
+  <form method="post">{% csrf_token %}{% include 'workforce/_fields.html' %}<button type="submit" class="btn btn-primary">Tạo lịch nháp</button></form>
+</div></div>
+<div class="col-xl-8"><div class="project-card p-3"><div class="table-responsive"><table class="table align-middle">
+  <thead><tr><th>Nhân viên</th><th>Ca / ngày</th><th>Thời gian</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+  <tbody>{% for row in page_obj %}<tr><td><strong>{{ row.employee.full_name }}</strong><br><small>{{ row.employee.employee_code }}</small></td><td>{{ row.shift_name }}<br><small>{{ row.work_date|date:'d/m/Y' }}</small>{% if row.note %}<br><small class="text-muted">{{ row.note }}</small>{% endif %}</td><td class="text-nowrap">{{ row.starts_at|date:'d/m H:i' }}<br>{{ row.ends_at|date:'d/m H:i' }}</td><td><span class="wf-status wf-{{ row.status|lower }}">{{ row.get_status_display }}</span></td><td>
+    {% if row.status != 'CANCELLED' %}<form method="post" action="{% url 'workforce:schedule_action' row.pk %}" class="d-flex flex-wrap gap-2">{% csrf_token %}<input type="hidden" name="revision" value="{{ row.revision }}">{% if row.status == 'DRAFT' %}<button class="btn btn-sm btn-primary" name="action" value="publish">Công bố</button>{% endif %}<button class="btn btn-sm btn-outline-danger" name="action" value="cancel">Hủy lịch</button></form>{% endif %}
+  </td></tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-5">Chưa có lịch trong khoảng ngày đã chọn.</td></tr>{% endfor %}</tbody>
+</table></div>{% include 'workforce/_pagination.html' %}</div></div></div>
+{% endblock %}

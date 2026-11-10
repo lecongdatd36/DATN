@@ -18,13 +18,15 @@ from .permissions import has_inventory_permission
 
 
 def dish_inventory_state(dish):
+    from apps.reservations.services import held_quantities
+    reserved = held_quantities()
     lines = list(dish.recipe_ingredients.all())
     if not dish.tracks_inventory:
         return {"has_recipe": bool(lines), "can_prepare": True, "portions": None}
     if not lines:
         return {"has_recipe": False, "can_prepare": False, "portions": 0}
     portions = min(
-        int(line.ingredient.stock_quantity // line.quantity) if line.ingredient.is_active else 0
+        int(max(Decimal(0), line.ingredient.stock_quantity-reserved.get(line.ingredient_id,0)) // line.quantity) if line.ingredient.is_active else 0
         for line in lines
     )
     return {"has_recipe": True, "can_prepare": portions > 0, "portions": portions}
@@ -114,6 +116,9 @@ def record_inventory_transaction(*, actor, ingredient_id, transaction_type, quan
         after = quantity
     if after < 0:
         raise ValidationError("Tồn kho không đủ để xuất số lượng này.")
+    from apps.reservations.services import held_quantities
+    if after < held_quantities().get(ingredient.pk,0):
+        raise ValidationError("Nguyên liệu đang được giữ cho món đặt trước. Xử lý cam kết trước khi xuất/giảm kho.")
     supplier = Supplier.objects.filter(pk=supplier_id, is_active=True).first() if supplier_id else None
     ingredient.stock_quantity = after
     ingredient.average_unit_cost = average_cost
@@ -174,11 +179,13 @@ def consume_order_items(*, actor, items):
         for ingredient in Ingredient.objects.select_for_update().filter(pk__in=sorted(required)).order_by("pk")
     }
     shortages = []
+    from apps.reservations.services import held_quantities
+    reserved = held_quantities()
     for ingredient_id, quantity in required.items():
         ingredient = ingredients[ingredient_id]
         if not ingredient.is_active:
             shortages.append(f"{ingredient.name} đã ngừng sử dụng")
-        elif ingredient.stock_quantity < quantity:
+        elif ingredient.stock_quantity-reserved.get(ingredient_id,0) < quantity:
             shortages.append(
                 f"{ingredient.name} thiếu {(quantity - ingredient.stock_quantity):.3f} {ingredient.unit}"
             )
@@ -461,6 +468,9 @@ def record_waste(*, actor, ingredient_id, quantity, reason, note=""):
     if ingredient.stock_quantity < quantity:
         raise ValidationError(f"{ingredient.name} không đủ tồn để ghi nhận hao hụt.")
     before = ingredient.stock_quantity
+    from apps.reservations.services import held_quantities
+    if before-quantity < held_quantities().get(ingredient.pk,0):
+        raise ValidationError("Nguyên liệu đang được giữ cho món đặt trước; không thể ghi hao hụt vượt phần có thể dùng.")
     ingredient.stock_quantity = before - quantity
     ingredient.save(update_fields=("stock_quantity", "updated_at"))
     record = WasteRecord.objects.create(

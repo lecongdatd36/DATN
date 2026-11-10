@@ -15,6 +15,10 @@ htmlcov/
 *.egg-info/
 
 # Generated files and uploads
+artifacts/attendance/
+artifacts/reservations/
+artifacts/zalopay/
+artifacts/deploy/
 artifacts/staff-mobile/
 artifacts/ai/
 artifacts/homepage-preview/

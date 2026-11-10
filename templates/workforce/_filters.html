@@ -1,0 +1,6 @@
+<form method="get" class="project-card p-3 mb-4 wf-filters">
+  {% for field in filters %}<div><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}
+  <button class="btn btn-outline-primary" type="submit">Xem lịch / công</button>
+  {% if export %}<button class="btn btn-outline-secondary" name="export" value="csv" type="submit">Xuất CSV</button>{% endif %}
+  {% if filters.non_field_errors %}<div class="text-danger w-100">{{ filters.non_field_errors }}</div>{% endif %}
+</form>

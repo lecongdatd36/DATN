@@ -59,7 +59,7 @@
                 {% include 'customer/includes/dish_photo.html' with dish=drink_dish photo_class='cq-tile-photo' full_size=True %}
                 <span class="cq-tile-shade"></span><span class="cq-tile-copy"><span class="cq-tile-kicker">NHẤP MỘT NGỤM</span><strong>CHUYỆN NHÀ<br>THÊM VUI.</strong><span class="cq-tile-meta">{% if drink_dish %}{{ drink_dish.name }}{% else %}Cùng chọn món bạn thích{% endif %}</span></span><span class="cq-tile-arrow" aria-hidden="true">↗</span>
             </a>
-            <a class="cq-tile cq-tile-gather" href="{% url 'customer_reservations:create' %}">
+            <a class="cq-tile cq-tile-gather" href="{% url 'online_reservations:create' %}">
                 {% include 'customer/includes/dish_photo.html' with dish=sharing_dish photo_class='cq-tile-photo' full_size=True %}
                 <span class="cq-tile-shade"></span><span class="cq-tile-copy"><span class="cq-tile-kicker">HẸN NHAU Ở CƠM QUÊ</span><strong>BỮA CƠM SUM VẦY,<br>CHẲNG CẦN DỊP ĐẶC BIỆT.</strong><span class="cq-tile-link">Đặt bàn cho người thương <span aria-hidden="true">→</span></span></span>
             </a>
@@ -76,7 +76,7 @@
                     <button class="is-active" type="button" data-cq-category="all" aria-pressed="true"><span>Tất cả món</span><span class="cq-category-count">{{ menu_dish_count }}</span></button>
                     {% for category in home_categories %}<button type="button" data-cq-category="{{ category.id }}" aria-pressed="false"><span>{{ category.name }}</span><span class="cq-category-count">{{ category.count }}</span></button>{% endfor %}
                 </div>
-                <div class="cq-sidebar-note"><span aria-hidden="true">✳</span><strong>Bữa ngon, thêm gắn kết.</strong><p>Cùng nhau chọn món, cùng nhau kể chuyện nhà.</p><a href="{% url 'customer_reservations:create' %}">Hẹn một bữa cơm <span aria-hidden="true">→</span></a></div>
+                <div class="cq-sidebar-note"><span aria-hidden="true">✳</span><strong>Bữa ngon, thêm gắn kết.</strong><p>Cùng nhau chọn món, cùng nhau kể chuyện nhà.</p><a href="{% url 'online_reservations:create' %}">Hẹn một bữa cơm <span aria-hidden="true">→</span></a></div>
             </aside>
             <div class="cq-menu-results">
                 <div class="cq-menu-toolbar"><span data-cq-menu-label>Một chút gợi ý cho bạn</span><a href="{% url 'customer_portal:menu' %}">Thực đơn đầy đủ <span aria-hidden="true">↗</span></a></div>
@@ -99,10 +99,10 @@
 
     <section class="cq-story" id="cau-chuyen" aria-labelledby="cq-story-title">
         <div class="cq-story-visual">{% include 'customer/includes/dish_photo.html' with dish=primary_dish photo_class='cq-story-photo' full_size=True %}<span class="cq-story-seal">CƠM NHÀ<br><strong>là để nhớ.</strong><span aria-hidden="true">✳</span></span></div>
-        <div class="cq-story-copy"><span class="cq-eyebrow">CHÚT CHUYỆN QUÊ MÌNH</span><h2 id="cq-story-title">Có những hương vị,<br>gọi một tiếng là <em>nhà.</em></h2><p>Đôi khi, điều mình cần chỉ là một bữa cơm ngon và người thương ngồi cạnh. CƠM QUÊ gom những món Việt thân quen vào cùng một thực đơn, để mỗi cuộc hẹn đều có một chút ấm áp của bữa cơm nhà.</p><p>Không cần một dịp thật đặc biệt. Ghé ăn một bữa, kể nhau nghe vài câu chuyện — vậy là đủ vui.</p><a class="cq-text-link" href="{% url 'customer_reservations:create' %}">Cùng về ăn cơm <span aria-hidden="true">↗</span></a></div>
+        <div class="cq-story-copy"><span class="cq-eyebrow">CHÚT CHUYỆN QUÊ MÌNH</span><h2 id="cq-story-title">Có những hương vị,<br>gọi một tiếng là <em>nhà.</em></h2><p>Đôi khi, điều mình cần chỉ là một bữa cơm ngon và người thương ngồi cạnh. CƠM QUÊ gom những món Việt thân quen vào cùng một thực đơn, để mỗi cuộc hẹn đều có một chút ấm áp của bữa cơm nhà.</p><p>Không cần một dịp thật đặc biệt. Ghé ăn một bữa, kể nhau nghe vài câu chuyện — vậy là đủ vui.</p><a class="cq-text-link" href="{% url 'online_reservations:create' %}">Cùng về ăn cơm <span aria-hidden="true">↗</span></a></div>
     </section>
 
-    <section class="cq-reserve" aria-labelledby="cq-reserve-title"><div><span class="cq-eyebrow">HẸN MỘT BỮA NGON</span><h2 id="cq-reserve-title">Có bạn, bữa cơm thêm trọn.</h2><p>Gửi yêu cầu đặt bàn, CƠM QUÊ sẽ kiểm tra và xác nhận cùng bạn.</p></div><a class="cq-button" href="{% url 'customer_reservations:create' %}">Đặt bàn ngay <span aria-hidden="true">→</span></a></section>
+    <section class="cq-reserve" aria-labelledby="cq-reserve-title"><div><span class="cq-eyebrow">HẸN MỘT BỮA NGON</span><h2 id="cq-reserve-title">Có bạn, bữa cơm thêm trọn.</h2><p>Gửi yêu cầu đặt bàn, CƠM QUÊ sẽ kiểm tra và xác nhận cùng bạn.</p></div><a class="cq-button" href="{% url 'online_reservations:create' %}">Đặt bàn ngay <span aria-hidden="true">→</span></a></section>
 </div>
 {% include 'customer/includes/chatbot.html' %}
 {% endblock %}

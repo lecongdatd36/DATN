@@ -1,0 +1,2 @@
+{% if form.non_field_errors %}<div class="or-alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+{% for field in form %}{% if field.is_hidden %}{{ field }}{{ field.errors }}{% elif field.name|slice:':4' != 'qty_' and field.name|slice:':5' != 'note_' and field.name != 'agree' %}<div class="or-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}

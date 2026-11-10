@@ -24,11 +24,16 @@
 
     {% if access.can_manage_accounts %}
     <span class="sidebar-section">NHÂN SỰ & HỆ THỐNG</span>
+    <a class="sidebar-link {% if request.resolver_match.app_name == 'workforce' and request.resolver_match.url_name != 'mine' %}active{% endif %}" href="{% url 'workforce:schedules' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-clock"></use></svg><span class="nav-text">Ca làm & chấm công</span></a>
     <a class="sidebar-link {% if request.resolver_match.app_name == 'employees' %}active{% endif %}" href="{% url 'employees:employee_list' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-employees"></use></svg><span class="nav-text">Nhân sự</span></a>
     <a class="sidebar-link {% if request.resolver_match.url_name == 'account_list' or request.resolver_match.url_name == 'account_create' or request.resolver_match.url_name == 'account_detail' or request.resolver_match.url_name == 'account_update' or request.resolver_match.url_name == 'account_delete' or request.resolver_match.url_name == 'account_lock' or request.resolver_match.url_name == 'account_unlock' or request.resolver_match.url_name == 'password_reset' %}active{% endif %}" href="{% url 'accounts:account_list' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-users"></use></svg><span class="nav-text">Tài khoản</span></a>
     {% endif %}
     {% if access.can_access_admin %}<a class="sidebar-link" href="{% url 'admin:index' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-settings"></use></svg><span class="nav-text">Quản trị hệ thống</span></a>{% endif %}
 
     <span class="sidebar-section">CÁ NHÂN</span>
+    {% if access.can_manage_bookings %}<a class="sidebar-link" href="{% url 'online_reservations:manage' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg><span class="nav-text">Đặt bàn online & cọc</span></a>{% endif %}
+    {% if access.can_work_kitchen %}<a class="sidebar-link" href="{% url 'online_reservations:kitchen' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-kitchen"></use></svg><span class="nav-text">Món chuẩn bị trước</span></a>{% endif %}
+    <a class="sidebar-link" href="{% url 'workforce:point' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-clock"></use></svg><span class="nav-text">Chấm công</span></a>
+    <a class="sidebar-link {% if request.resolver_match.view_name == 'workforce:mine' %}active{% endif %}" href="{% url 'workforce:mine' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg><span class="nav-text">Lịch và công của tôi</span></a>
     <a class="sidebar-link {% if request.resolver_match.url_name == 'password_change' or request.resolver_match.url_name == 'password_change_done' %}active{% endif %}" href="{% url 'accounts:password_change' %}"><svg class="app-icon" aria-hidden="true"><use href="#icon-lock"></use></svg><span class="nav-text">Đổi mật khẩu</span></a>
 </nav>

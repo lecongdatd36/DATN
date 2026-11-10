@@ -9,12 +9,15 @@ from apps.accounts.admin import admin_site
 from core.notification_views import notification_state
 
 urlpatterns = [
+    path("payments/zalopay/", include("apps.orders.zalopay_urls")),
     path("notifications/state/", notification_state, name="notification_state"),
     path("", CustomerHomeView.as_view(), name="home"),
     path("menu/", include("apps.customer_portal.urls")),
     path("reservations/", include("apps.customer_portal.reservation_urls")),
+    path("reservations/online/", include("apps.reservations.urls")),
     path("tai-khoan/", include("apps.accounts.urls")),
     path("nhan-vien/", include("apps.employees.urls")),
+    path("cham-cong/", include("apps.workforce.urls")),
     path("khach-hang/", include("apps.customers.urls")),
     path("ban/", include("apps.seating.urls")),
     path("dat-ban/", include("apps.bookings.urls")),

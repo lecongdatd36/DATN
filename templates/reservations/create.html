@@ -1,0 +1,20 @@
+{% extends 'reservations/flow_base.html' %}
+{% block title %}Đặt bàn · CƠM QUÊ{% endblock %}
+{% block flow_content %}
+<div class="or-booking-layout">
+    <aside class="or-booking-visual">
+        {% include 'customer/includes/dish_photo.html' with dish=storefront.primary_dish photo_class='or-booking-photo' full_size=True eager=True %}
+        <div class="or-booking-copy"><p class="or-kicker">HẸN NHAU Ở CƠM QUÊ</p><h1>Một chỗ ngồi.<br>Một bữa cơm.<br><em>Thật nhiều niềm vui.</em></h1><p>Chọn một giờ hẹn,<br>để Cơm Quê đón bạn chu đáo.</p></div>
+    </aside>
+    <div class="or-booking-content">
+        <p class="or-kicker">BƯỚC 01 · THÔNG TIN CUỘC HẸN</p><h2>Đặt bàn của bạn</h2>
+        <p class="or-intro">Chọn giờ đến và số khách. Sau đó bạn có thể chọn đặt món trước hoặc gọi món khi đến.</p>
+        <form method="post" class="or-booking-form">
+            {% csrf_token %}<input type="hidden" name="step" value="details">
+            <div class="or-form-grid">{% include 'reservations/_public_fields.html' %}</div>
+            <div class="or-actions"><button class="customer-button" data-details-submit type="submit">Tiếp tục <span aria-hidden="true">→</span></button></div>
+            <p class="or-muted">Chưa giữ chỗ hoặc thu cọc ở bước này.</p>
+        </form>
+    </div>
+</div>
+{% endblock %}

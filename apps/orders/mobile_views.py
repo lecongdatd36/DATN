@@ -347,7 +347,9 @@ class MobileActionView(SalesAccessMixin, View):
         invoice = services.process_payment(actor=request.user, order_id=order.pk, payment_method=method,
                                            transaction_code=data.get("transaction_code", ""), promotion_code=promotion)
         invoice.refresh_from_db()
-        if invoice.paid_amount - before_paid != reviewed:
+        allocated = getattr(invoice, "deposit_allocation", None)
+        newly_applied = allocated.amount if allocated and before_paid == 0 else Decimal("0")
+        if invoice.paid_amount - before_paid - newly_applied != reviewed:
             raise ValidationError("Ưu đãi hoặc số tiền vừa thay đổi. Giao dịch chưa được ghi nhận; hãy kiểm tra lại.")
         request.session["mobile_tender"] = {"invoice": invoice.pk, "cash": str(cash), "change": str(cash - reviewed) if method == "CASH" else "0"}
         return {"url": mobile_url("receipt", invoice=invoice.pk), "message": "Đã thu đủ tiền và chốt hóa đơn."}

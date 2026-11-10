@@ -1,0 +1,23 @@
+{% extends 'customer/base_customer.html' %}{% load static menu_money %}
+{% block title %}Kết quả ZaloPay Sandbox · CƠM QUÊ{% endblock %}
+{% block body_class %}cq-reservation-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/online-reservations.css' %}?v=4">{% endblock %}
+{% block content %}
+<section class="customer-container or-page or-flow" style="max-width:760px" data-zalopay-result data-state-url="{{ payment_state.state_url }}" data-query-url="{{ payment_state.query_url }}" data-status="{{ payment.status }}">
+    <p class="or-kicker">ZALOPAY · CHỈ MÔI TRƯỜNG SANDBOX</p>
+    <h1>Kết quả thanh toán thử nghiệm</h1>
+    <div class="or-card">
+        <p style="overflow-wrap:anywhere">Mã giao dịch: <strong>{{ payment.app_trans_id }}</strong></p>
+        <p>Số tiền: <strong>{{ payment.amount|dong }}đ</strong></p>
+        <p role="status" aria-live="polite">Trạng thái: <strong data-payment-status>{{ payment.get_status_display }}</strong></p>
+        <p class="or-alert{% if payment.status == 'PAID' %} or-ok{% endif %}" data-payment-message>{% if payment.status == 'PAID' %}Máy chủ đã xác minh thanh toán thành công.{% elif payment.status == 'REVIEW' %}Đã nhận tiền Sandbox, nhà hàng cần đối soát trước khi xác nhận đơn.{% elif payment.status == 'FAILED' %}Giao dịch chưa thành công. Bạn có thể quay lại để tạo yêu cầu thanh toán mới.{% elif payment.last_error %}{{ payment.last_error }}{% else %}Đang chờ xác minh. Việc chuyển về trang này chưa có nghĩa đã thanh toán. Hệ thống nhận callback hoặc truy vấn ZaloPay để xác nhận.{% endif %}</p>
+        <div class="or-actions">
+            <a class="customer-button" data-open-gateway href="{{ payment_state.order_url }}"{% if not payment_state.order_url %} hidden{% endif %}>Mở ZaloPay Sandbox →</a>
+            <form method="post" action="{{ payment_state.query_url }}" data-query-payment>{% csrf_token %}<button class="customer-button or-secondary"{% if payment.status == 'PAID' or payment.status == 'REVIEW' %} disabled{% endif %}>Kiểm tra lại giao dịch</button></form>
+        </div>
+        <p class="or-muted">Không tạo hoặc trả tiền lần nữa khi giao dịch hiện tại chưa rõ kết quả. Trang tự kiểm tra trạng thái; yêu cầu truy vấn cổng được giới hạn mỗi 30 giây.</p>
+    </div>
+    {% if payment.deposit_payment_id %}<a href="{% url 'online_reservations:detail' payment.deposit_payment.reservation.access_token %}">← Trở về lịch đặt bàn</a>{% else %}<a href="{% url 'sales:workspace' %}?order={{ payment.order_payment.order_id }}">← Trở về hóa đơn</a>{% endif %}
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/zalopay-status.js' %}?v=2" defer></script>{% endblock %}

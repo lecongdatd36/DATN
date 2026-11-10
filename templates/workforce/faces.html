@@ -1,0 +1,17 @@
+{% extends 'workforce/layout.html' %}{% load static %}
+{% block title %}Đăng ký khuôn mặt · QLNH{% endblock %}
+{% block workforce_heading %}Đăng ký khuôn mặt{% endblock %}
+{% block workforce_content %}
+{% if not ready %}<div class="alert alert-warning">{{ readiness_error }}</div>{% endif %}
+<div class="row g-4">
+  {% if employee %}<div class="col-lg-6"><div class="project-card p-4" data-face-enrollment data-save-url="{% url 'workforce:face_save' employee.pk %}">
+    <h2 class="h5">{{ employee.full_name }} · {{ employee.employee_code }}</h2><p class="small text-muted">Chụp 3 mẫu riêng: nhìn thẳng, quay nhẹ trái, quay nhẹ phải. Mỗi mẫu chỉ có một khuôn mặt, đủ sáng. Hệ thống chỉ lưu đặc trưng nhận diện.</p>
+    <div class="wf-camera"><video autoplay playsinline muted aria-label="Camera đăng ký khuôn mặt"></video><span class="wf-face-outline" aria-hidden="true"></span></div>
+    <p class="wf-camera-status mt-3" role="status" aria-live="polite">Bật camera để bắt đầu.</p>
+    <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="face-consent"><label class="form-check-label" for="face-consent">Nhân viên đồng ý đăng ký và sử dụng mẫu khuôn mặt để chấm công.</label></div>
+    <div class="d-flex flex-wrap gap-2"><button type="button" class="btn btn-outline-primary" data-camera-start {% if not ready %}disabled{% endif %}>Bật camera</button><button type="button" class="btn btn-primary" data-capture disabled>Chụp mẫu 1/3</button><button type="button" class="btn btn-primary" data-save disabled>Lưu 3 mẫu</button><button type="button" class="btn btn-outline-secondary" data-reset>Chụp lại</button></div>
+  </div></div>{% endif %}
+  <div class="{% if employee %}col-lg-6{% else %}col-12{% endif %}"><div class="project-card p-3"><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Nhân viên</th><th>Mẫu khuôn mặt</th><th></th></tr></thead><tbody>{% for item in employees %}<tr><td><strong>{{ item.full_name }}</strong><br><small>{{ item.employee_code }} · {{ item.job_position.name }}</small></td><td>{% if item.face_profile %}Đã đăng ký<br><small>{{ item.face_profile.updated_at|date:'d/m/Y H:i' }}</small>{% else %}<span class="text-muted">Chưa đăng ký</span>{% endif %}</td><td><a class="btn btn-sm btn-outline-primary" href="{% url 'workforce:face_enroll' item.pk %}">Đăng ký</a>{% if item.face_profile %}<form class="d-inline" method="post" action="{% url 'workforce:face_delete' item.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Xóa mẫu khuôn mặt? Nhân viên sẽ cần đăng ký lại để chấm công.">Xóa mẫu</button></form>{% endif %}</td></tr>{% empty %}<tr><td colspan="3" class="text-center text-muted py-4">Chưa có hồ sơ nhân viên.</td></tr>{% endfor %}</tbody></table></div></div></div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/attendance-camera.js' %}?v=2" defer></script>{% endblock %}

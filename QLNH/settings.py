@@ -68,9 +68,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "apps.accounts.apps.AccountsConfig",
     "apps.employees.apps.EmployeesConfig",
+    "apps.workforce.apps.WorkforceConfig",
     "apps.customers.apps.CustomersConfig",
     "apps.seating.apps.SeatingConfig",
     "apps.bookings.apps.BookingsConfig",
+    "apps.reservations.apps.ReservationsConfig",
     "apps.menu.apps.MenuConfig",
     "apps.orders.apps.OrdersConfig",
     "apps.inventory.apps.InventoryConfig",
@@ -124,6 +126,15 @@ LOGGING = {
 }
 
 ROOT_URLCONF = "QLNH.urls"
+ATTENDANCE_MODEL_ROOT = Path(os.environ.get("ATTENDANCE_MODEL_ROOT", str(BASE_DIR / "artifacts/attendance/models")))
+# Initial trial thresholds; calibrate with enrolled employees before real operation.
+try:
+    ATTENDANCE_FACE_THRESHOLD = float(os.environ.get("ATTENDANCE_FACE_THRESHOLD", "0.45"))
+    ATTENDANCE_FACE_MARGIN = float(os.environ.get("ATTENDANCE_FACE_MARGIN", "0.06"))
+except ValueError as error:
+    raise ImproperlyConfigured("Ngưỡng nhận diện khuôn mặt phải là số.") from error
+if not 0.3 <= ATTENDANCE_FACE_THRESHOLD <= 0.95 or not 0.01 <= ATTENDANCE_FACE_MARGIN <= 0.3:
+    raise ImproperlyConfigured("Ngưỡng nhận diện hoặc khoảng cách phân biệt không hợp lệ.")
 APRIORI_MODEL_PATH = Path(os.environ.get("APRIORI_MODEL_PATH", str(BASE_DIR / "fixtures/ai/apriori_model.json")))
 
 # Public homepage chat. Keys remain on the server; never expose this configuration
@@ -255,5 +266,12 @@ VNPAY_PAYMENT_URL = os.environ.get(
 VNPAY_TMN_CODE = os.environ.get("VNPAY_TMN_CODE", "").strip()
 VNPAY_HASH_SECRET = os.environ.get("VNPAY_HASH_SECRET", "").strip()
 VNPAY_RETURN_URL = os.environ.get("VNPAY_RETURN_URL", "").strip()
+
+# ZaloPay v2 is deliberately restricted to Sandbox by the integration client.
+ZALOPAY_APP_ID = os.environ.get("ZALOPAY_APP_ID", "").strip()
+ZALOPAY_KEY1 = os.environ.get("ZALOPAY_KEY1", "").strip()
+ZALOPAY_KEY2 = os.environ.get("ZALOPAY_KEY2", "").strip()
+ZALOPAY_ENDPOINT = os.environ.get("ZALOPAY_ENDPOINT", "https://sb-openapi.zalopay.vn/v2/create").strip()
+ZALOPAY_CALLBACK_URL = os.environ.get("ZALOPAY_CALLBACK_URL", "").strip()
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

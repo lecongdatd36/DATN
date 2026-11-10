@@ -22,7 +22,7 @@ def normalized(text):
 
 def navigation_links():
     return [{"label": "Xem thực đơn", "url": reverse("customer_portal:menu")},
-            {"label": "Đặt bàn", "url": reverse("customer_reservations:create")}]
+            {"label": "Đặt bàn", "url": reverse("online_reservations:create")}]
 
 
 def policy_reply(message):

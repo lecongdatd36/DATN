@@ -1,0 +1,15 @@
+{% extends 'customer/base_customer.html' %}{% load static %}
+{% block body_class %}cq-reservation-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/online-reservations.css' %}?v=4">{% endblock %}
+{% block content %}
+<section class="customer-container or-page or-flow">
+    <div class="or-flow-top"><a href="{% url 'home' %}" class="or-back-link">← Về trang chủ</a><a href="{% url 'online_reservations:lookup' %}">Tra cứu đặt bàn ↗</a></div>
+    <nav class="or-steps" aria-label="Các bước đặt bàn">
+        <a href="{{ details_url }}"{% if step == 'details' %} class="is-current" aria-current="step"{% endif %}><span>01</span> Thông tin đặt bàn</a>
+        {% if step == 'details' %}<span class="or-step-pending"><span>02</span> Đặt món trước?</span>{% else %}<a href="{% url 'online_reservations:choice' %}"{% if step == 'choice' %} class="is-current" aria-current="step"{% endif %}><span>02</span> Đặt món trước?</a>{% endif %}
+        {% if flow == 'preorder' and step != 'choice' %}<a href="{% url 'online_reservations:menu' %}"{% if step == 'menu' %} class="is-current" aria-current="step"{% endif %}><span>03</span> Chọn món</a>{% endif %}
+        <span{% if step == 'review' %} class="is-current" aria-current="step"{% else %} class="or-step-pending"{% endif %}><span>{% if flow == 'preorder' and step != 'choice' %}04{% else %}03{% endif %}</span> Xác nhận</span>
+    </nav>
+    {% block flow_content %}{% endblock %}
+</section>
+{% endblock %}

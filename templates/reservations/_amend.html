@@ -1,0 +1,5 @@
+{% if reservation.status == 'CONFIRMED' and access.can_manage_accounts %}
+<div class="or-card"><h2>Điều chỉnh sau cọc</h2><p>Chỉ khi chưa gửi bếp và đã xác minh khách đồng ý. Thay thế không hợp lệ thì lịch cũ được giữ. Bản đầu chưa thu thêm cọc cho bản điều chỉnh vượt số dư hiện có.</p>
+<form method="post">{% csrf_token %}{% include 'reservations/_public_fields.html' %}{% include 'reservations/_items_form.html' %}<label class="or-check"><input type="checkbox" name="verified" value="yes" required> Đã xác minh khách đồng ý món, giá, giờ và hạn hủy của bản điều chỉnh.</label><button class="btn btn-outline-primary" name="action" value="amend">Chốt điều chỉnh khách đã đồng ý</button></form></div>
+{% endif %}
+{% if archived_items %}<div class="or-card"><h2>Món trong các bản chốt trước</h2><p>Chỉ để đối chiếu; không cộng vào đơn hiện tại.</p>{% for item in archived_items %}<p>{{ item.dish_name }} × {{ item.quantity }} · {{ item.unit_price|floatformat:0 }}đ/phần</p>{% endfor %}</div>{% endif %}

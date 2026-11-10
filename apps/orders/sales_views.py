@@ -32,6 +32,7 @@ from .models import (
 from .permissions import has_order_permission
 from . import services
 from .vnpay import verify as verify_vnpay
+from .zalopay import enabled as zalopay_enabled
 
 
 logger = logging.getLogger(__name__)
@@ -98,6 +99,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             selected_order.promotion_discount = preview["promotion_discount"]
             selected_order.payment_discount = preview["discount"]
             selected_order.payment_due = preview["due"]
+            selected_order.payment_deposit = preview["deposit_credit"]
             invoice = getattr(selected_order, "invoice", None)
             if invoice is not None and invoice.paid_amount > 0:
                 selected_order.payment_due = invoice.remaining
@@ -130,6 +132,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
                 can_manage_order=has_order_permission(self.request.user, "manage_order"),
                 can_collect_payment=can_collect_payment,
                 vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
+                zalopay_enabled=zalopay_enabled(),
                 available_tables=DiningTable.objects.select_related("area").filter(
                     status=DiningTable.Status.AVAILABLE,
                     is_active=True,
@@ -195,6 +198,7 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             can_manage_order=has_order_permission(self.request.user, "manage_order"),
             can_collect_payment=can_collect_payment,
             vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
+            zalopay_enabled=zalopay_enabled(),
             is_manager=can_manage_accounts(self.request.user),
             available_tables=DiningTable.objects.select_related("area").filter(status=DiningTable.Status.AVAILABLE, is_active=True, area__is_active=True).exclude(pk=selected_order.table_id if selected_order else None),
         )
@@ -449,6 +453,13 @@ class PaymentActionView(SalesAccessMixin, View):
         promotion_code = request.POST.get("promotion_code")
         promotion_code = promotion_code.strip() if promotion_code and promotion_code.strip() else None
         try:
+            if request.POST.get("payment_method") == "ZALOPAY":
+                from .zalopay_services import create_order_payment
+                from .zalopay_views import base_url, callback_url
+                payment = create_order_payment(actor=request.user, order_id=int(order_id),
+                    base_url=base_url(request), callback_url=callback_url(request), promotion_code=promotion_code,
+                    quick_payment=bool(request.POST.get("quick_payment")))
+                return redirect(payment.order_url or reverse("zalopay:result", args=[payment.token]))
             if request.POST.get("quick_payment"):
                 services.prepare_quick_payment(actor=request.user, order_id=int(order_id))
             if request.POST.get("payment_method") == "VNPAY":
@@ -550,7 +561,11 @@ class VnpayIpnView(View):
         if params.get("vnp_TmnCode") != settings.VNPAY_TMN_CODE or not verify_vnpay(params):
             return JsonResponse({"RspCode": "97", "Message": "Invalid signature"})
         try:
-            code, message = services.process_vnpay_ipn(params=params)
+            if str(params.get("vnp_TxnRef", "")).startswith("DEP"):
+                from apps.reservations.services import deposit_ipn
+                code, message = deposit_ipn(params)
+            else:
+                code, message = services.process_vnpay_ipn(params=params)
         except Exception:
             logger.exception("Không thể xử lý IPN VNPAY")
             return JsonResponse({"RspCode": "99", "Message": "Unknown error"})

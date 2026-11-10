@@ -1,0 +1,11 @@
+{% extends 'workforce/layout.html' %}
+{% block title %}Bảng công · QLNH{% endblock %}
+{% block workforce_heading %}Bảng công{% endblock %}
+{% block workforce_content %}
+{% include 'workforce/_filters.html' with export=True %}
+<p class="small text-muted">Tổng giờ chỉ tính công đã duyệt, trong khung ca và trừ số phút nghỉ cố định. Giờ ngoài ca chưa tính tăng ca. Ca qua đêm được tính vào ngày bắt đầu.</p>
+<div class="project-card p-3 mb-4"><h2 class="h5 px-2">Tổng hợp theo nhân viên</h2><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Nhân viên</th><th>Ca phân</th><th>Đã duyệt</th><th>Giờ công</th><th>Trễ</th><th>Về sớm</th><th>Vắng</th></tr></thead><tbody>
+{% for row in summary %}<tr><td>{{ row.employee.full_name }} <small class="text-muted">{{ row.employee.employee_code }}</small></td><td>{{ row.shifts }}</td><td>{{ row.approved }}</td><td><strong>{{ row.hours }}</strong></td><td>{{ row.late }}</td><td>{{ row.early }}</td><td>{{ row.absent }}</td></tr>{% empty %}<tr><td colspan="7" class="py-4 text-center text-muted">Chưa có dữ liệu.</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="project-card p-3"><h2 class="h5 px-2">Chi tiết từng ca</h2><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Nhân viên</th><th>Ca</th><th>Vào / ra thực tế</th><th>Tình trạng</th><th>Duyệt</th><th></th></tr></thead><tbody>
+{% for row in page_obj %}<tr><td>{{ row.employee.full_name }}</td><td>{{ row.work_date|date:'d/m/Y' }}<br><small>{{ row.shift_name }} · {{ row.starts_at|date:'H:i' }}–{{ row.ends_at|date:'H:i' }}</small></td><td>{{ row.attendance.checked_in_at|date:'d/m H:i:s'|default:'—' }}<br>{{ row.attendance.checked_out_at|date:'d/m H:i:s'|default:'—' }}</td><td>{{ row.attendance.condition|default:'Chưa ghi nhận' }}</td><td>{{ row.attendance.get_review_display|default:row.get_status_display }}</td><td>{% if row.status == 'PUBLISHED' %}<a href="{% url 'workforce:attendance' row.pk %}">Kiểm tra công</a>{% endif %}</td></tr>{% empty %}<tr><td colspan="6" class="py-4 text-center text-muted">Chưa có lịch trong khoảng ngày đã chọn.</td></tr>{% endfor %}</tbody></table></div>{% include 'workforce/_pagination.html' %}</div>
+{% endblock %}

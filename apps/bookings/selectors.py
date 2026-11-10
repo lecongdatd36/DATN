@@ -32,7 +32,8 @@ def overlapping_bookings(*, starts_at, ends_at, table_id=None, exclude_id=None):
     result = Booking.objects.annotate(effective_start=Case(
         When(status=Booking.Status.SEATED, then=Coalesce("seated_at", "starts_at")),
         default=F("starts_at"), output_field=DateTimeField(),
-    )).filter(status__in=BLOCKING_STATUSES, effective_start__lt=ends_at, ends_at__gt=starts_at)
+    )).filter(status__in=BLOCKING_STATUSES, effective_start__lt=ends_at, ends_at__gt=starts_at).exclude(
+        status="PENDING", online_reservation__status="WAITING", online_reservation__hold_expires_at__lte=timezone.now())
     if table_id is not None:
         result = result.filter(table_id=table_id)
     if exclude_id is not None:
@@ -42,7 +43,8 @@ def overlapping_bookings(*, starts_at, ends_at, table_id=None, exclude_id=None):
 
 def protected_bookings():
     # A seated party still occupies its table even if its planned end has passed.
-    return Booking.objects.filter(Q(status=Booking.Status.SEATED) | Q(status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED), ends_at__gt=timezone.now()))
+    return Booking.objects.filter(Q(status=Booking.Status.SEATED) | Q(status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED), ends_at__gt=timezone.now())).exclude(
+        status="PENDING", online_reservation__status="WAITING", online_reservation__hold_expires_at__lte=timezone.now())
 
 
 def available_tables(*, starts_at, ends_at, party_size):

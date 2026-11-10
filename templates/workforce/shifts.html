@@ -1,0 +1,15 @@
+{% extends 'workforce/layout.html' %}
+{% block title %}Ca làm · QLNH{% endblock %}
+{% block workforce_heading %}Ca làm{% endblock %}
+{% block workforce_content %}
+<div class="row g-4">
+  <div class="col-lg-4"><div class="project-card p-4"><h2 class="h5">{% if editing %}Sửa {{ editing.name }}{% else %}Tạo ca làm{% endif %}</h2>
+    <p class="text-muted small">Giờ kết thúc sớm hơn giờ bắt đầu là ca qua đêm. Mỗi ca tối đa 16 giờ.</p>
+    <form method="post">{% csrf_token %}{% include 'workforce/_fields.html' %}<button class="btn btn-primary" type="submit">Lưu ca</button>{% if editing %} <a href="{% url 'workforce:shifts' %}" class="btn btn-outline-secondary">Tạo ca khác</a>{% endif %}</form>
+  </div></div>
+  <div class="col-lg-8"><div class="project-card p-3"><div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Ca</th><th>Giờ làm</th><th>Nghỉ</th><th>Cho phép trễ</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>{% for shift in shifts %}<tr><td><strong>{{ shift.name }}</strong><br><small>{{ shift.code }}</small></td><td>{{ shift.starts_at|time:'H:i' }}–{{ shift.ends_at|time:'H:i' }}</td><td>{{ shift.break_minutes }} phút</td><td>{{ shift.grace_minutes }} phút</td><td>{{ shift.is_active|yesno:'Đang dùng,Ngừng dùng' }}</td><td><a href="{% url 'workforce:shift_edit' shift.pk %}">Sửa</a></td></tr>{% empty %}<tr><td colspan="6" class="text-muted py-5 text-center">Tạo ca đầu tiên để bắt đầu phân lịch.</td></tr>{% endfor %}</tbody>
+  </table></div></div><p class="small text-muted mt-3">Sửa mẫu ca không thay đổi các lịch đã phân. Để đổi lịch chưa chấm công, hủy lịch cũ rồi phân lại.</p></div>
+</div>
+{% endblock %}

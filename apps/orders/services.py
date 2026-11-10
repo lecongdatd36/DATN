@@ -61,6 +61,11 @@ def _invoice_code_for(order):
     return f"HD{order.pk:06d}"
 
 
+def _check_pending_zalopay(order):
+    if order.online_payments.filter(status=OnlinePayment.Status.PENDING, zalopay_transaction__isnull=False).exists():
+        raise ValidationError("Hóa đơn đang chờ kết quả ZaloPay. Truy vấn giao dịch đó trước khi thu bằng phương thức khác.")
+
+
 def payment_preview(order, promotion_code=None):
     """Return the authoritative member and promotion discount preview."""
     subtotal = order.total
@@ -98,6 +103,9 @@ def payment_preview(order, promotion_code=None):
                 promotion_discount = min(promotion_discount, promotion.maximum_discount)
             promotion_discount = min(promotion_discount, eligible)
     total_discount = membership_discount + promotion_discount
+    from apps.reservations.services import deposit_for_order
+    invoice_total = max(Decimal("0"), subtotal - total_discount)
+    deposit_credit = min(invoice_total, deposit_for_order(order))
     return {
         "subtotal": subtotal,
         "tier": tier,
@@ -107,7 +115,9 @@ def payment_preview(order, promotion_code=None):
         "promotion_code": promotion_snapshot,
         "promotion_discount": promotion_discount,
         "discount": total_discount,
-        "due": max(Decimal("0"), subtotal - total_discount),
+        "invoice_total": invoice_total,
+        "deposit_credit": deposit_credit,
+        "due": invoice_total - deposit_credit,
     }
 
 
@@ -115,13 +125,14 @@ def _store_promotion(order, preview):
     order.promotion_code_snapshot = preview["promotion_code"]
     order.promotion_discount_amount = preview["promotion_discount"]
     order.discount_amount = preview["discount"]
-    order.total_amount = preview["due"]
+    order.total_amount = preview["invoice_total"]
 
 
 @transaction.atomic
 def apply_promotion(*, actor, order_id, promotion_code):
     actor = _lock_actor(actor, "collect_payment")
     order = Order.objects.select_for_update().get(pk=order_id)
+    _check_pending_zalopay(order)
     if order.status != Order.Status.PAYMENT_REQUESTED:
         raise ValidationError("Chỉ áp dụng mã khi đơn đang chờ thanh toán.")
     if Invoice.objects.filter(order=order, paid_amount__gt=0).exists():
@@ -200,6 +211,8 @@ def _create_order(actor, booking):
         booking.table.status = DiningTable.Status.OCCUPIED
         booking.table.save(update_fields=("status", "updated_at"))
     _log(actor, order, "Mở đơn", f"Lượt {booking.booking_code}; bàn {booking.table.code}; {booking.party_size} khách.")
+    from apps.reservations.services import attach_items
+    attach_items(order, actor)
     return order
 
 
@@ -672,6 +685,9 @@ def open_table(*, actor, table_id, guest_count, customer_id=None, reservation_id
     table.status = DiningTable.Status.OCCUPIED
     table.save(update_fields=("status", "updated_at"))
     _log(actor, order, "Mở bàn", f"{actor.username} mở bàn {table.code} cho {guest_count} khách.")
+    if reservation is not None:
+        from apps.reservations.services import attach_items
+        attach_items(order, actor)
     return order
 
 
@@ -875,6 +891,7 @@ def process_payment(*, actor, order_id, payment_method, transaction_code="", pro
     if len(transaction_code) > 100:
         raise ValidationError({"transaction_code": "Mã giao dịch không được dài quá 100 ký tự."})
     order = Order.objects.select_for_update().get(pk=order_id)
+    _check_pending_zalopay(order)
     if order.status != Order.Status.PAYMENT_REQUESTED:
         raise ValidationError("Đơn chưa ở trạng thái yêu cầu thanh toán.")
     items = list(order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED))
@@ -897,7 +914,7 @@ def process_payment(*, actor, order_id, payment_method, transaction_code="", pro
     subtotal = preview["subtotal"]
     discount_percent = preview["discount_percent"]
     discount_amount = preview["discount"]
-    total = preview["due"]
+    total = preview["invoice_total"]
     return _complete_payment(
         order=order,
         subtotal=subtotal,
@@ -916,8 +933,10 @@ def process_payment(*, actor, order_id, payment_method, transaction_code="", pro
 
 def _complete_payment(*, order, subtotal, discount_percent, discount_amount, total,
                       membership_discount_amount=Decimal("0"), promotion_code="", promotion_discount_amount=Decimal("0"),
-                      payment_method, reference, actor=None, actor_snapshot=""):
+                      payment_method, reference, actor=None, actor_snapshot="", expected_deposit=None):
     """Finalize an already locked order exactly once inside the caller's transaction."""
+    lock_seating_schedule()
+    lock_menu()
     customer = Customer.objects.select_for_update().filter(pk=order.customer_id).first()
     invoice, _ = Invoice.objects.select_for_update().get_or_create(
         order=order,
@@ -942,10 +961,15 @@ def _complete_payment(*, order, subtotal, discount_percent, discount_amount, tot
     invoice.status = Invoice.Status.PAID
     invoice.closed_at = now
     invoice.save()
-    if total > 0:
+    from apps.reservations.services import allocate_deposit
+    credit = allocate_deposit(order, invoice, total, expected=expected_deposit)
+    if credit > 0:
+        Payment.objects.create(invoice=invoice, amount=credit, method=Payment.Method.DEPOSIT,
+            reference="Khấu trừ cọc đã nhận trước", performed_by=actor, actor_snapshot=actor_snapshot)
+    if total - credit > 0:
         Payment.objects.create(
             invoice=invoice,
-            amount=total,
+            amount=total-credit,
             method=payment_method,
             reference=reference,
             performed_by=actor,
@@ -991,6 +1015,8 @@ def _finalize_paid_invoice(*, order, invoice, customer, actor, actor_snapshot, n
         booking.completed_at = now
         booking.revision += 1
         booking.save(update_fields=("status", "completed_at", "revision", "updated_at"))
+        from apps.reservations.models import Reservation
+        Reservation.objects.filter(booking=booking).update(status="COMPLETED")
     if customer:
         customer.total_spending += invoice.total
         tier = tier_for_spending(customer.total_spending)
@@ -1011,6 +1037,7 @@ def _finalize_paid_invoice(*, order, invoice, customer, actor, actor_snapshot, n
 def create_vnpay_payment(*, actor, order_id, return_url, ip_address, promotion_code=None):
     actor = _lock_actor(actor, "collect_payment")
     order = Order.objects.select_for_update().get(pk=order_id)
+    _check_pending_zalopay(order)
     if order.status != Order.Status.PAYMENT_REQUESTED:
         raise ValidationError("Đơn chưa ở trạng thái yêu cầu thanh toán.")
     if Invoice.objects.filter(order=order, paid_amount__gt=0).exists():
@@ -1029,6 +1056,7 @@ def create_vnpay_payment(*, actor, order_id, return_url, ip_address, promotion_c
         order=order,
         txn_ref=txn_ref,
         amount=preview["due"],
+        deposit_amount=preview["deposit_credit"],
         subtotal=preview["subtotal"],
         discount_percent=preview["discount_percent"],
         discount_amount=preview["discount"],
@@ -1057,8 +1085,10 @@ def create_vnpay_payment(*, actor, order_id, return_url, ip_address, promotion_c
 @transaction.atomic
 def process_vnpay_ipn(*, params):
     """Apply a verified VNPAY IPN and return its protocol response code/message."""
+    lock_seating_schedule()
+    lock_menu()
     txn_ref = str(params.get("vnp_TxnRef", ""))
-    online_payment = OnlinePayment.objects.select_for_update().select_related("order").filter(txn_ref=txn_ref).first()
+    online_payment = OnlinePayment.objects.select_for_update(of=("self",)).select_related("order").filter(txn_ref=txn_ref, zalopay_transaction__isnull=True).first()
     if online_payment is None:
         return "01", "Order not found"
     if online_payment.status == OnlinePayment.Status.PAID:
@@ -1096,7 +1126,8 @@ def process_vnpay_ipn(*, params):
         membership_discount_amount=online_payment.membership_discount_amount,
         promotion_code=online_payment.promotion_code,
         promotion_discount_amount=online_payment.promotion_discount_amount,
-        total=online_payment.amount,
+        total=online_payment.amount+online_payment.deposit_amount,
+        expected_deposit=online_payment.deposit_amount,
         payment_method=Payment.Method.VNPAY,
         reference=online_payment.provider_transaction_no or online_payment.txn_ref,
         actor=None,
@@ -1283,6 +1314,7 @@ def record_payment(*, actor, order_id, expected_revision, payment_method="CASH",
     """Settle an invoice in one payment; ``amount`` only guards legacy callers."""
     actor = _lock_actor(actor, "collect_payment")
     order = _order(order_id, expected_revision, require_open=False)
+    _check_pending_zalopay(order)
     if order.status != Order.Status.PAYMENT_REQUESTED:
         raise ValidationError("Chỉ thanh toán cho đơn đang ở trạng thái chờ thanh toán.")
 
@@ -1304,7 +1336,7 @@ def record_payment(*, actor, order_id, expected_revision, payment_method="CASH",
     invoice = Invoice.objects.select_for_update().filter(order=order).first()
     if invoice is None:
         preview = payment_preview(order)
-        total = preview["due"]
+        total = preview["invoice_total"]
         if total <= 0:
             raise ValidationError("Đơn hiện không có giá trị thanh toán.")
         customer = Customer.objects.select_for_update().filter(pk=order.customer_id).first()
@@ -1328,8 +1360,23 @@ def record_payment(*, actor, order_id, expected_revision, payment_method="CASH",
     if invoice.status == Invoice.Status.CANCELLED:
         raise ValidationError("Hóa đơn đã bị hủy, không thể thu thêm tiền.")
 
+    from apps.reservations.services import allocate_deposit
+    credit = Decimal(0)
+    if not hasattr(invoice, "deposit_allocation"):
+        credit = allocate_deposit(order, invoice, max(Decimal(0),invoice.total-invoice.paid_amount))
+        if credit:
+            Payment.objects.create(invoice=invoice,amount=credit,method=Payment.Method.DEPOSIT,reference="Khấu trừ cọc",performed_by=actor,actor_snapshot=actor.username)
+            invoice.paid_amount += credit
     remaining = invoice.total - invoice.paid_amount
     if remaining <= 0:
+        if credit:
+            if requested_amount is not None and requested_amount != 0:
+                raise ValidationError("Cọc đã đủ hóa đơn; không thu thêm tiền.")
+            invoice.status=Invoice.Status.PAID
+            invoice.closed_at=timezone.now()
+            invoice.save()
+            customer=Customer.objects.select_for_update().filter(pk=order.customer_id).first()
+            return _finalize_paid_invoice(order=order,invoice=invoice,customer=customer,actor=actor,actor_snapshot=actor.username,now=timezone.now())
         raise ValidationError("Hóa đơn đã được thanh toán.")
     if requested_amount is not None and requested_amount != remaining:
         raise ValidationError({"amount": f"Hóa đơn phải thanh toán đủ một lần: {remaining:.0f} đồng."})
@@ -1395,12 +1442,12 @@ def pay_tables(*, actor, order_ids, payment_method="CASH", reference="", promoti
             transaction_code=reference,
             promotion_code=promotion_code,
         )
-        payment = invoice.payments.order_by("-pk").first()
+        payment = invoice.payments.exclude(method=Payment.Method.DEPOSIT).order_by("-pk").first()
         invoices.append(invoice)
         if payment:
             payments.append(payment)
         table_codes.append(invoice.order.table.code)
-        grand_total += invoice.total_amount
+        grand_total += payment.amount if payment else 0
 
     batch = PaymentBatch.objects.create(
         total=grand_total,
@@ -1450,6 +1497,16 @@ def _cancel_locked_order(*, actor, order, table, reason, now):
         status=QRServiceRequest.Status.WAITING,
     ).update(status=QRServiceRequest.Status.CANCELLED)
     _log(actor, order, "Hủy bàn", f"Hủy đơn và giải phóng bàn {table.code}. Lý do: {reason}")
+    if order.booking_id:
+        from apps.reservations.models import Reservation
+        from apps.reservations.services import log as reservation_log, release_holds
+        online=Reservation.objects.select_for_update().filter(booking_id=order.booking_id).first()
+        if online:
+            online.status="CANCELLED"
+            online.revision+=1
+            online.save()
+            release_holds(online)
+            reservation_log(online,"Hủy đơn khi đã nhận khách",f"{reason}; tiền cọc được giữ để quản lý đối soát/hoàn, không bị xóa.",actor)
 
 
 @transaction.atomic

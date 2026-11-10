@@ -241,7 +241,7 @@
   });
   document.addEventListener("submit", event => {
     const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !form.closest("[data-mobile-app]")) return;
+    if (!(form instanceof HTMLFormElement) || !form.closest("[data-mobile-app]") || form.hasAttribute("data-native-payment")) return;
     event.preventDefault();
     if (form.method.toLowerCase() === "get") {
       const url = new URL(form.action);url.search = new URLSearchParams(new FormData(form)).toString();navigateSafely(url.href);return;

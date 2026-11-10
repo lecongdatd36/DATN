@@ -1,0 +1,8 @@
+{% extends 'workforce/layout.html' %}
+{% block title %}Máy chấm công tại cửa · QLNH{% endblock %}
+{% block workforce_heading %}Máy chấm công tại cửa{% endblock %}
+{% block workforce_content %}
+<div class="row g-4"><div class="col-lg-5"><div class="project-card p-4"><h2 class="h5">Kích hoạt trình duyệt này</h2><p class="text-muted">Thực hiện trên máy đặt tại cửa. Sau kích hoạt, tài khoản quản lý được đăng xuất; máy chỉ nhận diện và ghi công trong 30 ngày.</p>
+  <form method="post">{% csrf_token %}{% include 'workforce/_fields.html' %}<button class="btn btn-primary" type="submit">Kích hoạt và mở màn hình chấm công</button></form>
+</div></div><div class="col-lg-7"><div class="project-card p-3"><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Thiết bị</th><th>Hết hạn</th><th>Trạng thái</th><th></th></tr></thead><tbody>{% for device in devices %}<tr><td>{{ device.name }}</td><td>{{ device.expires_at|date:'d/m/Y H:i' }}</td><td>{% now 'U' as current_timestamp %}{% if not device.is_active %}Đã thu hồi{% elif device.expires_at|date:'U' < current_timestamp %}Hết hạn{% else %}Đang hoạt động{% endif %}</td><td>{% if device.is_active %}<form method="post" action="{% url 'workforce:device_revoke' device.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit">Thu hồi</button></form>{% endif %}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-4">Chưa kích hoạt thiết bị nào.</td></tr>{% endfor %}</tbody></table></div></div></div></div>
+{% endblock %}

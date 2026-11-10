@@ -23,7 +23,7 @@
     </form>
 
     {% if report_ready %}
-    <div class="report-period mb-3">Số liệu từ <strong>{{ date_from|date:'d/m/Y' }}</strong> đến <strong>{{ date_to|date:'d/m/Y' }}</strong></div>
+    <p class="small text-muted">Thu hóa đơn trong kỳ: {{ settlement_collected|dong }}đ · Cọc nhận: {{ deposit_collected|dong }}đ · Cọc hoàn thực tế: {{ deposit_refunded|dong }}đ. Khấu trừ cọc không được cộng vào tiền thu lần nữa.</p><div class="report-period mb-3">Số liệu từ <strong>{{ date_from|date:'d/m/Y' }}</strong> đến <strong>{{ date_to|date:'d/m/Y' }}</strong></div>
     <div class="metric-grid mb-4">
         <article class="metric-card metric-primary"><span class="metric-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-chart"></use></svg></span><div><span>Doanh thu đã chốt</span><strong>{{ revenue|dong }} đ</strong><small>{{ invoice_count }} hóa đơn đã thanh toán</small></div></article>
         <article class="metric-card metric-success"><span class="metric-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-wallet"></use></svg></span><div><span>Tiền thực thu</span><strong>{{ collected|dong }} đ</strong><small>Theo thời điểm ghi nhận phiếu thu</small></div></article>

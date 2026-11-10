@@ -1,0 +1,13 @@
+{% extends 'workforce/layout.html' %}
+{% block title %}Lịch và công của tôi · QLNH{% endblock %}
+{% block workforce_heading %}Lịch và công của tôi{% endblock %}
+{% block workforce_content %}
+<p class="text-muted"><a href="{% url 'workforce:point' %}" class="btn btn-primary">Mở trang chấm công khuôn mặt</a></p><p class="text-muted">Lịch dưới đây chỉ hiển thị ca đã công bố hoặc đã hủy của bạn.</p>
+{% include 'workforce/_filters.html' %}
+<div class="row g-3">{% for row in rows %}<div class="col-md-6 col-xl-4"><article class="project-card p-4 h-100">
+  <div class="d-flex justify-content-between gap-2"><h2 class="h5">{{ row.shift_name }}</h2><span class="wf-status wf-{{ row.status|lower }}">{{ row.get_status_display }}</span></div>
+  <p class="mb-1">{{ row.starts_at|date:'d/m/Y H:i' }} → {{ row.ends_at|date:'d/m/Y H:i' }}</p><p class="small text-muted">Nghỉ {{ row.break_minutes }} phút · cho phép trễ {{ row.grace_minutes }} phút</p>
+  {% if row.attendance %}<dl class="row mb-0"><dt class="col-4">Vào / ra</dt><dd class="col-8">{{ row.attendance.checked_in_at|date:'H:i:s'|default:'—' }} / {{ row.attendance.checked_out_at|date:'H:i:s'|default:'—' }}</dd><dt class="col-4">Tình trạng</dt><dd class="col-8">{{ row.attendance.condition }}</dd><dt class="col-4">Giờ công</dt><dd class="col-8">{{ row.attendance.worked_minutes }} phút · {{ row.attendance.get_review_display }}</dd></dl>{% else %}<p class="mb-0 text-muted">Chưa ghi nhận chấm công.</p>{% endif %}
+  {% if row.note %}<p class="small mt-3 mb-0">{{ row.note }}</p>{% endif %}
+</article></div>{% empty %}<div class="col-12"><div class="project-card p-5 text-center text-muted">Bạn chưa có lịch được công bố trong khoảng ngày này.</div></div>{% endfor %}</div>
+{% endblock %}

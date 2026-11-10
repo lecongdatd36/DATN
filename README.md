@@ -1,5 +1,9 @@
 # QLNH — Ứng dụng quản lý nhà hàng tích hợp AI
 
+**Đặt bàn online, món trước và cọc:** khách chọn đến mới chế biến hoặc yêu cầu chuẩn bị theo giờ, nhận liên kết riêng, trả cọc VNPAY; nhà hàng chốt yêu cầu, bếp chuẩn bị trước, nhận khách và khấu trừ cọc vào hóa đơn. Trang khách `/reservations/online/`, quản lý `/reservations/online/quan-ly/`. Xem [hướng dẫn cấu hình, quy trình và giới hạn](docs/online-reservations.md); cần cấu hình merchant/secret sandbox trước khi trả cọc trực tiếp.
+
+Phân hệ **Ca làm & chấm công khuôn mặt**: tạo ca, phân/công bố lịch, trang chấm công chung, điều chỉnh/duyệt và tổng hợp công. Trang cố định `/cham-cong/diem-cham-cong/` nhận diện mọi nhân viên đã đăng ký, không cần đăng nhập hoặc kích hoạt thiết bị; vẫn cần camera và lịch ca phù hợp. Xem [hướng dẫn cài đặt và giới hạn nhận diện](docs/attendance-kiosk.md). Quản lý `/cham-cong/`, lịch nhân viên `/cham-cong/lich-cua-toi/`.
+
 Đồ án tốt nghiệp xây dựng bằng Django Templates và PostgreSQL tại `D:\DOANTOTNGHIEP`. Project Django chính là `QLNH`; mã nguồn được khởi tạo mới.
 
 **Trạng thái: VẬN HÀNH TÍCH HỢP, cập nhật ngày 30/09/2026.** Có quản lý tài khoản, nhân sự, khách hàng, hạng thành viên, khu vực, bàn, đặt bàn, thực đơn, gọi món, Bếp, kho, hóa đơn, thanh toán VNPAY sandbox và báo cáo; giao diện tiếng Việt. [Báo cáo Giai đoạn 9](docs/stage-9-report.md) được giữ làm tài liệu lịch sử của luồng hóa đơn ban đầu.
@@ -440,6 +444,8 @@ Luồng kho vận hành gồm:
 Thư mục `templates/` chứa template dùng chung; `static/` chứa CSS, JavaScript và ảnh giao diện; `media/` dành cho tệp tải lên. Bootstrap được lưu trong `static/vendor/` để giao diện không phụ thuộc CDN khi chạy. Server phát triển phục vụ static và media khi `DEBUG=True`.
 
 ## Git và phạm vi triển khai
+
+Đưa bản hiện tại lên Render: xem [nhánh master, biến môi trường, migration, static và kiểm tra sau deploy](docs/deploy-render.md).
 
 Repository Git đã có lịch sử commit. `.gitignore` loại trừ `.env`, `.venv/`, `__pycache__/`, `*.pyc`, `media/`, `.idea/` và `.vscode/` cùng các tệp phát sinh cục bộ.
 

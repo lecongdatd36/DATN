@@ -1,5 +1,7 @@
 <div class="m-management-links" aria-label="Chức năng theo quyền tài khoản">
   <a class="m-card" href="{% url 'accounts:workspace' %}"><svg aria-hidden="true"><use href="#icon-dashboard"></use></svg>Tổng quan</a>
+  {% if access.can_manage_bookings %}<a class="m-card" href="{% url 'online_reservations:manage' %}">Đặt bàn online & cọc</a>{% endif %}
+  {% if access.can_work_kitchen %}<a class="m-card" href="{% url 'online_reservations:kitchen' %}">Món chuẩn bị trước</a>{% endif %}
   {% if access.can_view_bookings %}<a class="m-card" href="{% url 'bookings:list' %}"><svg aria-hidden="true"><use href="#icon-calendar"></use></svg>Đặt bàn</a>{% endif %}
   {% if access.can_view_menu %}<a class="m-card" href="{% url 'menu:dish_list' %}"><svg aria-hidden="true"><use href="#icon-menu-book"></use></svg>Thực đơn</a>{% endif %}
   {% if access.can_view_customers %}<a class="m-card" href="{% url 'customers:customer_list' %}"><svg aria-hidden="true"><use href="#icon-customers"></use></svg>Khách hàng</a>{% endif %}

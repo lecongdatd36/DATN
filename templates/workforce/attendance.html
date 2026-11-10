@@ -1,0 +1,15 @@
+{% extends 'workforce/layout.html' %}
+{% block title %}Kiểm tra công · QLNH{% endblock %}
+{% block workforce_heading %}Kiểm tra công — {{ schedule.employee.full_name }}{% endblock %}
+{% block workforce_content %}
+<p>{{ schedule.shift_name }} · {{ schedule.starts_at|date:'d/m/Y H:i' }} → {{ schedule.ends_at|date:'d/m/Y H:i' }}</p>
+<div class="row g-4"><div class="col-lg-5"><div class="project-card p-4">
+  <p><strong>{{ attendance.get_review_display|default:'Chưa ghi nhận' }}</strong> · {{ attendance.condition|default:'Chưa có giờ công' }}</p>
+  {% if attendance.approved_at %}<p class="small">Duyệt lúc {{ attendance.approved_at|date:'d/m/Y H:i' }}</p>{% endif %}
+  {% if attendance.note %}<p class="small">Lý do đã lưu: {{ attendance.note }}</p>{% endif %}
+  <form method="post">{% csrf_token %}{% include 'workforce/_fields.html' %}
+    {% if attendance.review == 'APPROVED' %}<button type="submit" name="action" value="reopen" class="btn btn-outline-warning">Mở lại công</button>
+    {% else %}<div class="d-flex flex-wrap gap-2"><button type="submit" name="action" value="correct" class="btn btn-outline-primary">Lưu điều chỉnh</button>{% if attendance %}<button type="submit" name="action" value="approve" class="btn btn-primary">Duyệt công đã lưu</button>{% endif %}</div>{% endif %}
+  </form><p class="small text-muted mt-3 mb-0">Bỏ trống cả giờ vào và ra để ghi vắng sau khi ca kết thúc. Điều chỉnh và mở lại cần lý do. Lưu điều chỉnh trước khi duyệt; công của chính mình cần quản lý khác xử lý.</p>
+</div></div><div class="col-lg-7"><div class="project-card p-4"><h2 class="h5">Lịch sử xử lý</h2>{% for entry in logs %}<article class="wf-log"><strong>{{ entry.created_at|date:'d/m/Y H:i:s' }}</strong> <span class="text-muted">{% if entry.actor %}{{ entry.actor.username }}{% elif entry.device %}{{ entry.device.name }}{% else %}Hệ thống{% endif %}</span><p class="small mb-0">{{ entry.description }}</p></article>{% empty %}<p class="text-muted">Chưa có lịch sử.</p>{% endfor %}</div></div></div>
+{% endblock %}

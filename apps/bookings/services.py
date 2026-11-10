@@ -78,14 +78,17 @@ def expire_overdue_bookings(*, at=None):
     """
     lock_seating_schedule()
     now = at or timezone.now()
+    from apps.reservations.services import expire_holds
+    expire_holds(now=now)
     grace_minutes = BookingSettings.objects.only("no_show_grace_minutes").get(pk=1).no_show_grace_minutes
     cutoff = now - timedelta(minutes=grace_minutes)
     expired = list(
-        Booking.objects.select_for_update()
+        Booking.objects.select_for_update(of=("self",))
         .filter(
             status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED),
             starts_at__lte=cutoff,
         )
+        .filter(online_reservation__isnull=True)
         .order_by("table_id", "pk")
     )
     for booking in expired:
@@ -178,6 +181,8 @@ def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends
         raise ValidationError("Lịch đã thay đổi. Hãy tải lại trang trước khi sửa.")
     if not created and not booking.can_edit:
         raise ValidationError("Chỉ sửa được lịch chờ xác nhận hoặc đã xác nhận.")
+    if not created and hasattr(booking, "online_reservation"):
+        raise ValidationError("Lịch có cọc/món đặt trước cần xử lý tại Đặt bàn online để giữ đúng bản chốt và tiền cọc.")
     if duration_minutes is not None:
         if ends_at is not None:
             raise ValidationError("Chỉ truyền thời lượng hoặc giờ kết thúc, không truyền cả hai.")
@@ -334,6 +339,12 @@ def update_booking_settings(*, actor, default_duration_minutes, expected_revisio
 def transition_booking(*, actor, booking_id, target, expected_status, expected_revision, reason=""):
     actor = _lock_actor(actor)
     booking = Booking.objects.select_for_update().get(pk=booking_id)
+    online = getattr(booking, "online_reservation", None)
+    if online:
+        if target in (Booking.Status.CANCELLED, Booking.Status.NO_SHOW):
+            raise ValidationError("Xử lý hủy/không đến tại Đặt bàn online để đối soát cọc và món đã chuẩn bị.")
+        if target in (Booking.Status.CONFIRMED, Booking.Status.SEATED) and online.status != "CONFIRMED":
+            raise ValidationError("Lịch online chưa nhận cọc hợp lệ hoặc còn cần đối soát.")
     if booking.status != expected_status or booking.revision != expected_revision:
         raise ValidationError("Lịch hoặc trạng thái đã thay đổi. Hãy tải lại trang trước khi thao tác.")
     if target not in TRANSITIONS.get(booking.status, ()):

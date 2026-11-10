@@ -1,0 +1,32 @@
+{% extends 'reservations/flow_base.html' %}{% load menu_money %}
+{% block title %}Xác nhận đặt bàn · CƠM QUÊ{% endblock %}
+{% block flow_content %}
+<header class="or-menu-heading"><div><p class="or-kicker">BƯỚC {% if flow == 'table' %}03{% else %}04{% endif %} · KIỂM TRA CUỘC HẸN</p><h1>Mọi thứ đã vừa ý bạn?</h1><p class="or-intro">{% if flow == 'table' %}Kiểm tra thông tin trước khi gửi yêu cầu đặt bàn đến Cơm Quê.{% else %}Kiểm tra thông tin và giỏ món trước khi gửi yêu cầu đến Cơm Quê.{% endif %}</p></div></header>
+{% if form.errors %}<div class="or-alert" role="alert">{{ form.non_field_errors }}{% for field in form %}{% if field.errors %}<p><strong>{{ field.label }}:</strong> {{ field.errors|striptags }}</p>{% endif %}{% endfor %}</div>{% endif %}
+<div class="or-review-layout">
+    <div>
+        <section class="or-card">
+            <div class="or-section-heading"><h2>Thông tin đặt bàn</h2><a href="{{ details_url }}">Chỉnh sửa</a></div>
+            <div class="or-summary">
+                <div><span>Khách đặt</span><strong>{{ details.full_name }}</strong></div>
+                <div><span>Số điện thoại</span><strong>{{ details.phone }}</strong></div>
+                <div><span>Giờ hẹn</span><strong>{{ details.starts_at|date:'H:i, d/m/Y' }}</strong></div>
+                <div><span>Số khách</span><strong>{{ details.party_size }} người</strong></div>
+                <div><span>Thời lượng</span><strong>{{ details.duration_minutes }} phút</strong></div>
+                <div><span>Khu vực</span><strong>{{ details.area|default:'Không chọn khu vực' }}</strong></div>
+                {% if flow != 'table' %}<div><span>Cách chuẩn bị</span><strong>{{ mode_label }}</strong></div>{% endif %}
+                {% if details.note %}<div><span>Ghi chú</span><strong>{{ details.note }}</strong></div>{% endif %}
+            </div>
+        </section>
+        {% if flow != 'table' %}<section class="or-card"><div class="or-section-heading"><h2>Giỏ món đã chọn</h2><a href="{% url 'online_reservations:menu' %}">Chỉnh sửa món</a></div>
+            {% for row in selected_rows %}<article class="or-review-item">{% include 'customer/includes/dish_photo.html' with dish=row.dish photo_class='or-review-photo' %}<div><strong>{{ row.dish.name }}</strong><p>{{ row.count }} {{ row.dish.unit.name }} × {{ row.dish.price|dong }}đ</p>{% if row.item_note %}<small>{{ row.item_note }}</small>{% endif %}</div><strong>{{ row.line_total|dong }}đ</strong></article>{% empty %}<p class="or-empty">Bạn chỉ đặt bàn, chưa chọn món trước. Có thể gọi món khi đến nhà hàng.</p>{% endfor %}
+            <div class="or-cart-total"><span>Tạm tính tiền món</span><strong>{{ total|dong }}đ</strong></div>
+        </section>{% endif %}
+    </div>
+    <aside class="or-card or-review-confirm"><h2>Gửi yêu cầu đặt bàn</h2><div class="or-summary"><div><span>{% if details.mode == 'READY' %}Cọc sau khi chốt món{% else %}Cọc giữ bàn{% endif %}</span><strong>{% if details.mode == 'READY' %}{{ policy.ready_percent }}% tiền món{% else %}{{ policy.table_deposit|dong }}đ{% endif %}</strong></div></div>
+        <div class="or-alert"><strong>Điều kiện đặt bàn</strong><p>Chỗ chờ cọc được giữ {{ policy.hold_minutes }} phút kể từ khi giữ chỗ.</p><p>{% if details.mode == 'READY' %}Nhà hàng sẽ chốt món và giờ phục vụ. Bạn đồng ý bản chốt rồi mới trả cọc. Chỉ được hủy miễn phí trước mốc bếp đã chốt và khi chưa bắt đầu chế biến.{% else %}Được hủy miễn phí trước giờ hẹn {{ policy.free_cancel_hours }} giờ. Nhà hàng chỉ chế biến khi bạn đến.{% endif %}</p><p>Sau hạn, quản lý xử lý hoàn theo chính sách đã đồng ý. Cọc được trừ một lần vào hóa đơn; tiền dư được đối soát để hoàn.</p></div>
+        <form method="post">{% csrf_token %}<label class="or-check"><input type="checkbox" name="agree" required{% if agree_checked %} checked{% endif %}> {{ form.agree.label }}</label><button class="customer-button or-cart-submit" type="submit">Gửi yêu cầu đặt bàn →</button></form>
+        <p class="or-muted">{% if details.mode == 'READY' %}Yêu cầu chuẩn bị theo giờ chưa phải cam kết giữ bàn cho đến khi nhà hàng chốt và nhận cọc.{% else %}Sau khi gửi, bạn sẽ nhận liên kết riêng để theo dõi và trả cọc giữ bàn.{% endif %}</p>
+    </aside>
+</div>
+{% endblock %}

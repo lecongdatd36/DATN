@@ -53,8 +53,17 @@ def report_data(start_at, end_at):
         total=_money_sum("total_cost")
     )["total"]
 
-    payments = Payment.objects.filter(created_at__gte=start_at, created_at__lt=end_at)
+    payments = Payment.objects.filter(created_at__gte=start_at, created_at__lt=end_at).exclude(method=Payment.Method.DEPOSIT)
     collected = payments.aggregate(total=_money_sum("amount"))["total"]
+    from apps.reservations.models import DepositPayment, DepositRefund, PreorderItem
+    deposit_collected = DepositPayment.objects.filter(status__in=("PAID","REVIEW"),paid_at__gte=start_at,paid_at__lt=end_at).aggregate(total=_money_sum("amount"))["total"]
+    deposit_refunded = DepositRefund.objects.filter(status="COMPLETED",completed_at__gte=start_at,completed_at__lt=end_at).aggregate(total=_money_sum("amount"))["total"]
+    settlement_collected = collected
+    collected += deposit_collected - deposit_refunded
+    preorder_waste = PreorderItem.objects.filter(status="CANCELLED",cancelled_at__gte=start_at,cancelled_at__lt=end_at,
+        inventory_deducted_at__isnull=False,inventory_returned_at__isnull=True).aggregate(total=Coalesce(
+            Sum(ExpressionWrapper(F("quantity")*F("unit_cost"),output_field=MONEY_FIELD)),Decimal(0),output_field=MONEY_FIELD))["total"]
+    waste_cost += preorder_waste
 
     remaining_expression = ExpressionWrapper(F("total") - F("paid_amount"), output_field=MONEY_FIELD)
     outstanding = Invoice.objects.filter(status=Invoice.Status.UNPAID).aggregate(
@@ -132,6 +141,10 @@ def report_data(start_at, end_at):
         "purchase_cost": purchase_cost,
         "waste_cost": waste_cost,
         "collected": collected,
+        "deposit_collected": deposit_collected,
+        "deposit_refunded": deposit_refunded,
+        "settlement_collected": settlement_collected,
+        "preorder_waste_cost": preorder_waste,
         "outstanding": outstanding,
         "booking_summary": booking_summary,
         "new_customers": Customer.objects.filter(created_at__gte=start_at, created_at__lt=end_at).count(),

@@ -1,0 +1,193 @@
+.or-page{padding-top:3rem;padding-bottom:4rem;max-width:1200px;margin:auto}
+.or-kicker{color:#8d2338;font-size:.8rem;letter-spacing:.15em;font-weight:700}
+.or-intro{font-size:1.1rem;color:#72655d}
+.or-modes,.or-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}
+.or-modes{margin:2rem 0}
+.or-modes article,.or-card{padding:1.5rem;background:var(--bs-body-bg,#fff);border:1px solid #ded8d1;border-radius:1rem}
+.or-modes article{background:#f6f0e7;color:#44362e}
+.or-card{margin:1.5rem 0}
+.or-card h2{font-size:1.3rem;margin:1rem 0}
+.or-page input:not([type=checkbox]):not([type=hidden]),.or-page select,.or-page textarea{width:100%;padding:.65rem .75rem;border:1px solid #d5cdc5;border-radius:.5rem;background:var(--bs-body-bg,#fff);color:inherit;min-width:0}
+.or-page label{display:block;font-size:.9rem;margin-bottom:.4rem}
+.or-page small,.or-muted{color:#80746c;font-size:.85rem}
+.or-field small{display:block;margin-top:.4rem}
+.or-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.or-dish{padding:1rem;border:1px solid #e6ded5;border-radius:.75rem;display:grid;grid-template-columns:1fr 100px;gap:.75rem;align-items:center}
+.or-dish p{margin:.25rem 0}
+.or-note{grid-column:1/-1}
+.or-alert{padding:1rem;border-radius:.7rem;background:#fff1d9;color:#684c22;margin:1rem 0;overflow-wrap:anywhere}
+.or-ok{background:#e2f2e8;color:#165336}
+.or-check{display:flex!important;align-items:flex-start;gap:.6rem;margin:1rem 0!important}
+.or-check input{margin-top:.3rem;flex-shrink:0}
+.or-actions{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-top:1rem}
+.or-actions .form-control{flex:1;min-width:180px}
+.or-secondary{background:#fff!important;color:#8d2338!important;border:1px solid #8d2338!important}
+.or-summary>div{display:flex;justify-content:space-between;gap:1rem;padding:.6rem 0;border-bottom:1px solid #e9e0d8}
+.or-summary strong{text-align:right}
+.or-table{overflow-x:auto}
+.or-table table{width:100%;border-collapse:collapse;min-width:480px}
+.or-table th,.or-table td{padding:.8rem;text-align:left;border-bottom:1px solid #e5ddd5}
+.or-refund{border-top:1px solid #ddd;padding:1rem 0;margin-top:1rem}
+.or-staff{max-width:1400px}
+.errorlist{color:#a02238;padding-left:1.2rem}
+@media(max-width:700px){.or-page{padding-top:1.5rem}
+.or-modes,.or-form-grid,.or-menu{grid-template-columns:1fr}
+.or-card{padding:1rem}
+.or-summary>div{display:block}
+.or-summary strong{display:block;text-align:left;margin-top:.25rem}
+.or-staff{width:100%}
+}
+
+.or-flow{max-width:1280px;color:#352d28}
+.or-flow [hidden]{display:none!important}
+.or-flow h1,.or-booking-content>h2{font-family:"Segoe UI",Arial,sans-serif;font-weight:500;letter-spacing:normal}
+.or-flow h1{font-size:clamp(2rem,3.4vw,3rem);line-height:1.15;margin:.5rem 0 1rem}
+.or-flow-top{display:flex;justify-content:space-between;gap:1rem;font-size:.85rem;margin-bottom:1.75rem}
+.or-flow a{color:#812b3b}
+.or-steps{display:flex;justify-content:center;gap:3rem;padding:1.25rem 0 2rem;border-bottom:1px solid #e6ded5;margin-bottom:2rem;font-size:.9rem}
+.or-steps>a,.or-steps>span{display:flex;align-items:center;gap:.6rem;text-decoration:none;color:#8b8077}
+.or-steps>a>span,.or-steps>span>span{display:grid;place-items:center;border:1px solid #d9cfc3;width:2rem;height:2rem;border-radius:50%;font-size:.75rem}
+.or-steps .is-current{color:#812b3b;font-weight:700}
+.or-steps .is-current>span{background:#812b3b;border-color:#812b3b;color:white}
+.or-booking-layout{display:grid;grid-template-columns:.85fr 1.15fr;background:#fff;border:1px solid #e6ded5;border-radius:1.25rem;overflow:hidden}
+.or-booking-visual{position:relative;min-height:670px;background:#393429;isolation:isolate}
+.or-booking-photo{position:absolute;width:100%;height:100%;object-fit:cover;inset:0;z-index:-2}
+.or-booking-visual:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,12,.08),rgba(20,18,12,.86));z-index:-1}
+.or-booking-copy{position:absolute;left:2.25rem;right:1.5rem;bottom:2.5rem;color:#fff8ea}
+.or-booking-copy .or-kicker{color:#f5cf9f}
+.or-booking-copy h1{font-size:clamp(2rem,3.3vw,3.1rem);line-height:1.2}
+.or-booking-copy h1 em{color:#edc18b;font-weight:400}
+.or-booking-copy>p:last-child{line-height:1.8;color:#eee1d2}
+.or-booking-content{padding:2.25rem;min-width:0}
+.or-booking-content>h2{font-size:2.4rem;margin:.5rem 0}
+.or-booking-content .or-intro{font-size:.98rem;line-height:1.6;margin-bottom:1.6rem}
+.or-booking-form .or-form-grid{gap:1.1rem}
+.or-field:has(textarea),.or-field:has(select[name=mode]){grid-column:1/-1}
+.or-booking-hint{background:#f8f3ea;border-left:3px solid #b6925c;padding:1rem 1.1rem;margin:1.5rem 0;font-size:.85rem;color:#6a5a4b}
+.or-booking-hint p{margin:.5rem 0;line-height:1.6}
+.or-text-button{border:0;background:transparent;color:#812b3b;font:inherit;font-size:.9rem;text-decoration:underline;text-underline-offset:4px;padding:.65rem .1rem;cursor:pointer}
+.or-flow .customer-button{font-size:.9rem;justify-content:center}
+.or-booking-form>.or-muted{margin-top:1rem;line-height:1.6}
+.or-menu-heading{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin:2rem 0}
+.or-menu-heading .or-intro{max-width:720px;font-size:1rem;line-height:1.7}
+.or-cart-link{display:flex;align-items:center;gap:.6rem;flex-shrink:0;text-decoration:none;background:#f3e9dd;border:1px solid #dfd2c3;padding:.7rem 1rem;border-radius:2rem;font-size:.9rem}
+.or-cart-link>span,.or-cart-heading>span{background:#812b3b;color:#fff;border-radius:1rem;min-width:1.8rem;text-align:center;padding:.2rem .4rem;font-size:.8rem}
+.or-menu-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:2rem;align-items:start}
+.or-menu-tools{display:grid;grid-template-columns:1.4fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.or-menu-tools label{font-size:.8rem;font-weight:600;color:#74665c}
+.or-catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}
+.or-product{background:#fff;border:1px solid #e3d9ce;border-radius:1rem;overflow:hidden;min-width:0;transition:border-color .15s}
+.or-product.is-selected{border-color:#8d2338}
+.or-product-photo-wrap{position:relative;background:#ece4d7;aspect-ratio:4/3}
+.or-product-photo{display:block;object-fit:cover;width:100%;height:100%}
+.or-dish-badge{position:absolute;bottom:.7rem;left:.7rem;right:.7rem;width:fit-content;max-width:calc(100% - 1.4rem);font-size:.65rem;background:#fff9ed;color:#66503a;padding:.35rem .6rem;border-radius:1rem;box-shadow:0 1px 5px #0001}
+.or-product-body{padding:1rem}
+.or-product-body>small{text-transform:uppercase;letter-spacing:.08em;font-size:.65rem}
+.or-product-body h2{font-family:"Segoe UI",Arial,sans-serif;font-size:1.3rem;font-weight:500;margin:.45rem 0 .65rem}
+.or-product-description{font-size:.8rem;color:#7b6f63;line-height:1.6}
+.or-product-price{font-weight:700;color:#812b3b;margin:.8rem 0}
+.or-product-price>span{font-size:.8rem;font-weight:400;color:#8b7d70}
+.or-product-controls{display:flex;align-items:center;justify-content:space-between;gap:.5rem;border-top:1px solid #eee5db;padding-top:.8rem}
+.or-product-controls>span{font-size:.7rem;color:#8c7660}
+.or-quantity{display:flex;align-items:center;flex-shrink:0;border:1px solid #e2d7c9;border-radius:.5rem;overflow:hidden}
+.or-quantity button,.or-cart-quantity button{width:30px;height:32px;border:0;background:#f9f5ee;color:#812b3b;cursor:pointer;font:inherit;font-size:1.2rem}
+.or-quantity button:disabled,.or-cart-quantity button:disabled{opacity:.35;cursor:default}
+.or-flow .or-quantity input[type=number]{appearance:textfield;-moz-appearance:textfield;width:36px;min-width:0;text-align:center;padding:0;border:0;border-radius:0;height:32px;font-size:.85rem}
+.or-quantity input::-webkit-inner-spin-button,.or-quantity input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.or-menu-layout>.or-cart{margin:0;position:sticky;top:1.5rem;padding:1.3rem}
+.or-cart-heading,.or-section-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.or-cart-heading h2,.or-section-heading h2{margin:0}
+.or-cart-visit{font-size:.8rem;line-height:1.8;padding:1rem 0;border-bottom:1px solid #e9dfd3;color:#8b7a69}
+.or-empty{text-align:center;padding:1.5rem .5rem;line-height:1.8;color:#8b7a69;font-size:.9rem}
+.or-cart-item{padding:.9rem 0;border-bottom:1px solid #ece2d7}
+.or-cart-item-top,.or-cart-item-bottom{display:flex;align-items:center;justify-content:space-between;gap:.75rem;font-size:.85rem}
+.or-cart-item-top strong{overflow-wrap:anywhere}
+.or-remove{background:none;border:0;padding:.3rem 0;color:#966e62;font-size:.75rem;text-decoration:underline;cursor:pointer}
+.or-cart-item-bottom{margin:.6rem 0}
+.or-cart-quantity{display:flex;align-items:center;gap:.5rem}
+.or-cart-quantity button{border-radius:.35rem;width:27px;height:27px}
+.or-flow .or-cart-item input{font-size:.8rem;padding:.5rem .6rem;background:#faf8f3}
+.or-cart-total{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1.25rem;padding-top:1rem;border-top:1px solid #e3d7c9;font-size:.85rem}
+.or-cart-total strong{color:#812b3b;font-size:1.25rem;white-space:nowrap}
+.or-cart .or-muted,.or-review-confirm .or-muted{font-size:.78rem;line-height:1.7}
+.or-cart-submit{width:100%;margin-top:.7rem}
+.or-cart>.or-text-button{display:block;width:100%;margin-top:.65rem;text-align:center;font-size:.8rem}
+.or-review-layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:2rem;align-items:start}
+.or-review-layout .or-card{margin-top:0}
+.or-section-heading{margin-bottom:1rem}
+.or-section-heading>a{font-size:.8rem;flex-shrink:0}
+.or-review-item{display:flex;align-items:center;gap:1rem;border-bottom:1px solid #eee4d8;padding:1rem 0;font-size:.9rem}
+.or-review-photo{width:70px;height:70px;object-fit:cover;border-radius:.6rem;flex-shrink:0}
+.or-review-item>div{flex:1;min-width:0}
+.or-review-item p{font-size:.8rem;color:#8b7b6a;margin:.4rem 0}
+.or-review-item>strong{color:#812b3b;font-size:.85rem;white-space:nowrap}
+.or-review-confirm{position:sticky;top:1.5rem}
+.or-review-confirm>h2{margin-top:0}
+.or-review-confirm .or-alert{font-size:.8rem;line-height:1.7;background:#f8f1e6}
+.or-review-confirm .or-check{font-size:.8rem;line-height:1.7}
+.or-review-confirm .or-check input{width:16px;height:16px;accent-color:#812b3b}
+.or-sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.or-flow button:focus-visible,.or-flow a:focus-visible,.or-flow input:focus-visible,.or-flow select:focus-visible{outline:2px solid #9b743f;outline-offset:3px}
+
+@media(max-width:1050px){.or-menu-layout{grid-template-columns:minmax(0,1fr) 300px;gap:1.25rem}
+.or-booking-content{padding:1.5rem}
+.or-product-controls{flex-wrap:wrap}
+.or-review-layout{grid-template-columns:minmax(0,1fr) 330px;gap:1.25rem}
+}
+
+@media(max-width:800px){.or-booking-layout,.or-menu-layout,.or-review-layout{grid-template-columns:1fr}
+.or-booking-visual{min-height:340px}
+.or-booking-copy{left:1.5rem;bottom:1.25rem}
+.or-booking-copy h1{font-size:2.1rem}
+.or-booking-copy>p:last-child{display:none}
+.or-menu-layout>.or-cart,.or-review-confirm{position:static}
+.or-steps{gap:1.25rem;font-size:.8rem}
+.or-menu-heading h1{font-size:2rem}
+.or-product-controls{flex-wrap:nowrap}
+.or-menu-heading{align-items:start}
+.or-menu-heading .or-cart-link{font-size:.75rem;padding:.5rem .7rem}
+.or-review-layout{gap:0}
+}
+
+@media(max-width:480px){.or-flow{padding-bottom:2rem}
+.or-flow-top{font-size:.75rem;margin-bottom:1rem}
+.or-steps{gap:.6rem;justify-content:space-between;padding:1rem 0 1.25rem;margin-bottom:1.25rem}
+.or-steps>a,.or-steps>span{flex-direction:column;gap:.4rem;font-size:.7rem;text-align:center}
+.or-steps>a>span,.or-steps>span>span{width:1.6rem;height:1.6rem}
+.or-booking-visual{min-height:285px}
+.or-booking-content{padding:1.25rem}
+.or-booking-content>h2{font-size:2rem}
+.or-booking-form .or-form-grid{grid-template-columns:1fr}
+.or-booking-form .or-actions{flex-direction:column;align-items:stretch}
+.or-booking-form .or-text-button{text-align:center}
+.or-menu-heading{flex-wrap:wrap}
+.or-menu-heading h1{font-size:1.9rem}
+.or-menu-heading .or-intro{font-size:.9rem}
+.or-menu-tools{grid-template-columns:1fr;gap:.75rem}
+.or-catalog{gap:.7rem}
+.or-product-photo-wrap{aspect-ratio:1}
+.or-product-body{padding:.75rem}
+.or-product-body h2{font-size:1.05rem}
+.or-product-description{display:none}
+.or-product-controls{flex-direction:column;align-items:start;gap:.4rem}
+.or-product-controls>span{font-size:.65rem}
+.or-dish-badge{font-size:.55rem;left:.4rem;bottom:.4rem;right:.4rem;padding:.25rem .4rem;max-width:calc(100% - .8rem)}
+.or-product-price{font-size:.9rem}
+.or-product-price>span{font-size:.65rem}
+.or-review-photo{width:52px;height:52px}
+.or-review-item{gap:.65rem;flex-wrap:wrap}
+.or-review-item>strong{margin-left:auto}
+.or-review-layout .or-summary>div{display:flex}
+.or-review-layout .or-summary strong{text-align:right;margin:0;overflow-wrap:anywhere;max-width:65%}
+}
+
+.cq-reservation-page .or-flow,.cq-reservation-page .or-flow h1,.cq-reservation-page .or-flow h2,.cq-reservation-page .or-flow h3,.cq-reservation-page .or-flow input,.cq-reservation-page .or-flow select,.cq-reservation-page .or-flow textarea,.cq-reservation-page .or-flow button{font-family:"Segoe UI",Arial,sans-serif;letter-spacing:normal}
+.cq-reservation-page .or-flow h1,.cq-reservation-page .or-flow h2,.cq-reservation-page .or-flow h3{font-weight:600;line-height:1.35}
+.cq-reservation-page .or-booking-copy h1{font-weight:500;line-height:1.4;font-size:clamp(1.8rem,2.7vw,2.5rem)}
+.or-preorder-question{max-width:780px;margin:2rem auto;padding:2rem}
+.or-preorder-question h1{font-size:clamp(1.6rem,3vw,2.3rem)}
+.or-preorder-question>p{line-height:1.8}
+.or-preorder-question .or-actions{gap:1rem;margin:1.5rem 0}
+.or-preorder-question .or-actions button{flex:1}
+.or-quantity button,.or-cart-quantity button{position:relative;z-index:1;touch-action:manipulation}
+@media(max-width:600px){.or-preorder-question{padding:1.25rem}.or-preorder-question .or-actions{flex-direction:column;align-items:stretch}.or-preorder-question .or-actions button{width:100%}.or-steps{gap:.5rem}.or-booking-visual{min-height:320px}.or-booking-copy h1{font-size:1.8rem}}

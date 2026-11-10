@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% load static %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/workforce.css' %}">{% endblock %}
+{% block content %}
+<section class="container-fluid px-3 px-md-4 pb-5 wf-page">
+  <p class="eyebrow mb-2">NHÂN SỰ · CA LÀM & CHẤM CÔNG</p>
+  <h1 class="h2 mb-3">{% block workforce_heading %}{% endblock %}</h1>
+  {% if access.can_manage_accounts %}{% include 'workforce/_nav.html' %}{% endif %}
+  {% block workforce_content %}{% endblock %}
+</section>
+{% endblock %}

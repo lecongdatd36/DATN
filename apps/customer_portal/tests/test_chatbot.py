@@ -194,7 +194,7 @@ class CustomerChatTests(TestCase):
         data = response.json()
         self.assertEqual([item["id"] for item in data["dishes"]], [self.available.pk])
         self.assertEqual({item["url"] for item in data["links"]},
-                         {reverse("customer_portal:menu"), reverse("customer_reservations:create")})
+                         {reverse("customer_portal:menu"), reverse("online_reservations:create")})
         self.assertNotIn("unit-test-placeholder", response.content.decode())
 
     def test_apriori_reuses_existing_service_with_live_public_intersection(self):

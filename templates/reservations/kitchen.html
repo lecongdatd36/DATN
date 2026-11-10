@@ -1,0 +1,39 @@
+{% extends 'reservations/staff_base.html' %}{% load menu_money %}
+{% block title %}Món đặt trước · QLNH{% endblock %}
+{% block reservation_staff %}
+<h1 class="h2">Món đặt trước đã xác nhận cọc</h1>
+<p>Theo dõi món trước khi nhận khách. Món có lịch chuẩn bị được phát hành khi đến giờ; món chờ khách đến được chuyển sang đơn phục vụ khi nhân viên nhận khách.</p>
+<div class="or-menu">
+{% for item in items %}
+    <article class="or-card" data-preorder-item="{{ item.pk }}" data-preorder-mode="{{ item.reservation.mode }}">
+        <small>{{ item.reservation.code }} · {{ item.reservation.get_status_display }}</small>
+        <h2>{{ item.dish_name }} × {{ item.quantity }}</h2>
+        <p>Khách {{ item.reservation.full_name }} · {{ item.reservation.party_size }} người<br>
+        Giờ đến <strong>{{ item.reservation.starts_at|date:'d/m/Y H:i' }}</strong>{% if item.reservation.booking %} · Bàn {{ item.reservation.booking.table.code }}{% endif %}</p>
+        {% if item.note %}<p>Ghi chú món: {{ item.note }}</p>{% endif %}
+        {% if item.reservation.note %}<p>Ghi chú đặt bàn: {{ item.reservation.note }}</p>{% endif %}
+        <p>Cọc đã nhận: {{ item.reservation.received|dong }}đ</p>
+        {% if item.reservation.mode == 'READY' %}
+            <p>Bắt đầu {{ item.reservation.prep_starts_at|date:'d/m/Y H:i' }} · cần sẵn {{ item.reservation.ready_by|date:'d/m/Y H:i' }}</p>
+            <strong>{{ item.get_status_display }}</strong>
+            <form method="post" class="mt-3">
+                {% csrf_token %}<input type="hidden" name="item_id" value="{{ item.pk }}">
+                {% if item.status == 'SCHEDULED' %}
+                    <button class="btn btn-primary" name="target" value="PENDING" {% if now < item.reservation.prep_starts_at %}disabled{% endif %}>Phát hành phiếu bếp</button>
+                    {% if now < item.reservation.prep_starts_at %}<p class="or-muted">Chưa đến giờ chuẩn bị đã chốt.</p>{% endif %}
+                {% elif item.status == 'PENDING' %}
+                    <button class="btn btn-primary" name="target" value="COOKING">Bắt đầu chế biến</button>
+                {% elif item.status == 'COOKING' %}
+                    <button class="btn btn-primary" name="target" value="READY">Món đã sẵn sàng</button>
+                {% endif %}
+            </form>
+        {% else %}
+            <p class="or-alert"><strong>Chờ khách đến · chưa phát hành phiếu bếp</strong><br>Lịch này ghi nhận món dự kiến, chưa chốt giờ chuẩn bị trước. Nhận cọc giữ bàn chưa tự chuyển món sang chế biến.</p>
+        {% endif %}
+        {% if can_manage_reservations %}<a class="btn btn-outline-primary mt-3" href="{% url 'online_reservations:manage_detail' item.reservation.pk %}">Xem hồ sơ {{ item.reservation.code }}</a>{% endif %}
+    </article>
+{% empty %}
+    <div class="or-card">Chưa có món đặt trước đã xác nhận cọc đang chờ nhận khách. Lịch chỉ đặt bàn, chưa cọc hoặc món đã chuyển sang đơn phục vụ không hiển thị ở đây.</div>
+{% endfor %}
+</div>
+{% endblock %}
