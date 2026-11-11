@@ -1,24 +1,24 @@
-{% extends 'customer/base_customer.html' %}
+{% extends 'customer/base_customer.html' %}{% load i18n customer_language %}
 {% load static menu_money %}
 
-{% block title %}{{ dish.name }} · CƠM QUÊ{% endblock %}
+{% block title %}{{ dish|public_name }} {% translate "· CƠM QUÊ" %}{% endblock %}
 
 {% block content %}
 <section class="customer-detail-page" aria-labelledby="dish-title">
     <div class="customer-container">
-        <a class="customer-back-link" href="{% url 'customer_portal:menu' %}">← Quay lại thực đơn</a>
+        <a class="customer-back-link" href="{% url 'customer_portal:menu' %}">{% translate "← Quay lại thực đơn" %}</a>
         <div class="customer-detail-grid">
             <div class="customer-detail-image-wrap">
                 {% include 'customer/includes/dish_photo.html' with dish=dish photo_class='customer-detail-image' full_size=True eager=True %}
             </div>
             <div class="customer-detail-copy">
-                <span class="customer-section-label">{{ dish.category.name }}</span>
-                <h1 id="dish-title">{{ dish.name }}</h1>
-                <p class="customer-detail-price">{{ dish.price|dong }}đ <small>/ {{ dish.unit.name }}</small></p>
-                {% if dish.status == 'SOLD_OUT' %}<span class="customer-dish-badge customer-dish-badge-sold customer-detail-badge">Hết món</span>{% else %}<span class="customer-dish-badge customer-dish-badge-available">Đang phục vụ</span>{% endif %}
-                <p class="customer-detail-description">{{ dish.description|default:'Món ăn được chuẩn bị chỉn chu từ những nguyên liệu phù hợp trong ngày.' }}</p>
-                <div class="customer-detail-note">Bạn có thể gọi món tại bàn sau khi nhân viên mở bàn.</div>
-                <div class="cq-detail-actions"><a class="cq-button" href="{% url 'customer_reservations:create' %}">Đặt bàn thưởng thức <span aria-hidden="true">→</span></a><a class="cq-text-link" href="{% url 'customer_portal:menu' %}">Xem thêm món ↗</a></div>
+                <span class="customer-section-label">{{ dish.category|public_name }}</span>
+                <h1 id="dish-title">{{ dish|public_name }}</h1>
+                <p class="customer-detail-price">{{ dish.price|dong }}{% translate "đ" %} <small>/ {{ dish.unit|public_name }}</small></p>
+                {% if dish.status == 'SOLD_OUT' %}<span class="customer-dish-badge customer-dish-badge-sold customer-detail-badge">{% translate "Hết món" %}</span>{% else %}<span class="customer-dish-badge customer-dish-badge-available">{% translate "Đang phục vụ" %}</span>{% endif %}
+                <p class="customer-detail-description">{{ dish|public_description|default:_('Món ăn được chuẩn bị chỉn chu từ những nguyên liệu phù hợp trong ngày.') }}</p>
+                <div class="customer-detail-note">{% translate "Bạn có thể gọi món tại bàn sau khi nhân viên mở bàn." %}</div>
+                <div class="cq-detail-actions"><a class="cq-button" href="{% url 'online_reservations:create' %}">{% translate "Đặt bàn thưởng thức" %} <span aria-hidden="true">→</span></a><a class="cq-text-link" href="{% url 'customer_portal:menu' %}">{% translate "Xem thêm món ↗" %}</a></div>
             </div>
         </div>
     </div>
@@ -26,7 +26,7 @@
 
 {% if suggested_dishes %}
 <section class="customer-suggestions" aria-labelledby="suggestions-title">
-    <div class="customer-container"><span class="customer-section-label">Cùng danh mục</span><h2 id="suggestions-title">Có thể bạn cũng thích</h2><div class="customer-suggestion-list">{% for suggested in suggested_dishes %}<a href="{% url 'customer_portal:dish_detail' suggested.pk %}">{% include 'customer/includes/dish_photo.html' with dish=suggested photo_class='cq-suggestion-photo' %}<span>{{ suggested.name }}{% if suggested.status == 'SOLD_OUT' %}<small>Hết món</small>{% endif %}</span><strong>{{ suggested.price|dong }}đ</strong></a>{% endfor %}</div></div>
+    <div class="customer-container"><span class="customer-section-label">{% translate "Cùng danh mục" %}</span><h2 id="suggestions-title">{% translate "Có thể bạn cũng thích" %}</h2><div class="customer-suggestion-list">{% for suggested in suggested_dishes %}<a href="{% url 'customer_portal:dish_detail' suggested.pk %}">{% include 'customer/includes/dish_photo.html' with dish=suggested photo_class='cq-suggestion-photo' %}<span>{{ suggested|public_name }}{% if suggested.status == 'SOLD_OUT' %}<small>{% translate "Hết món" %}</small>{% endif %}</span><strong>{{ suggested.price|dong }}{% translate "đ" %}</strong></a>{% endfor %}</div></div>
 </section>
 {% endif %}
 {% endblock %}

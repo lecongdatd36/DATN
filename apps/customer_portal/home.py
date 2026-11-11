@@ -1,5 +1,6 @@
 """Read-only presentation data for the public Cơm Quê homepage."""
 from apps.menu.models import Dish
+from apps.menu.combos import combo_catalog
 
 from .selectors import customer_categories
 
@@ -27,7 +28,7 @@ def homepage_context():
     for category in categories:
         group = sorted(category.customer_dishes, key=dish_order)
         cover = next((dish for dish in group if dish.image or dish.thumbnail), None)
-        home_categories.append({"id": category.pk, "name": category.name, "count": len(group), "cover": cover})
+        home_categories.append({"id": category.pk, "name": category.name, "name_en": category.name_en, "count": len(group), "cover": cover})
     return {
         "featured_dishes": dishes[:6], "menu_dishes": dishes,
         "hero_dishes": hero_dishes, "primary_dish": primary,
@@ -36,4 +37,5 @@ def homepage_context():
         "sharing_dish": photo_for("khai vị", primary),
         "home_categories": home_categories, "menu_categories": categories,
         "menu_dish_count": len(dishes),
+        "home_combos": combo_catalog(),
     }

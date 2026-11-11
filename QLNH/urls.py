@@ -3,12 +3,16 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
+from django.views.i18n import JavaScriptCatalog
+from django.views.decorators.cache import never_cache
 from apps.customer_portal.views import CustomerHomeView
 
 from apps.accounts.admin import admin_site
 from core.notification_views import notification_state
 
 urlpatterns = [
+    path("i18n/", include("django.conf.urls.i18n")),
+    path("jsi18n/", never_cache(JavaScriptCatalog.as_view()), name="javascript-catalog"),
     path("payments/zalopay/", include("apps.orders.zalopay_urls")),
     path("notifications/state/", notification_state, name="notification_state"),
     path("", CustomerHomeView.as_view(), name="home"),

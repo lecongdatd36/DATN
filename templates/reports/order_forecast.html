@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Dự báo số đơn · Cơm Quê{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/forecast-page.css' %}?v=1">{% endblock %}
+{% block content %}
+<section class="forecast-page container-fluid px-3 px-md-4 pb-5">
+<div class="forecast-heading"><div><p class="eyebrow">AI · KẾ HOẠCH PHỤC VỤ</p><h1>Dự báo số đơn</h1><p class="text-secondary">Ước tính lượng đơn trong 7 ngày để tham khảo khi chuẩn bị nguyên liệu và sắp xếp nhân sự.</p></div><a class="btn btn-outline-primary" href="{% url 'reports:dashboard' %}">Báo cáo vận hành ↗</a></div>
+{% if order_forecast.ready %}<section class="project-card forecast-overview" aria-labelledby="forecast-chart-heading"><header><div><span>7 NGÀY DỰ BÁO</span><h2 id="forecast-chart-heading">Nhịp phục vụ sắp tới</h2><p>{{ order_forecast.date_from|date:'d/m/Y' }} – {{ order_forecast.date_to|date:'d/m/Y' }}</p></div><div><strong>{{ forecast_total }}</strong><small>tổng đơn dự kiến trong kỳ</small></div></header>{% if order_forecast.is_stale %}<p class="alert alert-warning">Đây là kỳ đã công bố trước đó, chưa cập nhật cho hôm nay.</p>{% endif %}<div class="forecast-bars-wrap"><div class="forecast-bars" role="img" aria-label="Số đơn dự báo theo từng ngày">{% for row in forecast_chart %}<div class="forecast-day"><strong>{{ row.orders }}<small> đơn</small></strong><div class="forecast-track"><span style="height:{{ row.percent|floatformat:'0u' }}%"></span></div><time datetime="{{ row.day|date:'Y-m-d' }}">{{ row.day|date:'d/m' }}</time></div>{% endfor %}</div></div></section>{% endif %}
+{% include 'reports/includes/order_forecast.html' %}
+</section>
+{% endblock %}

@@ -1,8 +1,10 @@
 from django.urls import path
 from . import views
+from .storefront_cart import cart
 
 app_name="online_reservations"
 urlpatterns=[
+    path("gio-mon/",cart,name="cart"),
     path("",views.create,name="create"),
     path("dat-mon-truoc-khong/",views.preorder_choice,name="choice"),
     path("dat-ban/",views.booking_details,{"flow":"table"},name="table"),

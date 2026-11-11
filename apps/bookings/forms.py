@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django import forms
 from django.db.models import Q
 from django.utils import timezone
@@ -22,8 +23,8 @@ def time_field(label):
 
 class SlotForm(BootstrapFormMixin, forms.Form):
     starts_at = time_field("Giờ đến")
-    duration_minutes = forms.IntegerField(label="Thời lượng dự kiến (phút)", min_value=1, max_value=MAX_DURATION_MINUTES, required=False, help_text="Chỉ đổi khi khách dự kiến dùng bàn lâu hơn hoặc ngắn hơn thường lệ.")
-    party_size = forms.IntegerField(label="Số khách", min_value=1, max_value=100)
+    duration_minutes = forms.IntegerField(label=_("Thời lượng dự kiến (phút)"), min_value=1, max_value=MAX_DURATION_MINUTES, required=False, help_text=_("Chỉ đổi khi khách dự kiến dùng bàn lâu hơn hoặc ngắn hơn thường lệ."))
+    party_size = forms.IntegerField(label=_("Số khách"), min_value=1, max_value=100)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,8 +48,8 @@ class SlotForm(BootstrapFormMixin, forms.Form):
 
 class BookingForm(SlotForm):
     expected_revision = forms.IntegerField(required=False, widget=forms.HiddenInput)
-    customer_phone = forms.CharField(label="Số điện thoại khách hàng", max_length=32, widget=forms.TextInput(attrs={"type": "tel"}))
-    table = TableChoiceField(label="Bàn", queryset=DiningTable.objects.none())
+    customer_phone = forms.CharField(label=_("Số điện thoại khách hàng"), max_length=32, widget=forms.TextInput(attrs={"type": "tel"}))
+    table = TableChoiceField(label=_("Bàn"), queryset=DiningTable.objects.none())
     field_order = ("customer_phone", "starts_at", "party_size", "table", "duration_minutes")
 
     def __init__(self, *args, booking=None, **kwargs):
@@ -69,11 +70,11 @@ class BookingForm(SlotForm):
 class TransitionForm(BootstrapFormMixin, forms.Form):
     expected_status = forms.ChoiceField(choices=Booking.Status.choices, widget=forms.HiddenInput)
     expected_revision = forms.IntegerField(widget=forms.HiddenInput)
-    reason = forms.CharField(label="Lý do", required=False, max_length=500, widget=forms.Textarea(attrs={"rows": 3}))
+    reason = forms.CharField(label=_("Lý do"), required=False, max_length=500, widget=forms.Textarea(attrs={"rows": 3}))
 
 
 class TransferTableForm(BootstrapFormMixin, forms.Form):
-    table = TableChoiceField(label="Chuyển sang bàn", queryset=DiningTable.objects.none(), empty_label="Chọn bàn trống phù hợp")
+    table = TableChoiceField(label=_("Chuyển sang bàn"), queryset=DiningTable.objects.none(), empty_label=_("Chọn bàn trống phù hợp"))
     expected_revision = forms.IntegerField(widget=forms.HiddenInput)
 
     def __init__(self, *args, booking=None, **kwargs):
@@ -84,30 +85,30 @@ class TransferTableForm(BootstrapFormMixin, forms.Form):
 
 class CancelSeatedVisitForm(BootstrapFormMixin, forms.Form):
     reason = forms.CharField(
-        label="Lý do hủy bàn",
+        label=_("Lý do hủy bàn"),
         max_length=500,
-        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Ví dụ: khách đổi ý và rời nhà hàng"}),
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": _("Ví dụ: khách đổi ý và rời nhà hàng")}),
     )
     expected_revision = forms.IntegerField(widget=forms.HiddenInput)
 
 
 class BookingFilterForm(BootstrapFormMixin, forms.Form):
-    q = forms.CharField(label="Mã đặt / tên / điện thoại / bàn", required=False, max_length=150)
-    visit_type = forms.ChoiceField(label="Loại lượt", required=False, choices=[
+    q = forms.CharField(label=_("Mã đặt / tên / điện thoại / bàn"), required=False, max_length=150)
+    visit_type = forms.ChoiceField(label=_("Loại lượt"), required=False, choices=[
         ("", "Khách đặt trước"), ("walk_in", "Khách trực tiếp"), ("all", "Tất cả"),
     ])
-    date = forms.DateField(label="Ngày đến", required=False, widget=forms.DateInput(attrs={"type": "date"}))
-    status = forms.ChoiceField(label="Trạng thái", required=False, choices=[("", "Tất cả"), *Booking.Status.choices])
-    table = TableChoiceField(label="Bàn", queryset=DiningTable.objects.select_related("area"), required=False, empty_label="Tất cả bàn")
+    date = forms.DateField(label=_("Ngày đến"), required=False, widget=forms.DateInput(attrs={"type": "date"}))
+    status = forms.ChoiceField(label=_("Trạng thái"), required=False, choices=[("", "Tất cả"), *Booking.Status.choices])
+    table = TableChoiceField(label=_("Bàn"), queryset=DiningTable.objects.select_related("area"), required=False, empty_label=_("Tất cả bàn"))
 
 
 class BookingSettingsForm(BootstrapFormMixin, forms.Form):
-    opening_time = forms.TimeField(label="Giờ mở cửa", widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
-    closing_time = forms.TimeField(label="Giờ đóng cửa", widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
-    default_duration_minutes = forms.IntegerField(label="Thời lượng mặc định (phút)", min_value=1, max_value=MAX_DURATION_MINUTES)
+    opening_time = forms.TimeField(label=_("Giờ mở cửa"), widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
+    closing_time = forms.TimeField(label=_("Giờ đóng cửa"), widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
+    default_duration_minutes = forms.IntegerField(label=_("Thời lượng mặc định (phút)"), min_value=1, max_value=MAX_DURATION_MINUTES)
     no_show_grace_minutes = forms.IntegerField(
-        label="Tự động ghi nhận không đến sau (phút)", min_value=0, max_value=240, required=False,
-        help_text="Tính từ giờ hẹn. Nhập 0 nếu muốn giải phóng bàn ngay khi quá giờ hẹn.",
+        label=_("Tự động ghi nhận không đến sau (phút)"), min_value=0, max_value=240, required=False,
+        help_text=_("Tính từ giờ hẹn. Nhập 0 nếu muốn giải phóng bàn ngay khi quá giờ hẹn."),
     )
     expected_revision = forms.IntegerField(widget=forms.HiddenInput)
 
@@ -119,13 +120,13 @@ class BookingSettingsForm(BootstrapFormMixin, forms.Form):
 
 
 class PublicReservationForm(forms.Form):
-    full_name = forms.CharField(label="Họ và tên", max_length=150)
-    phone = forms.CharField(label="Số điện thoại", max_length=20, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}))
+    full_name = forms.CharField(label=_("Họ và tên"), max_length=150)
+    phone = forms.CharField(label=_("Số điện thoại"), max_length=20, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}))
     starts_at = time_field("Ngày và giờ đến")
-    party_size = forms.IntegerField(label="Số khách", min_value=1, max_value=100)
-    area = forms.ModelChoiceField(label="Khu vực mong muốn", queryset=Area.objects.filter(is_active=True), required=False, empty_label="Không chọn khu vực")
-    duration_minutes = forms.IntegerField(label="Thời lượng dự kiến (phút)", min_value=1, max_value=MAX_DURATION_MINUTES, required=False)
-    note = forms.CharField(label="Ghi chú", max_length=500, required=False, widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Ví dụ: cần ghế trẻ em hoặc bàn yên tĩnh"}))
+    party_size = forms.IntegerField(label=_("Số khách"), min_value=1, max_value=100)
+    area = forms.ModelChoiceField(label=_("Khu vực mong muốn"), queryset=Area.objects.filter(is_active=True), required=False, empty_label=_("Không chọn khu vực"))
+    duration_minutes = forms.IntegerField(label=_("Thời lượng dự kiến (phút)"), min_value=1, max_value=MAX_DURATION_MINUTES, required=False)
+    note = forms.CharField(label=_("Ghi chú"), max_length=500, required=False, widget=forms.Textarea(attrs={"rows": 3, "placeholder": _("Ví dụ: cần ghế trẻ em hoặc bàn yên tĩnh")}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -136,7 +137,7 @@ class PublicReservationForm(forms.Form):
     def clean_full_name(self):
         name = " ".join(self.cleaned_data["full_name"].split())
         if not name:
-            raise forms.ValidationError("Vui lòng nhập họ tên.")
+            raise forms.ValidationError(_("Vui lòng nhập họ tên."))
         return name
 
     def clean_phone(self):
@@ -158,13 +159,13 @@ class PublicReservationForm(forms.Form):
 
 
 class PublicReservationLookupForm(forms.Form):
-    reservation_code = forms.CharField(label="Mã đặt bàn", max_length=20)
-    phone = forms.CharField(label="Số điện thoại", max_length=20, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}))
+    reservation_code = forms.CharField(label=_("Mã đặt bàn"), max_length=20)
+    phone = forms.CharField(label=_("Số điện thoại"), max_length=20, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}))
 
     def clean_reservation_code(self):
         code = self.cleaned_data["reservation_code"].strip().upper()
         if not code.startswith("DB") or not code[2:].isdigit():
-            raise forms.ValidationError("Mã đặt bàn không hợp lệ.")
+            raise forms.ValidationError(_("Mã đặt bàn không hợp lệ."))
         return code
 
     def clean_phone(self):
@@ -173,9 +174,9 @@ class PublicReservationLookupForm(forms.Form):
 
 class PublicAvailabilityForm(forms.Form):
     starts_at = time_field("Ngày và giờ đến")
-    party_size = forms.IntegerField(label="Số khách", min_value=1, max_value=100)
-    area = forms.ModelChoiceField(label="Khu vực mong muốn", queryset=Area.objects.filter(is_active=True), required=False, empty_label="Tất cả khu vực")
-    duration_minutes = forms.IntegerField(label="Thời lượng dự kiến (phút)", min_value=1, max_value=MAX_DURATION_MINUTES, required=False)
+    party_size = forms.IntegerField(label=_("Số khách"), min_value=1, max_value=100)
+    area = forms.ModelChoiceField(label=_("Khu vực mong muốn"), queryset=Area.objects.filter(is_active=True), required=False, empty_label=_("Tất cả khu vực"))
+    duration_minutes = forms.IntegerField(label=_("Thời lượng dự kiến (phút)"), min_value=1, max_value=MAX_DURATION_MINUTES, required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

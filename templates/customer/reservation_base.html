@@ -1,16 +1,16 @@
-{% extends 'customer/base_customer.html' %}
+{% extends 'customer/base_customer.html' %}{% load i18n customer_language %}
 {% block content %}
 <section class="cq-booking-page">
     <div class="customer-container">
-        <nav class="cq-booking-nav" aria-label="Đặt bàn trực tuyến">
-            <a href="{% url 'customer_reservations:create' %}"{% if request.resolver_match.url_name == 'create' %} class="is-current" aria-current="page"{% endif %}>01 <span>Đặt bàn</span></a>
-            <a href="{% url 'customer_reservations:check' %}"{% if request.resolver_match.url_name == 'check' %} class="is-current" aria-current="page"{% endif %}>02 <span>Kiểm tra bàn</span></a>
-            <a href="{% url 'customer_reservations:lookup' %}"{% if request.resolver_match.url_name == 'lookup' or request.resolver_match.url_name == 'status' or request.resolver_match.url_name == 'success' %} class="is-current"{% endif %}>03 <span>Tra cứu đặt bàn</span></a>
+        <nav class="cq-booking-nav" aria-label="{% translate "Đặt bàn trực tuyến" %}">
+            <a href="{% url 'customer_reservations:create' %}"{% if request.resolver_match.url_name == 'create' %} class="is-current" aria-current="page"{% endif %}>01 <span>{% translate "Đặt bàn" %}</span></a>
+            <a href="{% url 'customer_reservations:check' %}"{% if request.resolver_match.url_name == 'check' %} class="is-current" aria-current="page"{% endif %}>02 <span>{% translate "Kiểm tra bàn" %}</span></a>
+            <a href="{% url 'customer_reservations:lookup' %}"{% if request.resolver_match.url_name == 'lookup' or request.resolver_match.url_name == 'status' or request.resolver_match.url_name == 'success' %} class="is-current"{% endif %}>03 <span>{% translate "Tra cứu đặt bàn" %}</span></a>
         </nav>
         <div class="cq-booking-layout">
-            <aside class="cq-booking-visual" aria-label="Hẹn nhau ở Cơm Quê">
+            <aside class="cq-booking-visual" aria-label="{% translate "Hẹn nhau ở Cơm Quê" %}">
                 {% include 'customer/includes/dish_photo.html' with dish=storefront.primary_dish photo_class='cq-booking-photo' full_size=True eager=True %}
-                <div class="cq-booking-visual-copy"><span class="cq-eyebrow cq-eyebrow-light">HẸN NHAU Ở CƠM QUÊ</span><h2>Một chỗ ngồi.<br>Một bữa cơm.<br><em>Thật nhiều niềm vui.</em></h2><p>Gác lại một ngày bận rộn,<br>mình cùng về ăn cơm nhé.</p><a href="{% url 'customer_portal:menu' %}">Chọn món cho cuộc hẹn <span aria-hidden="true">↗</span></a></div>
+                <div class="cq-booking-visual-copy"><span class="cq-eyebrow cq-eyebrow-light">{% translate "HẸN NHAU Ở CƠM QUÊ" %}</span><h2>{% translate "Một chỗ ngồi." %}<br>{% translate "Một bữa cơm." %}<br><em>{% translate "Thật nhiều niềm vui." %}</em></h2><p>{% translate "Gác lại một ngày bận rộn," %}<br>{% translate "mình cùng về ăn cơm nhé." %}</p><a href="{% url 'customer_portal:menu' %}">{% translate "Chọn món cho cuộc hẹn" %} <span aria-hidden="true">↗</span></a></div>
             </aside>
             <div class="cq-booking-content customer-form-page">{% block reservation_content %}{% endblock %}</div>
         </div>

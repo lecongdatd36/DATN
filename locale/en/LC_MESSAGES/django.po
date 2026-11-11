@@ -1,0 +1,2181 @@
+# English customer-facing translations for Com Que.
+msgid ""
+msgstr "Project-Id-Version: Com Que\nLanguage: en\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\nPlural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid " món"
+msgstr " items"
+
+msgid "% tiền món"
+msgstr "% of the food total"
+
+msgid ", cần sẵn lúc"
+msgstr ", ready by"
+
+msgid "- Trang chủ"
+msgstr "- Home"
+
+msgid ". Hủy muộn/không đến cần nhà hàng đối soát theo chính sách đã chốt; hoàn tiền chỉ hoàn tất khi có xác nhận thực tế."
+msgstr ". Late cancellations or no-shows are reviewed under the agreed policy. Refunds are complete only after the actual transfer is verified."
+
+msgid ". Quá hạn cần kiểm tra lại bàn. Không xác nhận đã trả tiền chỉ từ trang chuyển về."
+msgstr ". After this deadline, table availability must be checked again. A return page alone does not confirm payment."
+
+msgid ". Trạng thái từng món ở bảng bên dưới."
+msgstr ". See each dish's progress in the table below."
+
+msgid ". Đồng ý để kiểm tra lại và giữ chỗ chờ cọc."
+msgstr ". Accept to recheck availability and hold your table while awaiting the deposit."
+
+msgid "02 người · Một cuộc hẹn"
+msgstr "2 guests · A little date"
+
+msgid "03 người"
+msgstr "3 guests"
+
+msgid "04 người · Bữa cơm gia đình"
+msgstr "4 guests · A family meal"
+
+msgid "05 người"
+msgstr "5 guests"
+
+msgid "06 người"
+msgstr "6 guests"
+
+msgid "08 người · Bạn bè sum họp"
+msgstr "8 guests · Friends together"
+
+msgid "0đ"
+msgstr "0₫"
+
+msgid "10 người"
+msgstr "10 guests"
+
+msgid "12 người"
+msgstr "12 guests"
+
+msgid "<p class=\"customer-qr-cart-empty\">Chưa có món trong giỏ.</p>"
+msgstr "<p class=\"customer-qr-cart-empty\">Your basket is empty.</p>"
+
+msgid "Bia lon Sài Gòn Lager"
+msgstr "Saigon Lager Beer (Can)"
+
+msgid "Bàn"
+msgstr "Table"
+
+msgid "Bàn chưa được mở"
+msgstr "Your table is not open yet"
+
+msgid "Bàn chỉ có thể nhận gọi món sau khi nhân viên mở bàn và đơn hiện tại."
+msgstr "Orders can be submitted once staff open your table and its current order."
+
+msgid "Bàn phù hợp cho bạn"
+msgstr "Tables that suit your visit"
+
+msgid "Bàn đã giữ"
+msgstr "Reserved table"
+
+msgid "Bàn được đề xuất theo độ phù hợp"
+msgstr "Tables recommended for your party"
+
+msgid "Bát"
+msgstr "Bowl"
+
+msgid "Bún chả Hà Nội"
+msgstr "Hanoi Grilled Pork with Vermicelli"
+
+msgid "BƯỚC"
+msgstr "STEP"
+
+msgid "BƯỚC 01 · THÔNG TIN CUỘC HẸN"
+msgstr "STEP 01 · YOUR VISIT"
+
+msgid "BƯỚC 03 · THỰC ĐƠN CHO CUỘC HẸN"
+msgstr "STEP 03 · FOOD FOR YOUR VISIT"
+
+msgid "Bạn"
+msgstr "You"
+
+msgid "Bạn bè quây quần"
+msgstr "Good Company for Six"
+
+msgid "Bạn chỉ đặt bàn, chưa chọn món trước. Có thể gọi món khi đến nhà hàng."
+msgstr "You are booking a table without preordering. You can order food when you arrive."
+
+msgid "Bạn có muốn đặt món trước không?"
+msgstr "Would you like to preorder food?"
+
+msgid "Bạn có muốn đặt món trước? · CƠM QUÊ"
+msgstr "Preorder food? · CƠM QUÊ"
+
+msgid "Bạn có thể chọn món ngay bây giờ, hoặc gọi món khi đến nhà hàng."
+msgstr "Choose your dishes now, or order when you arrive."
+
+msgid "Bạn có thể gọi món tại bàn sau khi nhân viên mở bàn."
+msgstr "You can order at your table after staff open it."
+
+msgid "Bạn cần thêm gì?"
+msgstr "Anything else you need?"
+
+msgid "Bạn không có quyền thực hiện thao tác này."
+msgstr "You do not have permission to perform this action."
+
+msgid "Bạn muốn hỏi điều gì?"
+msgstr "What would you like to ask?"
+
+msgid "Bạn muốn tìm món gì?"
+msgstr "What would you like to eat?"
+
+msgid "Bạn sẽ gọi món khi đến nhà hàng."
+msgstr "You can order food when you arrive."
+
+msgid "Bạn vẫn có thể nhập số lượng trên từng món rồi tiếp tục để xem tổng tiền. Bật JavaScript để xem giỏ món cập nhật ngay."
+msgstr "You can enter quantities beside each dish and continue to see your total. Enable JavaScript for live basket updates."
+
+msgid "Bạn đã có lịch hẹn? Tra cứu tại đây"
+msgstr "Already booked? Look up your reservation"
+
+msgid "Bạn định ghé Cơm Quê khi nào?"
+msgstr "When would you like to visit Cơm Quê?"
+
+msgid "Bản chốt có hiệu lực tới"
+msgstr "This offer is valid until"
+
+msgid "Bản chốt đã thay đổi hoặc hết hạn. Nhờ nhà hàng kiểm tra lại."
+msgstr "This offer has changed or expired. Please contact the restaurant."
+
+msgid "Bắt đầu chuẩn bị"
+msgstr "Preparation starts"
+
+msgid "Bắt đầu từ một chỗ ngồi"
+msgstr "It starts with a seat at the table"
+
+msgid "Bếp phát hành phiếu từ"
+msgstr "The kitchen can start preparing from"
+
+msgid "Bớt"
+msgstr "Remove one"
+
+msgid "Bớt một phần"
+msgstr "Remove one serving"
+
+msgid "Bữa cơm ngon hơn khi có bạn."
+msgstr "Good food tastes better with you."
+
+msgid "Bữa cơm sum vầy,"
+msgstr "A table full of food,"
+
+msgid "Bữa ngon,"
+msgstr "Good food,"
+
+msgid "CHÚT CHUYỆN QUÊ MÌNH"
+msgstr "A LITTLE OF OUR STORY"
+
+msgid "CHÚT GỢI Ý TỪ GIAN BẾP"
+msgstr "A LITTLE INSPIRATION FROM OUR KITCHEN"
+
+msgid "CHẲNG CẦN DỊP ĐẶC BIỆT"
+msgstr "NO SPECIAL OCCASION NEEDED"
+
+msgid "CHỌN MỘT LẦN, ĐỦ VỊ NGON"
+msgstr "ONE CHOICE, A TABLE FULL OF FLAVOUR"
+
+msgid "CHỌN VỊ NGON CHO BỮA HẸN"
+msgstr "SOMETHING DELICIOUS FOR YOUR VISIT"
+
+msgid "COMBO TRỌN BỮA"
+msgstr "MEAL COMBO"
+
+msgid "Chai"
+msgstr "Bottle"
+
+msgid "Chuyển sang bàn"
+msgstr "Moved to table"
+
+msgid "Chuyển đến nội dung chính"
+msgstr "Skip to main content"
+
+msgid "Chuyện Cơm Quê"
+msgstr "Our story"
+
+msgid "Chuyện Cơm Quê ↗"
+msgstr "Our story ↗"
+
+msgid "Chuẩn bị"
+msgstr "Preparation"
+
+msgid "Chuẩn bị món theo giờ hẹn"
+msgstr "Advance preparation"
+
+msgid "Chuẩn bị theo giờ hẹn"
+msgstr "Prepare for the agreed time"
+
+msgid "Chào bạn! Mình có thể trò chuyện, giải đáp câu hỏi, tư vấn món, giải thích ưu đãi hạng thành viên và hướng dẫn đặt bàn."
+msgstr "Hello! I can help you explore the menu, explain membership benefits, answer questions and guide you through booking a table."
+
+msgid "Chè khúc bạch"
+msgstr "Khuc Bach Sweet Dessert"
+
+msgid "Chăm chút từ"
+msgstr "Care in"
+
+msgid "Chưa biết nhà hàng còn bàn?"
+msgstr "Not sure if a table is available?"
+
+msgid "Chưa có bàn phù hợp."
+msgstr "No suitable tables found."
+
+msgid "Chưa có gợi ý phù hợp với các món đã chọn."
+msgstr "No matching suggestions for the selected dishes yet."
+
+msgid "Chưa có lượt gọi món."
+msgstr "No food orders yet."
+
+msgid "Chưa có món trong giỏ."
+msgstr "Your basket is empty."
+
+msgid "Chưa có yêu cầu hoàn tiền."
+msgstr "No refund requests."
+
+msgid "Chưa có yêu cầu phục vụ."
+msgstr "No service requests yet."
+
+msgid "Chưa có ảnh cho"
+msgstr "No photo available for"
+
+msgid "Chưa cập nhật được giỏ món."
+msgstr "Your basket could not be updated."
+
+msgid "Chưa giữ chỗ hoặc thu cọc ở bước này."
+msgstr "No table is held and no deposit is charged at this step."
+
+msgid "Chưa kết nối được máy chủ. Giữ mã giao dịch để kiểm tra lại."
+msgstr "Unable to reach the server. Keep your transaction reference and check again."
+
+msgid "Chưa kết nối được trợ lý. Vui lòng thử lại sau."
+msgstr "Unable to reach the assistant. Please try again later."
+
+msgid "Chưa lấy được kết quả."
+msgstr "Unable to retrieve the result."
+
+msgid "Chưa tìm thấy món phù hợp."
+msgstr "No matching dishes found."
+
+msgid "Chưa tải được gợi ý. Bạn vẫn có thể chọn món bình thường."
+msgstr "Suggestions could not be loaded. You can still choose dishes normally."
+
+msgid "Chưa tới giờ hẹn để ghi không đến."
+msgstr "It is too early to mark this reservation as a no-show."
+
+msgid "Chưa xác minh được kết quả thanh toán"
+msgstr "Payment has not yet been verified"
+
+msgid "Chưa xác minh được thanh toán. Giữ mã giao dịch và tiếp tục chờ hoặc truy vấn lại."
+msgstr "Payment has not been verified yet. Keep your reference and wait or check again."
+
+msgid "Chưa xử lý"
+msgstr "Unresolved"
+
+msgid "Chưa đến mốc chuẩn bị đã thông báo cho khách."
+msgstr "The agreed preparation time has not arrived."
+
+msgid "Chả giò hải sản"
+msgstr "Seafood Spring Rolls"
+
+msgid "Chế độ hoặc thời gian đặt bàn không hợp lệ."
+msgstr "The booking type or arrival time is invalid."
+
+msgid "Chỉ làm khi đến"
+msgstr "Prepare on arrival"
+
+msgid "Chỉ nhận khách cho lịch đã cọc và xác nhận."
+msgstr "Check-in requires a confirmed reservation with a verified deposit."
+
+msgid "Chỉ đặt bàn"
+msgstr "Table only"
+
+msgid "Chỉ đổi khi khách dự kiến dùng bàn lâu hơn hoặc ngắn hơn thường lệ."
+msgstr "Change this only if you expect a longer or shorter visit than usual."
+
+msgid "Chỉnh sửa"
+msgstr "Edit"
+
+msgid "Chỉnh sửa món"
+msgstr "Edit dishes"
+
+msgid "Chọn bàn trống phù hợp"
+msgstr "Choose a suitable available table"
+
+msgid "Chọn giờ đến và số khách. Sau đó bạn có thể chọn đặt món trước hoặc gọi món khi đến."
+msgstr "Choose your arrival time and party size. You can then preorder food or order on arrival."
+
+msgid "Chọn lại lịch đặt bàn →"
+msgstr "Choose another reservation →"
+
+msgid "Chọn món"
+msgstr "Choose dishes"
+
+msgid "Chọn món bạn thích"
+msgstr "Choose your favourites"
+
+msgid "Chọn món bạn thích, Cơm Quê lo bữa hẹn của bạn."
+msgstr "Choose your favourites. Let Cơm Quê take care of your meal."
+
+msgid "Chọn món cho bàn · CƠM QUÊ"
+msgstr "Choose dishes · CƠM QUÊ"
+
+msgid "Chọn món cho cuộc hẹn"
+msgstr "Food for your visit"
+
+msgid "Chọn món có thể chuẩn bị theo giờ. Nhà hàng sẽ gửi bạn bản chốt trước khi nhận cọc."
+msgstr "Choose dishes available for advance preparation. The restaurant will send an offer before requesting a deposit."
+
+msgid "Chọn món ngay"
+msgstr "Choose your dishes"
+
+msgid "Chọn món trong lúc chờ nhân viên nhận bàn."
+msgstr "Browse dishes while waiting for staff to check you in."
+
+msgid "Chọn món trong menu tại bàn để gửi yêu cầu."
+msgstr "Choose dishes from your table's menu to submit an order."
+
+msgid "Chọn món trước sau khi điền thông tin đặt bàn."
+msgstr "Preorder after entering your booking details."
+
+msgid "Chọn món ăn"
+msgstr "Choose dishes"
+
+msgid "Chọn món để xem gợi ý ăn kèm."
+msgstr "Choose dishes to see suggestions for your meal."
+
+msgid "Chọn một giờ hẹn,"
+msgstr "Choose a time,"
+
+msgid "Chọn thêm món"
+msgstr "Keep browsing"
+
+msgid "Chọn thời gian và số khách. Chúng tôi sẽ gợi ý bàn vừa đủ chỗ, không trùng lịch cho cuộc hẹn của bạn."
+msgstr "Choose your time and party size. We will suggest tables with enough seats and no overlapping reservations."
+
+msgid "Chọn từ 1 đến 1440 phút."
+msgstr "Choose between 1 and 1,440 minutes."
+
+msgid "Chọn từ 1 đến 50 món để yêu cầu chuẩn bị sẵn."
+msgstr "Choose between 1 and 50 dishes for advance preparation."
+
+msgid "Chọn vài món ngon cho cuộc hẹn nhé."
+msgstr "Choose something delicious for your visit."
+
+msgid "Chọn vị ngon, hẹn bữa vui."
+msgstr "Pick your favourites. Plan a lovely meal."
+
+msgid "Chọn vị ngon."
+msgstr "Pick your favourites."
+
+msgid "Chọn ít nhất một món để tiếp tục đặt món trước."
+msgstr "Choose at least one dish to continue preordering."
+
+msgid "Chỗ chờ cọc được giữ"
+msgstr "Your table is held for"
+
+msgid "Chờ chế biến"
+msgstr "Awaiting preparation"
+
+msgid "Chờ duyệt"
+msgstr "Awaiting approval"
+
+msgid "Chờ khách đồng ý bản chốt"
+msgstr "Awaiting your acceptance"
+
+msgid "Chờ kết quả"
+msgstr "Awaiting result"
+
+msgid "Chờ nhà hàng xem xét"
+msgstr "Awaiting restaurant review"
+
+msgid "Chờ nhà hàng xử lý"
+msgstr "Awaiting restaurant review"
+
+msgid "Chờ nhân viên nhận bàn"
+msgstr "Waiting for staff to check you in"
+
+msgid "Chờ nhận bàn"
+msgstr "Waiting for check-in"
+
+msgid "Chờ thanh toán cọc"
+msgstr "Awaiting deposit"
+
+msgid "Chờ trả"
+msgstr "Awaiting payment"
+
+msgid "Combo Cơm Quê"
+msgstr "Cơm Quê meal combos"
+
+msgid "Combo cho cuộc hẹn, gia đình & bạn bè"
+msgstr "For dates, family meals and good company"
+
+msgid "Combo có món hết/ngừng bán. Vui lòng chọn lại."
+msgstr "A dish in this combo is unavailable. Please choose another."
+
+msgid "Combo cần từ 2 đến 12 món khác nhau."
+msgstr "A combo must contain between 2 and 12 different dishes."
+
+msgid "Combo đã thay đổi, hết thành phần hoặc ngừng bán. Vui lòng chọn lại."
+msgstr "This combo has changed or is unavailable. Please choose again."
+
+msgid "Combo đã đặt"
+msgstr "Your booked combos"
+
+msgid "Cuộc hẹn"
+msgstr "Reservation"
+
+msgid "CÙNG NHAU THƯỞNG THỨC"
+msgstr "BETTER WHEN SHARED"
+
+msgid "Cà phê sữa đá"
+msgstr "Vietnamese Iced Coffee with Milk"
+
+msgid "Các bước đặt bàn"
+msgstr "Booking steps"
+
+msgid "Các món thành phần bên dưới đã được phân bổ theo giá combo; không tính thêm lần nữa."
+msgstr "The component dishes below are included in the combo price. They are not charged again."
+
+msgid "Các món và combo bạn chọn đã được giữ lại. Điền thông tin cuộc hẹn để kiểm tra giỏ món và tiền cọc trước khi gửi."
+msgstr "Your selected dishes and combos are saved. Enter your visit details, then review your basket and deposit before submitting."
+
+msgid "Cách chuẩn bị"
+msgstr "Preparation preference"
+
+msgid "Cách chuẩn bị món"
+msgstr "Food preparation"
+
+msgid "Câu hỏi cho trợ lý CƠM QUÊ"
+msgstr "Your question for the CƠM QUÊ assistant"
+
+msgid "Câu hỏi tối đa 1.000 ký tự."
+msgstr "Questions must be 1,000 characters or fewer."
+
+msgid "Còn món"
+msgstr "Available"
+
+msgid "Có món hết/ngừng bán; xử lý yêu cầu thay đổi trước khi nhận khách."
+msgstr "A selected dish is unavailable. Update the reservation before checking the guests in."
+
+msgid "Có món nào dưới 100.000 đồng?"
+msgstr "Are there any dishes under 100,000 VND?"
+
+msgid "Có món/ngành hàng đã ngừng bán; hãy chọn lại thành phần combo."
+msgstr "A dish or category is no longer on sale. Update the combo components."
+
+msgid "Có nhau, có bữa ngon."
+msgstr "Good company. A lovely meal."
+
+msgid "Có những hương vị,"
+msgstr "Some flavours"
+
+msgid "Có thành phần combo chưa cho phép chuẩn bị theo giờ."
+msgstr "A component of this combo is not available for advance preparation."
+
+msgid "Có thể bạn cũng thích"
+msgstr "You might also like"
+
+msgid "Có thể chuẩn bị theo giờ"
+msgstr "Available for advance preparation"
+
+msgid "Có, chọn món trước →"
+msgstr "Yes, preorder food →"
+
+msgid "Cùng danh mục"
+msgstr "In the same category"
+
+msgid "Căn bếp đang cập nhật thực đơn. Mời bạn ghé lại sau nhé."
+msgstr "Our kitchen is updating the menu. Please check back soon."
+
+msgid "Cơm gà xối mỡ"
+msgstr "Crispy Fried Chicken with Rice"
+
+msgid "Cơm sườn nướng"
+msgstr "Grilled Pork Chop with Rice"
+
+msgid "Cần lý do từ chối."
+msgstr "A reason for declining is required."
+
+msgid "Cần mã/bằng chứng hoàn thực tế và số dư đủ."
+msgstr "A verified refund reference and sufficient deposit balance are required."
+
+msgid "Cần xác minh khách đồng ý và lịch còn chưa nhận khách."
+msgstr "Verify the guest's consent and confirm that check-in has not taken place."
+
+msgid "Cần xác minh người nhận/phương thức gốc và ghi lý do xử lý."
+msgstr "Verify the recipient and original payment method, and record the reason."
+
+msgid "Cần xác minh yêu cầu và nhập lý do."
+msgstr "Verify the request and enter a reason."
+
+msgid "Cần đồng ý bản chốt và điều kiện trước khi giữ chỗ."
+msgstr "Accept the offer and terms before holding a table."
+
+msgid "Cần đồng ý điều kiện thanh toán trước khi trả cọc."
+msgstr "Agree to the payment terms before paying the deposit."
+
+msgid "Cần đồng ý điều kiện thanh toán/hủy trước khi trả cọc."
+msgstr "Agree to the payment and cancellation terms before paying the deposit."
+
+msgid "Cần đủ thời gian cọc trước khi làm; giờ sẵn nằm trong 10 phút từ giờ hẹn."
+msgstr "Allow time for the deposit before preparation. Food must be ready within 10 minutes of the arrival time."
+
+msgid "Cọc giữ bàn"
+msgstr "Table deposit"
+
+msgid "Cọc hiện có chưa đủ bản điều chỉnh. Bản đầu chưa thu cọc bổ sung; hãy thống nhất phương án khác với khách. Lịch cũ được giữ nguyên."
+msgstr "The existing deposit does not cover this change. Additional deposits are not supported yet; agree on another option with the guest. The current reservation is preserved."
+
+msgid "Cọc hoặc yêu cầu hoàn còn cần đối soát. Xử lý tại Đặt bàn online trước khi nhận khách."
+msgstr "The deposit or refund request needs reconciliation. Review the online reservation before check-in."
+
+msgid "Cọc sau khi chốt món"
+msgstr "Deposit after the menu is agreed"
+
+msgid "Cọc yêu cầu"
+msgstr "Required deposit"
+
+msgid "Cọc đang có giao dịch ZaloPay chờ kết quả. Hãy kiểm tra giao dịch đó trước."
+msgstr "A ZaloPay deposit transaction is pending. Check that transaction first."
+
+msgid "Cọc đã nhận"
+msgstr "Deposit received"
+
+msgid "Cổng thanh toán chưa sẵn sàng. Vui lòng liên hệ nhà hàng; không thanh toán lại nếu giao dịch trước chưa rõ kết quả."
+msgstr "The payment gateway is not ready. Contact the restaurant; do not pay again while an earlier transaction is unresolved."
+
+msgid "Cổng thanh toán đã trả kết quả. Tiền cọc chỉ được xác nhận sau thông báo hợp lệ từ máy chủ VNPAY; hãy xem trạng thái bên dưới."
+msgstr "The payment gateway has returned a result. The deposit is confirmed only after a verified server notification from VNPAY. Check the status below."
+
+msgid "Danh mục món ăn"
+msgstr "Dish categories"
+
+msgid "Dữ liệu giỏ hàng không hợp lệ."
+msgstr "Invalid basket data."
+
+msgid "Ghi chú"
+msgstr "Notes"
+
+msgid "Ghi chú cho cả combo…"
+msgstr "Notes for the whole combo…"
+
+msgid "Ghi chú combo"
+msgstr "Combo notes"
+
+msgid "Ghi chú khách:"
+msgstr "Guest notes:"
+
+msgid "Ghi chú món"
+msgstr "Dish notes"
+
+msgid "Ghi chú tối đa 500 ký tự."
+msgstr "Notes must be 500 characters or fewer."
+
+msgid "Ghé thăm"
+msgstr "Visit us"
+
+msgid "Giao dịch chưa thành công. Bạn có thể quay lại để tạo yêu cầu thanh toán mới."
+msgstr "The transaction was unsuccessful. You can return and start a new payment."
+
+msgid "Giao dịch chưa thành công. Quay lại đơn để tạo yêu cầu mới."
+msgstr "The transaction was unsuccessful. Return to the order to start a new payment."
+
+msgid "Giá combo không hợp lệ."
+msgstr "Invalid combo price."
+
+msgid "Giá combo phải đủ phân bổ cho các phần món và không cao hơn tổng giá lẻ."
+msgstr "The combo price must cover its component portions and cannot exceed their total regular price."
+
+msgid "Giá combo đã gồm các món bên trong. Tiền cọc giữ bàn được hiển thị ở bước xác nhận."
+msgstr "The combo price includes its component dishes. Your table deposit is shown at confirmation."
+
+msgid "Giá và tiền cọc sẽ được xác nhận trong bản chốt của nhà hàng."
+msgstr "Prices and the deposit will be confirmed in the restaurant's offer."
+
+msgid "Giảm"
+msgstr "Decrease"
+
+msgid "Giỏ có quá nhiều dòng thành phần. Vui lòng giảm số combo."
+msgstr "The basket contains too many component lines. Please reduce the number of combos."
+
+msgid "Giỏ hàng"
+msgstr "Basket"
+
+msgid "Giỏ hàng tối đa 50 món/combo khác nhau."
+msgstr "The basket can contain up to 50 different dishes or combos."
+
+msgid "Giỏ hàng ·"
+msgstr "Basket ·"
+
+msgid "Giỏ hàng được giữ lại và sẽ mở gửi món ngay khi bàn được nhận."
+msgstr "Your basket is saved. You can submit it once staff check you in."
+
+msgid "Giỏ món"
+msgstr "Food basket"
+
+msgid "Giỏ món của bạn"
+msgstr "Your food basket"
+
+msgid "Giỏ món đang trống."
+msgstr "Your basket is empty."
+
+msgid "Giỏ món đã chọn"
+msgstr "Your selected dishes"
+
+msgid "Giờ hẹn"
+msgstr "Arrival time"
+
+msgid "Giờ hẹn khách"
+msgstr "Guest arrival time"
+
+msgid "Giờ mở cửa"
+msgstr "Opening time"
+
+msgid "Giờ phục vụ: %(opening)s–%(closing)s. Thời gian dùng bàn phải kết thúc chậm nhất vào giờ đóng cửa."
+msgstr "Opening hours: %(opening)s–%(closing)s. Your visit must finish by closing time."
+
+msgid "Giờ đóng cửa"
+msgstr "Closing time"
+
+msgid "Giờ đến"
+msgstr "Arrival time"
+
+msgid "Giữ chỗ chờ cọc tới"
+msgstr "Table held pending deposit until"
+
+msgid "Giữ lại địa chỉ trang này. Không chia sẻ liên kết cho người không liên quan."
+msgstr "Keep this page address. Do not share your private link with anyone unrelated to the booking."
+
+msgid "Gác lại một ngày bận rộn,"
+msgstr "Leave the busy day behind,"
+
+msgid "Gọi nhân viên"
+msgstr "Call staff"
+
+msgid "Gỏi cuốn tôm thịt"
+msgstr "Fresh Shrimp and Pork Rolls"
+
+msgid "Gợi ý gọi thêm từ Apriori"
+msgstr "Apriori suggestions"
+
+msgid "Gợi ý ăn kèm: "
+msgstr "Suggested additions: "
+
+msgid "Gửi"
+msgstr "Send"
+
+msgid "Gửi câu hỏi"
+msgstr "Send your question"
+
+msgid "Gửi yêu cầu gọi món"
+msgstr "Submit food order"
+
+msgid "Gửi yêu cầu đặt bàn"
+msgstr "Submit reservation"
+
+msgid "Gửi yêu cầu đặt bàn →"
+msgstr "Submit reservation →"
+
+msgid "Gửi yêu cầu đổi / hủy"
+msgstr "Request a change or cancellation"
+
+msgid "Hoàn tất"
+msgstr "Completed"
+
+msgid "Hãy thử một thời gian hoặc khu vực khác."
+msgstr "Try a different time or seating area."
+
+msgid "Hình thức"
+msgstr "Booking type"
+
+msgid "Hôm nay ăn gì?"
+msgstr "What are you craving?"
+
+msgid "Hôm nay, mình ăn gì?"
+msgstr "What shall we eat today?"
+
+msgid "Hạn hủy miễn phí"
+msgstr "Free cancellation deadline"
+
+msgid "HẸN NHAU Ở CƠM QUÊ"
+msgstr "LET'S MEET AT CƠM QUÊ"
+
+msgid "Hẹn bạn bên bàn ăn"
+msgstr "See you at the table"
+
+msgid "Hẹn bạn ở Cơm Quê."
+msgstr "See you at Cơm Quê."
+
+msgid "Hẹn hò vị nhà"
+msgstr "A Taste of Home for Two"
+
+msgid "Hẹn một bữa cơm"
+msgstr "Plan a meal together"
+
+msgid "Hẹn một bữa cơm →"
+msgstr "Plan a meal together →"
+
+msgid "Hẹn một bữa ngon"
+msgstr "Plan a lovely meal"
+
+msgid "Hẹn một bữa ngon."
+msgstr "A little date with good food."
+
+msgid "Hẹn nhau ở Cơm Quê"
+msgstr "Meet at Cơm Quê"
+
+msgid "Hết hạn"
+msgstr "Expired"
+
+msgid "Hết món"
+msgstr "Sold out"
+
+msgid "Họ và tên"
+msgstr "Full name"
+
+msgid "Hỏi CƠM QUÊ"
+msgstr "Ask CƠM QUÊ"
+
+msgid "Hỏi đáp · Thực đơn · Ưu đãi"
+msgstr "Questions · Menu · Benefits"
+
+msgid "Hỗ trợ tại bàn"
+msgstr "Table assistance"
+
+msgid "Hủy miễn phí:"
+msgstr "Free cancellation:"
+
+msgid "Khai vị"
+msgstr "Starters"
+
+msgid "Khoản hoàn vượt số dư."
+msgstr "The refund exceeds the available balance."
+
+msgid "Khu vực"
+msgstr "Seating area"
+
+msgid "Khu vực mong muốn"
+msgstr "Preferred seating area"
+
+msgid "Khách / liên hệ"
+msgstr "Guest / contact"
+
+msgid "Khách đặt"
+msgstr "Booking guest"
+
+msgid "Khám phá Cơm Quê"
+msgstr "Discover Cơm Quê"
+
+msgid "Khám phá combo ↗"
+msgstr "Explore meal combos ↗"
+
+msgid "Khám phá gian bếp của chúng mình ↗"
+msgstr "Explore our kitchen ↗"
+
+msgid "Khám phá ngay"
+msgstr "Discover more"
+
+msgid "Khám phá nhóm món"
+msgstr "Explore categories"
+
+msgid "Khám phá thực đơn"
+msgstr "Explore the menu"
+
+msgid "Khám phá thực đơn món Việt và đặt bàn trực tuyến."
+msgstr "Explore our Vietnamese menu and book a table online."
+
+msgid "Không chọn khu vực"
+msgstr "No area preference"
+
+msgid "Không còn đủ thời gian trả cọc và chuẩn bị. Nhà hàng cần chốt lại giờ mới."
+msgstr "There is not enough time to pay the deposit and prepare the meal. The restaurant needs to agree on a new time."
+
+msgid "Không kết nối được giỏ món. Vui lòng tải lại trang."
+msgstr "Unable to connect to your basket. Please reload the page."
+
+msgid "Không thể gửi yêu cầu nhận bàn."
+msgstr "Unable to submit the check-in request."
+
+msgid "Không thể gửi yêu cầu phục vụ."
+msgstr "Unable to submit the service request."
+
+msgid "Không thể gửi yêu cầu. Vui lòng thử lại."
+msgstr "Unable to submit the request. Please try again."
+
+msgid "Không thể thay bản chốt của yêu cầu đã nhận tiền hoặc đang phục vụ."
+msgstr "An offer cannot be replaced after payment or check-in."
+
+msgid "Không tìm thấy lịch khớp mã và số điện thoại."
+msgstr "No reservation matches this code and phone number."
+
+msgid "Không tìm thấy món phù hợp."
+msgstr "No matching dishes found."
+
+msgid "Không tìm thấy món phù hợp. Thử tên hoặc nhóm món khác nhé."
+msgstr "No dishes match. Try another name or category."
+
+msgid "Không tạo hoặc trả tiền lần nữa khi giao dịch hiện tại chưa rõ kết quả. Trang tự kiểm tra trạng thái; yêu cầu truy vấn cổng được giới hạn mỗi 30 giây."
+msgstr "Do not create or pay another transaction while this one is unresolved. This page checks the status automatically; gateway queries are limited to once every 30 seconds."
+
+msgid "Không đến"
+msgstr "No-show"
+
+msgid "Không, chỉ đặt bàn →"
+msgstr "No, just book a table →"
+
+msgid "Kiểm tra & xác nhận →"
+msgstr "Review & confirm →"
+
+msgid "Kiểm tra / gửi lại yêu cầu"
+msgstr "Check / resubmit request"
+
+msgid "Kiểm tra bàn"
+msgstr "Check tables"
+
+msgid "Kiểm tra bàn phù hợp"
+msgstr "Check suitable tables"
+
+msgid "Kiểm tra bàn trước"
+msgstr "Check tables first"
+
+msgid "Kiểm tra bàn · CƠM QUÊ"
+msgstr "Check tables · CƠM QUÊ"
+
+msgid "Kiểm tra lại giao dịch"
+msgstr "Check payment again"
+
+msgid "Kiểm tra thông tin trước khi gửi yêu cầu đặt bàn đến Cơm Quê."
+msgstr "Review your details before sending your reservation to Cơm Quê."
+
+msgid "Kiểm tra thông tin và giỏ món trước khi gửi yêu cầu đến Cơm Quê."
+msgstr "Review your details and basket before sending your reservation to Cơm Quê."
+
+msgid "Kết nối đang chậm. Vui lòng chờ rồi thử lại."
+msgstr "The connection is slow. Please wait and try again."
+
+msgid "Kết nối đang chậm. Vui lòng thử lại sau."
+msgstr "The connection is slow. Please try again later."
+
+msgid "Kết quả ZaloPay Sandbox · CƠM QUÊ"
+msgstr "ZaloPay Sandbox result · CƠM QUÊ"
+
+msgid "Kết quả cho “"
+msgstr "Results for “"
+
+msgid "Kết quả thanh toán thử nghiệm"
+msgstr "Test payment result"
+
+msgid "LIÊN KẾT RIÊNG CỦA BẠN"
+msgstr "YOUR PRIVATE LINK"
+
+msgid "Liên hệ"
+msgstr "Contact"
+
+msgid "Lon"
+msgstr "Can"
+
+msgid "Loại lượt"
+msgstr "Request type"
+
+msgid "Ly"
+msgstr "Glass"
+
+msgid "Lý do"
+msgstr "Reason"
+
+msgid "Lý do hoặc số tiền hoàn vượt số dư có thể hoàn."
+msgstr "Enter a reason and a refund amount within the refundable balance."
+
+msgid "Lý do hủy bàn"
+msgstr "Cancellation reason"
+
+msgid "Lượt gọi món"
+msgstr "Food order"
+
+msgid "Lượt đang phục vụ/đã đóng cần xử lý qua đơn và đối soát, không hủy lại lịch."
+msgstr "For checked-in or closed visits, use the order and reconciliation workflow instead of cancelling the reservation."
+
+msgid "Lượt đang phục vụ: chốt hóa đơn trước khi hoàn phần cọc dư."
+msgstr "For a visit in progress, settle the bill before refunding the remaining deposit."
+
+msgid "Lịch này chưa chốt giờ chuẩn bị trước; nhân viên sẽ chuyển món sang đơn phục vụ khi nhận khách."
+msgstr "No advance preparation time has been agreed. Staff will transfer these dishes to your order at check-in."
+
+msgid "Lịch sử hội thoại"
+msgstr "Conversation history"
+
+msgid "Lịch đã kết thúc; liên hệ nhà hàng để đối soát tiền nếu cần."
+msgstr "This reservation has ended. Contact the restaurant if payment reconciliation is needed."
+
+msgid "Lọc nhóm món"
+msgstr "Filter dish categories"
+
+msgid "Lọc theo danh mục"
+msgstr "Filter by category"
+
+msgid "Menu tại bàn"
+msgstr "Table menu"
+
+msgid "Menu tại bàn · CƠM QUÊ"
+msgstr "Table menu · CƠM QUÊ"
+
+msgid "Menu đang được cập nhật."
+msgstr "The menu is being updated."
+
+msgid "MÓN LẺ"
+msgstr "INDIVIDUAL DISH"
+
+msgid "MÓN NGON LÀ ĐỂ SẺ CHIA"
+msgstr "GOOD FOOD IS MADE FOR SHARING"
+
+msgid "Máy chủ đã xác minh thanh toán thành công."
+msgstr "The server has verified your successful payment."
+
+msgid "Mã"
+msgstr "Code"
+
+msgid "Mã giao dịch:"
+msgstr "Transaction reference:"
+
+msgid "Mã gửi yêu cầu đã được sử dụng."
+msgstr "This request identifier has already been used."
+
+msgid "Mã yêu cầu"
+msgstr "Request code"
+
+msgid "Mã đặt / tên / điện thoại / bàn"
+msgstr "Booking code / name / phone / table"
+
+msgid "Mã đặt bàn"
+msgstr "Booking code"
+
+msgid "Mã đặt bàn không hợp lệ."
+msgstr "Invalid booking code."
+
+msgid "Món"
+msgstr "Dish"
+
+msgid "Món Việt thân quen, nấu bằng sự chăm chút."
+msgstr "Familiar Vietnamese flavours, prepared with care."
+
+msgid "Món chính"
+msgstr "Main dishes"
+
+msgid "Món chính đậm đà, món rau xanh mát, chút ngọt tròn vị."
+msgstr "Comforting mains, fresh greens and a little something sweet."
+
+msgid "Món chưa có phần nguyên liệu được giữ. Nhờ quản lý kiểm tra."
+msgstr "No ingredients are reserved for this dish. Ask a manager to review it."
+
+msgid "Món dự kiến đã đổi giá/hết món. Xác nhận lại với khách tại trang đặt bàn online trước khi nhận."
+msgstr "A selected dish has changed price or is unavailable. Confirm the update with the guest before check-in."
+
+msgid "Món hiện đã hết. Vui lòng bỏ khỏi giỏ."
+msgstr "This dish is sold out. Please remove it from your basket."
+
+msgid "Món ngon cho bữa cơm nhà"
+msgstr "Good food for a lovely meal"
+
+msgid "Món này chỉ chế biến khi khách đến. Vui lòng bỏ khỏi giỏ hoặc đổi cách chuẩn bị."
+msgstr "This dish is prepared only on arrival. Remove it or change your preparation preference."
+
+msgid "Món rau"
+msgstr "Vegetables"
+
+msgid "Món ăn được chuẩn bị chỉn chu từ căn bếp CƠM QUÊ."
+msgstr "Prepared with care in the CƠM QUÊ kitchen."
+
+msgid "Món ăn được chuẩn bị chỉn chu từ những nguyên liệu phù hợp trong ngày."
+msgstr "Prepared with care using suitable ingredients for the day."
+
+msgid "Món đã có lịch chuẩn bị."
+msgstr "Your dishes have an agreed preparation time."
+
+msgid "Món đã gửi bếp hoặc cọc đang xử lý hoàn; không đổi thẳng cam kết."
+msgstr "Food has been sent to the kitchen or a refund is being processed. The agreed plan cannot be changed directly."
+
+msgid "Món đã thay đổi hoặc bước chế biến không hợp lệ."
+msgstr "This dish has changed or the preparation step is invalid."
+
+msgid "Món đã được ghi nhận, chờ khách đến."
+msgstr "Your dishes are saved and will be prepared on arrival."
+
+msgid "Món/combo không hợp lệ hoặc bị lặp."
+msgstr "Invalid or duplicate dish/combo."
+
+msgid "Món/combo không hợp lệ."
+msgstr "Invalid dish or combo."
+
+msgid "Mọi thứ đã vừa ý bạn?"
+msgstr "Everything looking good?"
+
+msgid "Mỗi lượt đặt được chọn tối đa 50 món khác nhau."
+msgstr "Choose up to 50 different dishes per reservation."
+
+msgid "Mỗi món chỉ xuất hiện một lần, số lượng từ 1 đến 10."
+msgstr "Each component must appear once, with a quantity from 1 to 10."
+
+msgid "MỘT CHÚT NGỌT NGÀO"
+msgstr "A LITTLE SOMETHING SWEET"
+
+msgid "Một bữa cơm."
+msgstr "A lovely meal."
+
+msgid "Một bữa ăn ngon bắt đầu từ sự chu đáo trong từng chi tiết."
+msgstr "A lovely meal begins with care in every little detail."
+
+msgid "Một chỗ ngồi."
+msgstr "A seat at the table."
+
+msgid "Một cuộc hẹn ở Cơm Quê"
+msgstr "A date at Cơm Quê"
+
+msgid "Một cuộc hẹn, một bữa cơm ngon."
+msgstr "A little date. A lovely meal."
+
+msgid "Một hương vị thân quen, thêm tròn bữa cơm nhà."
+msgstr "A familiar favourite for a comforting meal."
+
+msgid "Một món ăn vừa miệng, một chỗ ngồi bên nhau. Đôi khi, một bữa ngon chỉ cần vậy."
+msgstr "A dish you love and a seat beside someone special. Sometimes, that is all a lovely meal needs."
+
+msgid "Một món đã hết/ngừng bán. Hãy chọn lại thực đơn."
+msgstr "A dish is unavailable. Please choose again."
+
+msgid "Một món đã ngừng phục vụ. Vui lòng kiểm tra giỏ và chọn lại món."
+msgstr "A dish is no longer available. Please review your basket."
+
+msgid "Mời bạn ghé, cùng người thương ăn một bữa thật ngon."
+msgstr "Come by and share a delicious meal with the people you love."
+
+msgid "Mở ZaloPay Sandbox →"
+msgstr "Open ZaloPay Sandbox →"
+
+msgid "Mở form đặt bàn ↗"
+msgstr "Open the booking form ↗"
+
+msgid "Mở giỏ hàng"
+msgstr "Open basket"
+
+msgid "Mở giỏ món"
+msgstr "Open food basket"
+
+msgid "Mở hồ sơ quản lý đặt bàn"
+msgstr "Open reservation management"
+
+msgid "Mở lại liên kết riêng của lịch đặt để kiểm tra trạng thái. Không thanh toán lại khi chưa rõ giao dịch trước; liên hệ nhà hàng để đối soát."
+msgstr "Reopen your private booking link to check the status. Do not pay again while an earlier transaction is unresolved; contact the restaurant for reconciliation."
+
+msgid "Mở menu"
+msgstr "Open navigation"
+
+msgid "Mở trang quản lý"
+msgstr "Open staff workspace"
+
+msgid "Ngày đến"
+msgstr "Visit date"
+
+msgid "Ngôn ngữ"
+msgstr "Language"
+
+msgid "Ngồi lại cùng nhau"
+msgstr "A little time together"
+
+msgid "Ngừng bán"
+msgstr "Not on sale"
+
+msgid "Nhà hàng có món gì?"
+msgstr "What is on the menu?"
+
+msgid "Nhà hàng có những hạng khách hàng nào?"
+msgstr "What membership tiers are available?"
+
+msgid "Nhà hàng mở cửa mấy giờ?"
+msgstr "What are your opening hours?"
+
+msgid "Nhà hàng sẽ chốt món và giờ phục vụ. Bạn đồng ý bản chốt rồi mới trả cọc. Chỉ được hủy miễn phí trước mốc bếp đã chốt và khi chưa bắt đầu chế biến."
+msgstr "The restaurant will agree on the menu and serving time. Accept the offer before paying the deposit. Free cancellation is available only before the agreed preparation time and before cooking has started."
+
+msgid "Nhà hàng từ chối"
+msgstr "Declined by restaurant"
+
+msgid "Nhà hàng xác minh và phản hồi trước khi thay đổi lịch hoặc tiền. Yêu cầu đổi sau cọc chưa tự thay lịch cũ."
+msgstr "The restaurant will verify and respond before changing your booking or deposit. A change request does not automatically replace the existing reservation."
+
+msgid "Nhà hàng đang cập nhật các combo cho bữa hẹn."
+msgstr "Our kitchen is updating the meal combos."
+
+msgid "Nhà hàng đang thiết lập thanh toán online. Vui lòng liên hệ nhà hàng trước khi trả cọc."
+msgstr "Online payment is being configured. Please contact the restaurant before paying a deposit."
+
+msgid "Nhà hàng đang xem xét khả năng chuẩn bị. Chưa thu cọc, chưa bảo đảm giữ bàn. Theo dõi tại trang này hoặc liên hệ nhà hàng."
+msgstr "The restaurant is reviewing your preparation request. No deposit has been charged and no table is guaranteed yet. Check this page or contact the restaurant."
+
+msgid "Nhà hàng đã nhận được yêu cầu của bạn. Vui lòng lưu lại mã đặt bàn để tra cứu trạng thái."
+msgstr "The restaurant has received your request. Save your booking code to check its status."
+
+msgid "Nhà hàng:"
+msgstr "Restaurant:"
+
+msgid "Nhân viên sẽ xác nhận trước khi món được gửi bếp."
+msgstr "Staff will confirm your order before it is sent to the kitchen."
+
+msgid "Nhân viên đã nhận bàn. Đang mở chức năng gọi món..."
+msgstr "You are checked in. Opening the ordering menu..."
+
+msgid "Nhân viên đã từ chối:"
+msgstr "Declined by staff:"
+
+msgid "Nhóm món"
+msgstr "Category"
+
+msgid "Nhóm món này đang được cập nhật. Bạn thử chọn nhóm khác nhé."
+msgstr "This category is being updated. Please try another."
+
+msgid "Nhận bàn qua QR"
+msgstr "QR check-in"
+
+msgid "Nhập cả mã đặt bàn và số điện thoại đã dùng khi đặt để xem thông tin."
+msgstr "Enter your booking code and the phone number used to make the reservation."
+
+msgid "Nhập số điện thoại Việt Nam gồm 10–11 chữ số, bắt đầu bằng 0 hoặc dùng mã +84."
+msgstr "Enter a Vietnamese phone number with 10–11 digits, starting with 0 or the +84 country code."
+
+msgid "Nhập tên món…"
+msgstr "Enter a dish name…"
+
+msgid "Nhập yêu cầu và lý do từ 1 đến 1000 ký tự."
+msgstr "Enter your request and reason using 1 to 1,000 characters."
+
+msgid "Nước ngọt Coca"
+msgstr "Coca-Cola"
+
+msgid "Nếu mất liên kết hoặc đổi thiết bị, liên hệ nhà hàng để xác minh và cấp lại."
+msgstr "If you lose the link or change devices, contact the restaurant to verify your identity and recover access."
+
+msgid "Nếu đặt món trước, bạn muốn nhà hàng chuẩn bị thế nào?"
+msgstr "If you preorder, when would you like the food prepared?"
+
+msgid "Nội dung / lý do"
+msgstr "Your request / reason"
+
+msgid "Nội dung nhà hàng chốt với khách"
+msgstr "Agreed details for the guest"
+
+msgid "Phiên bảo mật đã đổi. Vui lòng tải lại trang."
+msgstr "Your security session has changed. Please reload the page."
+
+msgid "Phiên gọi món đã hết hạn. Hãy tải lại mã QR rồi gửi lại."
+msgstr "Your ordering session has expired. Scan the QR code again and resubmit."
+
+msgid "Phiếu không còn ở luồng chuẩn bị trước; kiểm tra đơn đang phục vụ."
+msgstr "This ticket is no longer in advance preparation. Check the active order."
+
+msgid "Phần"
+msgstr "Serving"
+
+msgid "Phở bò đặc biệt"
+msgstr "Special Beef Pho"
+
+msgid "QR bàn"
+msgstr "Table QR"
+
+msgid "Quay lại menu"
+msgstr "Back to the menu"
+
+msgid "Quay lại menu gọi món"
+msgstr "Back to the ordering menu"
+
+msgid "Rau củ luộc kho quẹt"
+msgstr "Boiled Vegetables with Savoury Dip"
+
+msgid "Rau muống xào tỏi"
+msgstr "Garlic Stir-Fried Morning Glory"
+
+msgid "SL"
+msgstr "Qty"
+
+msgid "Sau hạn, quản lý xử lý hoàn theo chính sách đã đồng ý. Cọc được trừ một lần vào hóa đơn; tiền dư được đối soát để hoàn."
+msgstr "After the deadline, refunds are reviewed under the agreed policy. Your deposit is deducted from the bill once; any remaining balance is reconciled for refund."
+
+msgid "Sau khi gửi, bạn sẽ nhận liên kết riêng để theo dõi và trả cọc giữ bàn."
+msgstr "After submitting, you will receive a private link to track your reservation and pay the deposit."
+
+msgid "Sum vầy bốn người"
+msgstr "Family Gathering for Four"
+
+msgid "Sẵn sàng"
+msgstr "Ready"
+
+msgid "Sẵn sàng phục vụ"
+msgstr "Ready to serve"
+
+msgid "Sẵn sàng theo cam kết"
+msgstr "Agreed ready time"
+
+msgid "Số dư cọc"
+msgstr "Deposit balance"
+
+msgid "Số dư cọc thay đổi. Cần đối soát giao dịch thanh toán cuối bữa."
+msgstr "The deposit balance has changed. Reconcile the final payment."
+
+msgid "Số khách"
+msgstr "Party size"
+
+msgid "Số lượng"
+msgstr "Quantity"
+
+msgid "Số lượng phải từ 0 đến 100."
+msgstr "Quantity must be between 0 and 100."
+
+msgid "Số lượng phải từ 1 đến 100."
+msgstr "Quantity must be between 1 and 100."
+
+msgid "Số lượng tối đa 100."
+msgstr "The maximum quantity is 100."
+
+msgid "Số người cùng bàn"
+msgstr "Your party size"
+
+msgid "Số tiền phải là số nguyên đồng hợp lệ."
+msgstr "Enter a valid whole-VND amount."
+
+msgid "Số tiền:"
+msgstr "Amount:"
+
+msgid "Số điện thoại"
+msgstr "Phone number"
+
+msgid "Số điện thoại khi đặt"
+msgstr "Booking phone number"
+
+msgid "Số điện thoại khách hàng"
+msgstr "Guest phone number"
+
+msgid "Số điện thoại không hợp lệ."
+msgstr "Invalid phone number."
+
+msgid "THÊM MÓN CHO CUỘC HẸN"
+msgstr "SOMETHING DELICIOUS FOR YOUR VISIT"
+
+msgid "THỰC ĐƠN"
+msgstr "MENU"
+
+msgid "THỰC ĐƠN CƠM QUÊ"
+msgstr "THE CƠM QUÊ MENU"
+
+msgid "TRỌN VỊ CHO CẢ BÀN"
+msgstr "SOMETHING FOR EVERYONE AT THE TABLE"
+
+msgid "Thanh toán cọc qua VNPAY"
+msgstr "Pay the deposit with VNPAY"
+
+msgid "Thao tác giỏ hàng không hợp lệ."
+msgstr "Invalid basket action."
+
+msgid "Thao tác không hợp lệ."
+msgstr "Invalid action."
+
+msgid "Theo dõi hoàn tiền"
+msgstr "Refund tracking"
+
+msgid "Theo dõi lịch đặt"
+msgstr "Track your reservation"
+
+msgid "Theo dõi món và yêu cầu phục vụ →"
+msgstr "Track food and service requests →"
+
+msgid "Theo dõi tại bàn"
+msgstr "Your table updates"
+
+msgid "Theo dõi yêu cầu"
+msgstr "Track your request"
+
+msgid "Thành tiền"
+msgstr "Amount"
+
+msgid "Thêm"
+msgstr "Add"
+
+msgid "Thêm "
+msgstr "Add "
+
+msgid "Thêm chén"
+msgstr "Extra bowls"
+
+msgid "Thêm combo"
+msgstr "Add combo"
+
+msgid "Thêm combo vào giỏ"
+msgstr "Add combo to basket"
+
+msgid "Thêm món bạn thích vào giỏ. Nhà hàng sẽ chế biến khi bạn đến."
+msgstr "Add your favourites to the basket. The restaurant will prepare them when you arrive."
+
+msgid "Thêm món lẻ hoặc một combo cho bữa hẹn nhé."
+msgstr "Add individual dishes or a meal combo for your visit."
+
+msgid "Thêm một chút gắn kết"
+msgstr "Make a little more time together"
+
+msgid "Thêm một người."
+msgstr "One more person."
+
+msgid "Thêm một niềm vui."
+msgstr "A little more joy."
+
+msgid "Thêm một phần"
+msgstr "Add one serving"
+
+msgid "Thêm nước"
+msgstr "More water"
+
+msgid "Thêm vào giỏ"
+msgstr "Add to basket"
+
+msgid "Thêm đá"
+msgstr "Extra ice"
+
+msgid "Thông tin cuộc hẹn"
+msgstr "Your visit details"
+
+msgid "Thông tin trong tầm tay"
+msgstr "Your details at a glance"
+
+msgid "Thông tin đang được lưu nháp. Chưa gửi yêu cầu đặt bàn hoặc thu cọc."
+msgstr "Your details are saved as a draft. No reservation has been submitted and no deposit charged."
+
+msgid "Thông tin đặt bàn"
+msgstr "Booking details"
+
+msgid "Thông tin đặt bàn cần được kiểm tra lại."
+msgstr "Please review your booking details."
+
+msgid "Thất bại"
+msgstr "Failed"
+
+msgid "Thật nhiều niềm vui."
+msgstr "So much to enjoy."
+
+msgid "Thời gian"
+msgstr "Time"
+
+msgid "Thời gian giữ chỗ còn dưới 5 phút. ZaloPay cần tối thiểu 5 phút để mở giao dịch mới. Vui lòng chọn lịch hẹn khác hoặc liên hệ nhà hàng."
+msgstr "Less than 5 minutes remain on your table hold. ZaloPay needs at least 5 minutes for a new transaction. Choose another arrival time or contact the restaurant."
+
+msgid "Thời gian đặt bàn phải có múi giờ."
+msgstr "The booking time must include a timezone."
+
+msgid "Thời lượng"
+msgstr "Visit duration"
+
+msgid "Thời lượng dự kiến (phút)"
+msgstr "Expected duration (minutes)"
+
+msgid "Thời lượng mặc định (phút)"
+msgstr "Default duration (minutes)"
+
+msgid "Thời điểm chuẩn bị/sẵn sàng chưa hợp lệ."
+msgstr "The preparation or ready time is invalid."
+
+msgid "Thử một từ khóa khác hoặc xem toàn bộ thực đơn."
+msgstr "Try another search or browse the full menu."
+
+msgid "Thử nhập tên món khác hoặc xóa nội dung tìm kiếm."
+msgstr "Try another dish name or clear your search."
+
+msgid "Thực đơn"
+msgstr "Menu"
+
+msgid "Thực đơn ·"
+msgstr "Menu ·"
+
+msgid "Thực đơn đang được cập nhật. Bạn có thể quay lại để chỉ đặt bàn."
+msgstr "The menu is being updated. You can go back and book a table without food."
+
+msgid "Tin nhắn được gửi tới"
+msgstr "Messages are sent to"
+
+msgid "Tiếp tục"
+msgstr "Continue"
+
+msgid "Tiếp tục giao dịch ZaloPay →"
+msgstr "Continue ZaloPay payment →"
+
+msgid "Tiếp tục đặt bàn"
+msgstr "Continue to booking"
+
+msgid "Tiết kiệm"
+msgstr "Save"
+
+msgid "Tiền món"
+msgstr "Food total"
+
+msgid "Tiền món chưa bao gồm tiền cọc giữ bàn. Giá được kiểm tra lại khi tiếp nhận."
+msgstr "Food prices exclude the table deposit. Prices are rechecked at check-in."
+
+msgid "Tra cứu"
+msgstr "Look up"
+
+msgid "Tra cứu lịch đặt"
+msgstr "Find your reservation"
+
+msgid "Tra cứu đặt bàn"
+msgstr "Find your reservation"
+
+msgid "Tra cứu đặt bàn · CƠM QUÊ"
+msgstr "Find your reservation · CƠM QUÊ"
+
+msgid "Tra cứu đặt bàn ↗"
+msgstr "Find your reservation ↗"
+
+msgid "Trang chủ"
+msgstr "Home"
+
+msgid "Trà chanh"
+msgstr "Lemon Tea"
+
+msgid "Trái cây theo mùa"
+msgstr "Seasonal Fruit"
+
+msgid "Tráng miệng"
+msgstr "Desserts"
+
+msgid "Trò chuyện mới"
+msgstr "New conversation"
+
+msgid "Trò chuyện với trợ lý CƠM QUÊ"
+msgstr "Chat with the CƠM QUÊ assistant"
+
+msgid "Tròn vị ngon."
+msgstr "A sweet ending."
+
+msgid "Trạng thái"
+msgstr "Status"
+
+msgid "Trạng thái gọi món"
+msgstr "Food order status"
+
+msgid "Trạng thái gọi món · CƠM QUÊ"
+msgstr "Food order status · CƠM QUÊ"
+
+msgid "Trạng thái hoàn tiền đã thay đổi hoặc thao tác không hợp lệ."
+msgstr "The refund status has changed or the action is invalid."
+
+msgid "Trạng thái sẽ tự cập nhật khi nhân viên xử lý yêu cầu."
+msgstr "Updates will appear automatically as staff process your request."
+
+msgid "Trạng thái vừa thay đổi."
+msgstr "The status has changed."
+
+msgid "Trạng thái đặt bàn"
+msgstr "Reservation status"
+
+msgid "Trạng thái đặt bàn · CƠM QUÊ"
+msgstr "Reservation status · CƠM QUÊ"
+
+msgid "Trạng thái:"
+msgstr "Status:"
+
+msgid "Trọn một"
+msgstr "A little taste of"
+
+msgid "Trọn vẹn"
+msgstr "A taste of"
+
+msgid "Trợ lý"
+msgstr "Assistant"
+
+msgid "Trợ lý CƠM QUÊ"
+msgstr "CƠM QUÊ assistant"
+
+msgid "Trợ lý đang chờ cấu hình API. Bạn vẫn có thể xem thực đơn và đặt bàn."
+msgstr "The assistant is not configured yet. You can still browse the menu and book a table."
+
+msgid "Trợ lý đang trả lời…"
+msgstr "The assistant is replying…"
+
+msgid "Trứng chiên thịt"
+msgstr "Minced Meat Omelette"
+
+msgid "Tên khách hoặc số người không hợp lệ."
+msgstr "The guest name or party size is invalid."
+
+msgid "Tìm"
+msgstr "Search"
+
+msgid "Tìm món"
+msgstr "Search dishes"
+
+msgid "Tìm món bạn thích..."
+msgstr "Find your favourite dish..."
+
+msgid "Tìm món yêu thích"
+msgstr "Find your favourites"
+
+msgid "Tìm món ăn"
+msgstr "Search dishes"
+
+msgid "Tìm một hương vị thân quen"
+msgstr "Find a familiar favourite"
+
+msgid "Tính từ giờ hẹn. Nhập 0 nếu muốn giải phóng bàn ngay khi quá giờ hẹn."
+msgstr "Counted from arrival time. Enter 0 to release the table as soon as the booking time passes."
+
+msgid "Tô"
+msgstr "Bowl"
+
+msgid "Tôi muốn đặt bàn."
+msgstr "I would like to book a table."
+
+msgid "Tôi đã đọc tiền cọc, thời hạn thanh toán và điều kiện đổi/hủy."
+msgstr "I have read the deposit, payment deadline and change/cancellation terms."
+
+msgid "Tôi đồng ý món, giá, giờ, khoản cọc và điều kiện đổi/hủy ở trên."
+msgstr "I agree to the dishes, prices, times, deposit and change/cancellation terms above."
+
+msgid "Tôm rang me"
+msgstr "Tamarind Prawns"
+
+msgid "Tăng"
+msgstr "Increase"
+
+msgid "Tạm hết"
+msgstr "Unavailable"
+
+msgid "Tạm hết món"
+msgstr "Sold out"
+
+msgid "Tạm hết thành phần"
+msgstr "A component is unavailable"
+
+msgid "Tạm tính"
+msgstr "Subtotal"
+
+msgid "Tạm tính tiền món"
+msgstr "Food subtotal"
+
+msgid "Tạo yêu cầu mới"
+msgstr "Create a new request"
+
+msgid "Tải lại để xem kết quả mới"
+msgstr "Reload for the latest update"
+
+msgid "Tất cả"
+msgstr "All"
+
+msgid "Tất cả bàn"
+msgstr "All tables"
+
+msgid "Tất cả khu vực"
+msgstr "All areas"
+
+msgid "Tất cả món"
+msgstr "All dishes"
+
+msgid "Tất cả nhóm món"
+msgstr "All categories"
+
+msgid "Tối đa"
+msgstr "Up to"
+
+msgid "Tối đa 168 giờ."
+msgstr "The maximum is 168 hours."
+
+msgid "TỪ GIAN BẾP CƠM QUÊ"
+msgstr "FROM THE CƠM QUÊ KITCHEN"
+
+msgid "Từ chối"
+msgstr "Declined"
+
+msgid "Tự động ghi nhận không đến sau (phút)"
+msgstr "Automatically mark no-show after (minutes)"
+
+msgid "Vui lòng bỏ món/combo không còn phục vụ trước khi đặt bàn."
+msgstr "Remove unavailable dishes or combos before booking."
+
+msgid "Vui lòng chọn ít nhất một món để nhà hàng chuẩn bị theo giờ hẹn."
+msgstr "Select at least one dish for preparation at the agreed time."
+
+msgid "Vui lòng chọn ít nhất một món để đặt món trước."
+msgstr "Select at least one dish to preorder."
+
+msgid "Vui lòng kiểm tra lại các món trong giỏ."
+msgstr "Please review the dishes in your basket."
+
+msgid "Vui lòng liên hệ nhân viên."
+msgstr "Please contact a member of staff."
+
+msgid "Vui lòng nhập họ tên."
+msgstr "Please enter your full name."
+
+msgid "Vui lòng nhập lại thông tin đặt bàn trước khi chọn món."
+msgstr "Please enter your booking details before choosing dishes."
+
+msgid "Vui lòng thử lại sau ít phút."
+msgstr "Please try again in a few minutes."
+
+msgid "Ví dụ: cần ghế trẻ em hoặc bàn yên tĩnh"
+msgstr "For example: a high chair or a quiet table"
+
+msgid "Ví dụ: khách đổi ý và rời nhà hàng"
+msgstr "For example: the guest changed their mind and left"
+
+msgid "Ví dụ: không hành"
+msgstr "For example: no onions"
+
+msgid "Vẹn niềm vui."
+msgstr "A little more joy."
+
+msgid "Về trang chủ"
+msgstr "Back to home"
+
+msgid "VỊ NHÀ · TÌNH QUÊ"
+msgstr "A TASTE OF HOME"
+
+msgid "Vị nhà · Tình quê"
+msgstr "A taste of home"
+
+msgid "Xem chi tiết / thanh toán / yêu cầu đổi hủy"
+msgstr "View details / pay / request changes"
+
+msgid "Xem thêm món ngon ↓"
+msgstr "Discover more dishes ↓"
+
+msgid "Xem thêm món ↗"
+msgstr "More dishes ↗"
+
+msgid "Xem thực đơn"
+msgstr "Explore the menu"
+
+msgid "Xem thực đơn chung"
+msgstr "Browse the menu"
+
+msgid "Xem thực đơn đầy đủ ↗"
+msgstr "See the full menu ↗"
+
+msgid "Xem thực đơn ↗"
+msgstr "Explore the menu ↗"
+
+msgid "Xem tất cả món"
+msgstr "View all dishes"
+
+msgid "Xác nhận"
+msgstr "Confirm"
+
+msgid "Xác nhận đặt bàn · CƠM QUÊ"
+msgstr "Confirm reservation · CƠM QUÊ"
+
+msgid "Xóa"
+msgstr "Remove"
+
+msgid "Xóa giỏ món"
+msgstr "Clear basket"
+
+msgid "Xóa khỏi giỏ"
+msgstr "Remove from basket"
+
+msgid "Yêu cầu"
+msgstr "Request"
+
+msgid "Yêu cầu chuẩn bị theo giờ chưa phải cam kết giữ bàn cho đến khi nhà hàng chốt và nhận cọc."
+msgstr "An advance preparation request does not guarantee a table until the restaurant agrees on the offer and receives your deposit."
+
+msgid "Yêu cầu của bạn sẽ ở trạng thái chờ xác nhận. Nhà hàng sẽ giữ chỗ phù hợp và phản hồi sớm."
+msgstr "Your request will await confirmation. The restaurant will arrange a suitable table and respond shortly."
+
+msgid "Yêu cầu giỏ hàng quá dài."
+msgstr "The basket request is too large."
+
+msgid "Yêu cầu hủy"
+msgstr "Cancellation request"
+
+msgid "Yêu cầu không còn trong thời gian thanh toán cọc."
+msgstr "The deposit payment window has ended."
+
+msgid "Yêu cầu món sẵn phải đặt trước ít nhất 60 phút và chờ nhà hàng xác nhận."
+msgstr "Advance preparation requests must be made at least 60 minutes ahead and confirmed by the restaurant."
+
+msgid "Yêu cầu nhận bàn"
+msgstr "Request check-in"
+
+msgid "Yêu cầu phục vụ"
+msgstr "Service requests"
+
+msgid "Yêu cầu thay đổi"
+msgstr "Change request"
+
+msgid "Yêu cầu trước có thể đã tới hệ thống. Bấm “Kiểm tra / gửi lại” để xác nhận, hệ thống sẽ không tạo trùng."
+msgstr "Your previous request may have reached the system. Use “Check / resubmit” to confirm it; the system will not create a duplicate."
+
+msgid "Yêu cầu trước đã hết hạn. Bạn có thể gửi lại."
+msgstr "The previous request has expired. You can submit it again."
+
+msgid "Yêu cầu đã hết hạn. Bạn có thể gửi lại."
+msgstr "Your request has expired. You can submit it again."
+
+msgid "Yêu cầu đã thay đổi. Hãy tải lại trang."
+msgstr "Your request has changed. Please reload the page."
+
+msgid "Yêu cầu đặt bàn này đã kết thúc hoặc bị hủy."
+msgstr "This reservation has ended or been cancelled."
+
+msgid "ZALOPAY · CHỈ MÔI TRƯỜNG SANDBOX"
+msgstr "ZALOPAY · SANDBOX ONLY"
+
+msgid "ZaloPay Sandbox (chưa cấu hình)"
+msgstr "ZaloPay Sandbox (not configured)"
+
+msgid "ZaloPay: không đủ thời gian thanh toán"
+msgstr "ZaloPay: not enough time to pay"
+
+msgid "bữa nhà."
+msgstr "home."
+
+msgid "dự kiến"
+msgstr "estimated"
+
+msgid "giờ"
+msgstr "hours"
+
+msgid "giờ. Nhà hàng chỉ chế biến khi bạn đến."
+msgstr "hours. The restaurant prepares the food when you arrive."
+
+msgid "gọi một tiếng là"
+msgstr "feel just like"
+
+msgid "khách"
+msgstr "guests"
+
+msgid "khách ·"
+msgstr "guests ·"
+
+msgid "khách · yêu cầu tự hết hạn sau 15 phút."
+msgstr "guests · this request expires after 15 minutes."
+
+msgid "khỏi giỏ"
+msgstr "from basket"
+
+msgid "mình cùng về ăn cơm nhé."
+msgstr "and join us for a lovely meal."
+
+msgid "món"
+msgstr "items"
+
+msgid "món trong thực đơn"
+msgstr "dishes on the menu"
+
+msgid "người"
+msgstr "people"
+
+msgid "người · Trọn bữa"
+msgstr "people · A complete meal"
+
+msgid "nhà cung cấp AI"
+msgstr "the AI provider"
+
+msgid "nhà hàng"
+msgstr "the restaurant"
+
+msgid "nhà."
+msgstr "home."
+
+msgid "những điều nhỏ."
+msgstr "every little detail."
+
+msgid "phút"
+msgstr "minutes"
+
+msgid "phút kể từ khi giữ chỗ."
+msgstr "minutes after the hold begins."
+
+msgid "thêm gắn kết."
+msgstr "even better company."
+
+msgid "thêm đầy câu chuyện."
+msgstr "and stories to share."
+
+msgid "trước giờ đến"
+msgstr "before your arrival time by"
+
+msgid "trước mốc chuẩn bị đã thông báo và chưa bắt đầu làm"
+msgstr "before the agreed preparation time and before cooking begins"
+
+msgid "vào giỏ"
+msgstr "to basket"
+
+msgid "vị nhà."
+msgstr "home."
+
+msgid "· CƠM QUÊ"
+msgstr "· CƠM QUÊ"
+
+msgid "· KIỂM TRA CUỘC HẸN"
+msgstr "· REVIEW YOUR VISIT"
+
+msgid "· Một bữa cơm, vạn điều gắn kết"
+msgstr "· Good food, good company"
+
+msgid "· Nhà hàng Việt"
+msgstr "· Vietnamese restaurant"
+
+msgid "· Đặt bàn CƠM QUÊ"
+msgstr "· CƠM QUÊ reservations"
+
+msgid "Ít cay, không hành…"
+msgstr "Less spicy, no onions…"
+
+msgid "Đang chế biến"
+msgstr "Preparing"
+
+msgid "Đang chờ xác minh. Việc chuyển về trang này chưa có nghĩa đã thanh toán. Hệ thống nhận callback hoặc truy vấn ZaloPay để xác nhận."
+msgstr "Awaiting verification. Returning to this page does not confirm payment. The system will verify a callback or query ZaloPay."
+
+msgid "Đang cập nhật"
+msgstr "Updating"
+
+msgid "Đang gửi yêu cầu tới nhân viên..."
+msgstr "Sending your request to staff..."
+
+msgid "Đang gửi..."
+msgstr "Sending..."
+
+msgid "Đang gửi…"
+msgstr "Sending…"
+
+msgid "Đang mở cuộc trò chuyện…"
+msgstr "Opening your conversation…"
+
+msgid "Đang phục vụ"
+msgstr "In service"
+
+msgid "Đang tìm gợi ý phù hợp…"
+msgstr "Finding suggestions for your meal…"
+
+msgid "Điều hướng chính"
+msgstr "Main navigation"
+
+msgid "Điều kiện đặt bàn"
+msgstr "Booking terms"
+
+msgid "Điểm theo tỷ lệ số khách / số chỗ. Điểm cao hơn nghĩa là bàn vừa vặn hơn với nhóm của bạn."
+msgstr "The score compares party size with seat capacity. A higher score means a closer fit for your group."
+
+msgid "Đây là gợi ý tại lúc kiểm tra. Nhà hàng sẽ xếp lại bàn phù hợp khi bạn gửi yêu cầu; chưa giữ chỗ ở bước này."
+msgstr "These suggestions reflect current availability. A suitable table will be rechecked when you submit your request; no table is held at this step."
+
+msgid "Đã báo"
+msgstr "Notified"
+
+msgid "Đã báo nhân viên"
+msgstr "Staff notified"
+
+msgid "Đã duyệt, chờ hoàn"
+msgstr "Approved, awaiting refund"
+
+msgid "Đã ghi nhận · chờ khách đến"
+msgstr "Saved · waiting for your arrival"
+
+msgid "Đã gửi yêu cầu"
+msgstr "Request submitted"
+
+msgid "Đã gửi yêu cầu. Nhà hàng cần xác minh trước khi thay đổi lịch/tiền cọc."
+msgstr "Request sent. The restaurant will verify it before changing your reservation or deposit."
+
+msgid "Đã hoàn"
+msgstr "Refunded"
+
+msgid "Đã hoàn / đã khấu trừ"
+msgstr "Refunded / applied to bill"
+
+msgid "Đã hết thời gian giữ chỗ/bản chốt. Nếu tiền đã chuyển nhưng chưa được xác nhận, nhà hàng cần đối soát; không tự cấp lại bàn."
+msgstr "The table hold or offer has expired. If money was transferred but not confirmed, the restaurant must reconcile it; a table is not reassigned automatically."
+
+msgid "Đã hủy"
+msgstr "Cancelled"
+
+msgid "Đã lên lịch"
+msgstr "Scheduled"
+
+msgid "Đã lưu chính sách; các yêu cầu cũ giữ nguyên chính sách đã chốt."
+msgstr "Policy saved. Existing reservations keep their agreed policy."
+
+msgid "Đã lưu xử lý yêu cầu."
+msgstr "Request updated."
+
+msgid "Đã nhận"
+msgstr "Received"
+
+msgid "Đã nhận cọc và xác nhận giữ chỗ. Bàn chưa mở phục vụ cho đến khi bạn đến và nhân viên nhận khách."
+msgstr "Your deposit is received and your reservation confirmed. Service begins when you arrive and staff check you in."
+
+msgid "Đã nhận tiền Sandbox, nhà hàng cần đối soát trước khi xác nhận đơn."
+msgstr "Sandbox payment received. The restaurant must reconcile it before confirming the order."
+
+msgid "Đã nhận tiền, cần đối soát"
+msgstr "Payment received, awaiting reconciliation"
+
+msgid "Đã nhận, cần đối soát"
+msgstr "Received, awaiting reconciliation"
+
+msgid "Đã thanh toán"
+msgstr "Paid"
+
+msgid "Đã thêm vào giỏ món."
+msgstr "Added to your basket."
+
+msgid "Đã xác nhận"
+msgstr "Confirmed"
+
+msgid "Đã xử lý"
+msgstr "Resolved"
+
+msgid "Đã đạt giới hạn lượt. Bấm Trò chuyện mới để tiếp tục."
+msgstr "The conversation limit has been reached. Start a new conversation to continue."
+
+msgid "Đóng giỏ hàng"
+msgstr "Close basket"
+
+msgid "Đóng giỏ món"
+msgstr "Close food basket"
+
+msgid "Đóng menu"
+msgstr "Close navigation"
+
+msgid "Đóng trò chuyện"
+msgstr "Close chat"
+
+msgid "Đôi khi, điều mình cần chỉ là một bữa cơm ngon và người thương ngồi cạnh. Cơm Quê gom những món Việt thân quen vào cùng một thực đơn, để mỗi cuộc hẹn đều có một chút ấm áp của bữa cơm nhà."
+msgstr "Sometimes all we need is a lovely meal and someone we love beside us. Cơm Quê brings familiar Vietnamese favourites together, so every visit feels a little like coming home."
+
+msgid "Đăng nhập"
+msgstr "Sign in"
+
+msgid "Đĩa"
+msgstr "Plate"
+
+msgid "Đơn"
+msgstr "Order"
+
+msgid "Đơn giá"
+msgstr "Unit price"
+
+msgid "Đường dẫn"
+msgstr "Breadcrumb"
+
+msgid "Được hủy miễn phí trước giờ hẹn"
+msgstr "Free cancellation is available before arrival by"
+
+msgid "Đặt bàn"
+msgstr "Book a table"
+
+msgid "Đặt bàn cùng người thương"
+msgstr "Book a table with someone special"
+
+msgid "Đặt bàn của bạn"
+msgstr "Book your table"
+
+msgid "Đặt bàn ngay"
+msgstr "Book a table"
+
+msgid "Đặt bàn ngay ↗"
+msgstr "Book a table ↗"
+
+msgid "Đặt bàn thành công"
+msgstr "Reservation submitted"
+
+msgid "Đặt bàn thành công · CƠM QUÊ"
+msgstr "Reservation submitted · CƠM QUÊ"
+
+msgid "Đặt bàn thưởng thức"
+msgstr "Book a table to enjoy"
+
+msgid "Đặt bàn thật dễ dàng"
+msgstr "Booking made simple"
+
+msgid "Đặt bàn trực tuyến"
+msgstr "Online reservations"
+
+msgid "Đặt bàn · CƠM QUÊ"
+msgstr "Book a table · CƠM QUÊ"
+
+msgid "Đặt món trước ·"
+msgstr "Preorder ·"
+
+msgid "Đặt món trước?"
+msgstr "Preorder food?"
+
+msgid "Đặt trước cho bữa hẹn"
+msgstr "Preorder for your visit"
+
+msgid "Đến mới chế biến"
+msgstr "Prepare on arrival"
+
+msgid "Đến mới chế biến: nhà hàng gửi bếp khi bạn đến. Chuẩn bị theo giờ: nhà hàng sẽ chốt món và giờ phục vụ với bạn trước khi nhận cọc."
+msgstr "Prepare on arrival: your dishes are sent to the kitchen when you arrive. Advance preparation: the restaurant agrees on the menu and serving time before requesting a deposit."
+
+msgid "ĐỂ DÀNH MỘT CHỖ NGỒI"
+msgstr "SAVE A SEAT AT THE TABLE"
+
+msgid "ĐỂ DÀNH THỜI GIAN CHO NHAU"
+msgstr "MAKE A LITTLE TIME TOGETHER"
+
+msgid "Để dành một chỗ ngồi cho người thương."
+msgstr "Save a seat for someone special."
+
+msgid "Để xem món, giờ hẹn và tiền cọc, hãy tra cứu trên trình duyệt đã dùng đặt bàn hoặc mở liên kết riêng đã nhận sau khi đặt. Mã và số điện thoại chỉ dùng kiểm tra trạng thái."
+msgstr "To see dishes, arrival time and deposits, use the browser that made the booking or open your private link. A booking code and phone number alone reveal only the general status."
+
+msgid "Đồ uống"
+msgstr "Drinks"
+
+msgid "Đồng ý bản chốt & giữ chỗ"
+msgstr "Accept the offer & hold the table"
+
+msgid "đ"
+msgstr "₫"
+
+msgid "đ /"
+msgstr "₫ /"
+
+msgid "đ / combo"
+msgstr "₫ / combo"
+
+msgid "đ ·"
+msgstr "₫ ·"
+
+msgid "đang chờ xác nhận. Trang sẽ tự mở gọi món sau khi nhân viên nhận bàn."
+msgstr "is awaiting confirmation. Ordering will open automatically after staff check you in."
+
+msgid "đang phục vụ."
+msgstr "in service."
+
+msgid "đã chốt"
+msgstr "agreed"
+
+msgid "để Cơm Quê đón bạn chu đáo."
+msgstr "and let Cơm Quê welcome you."
+
+msgid "để xử lý. Không nhập thông tin nhạy cảm."
+msgstr "for processing. Do not enter sensitive information."
+
+msgid "Ảnh món đang được cập nhật"
+msgstr "Dish photo coming soon"
+
+msgid "Ẩm thực Việt, kể bằng sự tử tế."
+msgstr "Vietnamese food, made with care."
+
+msgid "← Quay lại thực đơn"
+msgstr "← Back to the menu"
+
+msgid "← Sửa thông tin đặt bàn"
+msgstr "← Edit booking details"
+
+msgid "← Trở về hóa đơn"
+msgstr "← Back to the bill"
+
+msgid "← Trở về lịch đặt bàn"
+msgstr "← Back to your reservation"
+
+msgid "← Về trang chủ"
+msgstr "← Back to home"
+
+msgid "← Đổi lựa chọn đặt món trước"
+msgstr "← Change preorder preference"
+
+msgid "＋ Thêm món"
+msgstr "＋ Add dish"
+
+msgid "%(dish)s: tổng số phần trong món lẻ và combo không được vượt 100."
+msgstr "%(dish)s: the combined quantity across dishes and combos cannot exceed 100."
+
+msgid "Chưa gửi Bếp"
+msgstr "Not sent to kitchen"
+
+msgid "Đang làm"
+msgstr "Preparing"
+
+msgid "Đã xong"
+msgstr "Ready"
+
+msgid "Đã phục vụ"
+msgstr "Served"
+
+msgid "Chờ nhân viên xác nhận"
+msgstr "Awaiting staff confirmation"
+
+msgid "Đã từ chối"
+msgstr "Declined"
+
+msgid "Đã nhận bàn"
+msgstr "Checked in"
+
+msgid "Đã hết hạn"
+msgstr "Expired"
+
+msgid "Đang chờ nhân viên"
+msgstr "Waiting for staff"
+
+msgid "Trợ lý đang chờ cấu hình API. Bạn vẫn có thể xem thực đơn hoặc đặt bàn."
+msgstr "The assistant is not configured yet. You can still browse the menu or book a table."
+
+msgid "Trợ lý đang chờ cấu hình Groq API. Bạn vẫn có thể xem thực đơn hoặc đặt bàn."
+msgstr "The assistant is not configured yet. You can still browse the menu or book a table."
+
+msgid "Trợ lý đang chờ cấu hình Gemini API. Bạn vẫn có thể xem thực đơn hoặc đặt bàn."
+msgstr "The assistant is not configured yet. You can still browse the menu or book a table."
+
+msgid "Cuộc trò chuyện đã đạt giới hạn. Hãy bấm Trò chuyện mới để tiếp tục."
+msgstr "The conversation limit has been reached. Start a new conversation to continue."
+
+msgid "Nội dung trao đổi đã dài. Vui lòng bắt đầu cuộc trò chuyện mới."
+msgstr "This conversation is getting long. Please start a new one."
+
+msgid "Trợ lý tạm chưa sẵn sàng. Vui lòng xem thực đơn hoặc mở form đặt bàn."
+msgstr "The assistant is temporarily unavailable. Please browse the menu or open the booking form."
+
+msgid "Kết quả thanh toán"
+msgstr "Payment result"
+
+msgid "ĐẶT CỌC BÀN · ZALOPAY"
+msgstr "TABLE DEPOSIT · ZALOPAY"
+
+msgid "THANH TOÁN HÓA ĐƠN · ZALOPAY"
+msgstr "BILL PAYMENT · ZALOPAY"
+
+msgid "Theo dõi thanh toán cọc cho lịch hẹn của bạn."
+msgstr "Track the deposit payment for your reservation."
+
+msgid "Hoàn tất thanh toán và tiếp tục quản lý bàn, hóa đơn."
+msgstr "Complete the payment and return to your tables and bills."
+
+msgid "Số tiền thanh toán"
+msgstr "Payment amount"
+
+msgid "Mã giao dịch"
+msgstr "Transaction reference"
+
+msgid "Giao dịch đang được nhà hàng đối soát. Vui lòng giữ mã giao dịch để kiểm tra."
+msgstr "The restaurant is reconciling this payment. Keep your reference for follow-up."
+
+msgid "Đang cập nhật kết quả thanh toán. Vui lòng chờ xác nhận từ hệ thống."
+msgstr "Updating the payment result. Please wait for confirmation."
+
+msgid "Trở về lịch đặt bàn"
+msgstr "Return to reservation"
+
+msgid "Trở về bàn / hóa đơn"
+msgstr "Return to tables / bill"
+
+msgid "Mở trang thanh toán"
+msgstr "Open payment page"
+
+msgid "Giữ mã giao dịch để tra cứu. Hệ thống tự cập nhật kết quả; chỉ thanh toán một lần cho mỗi giao dịch."
+msgstr "Keep your payment reference. The result updates automatically; pay only once per transaction."
+
+msgid "ZaloPay (chưa cấu hình)"
+msgstr "ZaloPay (not configured)"

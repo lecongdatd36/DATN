@@ -1,108 +1,85 @@
-{% extends 'customer/base_customer.html' %}
+{% extends 'customer/base_customer.html' %}{% load i18n customer_language %}
 {% load static menu_money %}
-
-{% block title %}{{ restaurant_public.name }} · Vị nhà, tình quê{% endblock %}
+{% block title %}{{ restaurant_public|public_name }} {% translate "· Một bữa cơm, vạn điều gắn kết" %}{% endblock %}
 {% block body_class %}cq-home-page{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'customer/css/chatbot.css' %}?v=2">
-{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'customer/css/chatbot.css' %}?v=2">{% endblock %}
 {% block extra_js %}
-<script src="{% static 'customer/js/home.js' %}?v=1" defer></script>
-<script src="{% static 'customer/js/chatbot.js' %}?v=2" defer></script>
+<script src="{% static 'customer/js/home.js' %}?v=3" defer></script>
+<script src="{% static 'customer/js/chatbot.js' %}?v=3" defer></script>
 {% endblock %}
-
-
-
 {% block content %}
-<div class="cq-home" data-cq-home>
-    <section class="cq-hero" aria-labelledby="cq-hero-title" aria-roledescription="trình chiếu">
-        <div class="cq-hero-gallery" aria-hidden="true">
-            {% for dish in hero_dishes %}
-            <div class="cq-hero-slide{% if forloop.first %} is-active{% endif %}" data-cq-hero-slide data-caption="{{ dish.name }} · {{ dish.price|dong }}đ">
-                {% include 'customer/includes/dish_photo.html' with dish=dish photo_class='cq-hero-photo' full_size=True eager=forloop.first %}
+<div class="cq-refresh" data-cq-home>
+    {% include 'customer/includes/welcome_banner.html' %}
+
+    <nav class="cq-benefits" aria-label="{% translate "Khám phá Cơm Quê" %}">
+        <a class="cq-benefit" href="{% url 'online_reservations:create' %}"><span>{% include 'customer/includes/ui_icon.html' with icon='calendar' %}</span><span><strong>{% translate "Hẹn một bữa ngon" %}</strong><small>{% translate "Đặt bàn thật dễ dàng" %}</small></span></a>
+        <a class="cq-benefit" href="{% url 'online_reservations:create' %}"><span>{% include 'customer/includes/ui_icon.html' with icon='bowl' %}</span><span><strong>{% translate "Chọn món bạn thích" %}</strong><small>{% translate "Đặt trước cho bữa hẹn" %}</small></span></a>
+        <a class="cq-benefit" href="{% url 'online_reservations:lookup' %}"><span>{% include 'customer/includes/ui_icon.html' with icon='search' %}</span><span><strong>{% translate "Theo dõi lịch đặt" %}</strong><small>{% translate "Thông tin trong tầm tay" %}</small></span></a>
+        <a class="cq-benefit" href="#cau-chuyen"><span>{% include 'customer/includes/ui_icon.html' with icon='people' %}</span><span><strong>{% translate "Ngồi lại cùng nhau" %}</strong><small>{% translate "Thêm một chút gắn kết" %}</small></span></a>
+    </nav>
+
+    <div class="cq-home-columns">
+        <section class="cq-featured" id="thuc-don" aria-labelledby="featured-title">
+            <div class="cq-heading-row">
+                <div><span class="cq-kicker">{% translate "CHÚT GỢI Ý TỪ GIAN BẾP" %}</span><h2 id="featured-title">{% translate "Hôm nay, mình ăn gì?" %}</h2></div>
+                <a class="cq-quiet-link" href="{% url 'customer_portal:menu' %}">{% translate "Xem thực đơn đầy đủ ↗" %}</a>
             </div>
-            {% empty %}<div class="cq-hero-slide is-active">{% include 'customer/includes/dish_photo.html' with photo_class='cq-hero-photo' eager=True %}</div>{% endfor %}
-        </div>
-        <div class="cq-hero-shade"></div>
-        <div class="cq-hero-content">
-            <span class="cq-eyebrow cq-eyebrow-light">BẾP VIỆT THÂN QUEN</span>
-            <h1 id="cq-hero-title">MỘT BỮA CƠM NGON.<br><span>VẠN ĐIỀU GẮN KẾT.</span></h1>
-            <p>Cơm thơm, món Việt, câu chuyện nhà.<br>CƠM QUÊ mời bạn về ăn một bữa thật ngon.</p>
-            <a class="cq-button" href="{% url 'customer_portal:menu' %}">Khám phá thực đơn <span aria-hidden="true">→</span></a>
-        </div>
-        {% if hero_dishes|length > 1 %}
-        <button class="cq-hero-arrow cq-hero-prev" type="button" data-cq-hero-prev aria-label="Xem ảnh món trước">‹</button>
-        <button class="cq-hero-arrow cq-hero-next" type="button" data-cq-hero-next aria-label="Xem ảnh món tiếp theo">›</button>
-        <div class="cq-hero-dots" role="group" aria-label="Chọn ảnh món">
-            {% for dish in hero_dishes %}<button class="{% if forloop.first %}is-active{% endif %}" type="button" data-cq-hero-dot="{{ forloop.counter0 }}" aria-label="Xem ảnh {{ dish.name }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"></button>{% endfor %}
-            <button class="cq-hero-pause" type="button" data-cq-hero-pause aria-label="Tạm dừng chuyển ảnh" aria-pressed="false">Ⅱ</button>
-        </div>
-        {% endif %}
-        {% if primary_dish %}<span class="cq-hero-caption" data-cq-hero-caption>{{ primary_dish.name }} · {{ primary_dish.price|dong }}đ</span>{% endif %}
-        <span class="cq-hero-scroll" aria-hidden="true">NGON NHƯ CƠM NHÀ <span>↓</span></span>
-    </section>
-
-    <section class="cq-discover" aria-labelledby="cq-discover-title">
-        <div class="cq-section-line"><span class="cq-eyebrow">CHÚT GỢI Ý CHO BỮA NGON</span><h2 id="cq-discover-title">Hôm nay, mình ăn gì?</h2><span class="cq-line-flower" aria-hidden="true">✳</span></div>
-        <div class="cq-mosaic">
-            <a class="cq-tile cq-tile-main" href="{% if primary_dish %}{% url 'customer_portal:dish_detail' primary_dish.pk %}{% else %}{% url 'customer_portal:menu' %}{% endif %}">
-                {% include 'customer/includes/dish_photo.html' with dish=primary_dish photo_class='cq-tile-photo' full_size=True %}
-                <span class="cq-tile-shade"></span>
-                <span class="cq-tile-copy"><span class="cq-tile-kicker">ĐẬM ĐÀ VỊ VIỆT</span><strong>MỘT ĐĨA CƠM.<br>ĐẦY VỊ QUÊ.</strong>{% if primary_dish %}<span class="cq-tile-meta">{{ primary_dish.name }} · {{ primary_dish.price|dong }}đ</span>{% else %}<span class="cq-tile-meta">Khám phá những món ăn thân quen</span>{% endif %}<span class="cq-tile-link">Xem món ngon <span aria-hidden="true">↗</span></span></span>
-                <span class="cq-round-stamp" aria-hidden="true">VỊ NHÀ<br><strong>THÂN QUEN</strong></span>
-            </a>
-            <a class="cq-tile cq-tile-dessert" href="{% if dessert_dish %}{% url 'customer_portal:dish_detail' dessert_dish.pk %}{% else %}{% url 'customer_portal:menu' %}{% endif %}">
-                {% include 'customer/includes/dish_photo.html' with dish=dessert_dish photo_class='cq-tile-photo' full_size=True %}
-                <span class="cq-tile-shade"></span><span class="cq-tile-copy"><span class="cq-tile-kicker">THÊM CHÚT NGỌT</span><strong>TRÒN VỊ<br>BỮA NGON.</strong><span class="cq-tile-meta">{% if dessert_dish %}{{ dessert_dish.name }}{% else %}Ghé xem thực đơn{% endif %}</span></span><span class="cq-tile-arrow" aria-hidden="true">↗</span>
-            </a>
-            <a class="cq-tile cq-tile-drink" href="{% if drink_dish %}{% url 'customer_portal:dish_detail' drink_dish.pk %}{% else %}{% url 'customer_portal:menu' %}{% endif %}">
-                {% include 'customer/includes/dish_photo.html' with dish=drink_dish photo_class='cq-tile-photo' full_size=True %}
-                <span class="cq-tile-shade"></span><span class="cq-tile-copy"><span class="cq-tile-kicker">NHẤP MỘT NGỤM</span><strong>CHUYỆN NHÀ<br>THÊM VUI.</strong><span class="cq-tile-meta">{% if drink_dish %}{{ drink_dish.name }}{% else %}Cùng chọn món bạn thích{% endif %}</span></span><span class="cq-tile-arrow" aria-hidden="true">↗</span>
-            </a>
-            <a class="cq-tile cq-tile-gather" href="{% url 'online_reservations:create' %}">
-                {% include 'customer/includes/dish_photo.html' with dish=sharing_dish photo_class='cq-tile-photo' full_size=True %}
-                <span class="cq-tile-shade"></span><span class="cq-tile-copy"><span class="cq-tile-kicker">HẸN NHAU Ở CƠM QUÊ</span><strong>BỮA CƠM SUM VẦY,<br>CHẲNG CẦN DỊP ĐẶC BIỆT.</strong><span class="cq-tile-link">Đặt bàn cho người thương <span aria-hidden="true">→</span></span></span>
-            </a>
-        </div>
-    </section>
-
-    <section class="cq-menu-section" id="thuc-don" aria-labelledby="cq-menu-title">
-        <div class="cq-menu-backdrop" aria-hidden="true">{% include 'customer/includes/dish_photo.html' with dish=sharing_dish photo_class='cq-menu-background' full_size=True %}</div>
-        <div class="cq-menu-heading"><span class="cq-eyebrow cq-eyebrow-light">TỪ GIAN BẾP CƠM QUÊ</span><h2 id="cq-menu-title">Món ngon mỗi ngày</h2><p>Chọn món bạn thích, tìm một hương vị thân quen.</p></div>
-        <div class="cq-menu-layout">
-            <aside class="cq-menu-sidebar" aria-label="Lọc món theo danh mục">
-                <div class="cq-sidebar-title"><span>THỰC ĐƠN</span><img src="{% static 'customer/images/com-que-mark.svg' %}" width="39" height="39" alt=""></div>
-                <div class="cq-menu-filters" role="group" aria-label="Chọn nhóm món">
-                    <button class="is-active" type="button" data-cq-category="all" aria-pressed="true"><span>Tất cả món</span><span class="cq-category-count">{{ menu_dish_count }}</span></button>
-                    {% for category in home_categories %}<button type="button" data-cq-category="{{ category.id }}" aria-pressed="false"><span>{{ category.name }}</span><span class="cq-category-count">{{ category.count }}</span></button>{% endfor %}
-                </div>
-                <div class="cq-sidebar-note"><span aria-hidden="true">✳</span><strong>Bữa ngon, thêm gắn kết.</strong><p>Cùng nhau chọn món, cùng nhau kể chuyện nhà.</p><a href="{% url 'online_reservations:create' %}">Hẹn một bữa cơm <span aria-hidden="true">→</span></a></div>
-            </aside>
-            <div class="cq-menu-results">
-                <div class="cq-menu-toolbar"><span data-cq-menu-label>Một chút gợi ý cho bạn</span><a href="{% url 'customer_portal:menu' %}">Thực đơn đầy đủ <span aria-hidden="true">↗</span></a></div>
-                <div class="cq-dish-grid" data-cq-dish-grid>
-                    {% for dish in menu_dishes %}
-                    <article class="cq-dish-card" data-cq-dish data-category="{{ dish.category_id }}">
-                        <a class="cq-dish-image-link" href="{% url 'customer_portal:dish_detail' dish.pk %}" aria-label="Xem {{ dish.name }}">
-                            {% include 'customer/includes/dish_photo.html' with dish=dish photo_class='cq-dish-photo' %}
-                            {% if dish.status == 'SOLD_OUT' %}<span class="cq-stock-badge">Tạm hết món</span>{% else %}<span class="cq-dish-image-arrow" aria-hidden="true">↗</span>{% endif %}
-                        </a>
-                        <div class="cq-dish-content"><span class="cq-dish-category">{{ dish.category.name }}</span><h3><a href="{% url 'customer_portal:dish_detail' dish.pk %}">{{ dish.name }}</a></h3><p>{{ dish.description|default:'Một hương vị thân quen, thêm tròn bữa cơm nhà.'|truncatewords:12 }}</p><div class="cq-dish-bottom"><strong>{{ dish.price|dong }}<small>đ</small></strong><span>/ {{ dish.unit.name }}</span><a href="{% url 'customer_portal:dish_detail' dish.pk %}" aria-label="Chi tiết {{ dish.name }}">→</a></div></div>
-                    </article>
-                    {% empty %}<p class="cq-menu-empty">Căn bếp đang cập nhật thực đơn. Mời bạn ghé lại sau nhé.</p>{% endfor %}
-                </div>
-                <p class="cq-menu-empty" data-cq-empty hidden>Nhóm món này đang được cập nhật. Bạn thử chọn nhóm khác nhé.</p>
-                <button class="cq-more-button" type="button" data-cq-show-more hidden>Xem thêm món ngon <span aria-hidden="true">↓</span></button>
+            <div class="cq-home-filters" role="group" aria-label="{% translate "Lọc nhóm món" %}">
+                <button class="is-active" type="button" data-cq-category="all" aria-pressed="true"><span>{% translate "Tất cả món" %}</span><small>{{ menu_dish_count }}</small></button>
+                {% for category in home_categories %}<button type="button" data-cq-category="{{ category.id }}" aria-pressed="false"><span>{{ category|public_name }}</span><small>{{ category.count }}</small></button>{% endfor %}
             </div>
-        </div>
-    </section>
+            <div class="cq-home-dishes">
+                {% for dish in menu_dishes %}
+                <article class="cq-food-card" data-cq-dish data-category="{{ dish.category_id }}">
+                    <a class="cq-food-photo-link" href="{% url 'customer_portal:dish_detail' dish.pk %}" aria-label="Xem {{ dish|public_name }}">
+                        {% include 'customer/includes/dish_photo.html' with dish=dish photo_class='cq-food-photo' %}
+                        {% if dish.status == 'SOLD_OUT' %}<span class="cq-food-out">{% translate "Tạm hết món" %}</span>{% endif %}
+                    </a>
+                    <div class="cq-food-copy">
+                        <span class="cq-food-category">{{ dish.category|public_name }}</span>
+                        <h3><a href="{% url 'customer_portal:dish_detail' dish.pk %}">{{ dish|public_name }}</a></h3>
+                        <div class="cq-food-price"><strong>{{ dish.price|dong }}<small>{% translate "đ" %}</small></strong><button type="button" data-basket-add="dish" data-item-id="{{ dish.pk }}" aria-label="{% translate "Thêm" %} {{ dish|public_name }} {% translate "vào giỏ" %}" {% if not dish.is_orderable %}disabled{% endif %}>+</button></div>
+                    </div>
+                </article>
+                {% empty %}<p class="cq-home-empty">{% translate "Căn bếp đang cập nhật thực đơn. Mời bạn ghé lại sau nhé." %}</p>{% endfor %}
+            </div>
+            <p class="cq-home-empty" data-cq-empty hidden>{% translate "Nhóm món này đang được cập nhật. Bạn thử chọn nhóm khác nhé." %}</p>
+            <div class="cq-menu-bottom"><span data-cq-menu-label>{% translate "Món ngon cho bữa cơm nhà" %}</span><button type="button" data-cq-show-more hidden>{% translate "Xem thêm món ngon ↓" %}</button></div>
+            <div class="cq-moments">
+                <article class="cq-moment cq-moment-meal">
+                    <span class="cq-kicker">{% translate "CHẲNG CẦN DỊP ĐẶC BIỆT" %}</span>
+                    <h3>{% translate "Bữa cơm sum vầy," %}<br>{% translate "thêm đầy câu chuyện." %}</h3>
+                    <a class="cq-quiet-link" href="{% url 'online_reservations:create' %}">{% translate "Hẹn nhau ở Cơm Quê" %} {% include 'customer/includes/ui_icon.html' with icon='arrow' %}</a>
+                </article>
+                <article class="cq-moment cq-moment-sweet">
+                    {% include 'customer/includes/dish_photo.html' with dish=dessert_dish photo_class='cq-moment-photo' full_size=True decorative=True %}
+                    <span class="cq-kicker">{% translate "MỘT CHÚT NGỌT NGÀO" %}</span><h3>{% translate "Tròn vị ngon." %}<br>{% translate "Vẹn niềm vui." %}</h3>
+                    <a class="cq-quiet-link" href="{% if dessert_dish %}{% url 'customer_portal:dish_detail' dessert_dish.pk %}{% else %}{% url 'customer_portal:menu' %}{% endif %}">{% translate "Khám phá ngay" %} {% include 'customer/includes/ui_icon.html' with icon='arrow' %}</a>
+                </article>
+            </div>
+        </section>
+        <aside class="cq-home-aside" aria-label="{% translate "Một cuộc hẹn ở Cơm Quê" %}">
+            <div class="cq-aside-photo-wrap">
+                {% include 'customer/includes/dish_photo.html' with dish=sharing_dish photo_class='cq-aside-photo' full_size=True decorative=True %}
+                <div class="cq-aside-photo-copy"><span class="cq-kicker">{% translate "MÓN NGON LÀ ĐỂ SẺ CHIA" %}</span><h2>{% translate "Thêm một người." %}<br>{% translate "Thêm một niềm vui." %}</h2><a href="{% url 'online_reservations:create' %}">{% translate "Đặt bàn cùng người thương" %} {% include 'customer/includes/ui_icon.html' with icon='arrow' %}</a></div>
+            </div>
+            <div class="cq-aside-note">
+                {% include 'customer/includes/ui_icon.html' with icon='leaf' %}
+                <h3>{% translate "Chăm chút từ" %}<br>{% translate "những điều nhỏ." %}</h3>
+                <p>{% translate "Một món ăn vừa miệng, một chỗ ngồi bên nhau. Đôi khi, một bữa ngon chỉ cần vậy." %}</p>
+            </div>
+        </aside>
+    </div>
 
-    <section class="cq-story" id="cau-chuyen" aria-labelledby="cq-story-title">
-        <div class="cq-story-visual">{% include 'customer/includes/dish_photo.html' with dish=primary_dish photo_class='cq-story-photo' full_size=True %}<span class="cq-story-seal">CƠM NHÀ<br><strong>là để nhớ.</strong><span aria-hidden="true">✳</span></span></div>
-        <div class="cq-story-copy"><span class="cq-eyebrow">CHÚT CHUYỆN QUÊ MÌNH</span><h2 id="cq-story-title">Có những hương vị,<br>gọi một tiếng là <em>nhà.</em></h2><p>Đôi khi, điều mình cần chỉ là một bữa cơm ngon và người thương ngồi cạnh. CƠM QUÊ gom những món Việt thân quen vào cùng một thực đơn, để mỗi cuộc hẹn đều có một chút ấm áp của bữa cơm nhà.</p><p>Không cần một dịp thật đặc biệt. Ghé ăn một bữa, kể nhau nghe vài câu chuyện — vậy là đủ vui.</p><a class="cq-text-link" href="{% url 'online_reservations:create' %}">Cùng về ăn cơm <span aria-hidden="true">↗</span></a></div>
+    <section class="cq-home-combos" id="combo-home" aria-labelledby="combo-home-title"><div class="cq-heading-row"><div><span class="cq-kicker">{% translate "CHỌN MỘT LẦN, ĐỦ VỊ NGON" %}</span><h2 id="combo-home-title">{% translate "Có nhau, có bữa ngon." %}</h2></div><span class="cq-combo-heading-note">{% translate "Combo cho cuộc hẹn, gia đình & bạn bè" %}</span></div>{% include 'customer/includes/combo_cards.html' %}</section>
+    <section class="cq-story-refresh" id="cau-chuyen" aria-labelledby="story-title">
+        <div><span class="cq-kicker">{% translate "CHÚT CHUYỆN QUÊ MÌNH" %}</span><h2 id="story-title">{% translate "Có những hương vị," %}<br>{% translate "gọi một tiếng là" %} <em>{% translate "nhà." %}</em></h2></div>
+        <div><p>{% translate "Đôi khi, điều mình cần chỉ là một bữa cơm ngon và người thương ngồi cạnh. Cơm Quê gom những món Việt thân quen vào cùng một thực đơn, để mỗi cuộc hẹn đều có một chút ấm áp của bữa cơm nhà." %}</p><a class="cq-quiet-link" href="{% url 'customer_portal:menu' %}">{% translate "Khám phá gian bếp của chúng mình ↗" %}</a></div>
     </section>
-
-    <section class="cq-reserve" aria-labelledby="cq-reserve-title"><div><span class="cq-eyebrow">HẸN MỘT BỮA NGON</span><h2 id="cq-reserve-title">Có bạn, bữa cơm thêm trọn.</h2><p>Gửi yêu cầu đặt bàn, CƠM QUÊ sẽ kiểm tra và xác nhận cùng bạn.</p></div><a class="cq-button" href="{% url 'online_reservations:create' %}">Đặt bàn ngay <span aria-hidden="true">→</span></a></section>
+    <section class="cq-last-invite" aria-labelledby="invite-title">
+        <div><span class="cq-kicker">{% translate "ĐỂ DÀNH THỜI GIAN CHO NHAU" %}</span><h2 id="invite-title">{% translate "Bữa cơm ngon hơn khi có bạn." %}</h2></div>
+        <a class="cq-pill cq-pill-gold" href="{% url 'online_reservations:create' %}">{% translate "Hẹn một bữa cơm" %} {% include 'customer/includes/ui_icon.html' with icon='arrow' %}</a>
+    </section>
 </div>
 {% include 'customer/includes/chatbot.html' %}
 {% endblock %}

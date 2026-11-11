@@ -1,3 +1,4 @@
+var cqTranslate_qr_check_in = window.gettext || (text => text);
 document.addEventListener("DOMContentLoaded", () => {
     const root = document.querySelector("[data-qr-check-in]");
     if (!root) return;
@@ -22,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!response.ok) return;
             const state = await response.json();
             if (state.ready) {
-                setMessage("Nhân viên đã nhận bàn. Đang mở chức năng gọi món...");
+                setMessage(cqTranslate_qr_check_in("Nhân viên đã nhận bàn. Đang mở chức năng gọi món..."));
                 window.location.replace(state.refresh_url);
                 return;
             }
@@ -31,18 +32,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 setMessage(`Yêu cầu ${state.request.code} đang chờ nhân viên xác nhận. Trang sẽ tự mở gọi món sau khi bàn được nhận.`);
                 if (form) form.hidden = true;
             } else if (state.request.status === "REJECTED") {
-                setMessage(`Nhân viên đã từ chối: ${state.request.reject_reason || "Vui lòng liên hệ nhân viên."}`, true);
+                setMessage(`${cqTranslate_qr_check_in('Nhân viên đã từ chối:')} ${state.request.reject_reason || cqTranslate_qr_check_in("Vui lòng liên hệ nhân viên.")}`, true);
                 if (form) {
                     form.hidden = false;
                     button.disabled = false;
-                    button.textContent = "Yêu cầu nhận bàn";
+                    button.textContent = cqTranslate_qr_check_in("Yêu cầu nhận bàn");
                 }
             } else if (state.request.status === "EXPIRED") {
-                setMessage("Yêu cầu đã hết hạn. Bạn có thể gửi lại.", true);
+                setMessage(cqTranslate_qr_check_in("Yêu cầu đã hết hạn. Bạn có thể gửi lại."), true);
                 if (form) {
                     form.hidden = false;
                     button.disabled = false;
-                    button.textContent = "Yêu cầu nhận bàn";
+                    button.textContent = cqTranslate_qr_check_in("Yêu cầu nhận bàn");
                 }
             }
         } catch (_error) {
@@ -56,8 +57,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const guestCount = Number(form.elements.guest_count.value);
         submitting = true;
         button.disabled = true;
-        button.textContent = "Đang gửi...";
-        setMessage("Đang gửi yêu cầu tới nhân viên...");
+        button.textContent = cqTranslate_qr_check_in("Đang gửi...");
+        setMessage(cqTranslate_qr_check_in("Đang gửi yêu cầu tới nhân viên..."));
         try {
             const csrf = form.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
             const response = await fetch(root.dataset.requestUrl, {
@@ -72,14 +73,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ guest_count: guestCount }),
             });
             const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(data.error || "Không thể gửi yêu cầu nhận bàn.");
+            if (!response.ok) throw new Error(data.error || cqTranslate_qr_check_in("Không thể gửi yêu cầu nhận bàn."));
             form.hidden = true;
             setMessage(`Yêu cầu ${data.request_code} đã được gửi. Trang sẽ tự mở gọi món sau khi nhân viên xác nhận.`);
             await poll();
         } catch (error) {
-            setMessage(error.message || "Không thể gửi yêu cầu nhận bàn.", true);
+            setMessage(error.message || cqTranslate_qr_check_in("Không thể gửi yêu cầu nhận bàn."), true);
             button.disabled = false;
-            button.textContent = "Yêu cầu nhận bàn";
+            button.textContent = cqTranslate_qr_check_in("Yêu cầu nhận bàn");
         } finally {
             submitting = false;
         }

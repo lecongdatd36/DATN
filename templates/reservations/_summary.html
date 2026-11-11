@@ -1,27 +1,29 @@
+{% load i18n customer_language %}
 {% load menu_money %}
 {% with preorder_items=reservation.items.all %}
 <div class="or-summary">
-    <div><span>Mã yêu cầu</span><strong>{{ reservation.code }}</strong></div>
-    <div><span>Hình thức</span><strong>{% if preorder_items %}Đặt món trước · {{ reservation.get_mode_display }}{% else %}Chỉ đặt bàn{% endif %}</strong></div>
-    <div><span>Trạng thái</span><strong>{{ reservation.get_status_display }}</strong></div>
-    <div><span>Khách / liên hệ</span><strong>{{ reservation.full_name }} · {{ reservation.phone }}</strong></div>
-    <div><span>Giờ đến</span><strong>{{ reservation.starts_at|date:'d/m/Y H:i' }} · {{ reservation.party_size }} khách</strong></div>
-    {% if reservation.booking %}<div><span>Bàn đã giữ</span><strong>{{ reservation.booking.table.code }}</strong></div>{% endif %}
-    {% if reservation.prep_starts_at %}<div><span>Bắt đầu chuẩn bị</span><strong>{{ reservation.prep_starts_at|date:'d/m/Y H:i' }}</strong></div><div><span>Sẵn sàng theo cam kết</span><strong>{{ reservation.ready_by|date:'d/m/Y H:i' }}</strong></div>{% endif %}
-    {% if preorder_items %}<div><span>Tiền món {% if reservation.mode == 'TABLE' %}dự kiến{% else %}đã chốt{% endif %}</span><strong>{{ reservation.subtotal|dong }}đ</strong></div>{% endif %}
-    <div><span>Cọc yêu cầu</span><strong>{{ reservation.deposit_required|dong }}đ</strong></div>
-    <div><span>Cọc đã nhận</span><strong>{{ reservation.received|dong }}đ</strong></div>
-    <div><span>Đã hoàn / đã khấu trừ</span><strong>{{ reservation.refunded|dong }}đ / {{ reservation.allocated|dong }}đ</strong></div>
-    <div><span>Số dư cọc</span><strong>{{ reservation.balance|dong }}đ</strong></div>
-    {% if reservation.free_cancel_until %}<div><span>Hạn hủy miễn phí</span><strong>{{ reservation.free_cancel_until|date:'d/m/Y H:i' }}</strong></div>{% endif %}
+    <div><span>{% translate "Mã yêu cầu" %}</span><strong>{{ reservation.code }}</strong></div>
+    <div><span>{% translate "Hình thức" %}</span><strong>{% if preorder_items %}{% translate "Đặt món trước ·" %} {{ reservation.get_mode_display|public_text }}{% else %}{% translate "Chỉ đặt bàn" %}{% endif %}</strong></div>
+    <div><span>{% translate "Trạng thái" %}</span><strong>{{ reservation.get_status_display|public_text }}</strong></div>
+    <div><span>{% translate "Khách / liên hệ" %}</span><strong>{{ reservation.full_name }} · {{ reservation.phone }}</strong></div>
+    <div><span>{% translate "Giờ đến" %}</span><strong>{{ reservation.starts_at|date:'d/m/Y H:i' }} · {{ reservation.party_size }} {% translate "khách" %}</strong></div>
+    {% if reservation.booking %}<div><span>{% translate "Bàn đã giữ" %}</span><strong>{{ reservation.booking.table.code }}</strong></div>{% endif %}
+    {% if reservation.prep_starts_at %}<div><span>{% translate "Bắt đầu chuẩn bị" %}</span><strong>{{ reservation.prep_starts_at|date:'d/m/Y H:i' }}</strong></div><div><span>{% translate "Sẵn sàng theo cam kết" %}</span><strong>{{ reservation.ready_by|date:'d/m/Y H:i' }}</strong></div>{% endif %}
+    {% if preorder_items %}<div><span>{% translate "Tiền món" %} {% if reservation.mode == 'TABLE' %}{% translate "dự kiến" %}{% else %}{% translate "đã chốt" %}{% endif %}</span><strong>{{ reservation.subtotal|dong }}{% translate "đ" %}</strong></div>{% endif %}
+    <div><span>{% translate "Cọc yêu cầu" %}</span><strong>{{ reservation.deposit_required|dong }}{% translate "đ" %}</strong></div>
+    <div><span>{% translate "Cọc đã nhận" %}</span><strong>{{ reservation.received|dong }}{% translate "đ" %}</strong></div>
+    <div><span>{% translate "Đã hoàn / đã khấu trừ" %}</span><strong>{{ reservation.refunded|dong }}{% translate "đ /" %} {{ reservation.allocated|dong }}{% translate "đ" %}</strong></div>
+    <div><span>{% translate "Số dư cọc" %}</span><strong>{{ reservation.balance|dong }}{% translate "đ" %}</strong></div>
+    {% if reservation.free_cancel_until %}<div><span>{% translate "Hạn hủy miễn phí" %}</span><strong>{{ reservation.free_cancel_until|date:'d/m/Y H:i' }}</strong></div>{% endif %}
 </div>
 {% if preorder_items and reservation.status == 'CONFIRMED' %}
 <p class="or-alert {% if reservation.mode == 'READY' %}or-ok{% endif %}">
-    {% if reservation.mode == 'TABLE' %}<strong>Món đã được ghi nhận, chờ khách đến.</strong> Lịch này chưa chốt giờ chuẩn bị trước; nhân viên sẽ chuyển món sang đơn phục vụ khi nhận khách.
-    {% else %}<strong>Món đã có lịch chuẩn bị.</strong> Bếp phát hành phiếu từ {{ reservation.prep_starts_at|date:'d/m/Y H:i' }}, cần sẵn lúc {{ reservation.ready_by|date:'d/m/Y H:i' }}. Trạng thái từng món ở bảng bên dưới.{% endif %}
+    {% if reservation.mode == 'TABLE' %}<strong>{% translate "Món đã được ghi nhận, chờ khách đến." %}</strong> {% translate "Lịch này chưa chốt giờ chuẩn bị trước; nhân viên sẽ chuyển món sang đơn phục vụ khi nhận khách." %}
+    {% else %}<strong>{% translate "Món đã có lịch chuẩn bị." %}</strong> {% translate "Bếp phát hành phiếu từ" %} {{ reservation.prep_starts_at|date:'d/m/Y H:i' }}{% translate ", cần sẵn lúc" %} {{ reservation.ready_by|date:'d/m/Y H:i' }}{% translate ". Trạng thái từng món ở bảng bên dưới." %}{% endif %}
 </p>
 {% endif %}
-{% if reservation.staff_note %}<p class="or-alert">Nhà hàng: {{ reservation.staff_note }}</p>{% endif %}
-{% if reservation.note %}<p>Ghi chú khách: {{ reservation.note }}</p>{% endif %}
-{% if preorder_items %}<div class="or-table"><table><thead><tr><th>Món</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th>Chuẩn bị</th></tr></thead><tbody>{% for item in preorder_items %}<tr><td>{{ item.dish_name }}{% if item.note %}<br><small>{{ item.note }}</small>{% endif %}</td><td>{{ item.quantity }}</td><td>{{ item.unit_price|dong }}đ</td><td>{{ item.total|dong }}đ</td><td>{% if item.order_item %}{{ item.order_item.get_status_display }}{% elif reservation.mode == 'TABLE' and item.status == 'SCHEDULED' %}Đã ghi nhận · chờ khách đến{% else %}{{ item.get_status_display }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="or-muted">Bạn sẽ gọi món khi đến nhà hàng.</p>{% endif %}
+{% if reservation.staff_note %}<p class="or-alert">{% translate "Nhà hàng:" %} {{ reservation.staff_note }}</p>{% endif %}
+{% if reservation.note %}<p>{% translate "Ghi chú khách:" %} {{ reservation.note }}</p>{% endif %}
+{% if reservation.combo_snapshot %}<div class="or-alert"><strong>{% translate "Combo đã đặt" %}</strong>{% for combo in reservation.combo_snapshot %}<p>{{ combo.quantity }} × {{ combo|public_name }} · {{ combo.unit_price|dong }}{% translate "đ / combo" %}<br><small>{% for part in combo.items %}{{ part.quantity }} × {{ part|public_name }}{% if not forloop.last %} · {% endif %}{% endfor %}</small></p>{% endfor %}<small>{% translate "Các món thành phần bên dưới đã được phân bổ theo giá combo; không tính thêm lần nữa." %}</small></div>{% endif %}
+{% if preorder_items %}<div class="or-table"><table><thead><tr><th>{% translate "Món" %}</th><th>{% translate "SL" %}</th><th>{% translate "Đơn giá" %}</th><th>{% translate "Thành tiền" %}</th><th>{% translate "Chuẩn bị" %}</th></tr></thead><tbody>{% for item in preorder_items %}<tr><td>{{ item|public_item_name }}{% if item.combo_name %}<br><small>Combo {{ item.combo_name|public_text }}</small>{% endif %}{% if item.note %}<br><small>{{ item.note }}</small>{% endif %}</td><td>{{ item.quantity }}</td><td>{{ item.unit_price|dong }}{% translate "đ" %}</td><td>{{ item.total|dong }}{% translate "đ" %}</td><td>{% if item.order_item %}{{ item.order_item.get_status_display|public_text }}{% elif reservation.mode == 'TABLE' and item.status == 'SCHEDULED' %}{% translate "Đã ghi nhận · chờ khách đến" %}{% else %}{{ item.get_status_display|public_text }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="or-muted">{% translate "Bạn sẽ gọi món khi đến nhà hàng." %}</p>{% endif %}
 {% endwith %}

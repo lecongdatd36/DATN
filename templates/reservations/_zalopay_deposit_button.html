@@ -1,11 +1,12 @@
+{% load i18n customer_language %}
 {% if zalopay_pending %}
-    <a class="customer-button or-secondary" href="{% url 'zalopay:result' zalopay_pending.token %}">Tiếp tục giao dịch ZaloPay →</a>
+    <a class="customer-button or-secondary" href="{% url 'zalopay:result' zalopay_pending.token %}">{% translate "Tiếp tục giao dịch ZaloPay →" %}</a>
 {% elif not zalopay_enabled %}
-    <button class="customer-button or-secondary" type="button" disabled>ZaloPay Sandbox (chưa cấu hình)</button>
+    <button class="customer-button or-secondary" type="button" disabled>{% translate "ZaloPay (chưa cấu hình)" %}</button>
 {% elif zalopay_can_create %}
-    <button class="customer-button or-secondary" type="submit" formaction="{% url 'zalopay:deposit_create' reservation.access_token %}">ZaloPay Sandbox</button>
+    <button class="customer-button or-secondary" type="submit" formaction="{% url 'zalopay:deposit_create' reservation.access_token %}">ZaloPay</button>
 {% else %}
-    <button class="customer-button or-secondary" type="button" disabled>ZaloPay: không đủ thời gian thanh toán</button>
-    <p class="or-alert" role="status">Thời gian giữ chỗ còn dưới 5 phút. ZaloPay cần tối thiểu 5 phút để mở giao dịch mới. Vui lòng chọn lịch hẹn khác hoặc liên hệ nhà hàng.</p>
-    <a class="or-back-link" href="{% url 'online_reservations:create' %}">Chọn lại lịch đặt bàn →</a>
+    <button class="customer-button or-secondary" type="button" disabled>{% translate "ZaloPay: không đủ thời gian thanh toán" %}</button>
+    <p class="or-alert" role="status">{% translate "Thời gian giữ chỗ còn dưới 5 phút. ZaloPay cần tối thiểu 5 phút để mở giao dịch mới. Vui lòng chọn lịch hẹn khác hoặc liên hệ nhà hàng." %}</p>
+    <a class="or-back-link" href="{% url 'online_reservations:create' %}">{% translate "Chọn lại lịch đặt bàn →" %}</a>
 {% endif %}

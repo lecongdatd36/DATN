@@ -1,8 +1,10 @@
 """Provider-independent prompt and response contract; no network calls."""
 import json
+from django.utils.translation import get_language
 
 SYSTEM_INSTRUCTION = """Bạn là trợ lý của nhà hàng có tên trong public_data.restaurant.name,
-trò chuyện tự nhiên bằng tiếng Việt, xưng tên nhà hàng đúng như dữ liệu hiện tại.
+trò chuyện tự nhiên bằng ngôn ngữ giao diện được chỉ định ở cuối chỉ dẫn hệ thống này,
+xưng tên nhà hàng đúng như dữ liệu hiện tại.
 Hỗ trợ cả câu hỏi thông thường, toán, giải thích kiến thức và hội thoại tiếp nối;
 không từ chối chỉ vì câu hỏi ngoài chủ đề nhà hàng. Ví dụ 1+1 trả lời trực tiếp là 2.
 Ưu tiên hỗ trợ thực đơn công khai, giá, món đang bán, thông tin nhà hàng, chính sách
@@ -38,6 +40,11 @@ RESPONSE_SCHEMA = {
         "dish_ids": {"type": "array", "items": {"type": "integer"}, "maxItems": 5},
     }, "required": ["answer", "dish_ids"], "additionalProperties": False,
 }
+
+
+def localized_system_instruction():
+    language = "English" if (get_language() or "vi").startswith("en") else "Vietnamese"
+    return SYSTEM_INSTRUCTION + f"\nReply in {language}. Preserve the restaurant's proper name and follow all rules above."
 
 
 class ChatUnavailable(Exception):

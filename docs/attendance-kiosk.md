@@ -8,8 +8,26 @@ Phân hệ `apps/workforce`, quản lý `/cham-cong/`, lịch cá nhân `/cham-c
 2. **Lịch phân ca**: chọn một hoặc nhiều nhân viên và ngày bắt đầu, lưu nháp rồi công bố từng lịch. Mọi ca chưa hủy, bao gồm ca nháp và ca qua đêm, đều được kiểm tra trùng giờ. Nhân viên chỉ xem lịch của mình đã công bố/đã hủy.
 3. **Khuôn mặt**: chọn nhân viên đang làm việc, xác nhận nhân viên đồng ý; bật camera và chụp 3 mẫu riêng (thẳng, quay nhẹ trái/phải), rồi lưu. Mẫu gần trùng nhân viên khác bị chặn. Nút xóa mẫu thu hồi ngay các thử thách đang dùng mẫu đó.
 4. Mở **Chấm công** trong menu hoặc truy cập `/cham-cong/diem-cham-cong/`. Trang chung nhận diện người đứng trước camera, không phụ thuộc tài khoản đang đăng nhập. Không có bước đăng ký/kích hoạt máy.
-5. Chọn **Vào ca / Ra ca**, nhìn camera. Hệ thống kiểm tra ca ngay sau nhận diện: thiếu ca, ca nháp, chưa đến giờ, đã có công hoặc chưa có giờ vào để ra đều báo lý do ngay. Nếu hợp lệ, quay đầu nhẹ theo hướng dẫn rồi nhìn lại camera. Chỉ hiện **Đã ghi công thành công** sau khi DB đã lưu. Mất kết nối không tự gửi lại POST; kiểm tra bảng công trước khi chấm lại.
+5. Bấm một nút **Chấm công**, nhìn camera. Hệ thống tự chọn **Vào ca** nếu không có ca đang mở, hoặc **Ra ca** nếu đang có giờ vào chưa có giờ ra; vẫn kiểm tra ca đã công bố, cửa sổ giờ, hồ sơ đang hoạt động và tình trạng duyệt. Thiếu ca hoặc có lỗi sẽ báo lý do ngay. Nếu hợp lệ, quay đầu nhẹ theo hướng dẫn rồi nhìn lại camera. Chỉ hiện **Đã ghi công thành công** sau khi DB đã lưu, kèm thao tác vào/ra và giờ máy chủ. Mất kết nối không tự gửi lại POST; kiểm tra bảng công trước khi chấm lại.
 6. Quản lý vào **Bảng công**, lọc ngày/nhân viên, mở từng ca để điều chỉnh, ghi vắng hoặc duyệt. Nhân viên xem giờ vào/ra và kết quả duyệt ở lịch cá nhân.
+
+## Trang kiểm thử nhận diện
+
+Quản lý vào **Ca làm & chấm công → Kiểm thử nhận diện**, hoặc `/cham-cong/khuon-mat/kiem-thu/`. Mục Khuôn mặt cũng có liên kết mở trang này. Bố cục gồm camera lớn bên trái, vị trí và thông số khớp mẫu ở dưới, kết quả và hướng dẫn bên phải; dùng điểm nhấn đỏ Cơm Quê và tự xếp một cột trên điện thoại/tablet.
+
+1. Bật camera, nhìn thẳng rồi chọn **Nhận diện thử**. Camera cần HTTPS hoặc localhost và quyền camera của trình duyệt.
+2. POST tới `/cham-cong/khuon-mat/kiem-thu/api/` chỉ đối chiếu với mẫu SFace của nhân viên/tài khoản/vị trí đang hoạt động. Kết quả phải vượt ngưỡng và đủ chênh lệch với ứng viên thứ hai theo cấu hình hiện có. Tên/mã nhân viên chỉ trả về khi tìm được khớp hợp lệ. Khi thất bại, giao diện hiển thị lỗi ảnh, thiếu mẫu, không khớp hoặc lỗi kết nối cụ thể.
+3. Độ tương đồng là điểm cosine, không phải phần trăm xác suất đúng. Ngưỡng hiện tại là ngưỡng thử nghiệm, chưa hiệu chuẩn trên tập kiểm định của nhà hàng.
+4. Đã bỏ phần vị trí; trang kiểm thử và chấm công không yêu cầu GPS.
+5. Dừng camera hoặc rời tab sẽ dừng stream, hủy yêu cầu đang chạy và xóa kết quả nhận diện cũ khỏi màn hình. Ảnh xử lý tạm trong bộ nhớ; không tạo mẫu, thử thách, lịch ca, bảng công hoặc nhật ký công.
+
+Trang và API kiểm thử yêu cầu quyền quản lý nhân sự, CSRF và không cache kết quả. Màn kiểm thử không ghi công; **trang chấm công chung đã dùng cùng bố cục camera / kết quả**, với một nút Chấm công tự xác định vào/ra và xác minh động tác như trên. Không thêm biến môi trường. Migration `workforce/0003` bổ sung chế độ AUTO trên lượt xác minh; giữ nguyên giờ công, mẫu khuôn mặt và lượt xác minh cũ.
+
+Khi nhận diện lần đầu, service chọn thao tác từ bảng công và giữ cố định thao tác cùng nhân viên cho cả lượt xác minh. Các frame sau kiểm tra lại để không chuyển nhầm từ vào thành ra khi một thiết bị khác vừa ghi công. Chặn lượt tự động trong 60 giây sau lần ghi công gần nhất của nhân viên, xuyên thiết bị/phiên, nhằm tránh chấm lặp do bấm lại. Ca quá hạn, công đã duyệt, lịch trùng hoặc thiếu lịch vẫn bị chặn theo nghiệp vụ hiện có; hệ thống không đoán ca thay cho quản lý.
+
+Kiểm tra bằng `scripts/verify_attendance_browser.py`: camera giả và vector tổng hợp trên PostgreSQL tạm, không dùng mẫu sinh trắc học hay bảng công thật. Chrome kiểm tra desktop/tablet/mobile, lỗi ảnh, thiếu ca, một nút tự ghi vào, chặn bấm lặp, rồi tự ghi ra sau khi dịch đồng hồ test. Ảnh lưu ở `artifacts/attendance/browser/` (không đưa vào Git).
+
+Kết quả bản một nút ngày 11/11/2026: toàn bộ **612 test Django qua**, Chrome qua luồng tự vào / chặn lặp / tự ra; check, migration consistency và production static manifest qua.
 
 ## Quy định công hiện tại
 

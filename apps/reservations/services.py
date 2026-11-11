@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 """Online reservations use the same seating -> menu -> actor lock order as POS.
 
 No seating or inventory consumption follows from merely receiving a deposit.
@@ -40,7 +41,7 @@ def actor_for(actor, kind="booking"):
     allowed = actor and (can_manage_accounts(actor) if kind == "manager" else
         has_order_permission(actor, "work_kitchen") if kind == "kitchen" else has_booking_permission(actor, "manage_booking"))
     if not allowed:
-        raise PermissionDenied("Bạn không có quyền thực hiện thao tác này.")
+        raise PermissionDenied(_("Bạn không có quyền thực hiện thao tác này."))
     return actor
 
 
@@ -56,45 +57,38 @@ def money(value):
             raise ValueError
         return value
     except (ValueError, InvalidOperation, TypeError):
-        raise ValidationError("Số tiền phải là số nguyên đồng hợp lệ.") from None
+        raise ValidationError(_("Số tiền phải là số nguyên đồng hợp lệ.")) from None
 
 
 def policy_snapshot():
-    policy, _ = ReservationPolicy.objects.get_or_create(pk=1)
+    policy, policy_created = ReservationPolicy.objects.get_or_create(pk=1)
     return {**{key:getattr(policy,key) for key in ("table_deposit", "ready_percent", "hold_minutes", "offer_minutes", "minimum_lead_minutes", "free_cancel_hours")},"allowed_dish_ids":list(policy.allowed_dishes.values_list("pk",flat=True))}
 
 
 def validate_request(*, full_name, phone, starts_at, duration_minutes, party_size, mode):
     name = " ".join(full_name.split()) if isinstance(full_name, str) else ""
     if not name or len(name) > 150 or type(party_size) is not int or not 1 <= party_size <= 100:
-        raise ValidationError("Tên khách hoặc số người không hợp lệ.")
+        raise ValidationError(_("Tên khách hoặc số người không hợp lệ."))
     if mode not in Reservation.Mode.values or not starts_at or timezone.is_naive(starts_at) or starts_at <= timezone.now():
-        raise ValidationError("Chế độ hoặc thời gian đặt bàn không hợp lệ.")
+        raise ValidationError(_("Chế độ hoặc thời gian đặt bàn không hợp lệ."))
     validate_booking_hours(starts_at, planned_end(starts_at, duration_minutes))
     return name, normalize_phone(phone)
 
 
 def capture_items(reservation, items):
-    if not isinstance(items, list) or len(items)>50 or (reservation.mode == "READY" and not items):
-        raise ValidationError("Chọn từ 1 đến 50 món để yêu cầu chuẩn bị sẵn.")
-    seen, total = set(), Decimal(0)
-    for data in items:
-        if not isinstance(data,dict) or type(data.get("quantity")) is not int or not 1<=data["quantity"]<=100:
-            raise ValidationError("Số lượng món phải từ 1 đến 100.")
-        dish_id = data.get("dish_id")
-        if type(dish_id) is not int or dish_id in seen:
-            raise ValidationError("Danh sách món không hợp lệ hoặc bị lặp.")
-        seen.add(dish_id)
-        dish = Dish.objects.select_related("category","unit").filter(pk=dish_id).first()
-        if not dish or not dish.is_orderable:
-            raise ValidationError("Một món đã hết/ngừng bán. Hãy chọn lại thực đơn.")
+    from apps.menu.combos import expand_selections
+    if reservation.mode == "READY" and not items:
+        raise ValidationError(_("Chọn từ 1 đến 50 món để yêu cầu chuẩn bị sẵn."))
+    expanded, snapshots = expand_selections(items)
+    reservation.combo_snapshot = snapshots
+    total = Decimal(0)
+    for data in expanded:
+        dish = data["dish"]
         if reservation.mode == "READY" and dish.pk not in reservation.policy_snapshot.get("allowed_dish_ids",[]):
             raise ValidationError(f"{dish.name} chưa được nhà hàng cho phép chuẩn bị trước. Chọn món khác hoặc Đến mới chế biến.")
-        note = str(data.get("note", "")).strip()
-        if len(note)>500:
-            raise ValidationError("Ghi chú món tối đa 500 ký tự.")
         line = PreorderItem.objects.create(reservation=reservation, dish=dish, dish_name=dish.name, dish_code=dish.code,
-            unit_name=dish.unit.name, quantity=data["quantity"], unit_price=dish.price, note=note)
+            unit_name=dish.unit.name, quantity=data["quantity"], unit_price=data["unit_price"], note=data["note"],
+            combo=data["combo"], combo_name=data["combo"].name if data["combo"] else "")
         total += line.total
     reservation.subtotal = total
     reservation.deposit_required = (total*Decimal(reservation.policy_snapshot["ready_percent"])/100).quantize(Decimal(1), rounding=ROUND_HALF_UP) if reservation.mode == "READY" else Decimal(reservation.policy_snapshot["table_deposit"])
@@ -141,7 +135,7 @@ def hold_table(reservation, already_funded=False):
     now = timezone.now()
     lead=0 if already_funded else reservation.policy_snapshot["hold_minutes"]
     if reservation.mode == "READY" and (not reservation.prep_starts_at or reservation.prep_starts_at <= now+timedelta(minutes=lead)):
-        raise ValidationError("Không còn đủ thời gian trả cọc và chuẩn bị. Nhà hàng cần chốt lại giờ mới.")
+        raise ValidationError(_("Không còn đủ thời gian trả cọc và chuẩn bị. Nhà hàng cần chốt lại giờ mới."))
     booking = create_public_booking(full_name=reservation.full_name, phone=reservation.phone, starts_at=reservation.starts_at,
         party_size=reservation.party_size, area_id=reservation.area_id, duration_minutes=reservation.duration_minutes, note=reservation.note)
     reservation.booking = booking
@@ -184,14 +178,14 @@ def create_request(*, full_name, phone, starts_at, party_size, duration_minutes,
     existing = Reservation.objects.filter(request_key=request_key).first()
     if existing:
         if existing.source_digest != source_digest:
-            raise PermissionDenied("Mã gửi yêu cầu đã được sử dụng.")
+            raise PermissionDenied(_("Mã gửi yêu cầu đã được sử dụng."))
         return existing
     name,phone = validate_request(full_name=full_name,phone=phone,starts_at=starts_at,duration_minutes=duration_minutes,party_size=party_size,mode=mode)
     policy = policy_snapshot()
     if mode == "READY" and starts_at < timezone.now()+timedelta(minutes=policy["minimum_lead_minutes"]):
-        raise ValidationError("Yêu cầu món sẵn phải đặt trước ít nhất 60 phút và chờ nhà hàng xác nhận.")
+        raise ValidationError(_("Yêu cầu món sẵn phải đặt trước ít nhất 60 phút và chờ nhà hàng xác nhận."))
     if len(note)>500:
-        raise ValidationError("Ghi chú tối đa 500 ký tự.")
+        raise ValidationError(_("Ghi chú tối đa 500 ký tự."))
     reservation = Reservation.objects.create(full_name=name,phone=phone,starts_at=starts_at,party_size=party_size,
         duration_minutes=duration_minutes,mode=mode,policy_snapshot=policy,request_key=request_key,source_digest=source_digest,area_id=area_id,note=note)
     capture_items(reservation,items)
@@ -206,7 +200,7 @@ def create_request(*, full_name, phone, starts_at, party_size, duration_minutes,
 def locked_reservation(pk,revision=None):
     row = Reservation.objects.select_for_update().get(pk=pk)
     if revision is not None and row.revision != revision:
-        raise ValidationError("Yêu cầu đã thay đổi. Hãy tải lại trang.")
+        raise ValidationError(_("Yêu cầu đã thay đổi. Hãy tải lại trang."))
     return row
 
 
@@ -215,14 +209,14 @@ def review_request(*, actor, reservation_id, revision, action, note, starts_at=N
     actor = actor_for(actor)
     row = locked_reservation(reservation_id,revision)
     if row.status not in ("REVIEW","OFFER") or row.received>0 or row.mode!="READY":
-        raise ValidationError("Không thể thay bản chốt của yêu cầu đã nhận tiền hoặc đang phục vụ.")
+        raise ValidationError(_("Không thể thay bản chốt của yêu cầu đã nhận tiền hoặc đang phục vụ."))
     if action=="reject":
         if not note.strip():
-            raise ValidationError("Cần lý do từ chối.")
+            raise ValidationError(_("Cần lý do từ chối."))
         row.status="REJECTED"
     elif action=="offer":
         if not all((starts_at,prep_starts_at,ready_by)) or not timezone.now()+timedelta(minutes=row.policy_snapshot["hold_minutes"])<prep_starts_at<starts_at<=ready_by<=starts_at+timedelta(minutes=10):
-            raise ValidationError("Cần đủ thời gian cọc trước khi làm; giờ sẵn nằm trong 10 phút từ giờ hẹn.")
+            raise ValidationError(_("Cần đủ thời gian cọc trước khi làm; giờ sẵn nằm trong 10 phút từ giờ hẹn."))
         validate_booking_hours(starts_at,planned_end(starts_at,row.duration_minutes))
         if row.booking_id:
             Booking.objects.filter(pk=row.booking_id,status="PENDING").update(status="CANCELLED")
@@ -236,7 +230,7 @@ def review_request(*, actor, reservation_id, revision, action, note, starts_at=N
         row.status="OFFER"
         row.offer_expires_at=min(timezone.now()+timedelta(minutes=row.policy_snapshot["offer_minutes"]),prep_starts_at-timedelta(minutes=row.policy_snapshot["hold_minutes"]))
     else:
-        raise ValidationError("Thao tác không hợp lệ.")
+        raise ValidationError(_("Thao tác không hợp lệ."))
     row.staff_note=note.strip()
     row.revision+=1
     row.save()
@@ -250,7 +244,7 @@ def accept_offer(*, token, revision):
     expire_holds()
     row=Reservation.objects.select_for_update().get(access_token=token)
     if row.revision!=revision or row.status!="OFFER" or row.offer_expires_at<=timezone.now():
-        raise ValidationError("Bản chốt đã thay đổi hoặc hết hạn. Nhờ nhà hàng kiểm tra lại.")
+        raise ValidationError(_("Bản chốt đã thay đổi hoặc hết hạn. Nhờ nhà hàng kiểm tra lại."))
     hold_table(row)
     row.revision+=1
     row.save()
@@ -268,12 +262,12 @@ def amend_confirmed(*, actor, reservation_id, revision, starts_at, prep_starts_a
     actor=actor_for(actor,"manager")
     row=locked_reservation(reservation_id,revision)
     if not verified or not note.strip() or row.status!="CONFIRMED" or row.booking.status!="CONFIRMED":
-        raise ValidationError("Cần xác minh khách đồng ý và lịch còn chưa nhận khách.")
+        raise ValidationError(_("Cần xác minh khách đồng ý và lịch còn chưa nhận khách."))
     if row.items.exclude(status="SCHEDULED").exists() or row.refunds.filter(status__in=("REQUESTED","APPROVED")).exists():
-        raise ValidationError("Món đã gửi bếp hoặc cọc đang xử lý hoàn; không đổi thẳng cam kết.")
+        raise ValidationError(_("Món đã gửi bếp hoặc cọc đang xử lý hoàn; không đổi thẳng cam kết."))
     validate_request(full_name=row.full_name,phone=row.phone,starts_at=starts_at,duration_minutes=row.duration_minutes,party_size=row.party_size,mode=row.mode)
     if row.mode=="READY" and not (prep_starts_at and ready_by and timezone.now()<prep_starts_at<starts_at<=ready_by<=starts_at+timedelta(minutes=10)):
-        raise ValidationError("Thời điểm chuẩn bị/sẵn sàng chưa hợp lệ.")
+        raise ValidationError(_("Thời điểm chuẩn bị/sẵn sàng chưa hợp lệ."))
     old_booking=row.booking
     release_holds(row)
     row.items.update(is_active=False)
@@ -284,7 +278,7 @@ def amend_confirmed(*, actor, reservation_id, revision, starts_at, prep_starts_a
     row.ready_by=ready_by if row.mode=="READY" else None
     capture_items(row,items)
     if row.deposit_required>available_balance(row):
-        raise ValidationError("Cọc hiện có chưa đủ bản điều chỉnh. Bản đầu chưa thu cọc bổ sung; hãy thống nhất phương án khác với khách. Lịch cũ được giữ nguyên.")
+        raise ValidationError(_("Cọc hiện có chưa đủ bản điều chỉnh. Bản đầu chưa thu cọc bổ sung; hãy thống nhất phương án khác với khách. Lịch cũ được giữ nguyên."))
     hold_table(row,already_funded=True)
     row.status="CONFIRMED"
     row.hold_expires_at=None
@@ -304,9 +298,9 @@ def checkout(*, token, revision, return_url, ip_address):
     expire_holds()
     row=Reservation.objects.select_for_update().get(access_token=token)
     if row.status!="WAITING" or row.revision!=revision or row.hold_expires_at<=timezone.now():
-        raise ValidationError("Yêu cầu không còn trong thời gian thanh toán cọc.")
+        raise ValidationError(_("Yêu cầu không còn trong thời gian thanh toán cọc."))
     if row.deposits.filter(status="PENDING",zalopay_transaction__isnull=False).exists():
-        raise ValidationError("Cọc đang có giao dịch ZaloPay chờ kết quả. Hãy kiểm tra giao dịch đó trước.")
+        raise ValidationError(_("Cọc đang có giao dịch ZaloPay chờ kết quả. Hãy kiểm tra giao dịch đó trước."))
     pending=row.deposits.filter(status="PENDING",revision=row.revision).first()
     payment=pending or DepositPayment.objects.create(reservation=row,txn_ref=f"DEP{row.pk}-{uuid4().hex[:16]}",amount=row.deposit_required,revision=row.revision)
     now=timezone.localtime()
@@ -372,9 +366,9 @@ def customer_message(*, token, kind, text):
     locks()
     row=Reservation.objects.select_for_update().get(access_token=token)
     if kind not in ("CHANGE","CANCEL") or not text.strip() or len(text)>1000:
-        raise ValidationError("Nhập yêu cầu và lý do từ 1 đến 1000 ký tự.")
+        raise ValidationError(_("Nhập yêu cầu và lý do từ 1 đến 1000 ký tự."))
     if row.status in ("REJECTED","CANCELLED","NO_SHOW","COMPLETED"):
-        raise ValidationError("Lịch đã kết thúc; liên hệ nhà hàng để đối soát tiền nếu cần.")
+        raise ValidationError(_("Lịch đã kết thúc; liên hệ nhà hàng để đối soát tiền nếu cần."))
     if not row.messages.filter(kind=kind,resolved=False).exists():
         ReservationMessage.objects.create(reservation=row,kind=kind,text=text.strip())
         log(row,"Khách yêu cầu "+kind,text.strip())
@@ -385,11 +379,11 @@ def close_request(*, actor, reservation_id, revision, action, reason, verified=F
     actor=actor_for(actor,"manager")
     row=locked_reservation(reservation_id,revision)
     if action not in ("cancel","no_show") or not reason.strip() or not verified:
-        raise ValidationError("Cần xác minh yêu cầu và nhập lý do.")
+        raise ValidationError(_("Cần xác minh yêu cầu và nhập lý do."))
     if row.status in ("SEATED", "COMPLETED", "CANCELLED", "NO_SHOW") or (row.booking_id and row.booking.status in ("SEATED","COMPLETED")):
-        raise ValidationError("Lượt đang phục vụ/đã đóng cần xử lý qua đơn và đối soát, không hủy lại lịch.")
+        raise ValidationError(_("Lượt đang phục vụ/đã đóng cần xử lý qua đơn và đối soát, không hủy lại lịch."))
     if action=="no_show" and timezone.now()<row.starts_at:
-        raise ValidationError("Chưa tới giờ hẹn để ghi không đến.")
+        raise ValidationError(_("Chưa tới giờ hẹn để ghi không đến."))
     if action=="no_show":
         from apps.bookings.models import BookingSettings
         grace=BookingSettings.objects.get(pk=1).no_show_grace_minutes
@@ -421,32 +415,32 @@ def manage_refund(*, actor, reservation_id, action, amount=0, reason="", refund_
     actor=actor_for(actor,"manager")
     row=locked_reservation(reservation_id)
     if row.booking_id and row.booking.status=="SEATED":
-        raise ValidationError("Lượt đang phục vụ: chốt hóa đơn trước khi hoàn phần cọc dư.")
+        raise ValidationError(_("Lượt đang phục vụ: chốt hóa đơn trước khi hoàn phần cọc dư."))
     terminal=row.status in ("CANCELLED","NO_SHOW","EXPIRED","REJECTED","COMPLETED") or (row.booking_id and row.booking.status in ("COMPLETED","CANCELLED"))
     limit=row.balance if terminal else max(Decimal(0),sum((p.amount for p in row.deposits.all() if p.status=="REVIEW"),Decimal(0))-row.refunded)
     if action=="request":
         amount=money(amount)
         if not reason.strip() or amount<=0 or amount>min(available_balance(row),limit):
-            raise ValidationError("Lý do hoặc số tiền hoàn vượt số dư có thể hoàn.")
+            raise ValidationError(_("Lý do hoặc số tiền hoàn vượt số dư có thể hoàn."))
         refund=DepositRefund.objects.create(reservation=row,amount=amount,reason=reason.strip())
     else:
         refund=row.refunds.select_for_update().get(pk=refund_id)
         if not verified or not reason.strip():
-            raise ValidationError("Cần xác minh người nhận/phương thức gốc và ghi lý do xử lý.")
+            raise ValidationError(_("Cần xác minh người nhận/phương thức gốc và ghi lý do xử lý."))
         if action=="approve" and refund.status=="REQUESTED":
             if refund.amount>min(row.balance,limit):
-                raise ValidationError("Khoản hoàn vượt số dư.")
+                raise ValidationError(_("Khoản hoàn vượt số dư."))
             refund.status="APPROVED"
         elif action=="reject" and refund.status in ("REQUESTED","APPROVED"):
             refund.status="REJECTED"
         elif action=="complete" and refund.status=="APPROVED":
             if not bank_reference.strip() or refund.amount>min(row.balance,limit):
-                raise ValidationError("Cần mã/bằng chứng hoàn thực tế và số dư đủ.")
+                raise ValidationError(_("Cần mã/bằng chứng hoàn thực tế và số dư đủ."))
             refund.status="COMPLETED"
             refund.bank_reference=bank_reference.strip()[:100]
             refund.completed_at=timezone.now()
         else:
-            raise ValidationError("Trạng thái hoàn tiền đã thay đổi hoặc thao tác không hợp lệ.")
+            raise ValidationError(_("Trạng thái hoàn tiền đã thay đổi hoặc thao tác không hợp lệ."))
         refund.reviewed_by=actor
         refund.save()
     log(row,"Hoàn cọc",f"Phiếu {refund.pk}: {refund.status}, {refund.amount} đồng; {reason}. Không tự chuyển tiền qua ngân hàng.",actor)
@@ -475,7 +469,7 @@ def allocate_deposit(order,invoice,total,expected=None):
     row=Reservation.objects.select_for_update().filter(booking_id=order.booking_id).first() if order.booking_id else None
     credit=min(total,available_balance(row)) if row and row.status in ("CONFIRMED","SEATED") else Decimal(0)
     if expected is not None and credit!=expected:
-        raise ValidationError("Số dư cọc thay đổi. Cần đối soát giao dịch thanh toán cuối bữa.")
+        raise ValidationError(_("Số dư cọc thay đổi. Cần đối soát giao dịch thanh toán cuối bữa."))
     if credit>0:
         DepositAllocation.objects.create(reservation=row,invoice=invoice,amount=credit)
         log(row,"Khấu trừ cọc",f"{credit} đồng vào hóa đơn {invoice.invoice_code}; không ghi thêm tiền mặt.")
@@ -486,7 +480,7 @@ def consume_preorder(line,actor):
     from apps.inventory.models import Ingredient,InventoryTransaction
     holds=list(line.ingredient_holds.filter(state="HELD").order_by("ingredient_id","pk"))
     if line.dish.tracks_inventory and not holds:
-        raise ValidationError("Món chưa có phần nguyên liệu được giữ. Nhờ quản lý kiểm tra.")
+        raise ValidationError(_("Món chưa có phần nguyên liệu được giữ. Nhờ quản lý kiểm tra."))
     if line.inventory_deducted_at:
         return
     cost=Decimal(0)
@@ -527,11 +521,11 @@ def kitchen_step(*, actor, item_id, target):
     line=PreorderItem.objects.select_for_update().select_related("reservation","dish").get(pk=item_id)
     row=line.reservation
     if row.status!="CONFIRMED" or row.mode!="READY" or line.order_item_id:
-        raise ValidationError("Phiếu không còn ở luồng chuẩn bị trước; kiểm tra đơn đang phục vụ.")
+        raise ValidationError(_("Phiếu không còn ở luồng chuẩn bị trước; kiểm tra đơn đang phục vụ."))
     now=timezone.now()
     if target=="PENDING" and line.status=="SCHEDULED":
         if now<row.prep_starts_at:
-            raise ValidationError("Chưa đến mốc chuẩn bị đã thông báo cho khách.")
+            raise ValidationError(_("Chưa đến mốc chuẩn bị đã thông báo cho khách."))
         consume_preorder(line,actor)
         line.sent_at=now
     elif target=="COOKING" and line.status=="PENDING":
@@ -539,7 +533,7 @@ def kitchen_step(*, actor, item_id, target):
     elif target=="READY" and line.status=="COOKING":
         line.ready_at=now
     else:
-        raise ValidationError("Món đã thay đổi hoặc bước chế biến không hợp lệ.")
+        raise ValidationError(_("Món đã thay đổi hoặc bước chế biến không hợp lệ."))
     line.status=target
     line.save()
     log(row,"Bếp chuẩn bị trước",f"{line.dish_name} × {line.quantity}: {target}.",actor)
@@ -554,14 +548,15 @@ def attach_items(order,actor):
     if not row:
         return
     if row.status!="CONFIRMED" or row.balance<row.deposit_required or row.refunds.filter(status__in=("REQUESTED","APPROVED")).exists():
-        raise ValidationError("Cọc hoặc yêu cầu hoàn còn cần đối soát. Xử lý tại Đặt bàn online trước khi nhận khách.")
+        raise ValidationError(_("Cọc hoặc yêu cầu hoàn còn cần đối soát. Xử lý tại Đặt bàn online trước khi nhận khách."))
     for line in row.items.select_for_update().select_related("dish").all():
         if line.order_item_id or line.status=="CANCELLED":
             continue
-        if row.mode=="TABLE" and (not line.dish.is_orderable or line.unit_price!=line.dish.price):
-            raise ValidationError("Món dự kiến đã đổi giá/hết món. Xác nhận lại với khách tại trang đặt bàn online trước khi nhận.")
+        if row.mode=="TABLE" and (not line.dish.is_orderable or (not line.combo_id and line.unit_price!=line.dish.price)):
+            raise ValidationError(_("Món dự kiến đã đổi giá/hết món. Xác nhận lại với khách tại trang đặt bàn online trước khi nhận."))
         item=OrderItem.objects.create(order=order,dish=line.dish,dish_code=line.dish_code,dish_name=line.dish_name,
-            unit_name=line.unit_name,quantity=line.quantity,unit_price=line.unit_price,note=line.note,
+            unit_name=line.unit_name,quantity=line.quantity,unit_price=line.unit_price,
+            note=(f"Combo {line.combo_name}. " if line.combo_id else "")+line.note,
             status="DRAFT" if line.status=="SCHEDULED" else line.status,sent_at=line.sent_at,started_at=line.started_at,
             ready_at=line.ready_at,inventory_deducted_at=line.inventory_deducted_at,unit_cost_snapshot=line.unit_cost)
         line.order_item=item
@@ -583,13 +578,14 @@ def receive(*, actor, reservation_id, revision, accept_prices=False):
     actor=actor_for(actor)
     row=locked_reservation(reservation_id,revision)
     if row.status!="CONFIRMED" or not row.booking_id:
-        raise ValidationError("Chỉ nhận khách cho lịch đã cọc và xác nhận.")
+        raise ValidationError(_("Chỉ nhận khách cho lịch đã cọc và xác nhận."))
     if row.mode=="TABLE" and accept_prices:
         total=Decimal(0)
         for line in row.items.select_related("dish"):
             if not line.dish.is_orderable:
-                raise ValidationError("Có món hết/ngừng bán; xử lý yêu cầu thay đổi trước khi nhận khách.")
-            line.unit_price=line.dish.price
+                raise ValidationError(_("Có món hết/ngừng bán; xử lý yêu cầu thay đổi trước khi nhận khách."))
+            if not line.combo_id:
+                line.unit_price=line.dish.price
             line.save(update_fields=("unit_price",))
             total+=line.total
         row.subtotal=total

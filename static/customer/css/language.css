@@ -1,0 +1,18 @@
+.cq-menu-landing-page .cq-header-refresh .cq-categories{display:none}
+.cq-language-switch{display:flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;margin:0;white-space:nowrap}
+.cq-language-switch>button{border:0;border-bottom:1px solid transparent;padding:4px 2px;background:none;color:#a38b73;font:600 10px "Segoe UI",Arial,sans-serif;cursor:pointer}
+.cq-language-switch>button[aria-pressed=true]{color:var(--cq-red);border-bottom-color:var(--cq-red)}
+.cq-language-switch>span{font-size:9px;color:#d0bea8}
+.cq-language-switch>button:focus-visible{outline:2px solid #ae2940;outline-offset:3px}
+.cq-menu-landing-page .cq-catalog{scroll-margin-top:22px}
+.cq-page .cq-header-nav>a.cq-mobile-account-link{display:none}
+html:lang(en) .cq-wordmark small{letter-spacing:1.4px}
+html:lang(en) .cq-welcome h1{font-size:clamp(67px,5.6vw,100px)}
+html:lang(en) .cq-quick-title>span{letter-spacing:1.4px}
+html:lang(en) .cq-benefit strong{font-size:10px}
+html:lang(en) .cq-combo-copy>p{min-height:62px}
+.cq-header-search{width:160px}
+@media(max-width:1200px){.cq-header-search{width:130px}.cq-page .cq-header-nav{gap:14px}.cq-header-inner{gap:18px}}
+@media(max-width:1000px){.cq-header-search{display:none}.cq-header-inner{gap:16px}.cq-header-actions{gap:9px}.cq-page .cq-header-nav{gap:11px}.cq-page .cq-header-nav>a{font-size:11px}}
+@media(max-width:760px){.cq-header-inner{gap:9px}.cq-header-actions{gap:6px}.cq-header-cart,.cq-header-account{width:32px;height:32px}.cq-page .cq-header-toggle{width:32px;height:32px;padding:8px}.cq-language-switch{gap:2px}.cq-language-switch>button{font-size:9px;padding-inline:2px}.cq-language-switch>span{font-size:8px}.cq-page .cq-header-nav>a{font-size:13px}.cq-page .cq-header-nav>a.cq-mobile-account-link{display:block}.cq-page .cq-welcome h1{letter-spacing:0}html:lang(en) .cq-welcome h1{font-size:clamp(48px,12.5vw,67px)}html:lang(en) .cq-combo-copy>p{min-height:0}html:lang(en) .cq-heading-row h2{font-size:29px}html:lang(en) .cq-heading-row>.cq-quiet-link{font-size:8px}}
+@media(max-width:380px){.cq-header-account{display:none}.cq-wordmark>img{width:35px;height:35px}.cq-wordmark{gap:6px}.cq-wordmark strong{font-size:20px}html:lang(en) .cq-welcome h1{font-size:46px}}

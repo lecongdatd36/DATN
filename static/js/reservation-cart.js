@@ -1,17 +1,19 @@
+var cqTranslate_reservation_cart = window.gettext || (text => text);
 (() => {
   const form = document.querySelector('[data-preorder-cart]');
   if (!form) return;
-  const money = value => new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+  const money = value => new Intl.NumberFormat(document.documentElement.lang === 'en' ? 'en-US' : 'vi-VN').format(value) + cqTranslate_reservation_cart('đ');
   const products = [...form.querySelectorAll('[data-dish-id]')];
   const entries = new Map(products.map(product => {
     const id = product.dataset.dishId;
     return [id, {product, input: product.querySelector('input[type="number"]'),
-      row: form.querySelector(`[data-cart-item="${id}"]`), price: Number(product.dataset.price)}];
+      row: form.querySelector(`[data-cart-item="${id}"]`), price: Number(product.dataset.price),
+      maximum: Number(product.querySelector('input[type="number"]').max) || 100}];
   }));
   function update() {
     let count = 0, total = 0;
     for (const entry of entries.values()) {
-      const quantity = Math.max(0, Math.min(100, Math.trunc(Number(entry.input.value) || 0)));
+      const quantity = Math.max(0, Math.min(entry.maximum, Math.trunc(Number(entry.input.value) || 0)));
       entry.row.hidden = quantity === 0;
       entry.row.querySelector('[data-item-count]').textContent = quantity;
       entry.row.querySelector('[data-line-total]').textContent = money(quantity * entry.price);
@@ -28,7 +30,7 @@
     if (!control || control.disabled) return;
     const entry = entries.get(control.dataset.target || control.dataset.remove);
     if (!entry) return;
-    entry.input.value = control.hasAttribute('data-remove') ? 0 : Math.max(0, Math.min(100,
+    entry.input.value = control.hasAttribute('data-remove') ? 0 : Math.max(0, Math.min(entry.maximum,
       (Math.trunc(Number(entry.input.value)) || 0) + Number(control.dataset.quantityDelta)));
     if (control.hasAttribute('data-remove')) {
       entry.row.querySelector('input').value = '';

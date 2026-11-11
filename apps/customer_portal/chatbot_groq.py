@@ -5,7 +5,7 @@ import logging
 import httpx
 from django.conf import settings
 
-from .chatbot_contract import SYSTEM_INSTRUCTION, RESPONSE_SCHEMA, ChatUnavailable, validate_reply
+from .chatbot_contract import SYSTEM_INSTRUCTION, RESPONSE_SCHEMA, ChatUnavailable, validate_reply, localized_system_instruction
 
 logger = logging.getLogger(__name__)
 ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
@@ -26,7 +26,7 @@ def generate_reply(context, history, message):
         raise ChatUnavailable("context_limit", "Nội dung trao đổi đã dài. Vui lòng bắt đầu cuộc trò chuyện mới.", 400)
     body = {
         "model": settings.GROQ_MODEL,
-        "messages": [{"role": "system", "content": SYSTEM_INSTRUCTION}, {"role": "user", "content": serialized}],
+        "messages": [{"role": "system", "content": localized_system_instruction()}, {"role": "user", "content": serialized}],
         "max_completion_tokens": settings.CHATBOT_MAX_OUTPUT_TOKENS,
         "stream": False,
         "response_format": {"type": "json_schema", "json_schema": {

@@ -1,16 +1,16 @@
-{% extends 'customer/reservation_base.html' %}
+{% extends 'customer/reservation_base.html' %}{% load i18n customer_language %}
 
-{% block title %}Tra cứu đặt bàn · CƠM QUÊ{% endblock %}
+{% block title %}{% translate "Tra cứu đặt bàn · CƠM QUÊ" %}{% endblock %}
 
 {% block reservation_content %}
 
-        <span class="customer-section-label">Theo dõi yêu cầu</span>
-        <h1 id="lookup-title">Tra cứu đặt bàn</h1>
-        <p class="customer-form-intro">Nhập cả mã đặt bàn và số điện thoại đã dùng khi đặt để xem thông tin.</p>
+        <span class="customer-section-label">{% translate "Theo dõi yêu cầu" %}</span>
+        <h1 id="lookup-title">{% translate "Tra cứu đặt bàn" %}</h1>
+        <p class="customer-form-intro">{% translate "Nhập cả mã đặt bàn và số điện thoại đã dùng khi đặt để xem thông tin." %}</p>
         <form class="customer-form-card cq-form-grid" method="post">
             {% csrf_token %}
             {% include 'customer/includes/form_fields.html' with form=form %}
-            <button class="customer-button" type="submit">Tra cứu <span aria-hidden="true">→</span></button>
+            <button class="customer-button" type="submit">{% translate "Tra cứu" %} <span aria-hidden="true">→</span></button>
         </form>
 
 {% endblock %}

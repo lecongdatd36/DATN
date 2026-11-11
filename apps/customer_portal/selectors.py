@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 
 from apps.menu.models import Category, Dish
 
@@ -24,7 +24,7 @@ def customer_dishes(*, query="", category_id=None):
         unit__is_active=True,
     )
     if query:
-        result = result.filter(name__icontains=query)
+        result = result.filter(Q(name__icontains=query)|Q(name_en__icontains=query))
     if category_id:
         result = result.filter(category_id=category_id)
     return result.order_by("category__name", "name", "pk")

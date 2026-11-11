@@ -1,17 +1,17 @@
-{% extends 'reservations/flow_base.html' %}
-{% block title %}Bạn có muốn đặt món trước? · CƠM QUÊ{% endblock %}
+{% extends 'reservations/flow_base.html' %}{% load i18n customer_language %}
+{% block title %}{% translate "Bạn có muốn đặt món trước? · CƠM QUÊ" %}{% endblock %}
 {% block flow_content %}
 <section class="or-preorder-question or-card">
-    <p class="or-kicker">THÊM MÓN CHO CUỘC HẸN</p>
-    <h1>Bạn có muốn đặt món trước không?</h1>
-    <p class="or-intro">{{ details.party_size }} khách · {{ details.starts_at|date:'H:i, d/m/Y' }} · {{ details.full_name }}</p>
-    <p>Bạn có thể chọn món ngay bây giờ, hoặc gọi món khi đến nhà hàng.</p>
+    <p class="or-kicker">{% translate "THÊM MÓN CHO CUỘC HẸN" %}</p>
+    <h1>{% translate "Bạn có muốn đặt món trước không?" %}</h1>
+    <p class="or-intro">{{ details.party_size }} {% translate "khách ·" %} {{ details.starts_at|date:'H:i, d/m/Y' }} · {{ details.full_name }}</p>
+    <p>{% translate "Bạn có thể chọn món ngay bây giờ, hoặc gọi món khi đến nhà hàng." %}</p>
     <form method="post" data-preorder-question>
         {% csrf_token %}{{ form.non_field_errors }}{{ form.decision.errors }}
-        <div class="or-booking-hint"><label for="{{ form.mode.id_for_label }}">{{ form.mode.label }}</label>{{ form.mode }}{{ form.mode.errors }}<p>Đến mới chế biến: nhà hàng gửi bếp khi bạn đến. Chuẩn bị theo giờ: nhà hàng sẽ chốt món và giờ phục vụ với bạn trước khi nhận cọc.</p></div>
-        <div class="or-actions"><button class="customer-button" type="submit" name="decision" value="yes">Có, chọn món trước →</button><button class="customer-button or-secondary" type="submit" name="decision" value="no" formnovalidate>Không, chỉ đặt bàn →</button></div>
+        <div class="or-booking-hint"><label for="{{ form.mode.id_for_label }}">{{ form.mode.label }}</label>{{ form.mode }}{{ form.mode.errors }}<p>{% translate "Đến mới chế biến: nhà hàng gửi bếp khi bạn đến. Chuẩn bị theo giờ: nhà hàng sẽ chốt món và giờ phục vụ với bạn trước khi nhận cọc." %}</p></div>
+        <div class="or-actions"><button class="customer-button" type="submit" name="decision" value="yes">{% translate "Có, chọn món trước →" %}</button><button class="customer-button or-secondary" type="submit" name="decision" value="no" formnovalidate>{% translate "Không, chỉ đặt bàn →" %}</button></div>
     </form>
-    <p class="or-muted">Thông tin đang được lưu nháp. Chưa gửi yêu cầu đặt bàn hoặc thu cọc.</p>
-    <a class="or-back-link" href="{{ details_url }}">← Sửa thông tin đặt bàn</a>
+    <p class="or-muted">{% translate "Thông tin đang được lưu nháp. Chưa gửi yêu cầu đặt bàn hoặc thu cọc." %}</p>
+    <a class="or-back-link" href="{{ details_url }}">{% translate "← Sửa thông tin đặt bàn" %}</a>
 </section>
 {% endblock %}

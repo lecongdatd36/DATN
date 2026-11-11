@@ -1,15 +1,15 @@
-{% extends 'customer/reservation_base.html' %}
+{% extends 'customer/reservation_base.html' %}{% load i18n customer_language %}
 
-{% block title %}Trạng thái đặt bàn · CƠM QUÊ{% endblock %}
+{% block title %}{% translate "Trạng thái đặt bàn · CƠM QUÊ" %}{% endblock %}
 
 {% block reservation_content %}
 
-        <span class="customer-section-label">Mã {{ booking.booking_code }}</span>
-        <h1 id="status-title">Trạng thái đặt bàn</h1>
+        <span class="customer-section-label">{% translate "Mã" %} {{ booking.booking_code }}</span>
+        <h1 id="status-title">{% translate "Trạng thái đặt bàn" %}</h1>
         <div class="customer-status-card">
-            <div class="customer-status-heading"><strong>{{ booking.get_status_display }}</strong><span>{{ booking.starts_at|date:'d/m/Y H:i' }}</span></div>
-            <dl class="customer-booking-summary"><div><dt>Số khách</dt><dd>{{ booking.party_size }}</dd></div><div><dt>Khu vực</dt><dd>{{ booking.table.area.name }}</dd></div><div><dt>Thời lượng</dt><dd>{{ booking.duration_minutes }} phút</dd></div></dl>
-            {% if cancelled %}<p class="customer-status-warning">Yêu cầu đặt bàn này đã kết thúc hoặc bị hủy.</p>{% else %}<ol class="customer-timeline">{% for item in timeline %}<li class="{% if item.done %}is-done{% endif %}"><span aria-hidden="true"></span>{{ item.label }}</li>{% endfor %}</ol>{% endif %}
+            <div class="customer-status-heading"><strong>{{ booking.get_status_display|public_text }}</strong><span>{{ booking.starts_at|date:'d/m/Y H:i' }}</span></div>
+            <dl class="customer-booking-summary"><div><dt>{% translate "Số khách" %}</dt><dd>{{ booking.party_size }}</dd></div><div><dt>{% translate "Khu vực" %}</dt><dd>{{ booking.table.area|public_name }}</dd></div><div><dt>{% translate "Thời lượng" %}</dt><dd>{{ booking.duration_minutes }} {% translate "phút" %}</dd></div></dl>
+            {% if cancelled %}<p class="customer-status-warning">{% translate "Yêu cầu đặt bàn này đã kết thúc hoặc bị hủy." %}</p>{% else %}<ol class="customer-timeline">{% for item in timeline %}<li class="{% if item.done %}is-done{% endif %}"><span aria-hidden="true"></span>{{ item.label }}</li>{% endfor %}</ol>{% endif %}
         </div>
 
 {% endblock %}

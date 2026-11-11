@@ -87,6 +87,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware", # deploy
     "django.middleware.gzip.GZipMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "core.middleware.RequestTimingMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -228,6 +229,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "vi"
+LANGUAGES = [("vi", "Tiếng Việt"), ("en", "English")]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "Asia/Ho_Chi_Minh"
 
 # Offline daily order forecasts; each source has its own publication pointer.

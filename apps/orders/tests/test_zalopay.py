@@ -127,6 +127,59 @@ class ZaloPayOrderTests(FakeGatewayMixin, TestCase):
         self.assertEqual(row.status, "PENDING")
         self.assertFalse(Invoice.objects.exists())
 
+    def test_pending_pos_result_uses_internal_shell_and_neutral_labels(self):
+        row = self.create()
+        self.client.force_login(self.users['CASHIER'])
+        self.gateway.reset_mock()
+        result = self.client.get(reverse('zalopay:result', args=[row.token]))
+        self.assertTemplateUsed(result, 'base.html')
+        self.assertNotContains(result, 'customer-header')
+        self.assertNotContains(result, 'data-basket-dialog')
+        self.assertNotContains(result, 'thanh toán thử nghiệm')
+        self.assertContains(result, 'THANH TOÁN HÓA ĐƠN')
+        self.assertContains(result, 'Trở về bàn / hóa đơn')
+        self.gateway.assert_not_called()
+        self.assertFalse(Invoice.objects.exists())
+
+    def test_verified_paid_return_goes_back_to_pos_with_stored_receipt(self):
+        row = self.create()
+        zalopay_services.process_callback(receipt(row))
+        self.client.force_login(self.users['CASHIER'])
+        self.gateway.reset_mock()
+        result = self.client.get(reverse('zalopay:result', args=[row.token]), {'next':'https://outside.example/', 'status':'failed'})
+        self.assertEqual(result.status_code, 302)
+        self.assertTrue(result.url.startswith(reverse('sales:workspace')+'?paid_order='+str(self.order.pk)))
+        self.assertNotIn('outside.example',result.url)
+        page = self.client.get(result.url)
+        self.assertContains(page, 'Đã thanh toán hóa đơn')
+        self.assertEqual(page.context['payment_receipt'].pk, Invoice.objects.get().pk)
+        self.assertEqual(Payment.objects.count(), 1)
+        self.gateway.assert_not_called()
+
+    def test_verified_paid_mobile_return_opens_receipt_and_state_has_safe_destination(self):
+        row = self.create()
+        zalopay_services.process_callback(receipt(row))
+        self.client.force_login(self.users['CASHIER'])
+        agent = {'HTTP_USER_AGENT':'Mozilla/5.0 (iPhone; Mobile)'}
+        result = self.client.get(reverse('zalopay:result',args=[row.token]), **agent)
+        expected = reverse('sales:mobile')+'?page=receipt&invoice='+str(Invoice.objects.get().pk)
+        self.assertEqual(result.url, expected)
+        state = self.client.get(reverse('zalopay:state',args=[row.token]), **agent).json()
+        self.assertEqual(state['return_url'],expected)
+        self.assertTrue(state['auto_return'])
+        self.assertTrue(state['sandbox'])
+        self.assertEqual(Payment.objects.count(),1)
+
+    def test_pending_and_review_never_return_as_success_and_no_unpaid_receipt_banner(self):
+        row = self.create()
+        self.client.force_login(self.users['CASHIER'])
+        self.assertEqual(self.client.get(reverse('zalopay:result',args=[row.token]),{'status':1}).status_code,200)
+        ZaloPayTransaction.objects.filter(pk=row.pk).update(status='REVIEW')
+        self.assertEqual(self.client.get(reverse('zalopay:result',args=[row.token])).status_code,200)
+        page = self.client.get(reverse('sales:workspace'),{'paid_order':self.order.pk})
+        self.assertNotContains(page,'Đã thanh toán hóa đơn')
+        self.assertFalse(Invoice.objects.exists())
+
     def test_missing_callback_query_success_checks_amount_and_uses_key1(self):
         row = self.create()
         self.gateway.return_value = response({"return_code": 1, "amount": int(row.amount), "zp_trans_id": 261110000000999})
@@ -291,6 +344,21 @@ class ZaloPayDepositTests(FakeGatewayMixin, TestCase):
         self.assertEqual(self.reservation.status, "CONFIRMED")
         self.assertEqual(self.reservation.received, 100000)
         self.assertEqual(DepositPayment.objects.count(), 1)
+        self.assertFalse(Order.objects.exists())
+
+    def test_deposit_return_stays_in_booking_flow_and_redirects_only_after_verified_paid(self):
+        with self.at(self.now):
+            row = self.create()
+            url = reverse('zalopay:result', args=[row.token])
+            pending = self.client.get(url, {'status':1})
+            self.assertEqual(pending.status_code,200)
+            self.assertTemplateUsed(pending,'customer/base_customer.html')
+            self.assertContains(pending,'ĐẶT CỌC BÀN')
+            self.assertNotContains(pending,'thanh toán thử nghiệm')
+            zalopay_services.process_callback(receipt(row))
+            paid = self.client.get(url)
+        self.assertEqual(paid.status_code,302)
+        self.assertEqual(paid.url,reverse('online_reservations:detail',args=[self.reservation.access_token]))
         self.assertFalse(Order.objects.exists())
 
     def test_late_deposit_is_recorded_for_refund_without_confirming_table(self):

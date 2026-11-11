@@ -1,0 +1,8 @@
+{% load i18n customer_language %}
+{% load menu_money %}
+<div class="cq-combo-grid">
+{% for combo in home_combos %}<article class="cq-combo-card" data-combo-card="{{ combo.pk }}">
+<div class="cq-combo-photos">{% for part in combo.components|slice:':3' %}{% include 'customer/includes/dish_photo.html' with dish=part.dish photo_class='cq-combo-photo' %}{% endfor %}<span class="cq-combo-people">{{ combo.people }} {% translate "người · Trọn bữa" %}</span></div>
+<div class="cq-combo-copy"><span class="cq-kicker">{% translate "CÙNG NHAU THƯỞNG THỨC" %}</span><h3>{{ combo|public_name }}</h3><p>{{ combo|public_description }}</p><ul>{% for part in combo.components %}<li><span>{{ part.quantity|stringformat:'02d' }}</span> {{ part.dish|public_name }}</li>{% endfor %}</ul><div class="cq-combo-price"><strong>{{ combo.price|dong }}{% translate "đ" %}</strong>{% if combo.savings %}<del>{{ combo.regular_price|dong }}{% translate "đ" %}</del><small>{% translate "Tiết kiệm" %} {{ combo.savings|dong }}{% translate "đ" %}</small>{% endif %}</div><button class="cq-pill" type="button" data-basket-add="combo" data-item-id="{{ combo.pk }}" {% if not combo.is_orderable %}disabled{% endif %}>{% if combo.is_orderable %}{% translate "Thêm combo vào giỏ" %} <span aria-hidden="true">+</span>{% else %}{% translate "Tạm hết thành phần" %}{% endif %}</button></div>
+</article>{% empty %}<p class="cq-home-empty">{% translate "Nhà hàng đang cập nhật các combo cho bữa hẹn." %}</p>{% endfor %}
+</div>

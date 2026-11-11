@@ -1,4 +1,5 @@
+{% load i18n customer_language %}
 {% load static %}
 <img class="{{ photo_class }}" src="{% if full_size and dish.image %}{{ dish.image.url }}{% elif dish.thumbnail %}{{ dish.thumbnail.url }}{% elif dish.image %}{{ dish.image.url }}{% else %}{% static 'images/dish-placeholder.svg' %}{% endif %}"
-     alt="{% if decorative %}{% elif dish %}{{ dish.name }}{% else %}Ảnh món đang được cập nhật{% endif %}"
+     alt="{% if decorative %}{% elif dish %}{{ dish|public_name }}{% else %}{% translate "Ảnh món đang được cập nhật" %}{% endif %}"
      {% if eager %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" width="900" height="600">

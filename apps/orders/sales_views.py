@@ -79,6 +79,9 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             expire_overdue_bookings()
             services.expire_qr_check_in_requests()
         context = super().get_context_data(**kwargs)
+        paid_order = self.request.GET.get('paid_order', '')
+        if paid_order.isdecimal() and 0 < len(paid_order) <= 19 and int(paid_order) < 2**63:
+            context['payment_receipt'] = Invoice.objects.filter(order_id=int(paid_order),status=Invoice.Status.PAID).select_related('order__table').first()
         selected_order = None
         order_id = self.request.GET.get("order")
         table_id = self.request.GET.get("table")

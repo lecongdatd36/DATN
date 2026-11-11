@@ -3,6 +3,7 @@
 {% block workforce_heading %}Đăng ký khuôn mặt{% endblock %}
 {% block workforce_content %}
 {% if not ready %}<div class="alert alert-warning">{{ readiness_error }}</div>{% endif %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"><p class="text-muted mb-0">Quản lý mẫu khuôn mặt nhân viên, sau đó kiểm tra khả năng nhận diện bằng camera.</p><a class="btn btn-outline-primary" href="{% url 'workforce:face_test' %}">Mở kiểm thử nhận diện →</a></div>
 <div class="row g-4">
   {% if employee %}<div class="col-lg-6"><div class="project-card p-4" data-face-enrollment data-save-url="{% url 'workforce:face_save' employee.pk %}">
     <h2 class="h5">{{ employee.full_name }} · {{ employee.employee_code }}</h2><p class="small text-muted">Chụp 3 mẫu riêng: nhìn thẳng, quay nhẹ trái, quay nhẹ phải. Mỗi mẫu chỉ có một khuôn mặt, đủ sáng. Hệ thống chỉ lưu đặc trưng nhận diện.</p>

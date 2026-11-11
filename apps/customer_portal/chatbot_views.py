@@ -1,4 +1,5 @@
 import json
+from django.utils.translation import gettext as _
 import logging
 import uuid
 
@@ -97,7 +98,7 @@ def customer_chat(request):
             return JsonResponse({"answer": answer["answer"], "dishes": dishes, "apriori": apriori,
                                  "links": links, "attempts": conversation["attempts"], "max_turns": settings.CHATBOT_MAX_TURNS})
     except ChatUnavailable as error:
-        response = JsonResponse({"error": error.message, "code": error.code, "links": links}, status=error.status)
+        response = JsonResponse({"error": _(error.message), "code": error.code, "links": links}, status=error.status)
         if error.status == 429:
             response["Retry-After"] = "60"
         return response

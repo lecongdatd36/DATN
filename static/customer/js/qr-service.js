@@ -1,3 +1,4 @@
+var cqTranslate_qr_service = window.gettext || (text => text);
 document.addEventListener("DOMContentLoaded", () => {
     const service = document.querySelector("[data-qr-service]");
     if (!service) return;
@@ -46,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
         savePending();
         const original = button.textContent;
         button.disabled = true;
-        button.textContent = "Đang gửi…";
+        button.textContent = cqTranslate_qr_service("Đang gửi…");
         if (status) status.textContent = "";
         try {
             const csrf = document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
@@ -71,12 +72,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     delete pending[requestType];
                     savePending();
                 }
-                throw new Error(payload.error || "Không thể gửi yêu cầu phục vụ.");
+                throw new Error(payload.error || cqTranslate_qr_service("Không thể gửi yêu cầu phục vụ."));
             }
             delete pending[requestType];
             savePending();
             button.classList.add("is-requested");
-            button.textContent = "Đã báo";
+            button.textContent = cqTranslate_qr_service("Đã báo");
             if (status) status.textContent = `${payload.request_type}: ${payload.status}.`;
         } catch (error) {
             button.disabled = false;

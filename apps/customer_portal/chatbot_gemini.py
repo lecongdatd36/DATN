@@ -7,7 +7,7 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 FREE_TIER_MODELS = frozenset({"gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash"})
 
-from .chatbot_contract import SYSTEM_INSTRUCTION, RESPONSE_SCHEMA, ChatUnavailable, validate_reply
+from .chatbot_contract import SYSTEM_INSTRUCTION, RESPONSE_SCHEMA, ChatUnavailable, validate_reply, localized_system_instruction
 
 
 def provider_failure_reason(error):
@@ -75,7 +75,7 @@ def generate_reply(context, history, message):
                 model=settings.GEMINI_MODEL,
                 contents=[types.Content(role="user", parts=[types.Part.from_text(text=serialized)])],
                 config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_INSTRUCTION, temperature=0.2,
+                    system_instruction=localized_system_instruction(), temperature=0.2,
                     max_output_tokens=settings.CHATBOT_MAX_OUTPUT_TOKENS,
                     response_mime_type="application/json", response_json_schema=RESPONSE_SCHEMA,
                 ),

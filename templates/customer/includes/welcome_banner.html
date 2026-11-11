@@ -1,0 +1,31 @@
+{% load i18n customer_language %}
+{% load static %}
+    <section class="cq-welcome" aria-labelledby="welcome-title">
+        <div class="cq-welcome-visual"><img class="cq-welcome-photo" src="{% static 'customer/images/com-que-table-hero-v1.webp' %}" width="2048" height="768" alt="" fetchpriority="high" decoding="async"></div>
+        <div class="cq-welcome-copy">
+            <span class="cq-kicker">{% if menu_banner %}{% translate "THỰC ĐƠN CƠM QUÊ" %}{% else %}{% translate "TỪ GIAN BẾP CƠM QUÊ" %}{% endif %}</span>
+            <h1 id="welcome-title">{% if menu_banner %}{% translate "Chọn vị ngon." %}<br>{% translate "Trọn một" %} <em>{% translate "bữa nhà." %}</em>{% else %}{% translate "Một bữa cơm." %}<br>{% translate "Trọn vẹn" %} <em>{% translate "vị nhà." %}</em>{% endif %}</h1>
+            <p>{% if menu_banner %}{% translate "Món chính đậm đà, món rau xanh mát, chút ngọt tròn vị." %}<br>{% translate "Chọn món bạn thích, Cơm Quê lo bữa hẹn của bạn." %}{% else %}{% translate "Món Việt thân quen, nấu bằng sự chăm chút." %}<br>{% translate "Mời bạn ghé, cùng người thương ăn một bữa thật ngon." %}{% endif %}</p>
+            <div class="cq-welcome-links">
+                <a class="cq-pill cq-pill-gold" href="{% if menu_banner %}#menu-catalog{% else %}#thuc-don{% endif %}">{% if menu_banner %}{% translate "Chọn món ngay" %}{% else %}{% translate "Xem thực đơn" %}{% endif %} {% include 'customer/includes/ui_icon.html' with icon='arrow' %}</a>
+                <a class="cq-quiet-link" href="{% if menu_banner %}#combo-home{% else %}#cau-chuyen{% endif %}">{% if menu_banner %}{% translate "Khám phá combo ↗" %}{% else %}{% translate "Chuyện Cơm Quê ↗" %}{% endif %}</a>
+            </div>
+        </div>
+        <aside class="cq-quick-booking" aria-labelledby="quick-booking-title">
+            <div class="cq-quick-title"><span>{% translate "ĐỂ DÀNH MỘT CHỖ NGỒI" %}</span>{% include 'customer/includes/ui_icon.html' with icon='calendar' %}</div>
+            <h2 id="quick-booking-title">{% translate "Hẹn một bữa ngon." %}</h2>
+            <p>{% translate "Bạn định ghé Cơm Quê khi nào?" %}</p>
+            <form action="{% url 'online_reservations:create' %}" method="get" data-quick-booking>
+                <div class="cq-quick-fields">
+                    <label>{% translate "Ngày đến" %}<input type="date" name="booking_date" min="{% now 'Y-m-d' %}" required aria-label="{% translate "Ngày đến" %}"></label>
+                    <label>{% translate "Giờ đến" %}<input type="time" name="booking_time" required aria-label="{% translate "Giờ đến" %}"></label>
+                    <label class="cq-full">{% translate "Số người cùng bàn" %}<select name="party_size" aria-label="{% translate "Số người cùng bàn" %}">
+                        <option value="2">{% translate "02 người · Một cuộc hẹn" %}</option><option value="3">{% translate "03 người" %}</option><option value="4">{% translate "04 người · Bữa cơm gia đình" %}</option><option value="5">{% translate "05 người" %}</option><option value="6">{% translate "06 người" %}</option><option value="8">{% translate "08 người · Bạn bè sum họp" %}</option><option value="10">{% translate "10 người" %}</option><option value="12">{% translate "12 người" %}</option>
+                    </select></label>
+                </div>
+                <button class="cq-pill" type="submit">{% translate "Tiếp tục đặt bàn" %} {% include 'customer/includes/ui_icon.html' with icon='arrow' %}</button>
+                <small class="cq-quick-note">{% translate "Chọn món trước sau khi điền thông tin đặt bàn." %}</small>
+            </form>
+            <a class="cq-quick-lookup" href="{% url 'online_reservations:lookup' %}">{% translate "Bạn đã có lịch hẹn? Tra cứu tại đây" %} {% include 'customer/includes/ui_icon.html' with icon='arrow' %}</a>
+        </aside>
+    </section>
