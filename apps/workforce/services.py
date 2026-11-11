@@ -5,9 +5,10 @@ import secrets
 from uuid import uuid4
 
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import connection, transaction
+from django.db import connection, transaction, models
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
@@ -249,6 +250,17 @@ def clock_target(employee, action, now):
         raise ValidationError("Chọn Vào ca hoặc Ra ca.")
 
 
+def automatic_clock_action(employee, now):
+    """Resolve from the ledger under workforce_lock; debounce across devices."""
+    recent = Attendance.objects.filter(schedule__employee=employee).filter(
+        models.Q(checked_in_at__gte=now-timedelta(seconds=60)) |
+        models.Q(checked_out_at__gte=now-timedelta(seconds=60))).exists()
+    if recent:
+        raise ValidationError("Bạn vừa chấm công thành công. Vui lòng chờ ít nhất 60 giây trước lượt tiếp theo; kiểm tra bảng công nếu cần.", code="recent_clock")
+    return "OUT" if Attendance.objects.filter(schedule__employee=employee,
+        checked_in_at__isnull=False, checked_out_at__isnull=True).exists() else "IN"
+
+
 @transaction.atomic
 def record_clock(*, employee_id, action, device=None, session_key=None):
     workforce_lock()
@@ -305,7 +317,7 @@ def delete_face(*, actor, employee_id):
 def begin_challenge(*, action, raw_token=None, session_key=None):
     workforce_lock()
     device, digest = challenge_source(raw_token, session_key)
-    if action not in ("IN", "OUT"):
+    if action not in ("AUTO", "IN", "OUT"):
         raise ValidationError("Chọn Vào ca hoặc Ra ca.")
     now = timezone.now()
     source_rows = FaceChallenge.objects.filter(device=device, session_digest=digest)
@@ -315,7 +327,7 @@ def begin_challenge(*, action, raw_token=None, session_key=None):
     # Bound history without keeping camera images or templates in challenge rows.
     FaceChallenge.objects.filter(expires_at__lt=now-timedelta(days=1)).delete()
     source_rows.filter(used_at__isnull=True).update(used_at=now)
-    return FaceChallenge.objects.create(id=uuid4(), device=device, session_digest=digest, action=action,
+    return FaceChallenge.objects.create(id=uuid4(), device=device, session_digest=digest, action=action, is_automatic=action=="AUTO",
         poses=["CENTER", secrets.choice(("LEFT", "RIGHT")), "CENTER"], expires_at=now+timedelta(seconds=90))
 
 
@@ -337,6 +349,7 @@ def process_frame(*, challenge_id, frame, raw_token=None, session_key=None):
         challenge.save()
         return {"ok": False, "done": True, "message": "Đã thử quá nhiều lần. Hãy bắt đầu lại."}
     identified_name = None
+    recognition = {}
     feedback = {}
     try:
         sample = extract_frame(frame)
@@ -348,10 +361,24 @@ def process_frame(*, challenge_id, frame, raw_token=None, session_key=None):
         if not match:
             raise ValidationError("Chưa thấy rõ khuôn mặt đã đăng ký. Đưa mặt về khung, quay nhẹ và giữ yên.", code="face_not_matched")
         profile = match[0]
-        identified_name = profile.employee.full_name
         if challenge.employee_id and (profile.employee_id != challenge.employee_id or profile.updated_at != challenge.profile_version):
             challenge.used_at = now
             raise ValidationError("Người chấm công hoặc hồ sơ đã thay đổi. Hãy bắt đầu lại.")
+        identified_name = profile.employee.full_name
+        recognition = {"employee_code": profile.employee.employee_code, "similarity": round(match[1], 4),
+            "threshold": settings.ATTENDANCE_FACE_THRESHOLD}
+        if challenge.is_automatic:
+            try:
+                resolved = automatic_clock_action(profile.employee, now)
+            except ValidationError:
+                challenge.used_at = now
+                raise
+            if challenge.action != "AUTO" and challenge.action != resolved:
+                challenge.used_at = now
+                raise ValidationError("Giờ công đã thay đổi trong lúc xác minh. Kiểm tra bảng công rồi bắt đầu lại.", code="clock_changed")
+            challenge.action = resolved
+            challenge.employee = profile.employee
+            challenge.profile_version = profile.updated_at
         # Explain schedule problems immediately after identifying the face.
         try:
             schedule, _ = clock_target(profile.employee, challenge.action, now)
@@ -360,7 +387,7 @@ def process_frame(*, challenge_id, frame, raw_token=None, session_key=None):
             raise
         if challenge.step and challenge.neutral_yaw is None:
             challenge.used_at = now
-            raise ValidationError("Lượt xác minh cũ đã thay đổi. Bấm Vào ca hoặc Ra ca để bắt đầu lại.", code="restart")
+            raise ValidationError("Lượt xác minh cũ đã thay đổi. Bấm Chấm công để bắt đầu lại.", code="restart")
         expected_pose = challenge.poses[challenge.step]
         feedback = pose_feedback(sample["yaw"], expected_pose, challenge.neutral_yaw)
         if not pose_matches(sample["yaw"], expected_pose, challenge.neutral_yaw):
@@ -381,11 +408,11 @@ def process_frame(*, challenge_id, frame, raw_token=None, session_key=None):
             challenge.save()
             return {"ok": True, "done": True, "recorded": True, "identified": True, "name": profile.employee.full_name,
                     "message": f"{'Vào ca' if challenge.action == 'IN' else 'Ra ca'} thành công lúc {timezone.localtime(now):%H:%M:%S}.",
-                    "shift": attendance.schedule.shift_name}
+                    "shift": attendance.schedule.shift_name, "action": challenge.action, "recorded_at": now.isoformat(), **recognition}
         challenge.save()
         return {"ok": True, "done": False, "recorded": False, "identified": True, "name": profile.employee.full_name,
                 "pose": challenge.poses[challenge.step], "step": challenge.step, "shift": schedule.shift_name,
-                **pose_feedback(sample["yaw"], challenge.poses[challenge.step], challenge.neutral_yaw)}
+                "action": challenge.action, **recognition, **pose_feedback(sample["yaw"], challenge.poses[challenge.step], challenge.neutral_yaw)}
     except ValidationError as error:
         if challenge.step >= len(challenge.poses):
             challenge.used_at = now
@@ -393,4 +420,4 @@ def process_frame(*, challenge_id, frame, raw_token=None, session_key=None):
         code = getattr(error, "code", None) or getattr(error.error_list[0], "code", None) or "camera"
         return {"ok": False, "done": bool(challenge.used_at), "recorded": False, "identified": bool(identified_name),
                 "name": identified_name, "code": code, "step": min(challenge.step, 2),
-                "message": " ".join(error.messages), **feedback}
+                "message": " ".join(error.messages), "action": challenge.action, **recognition, **feedback}

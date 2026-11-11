@@ -1,3 +1,4 @@
+var cqTranslate_qr_cart = window.gettext || (text => text);
 document.addEventListener("DOMContentLoaded", () => {
     const dishCards = [...document.querySelectorAll("[data-qr-dish]")];
     const itemsElement = document.querySelector("[data-qr-items]");
@@ -43,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         storage.removeItem(storageKey);
     }
 
-    const formatMoney = (value) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+    const formatMoney = (value) => `${new Intl.NumberFormat(document.documentElement.lang === "en" ? "en-US" : "vi-VN").format(value)}${cqTranslate_qr_cart('đ')}`;
     const normalizeText = (value) => String(value || "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -105,17 +106,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const entries = Object.values(cart);
         if (submitButton) {
             submitButton.disabled = !orderReady || isSubmitting || !entries.length;
-            if (!isSubmitting) submitButton.textContent = frozen ? "Kiểm tra / gửi lại yêu cầu" : "Gửi yêu cầu gọi món";
+            if (!isSubmitting) submitButton.textContent = frozen ? cqTranslate_qr_cart("Kiểm tra / gửi lại yêu cầu") : cqTranslate_qr_cart("Gửi yêu cầu gọi món");
         }
         if (!entries.length) {
-            itemsElement.innerHTML = '<p class="customer-qr-cart-empty">Chưa có món trong giỏ.</p>';
+            itemsElement.innerHTML = cqTranslate_qr_cart('<p class="customer-qr-cart-empty">Chưa có món trong giỏ.</p>');
             return;
         }
         entries.forEach((item) => {
             const row = document.createElement("div");
             row.className = "customer-qr-cart-item";
             const disabled = frozen ? " disabled" : "";
-            row.innerHTML = `<div class="customer-qr-cart-item-head"><strong>${escapeHtml(item.name)}</strong><span>${formatMoney(item.price * item.quantity)}</span></div><div class="customer-qr-quantity"><button type="button" data-qr-decrease="${item.id}" aria-label="Giảm ${escapeHtml(item.name)}"${disabled}>−</button><b>${item.quantity}</b><button type="button" data-qr-increase="${item.id}" aria-label="Tăng ${escapeHtml(item.name)}"${disabled}>+</button></div><label>Ghi chú món<input type="text" maxlength="500" value="${escapeHtml(item.note || "")}" data-qr-note="${item.id}" placeholder="Ví dụ: không hành"${disabled}></label>`;
+            row.innerHTML = `<div class="customer-qr-cart-item-head"><strong>${escapeHtml(item.name)}</strong><span>${formatMoney(item.price * item.quantity)}</span></div><div class="customer-qr-quantity"><button type="button" data-qr-decrease="${item.id}" aria-label="${escapeHtml(cqTranslate_qr_cart('Giảm'))} ${escapeHtml(item.name)}"${disabled}>−</button><b>${item.quantity}</b><button type="button" data-qr-increase="${item.id}" aria-label="${escapeHtml(cqTranslate_qr_cart('Tăng'))} ${escapeHtml(item.name)}"${disabled}>+</button></div><label>${escapeHtml(cqTranslate_qr_cart('Ghi chú món'))}<input type="text" maxlength="500" value="${escapeHtml(item.note || "")}" data-qr-note="${item.id}" placeholder="${escapeHtml(cqTranslate_qr_cart('Ví dụ: không hành'))}"${disabled}></label>`;
             itemsElement.appendChild(row);
         });
     };
@@ -174,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
         isSubmitting = true;
         showStatus();
         render();
-        button.textContent = "Đang gửi...";
+        button.textContent = cqTranslate_qr_cart("Đang gửi...");
         try {
             const csrf = document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
             if (!pendingSubmission) {
@@ -204,8 +205,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     save();
                 }
                 const fallback = response.status === 403
-                    ? "Phiên gọi món đã hết hạn. Hãy tải lại mã QR rồi gửi lại."
-                    : "Không thể gửi yêu cầu. Vui lòng thử lại.";
+                    ? cqTranslate_qr_cart("Phiên gọi món đã hết hạn. Hãy tải lại mã QR rồi gửi lại.")
+                    : cqTranslate_qr_cart("Không thể gửi yêu cầu. Vui lòng thử lại.");
                 throw new Error(result.error || fallback);
             }
             storage.removeItem(storageKey);
@@ -215,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
             render();
             window.location.href = result.status_url;
         } catch (error) {
-            showStatus(error.message || "Không thể gửi yêu cầu. Vui lòng thử lại.");
+            showStatus(error.message || cqTranslate_qr_cart("Không thể gửi yêu cầu. Vui lòng thử lại."));
             isSubmitting = false;
             render();
         }
@@ -225,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
         Object.keys(cart).forEach((id) => { if (!availableIds.has(id)) delete cart[id]; });
         save();
     } else {
-        showStatus("Yêu cầu trước có thể đã tới hệ thống. Bấm “Kiểm tra / gửi lại” để xác nhận, hệ thống sẽ không tạo trùng.");
+        showStatus(cqTranslate_qr_cart("Yêu cầu trước có thể đã tới hệ thống. Bấm “Kiểm tra / gửi lại” để xác nhận, hệ thống sẽ không tạo trùng."));
     }
 
     const pollMenuState = async () => {

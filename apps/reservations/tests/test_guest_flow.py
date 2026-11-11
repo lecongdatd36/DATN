@@ -2,6 +2,7 @@ from uuid import uuid4
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.menu.models import Dish
 from apps.reservations.models import Reservation
@@ -37,6 +38,29 @@ class GuestReservationFlowTests(TestCase):
         self.assertNotContains(response, 'data-preorder-cart')
         self.assertContains(response, 'name="full_name"')
         self.assertNotContains(response, 'data-booking-choice')
+
+    def test_homepage_shortcut_prefills_without_creating_or_holding_a_reservation(self):
+        arrival=timezone.localtime(self.arrival)
+        response=self.client.get(reverse("online_reservations:create"),{
+            "booking_date":arrival.strftime("%Y-%m-%d"),"booking_time":arrival.strftime("%H:%M"),"party_size":"6"})
+        self.assertEqual(response.context["form"].initial["starts_at"],self.arrival)
+        self.assertEqual(response.context["form"].initial["party_size"],6)
+        self.assertFalse(response.context["form"].is_bound)
+        self.assertFalse(Reservation.objects.exists())
+        self.assertFalse(self.client.session.get("reservation_draft"))
+
+    def test_homepage_shortcut_ignores_invalid_values_and_preserves_saved_details(self):
+        session=self.client.session
+        session["reservation_draft"]={"details":{"party_size":"4","full_name":"Tên đã nhập"}}
+        session.save()
+        response=self.client.get(reverse("online_reservations:create"),{
+            "booking_date":"invalid","booking_time":"25:99","party_size":"9999","mode":"READY"})
+        form=response.context["form"]
+        self.assertEqual(form.initial["party_size"],"4")
+        self.assertEqual(form.initial["full_name"],"Tên đã nhập")
+        self.assertNotIn("starts_at",form.initial)
+        self.assertNotIn("mode",form.fields)
+        self.assertFalse(Reservation.objects.exists())
 
     def test_booking_details_are_required_before_the_preorder_question(self):
         self.assertRedirects(self.client.get(reverse("online_reservations:choice")), reverse("online_reservations:create"))

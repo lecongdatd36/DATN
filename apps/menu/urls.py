@@ -1,8 +1,12 @@
 from django.urls import path
 from . import views
+from . import combo_views
 
 app_name = "menu"
 urlpatterns = [
+    path("combo/", combo_views.ComboListView.as_view(), name="combo_list"),
+    path("combo/them/", combo_views.ComboFormView.as_view(), name="combo_create"),
+    path("combo/<int:pk>/sua/", combo_views.ComboFormView.as_view(), name="combo_update"),
     path("", views.DishListView.as_view(), name="dish_list"),
     path("them/", views.DishFormView.as_view(), name="dish_create"),
     path("nhom-mon/", views.CatalogListView.as_view(), name="category_list"),

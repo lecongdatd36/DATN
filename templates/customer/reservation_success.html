@@ -1,17 +1,17 @@
-{% extends 'customer/reservation_base.html' %}
+{% extends 'customer/reservation_base.html' %}{% load i18n customer_language %}
 
-{% block title %}Đặt bàn thành công · CƠM QUÊ{% endblock %}
+{% block title %}{% translate "Đặt bàn thành công · CƠM QUÊ" %}{% endblock %}
 
 {% block reservation_content %}
 
         <div class="customer-success-card">
             <span class="customer-success-mark" aria-hidden="true">✓</span>
-            <span class="customer-section-label">Đã gửi yêu cầu</span>
-            <h1 id="success-title">Đặt bàn thành công</h1>
-            <p>Nhà hàng đã nhận được yêu cầu của bạn. Vui lòng lưu lại mã đặt bàn để tra cứu trạng thái.</p>
+            <span class="customer-section-label">{% translate "Đã gửi yêu cầu" %}</span>
+            <h1 id="success-title">{% translate "Đặt bàn thành công" %}</h1>
+            <p>{% translate "Nhà hàng đã nhận được yêu cầu của bạn. Vui lòng lưu lại mã đặt bàn để tra cứu trạng thái." %}</p>
             <div class="customer-booking-code">{{ success.booking_code }}</div>
-            <dl class="customer-booking-summary"><div><dt>Trạng thái</dt><dd>{{ success.status }}</dd></div><div><dt>Thời gian</dt><dd>{{ success.starts_at|slice:':16' }}</dd></div><div><dt>Số khách</dt><dd>{{ success.party_size }}</dd></div><div><dt>Khu vực</dt><dd>{{ success.area_name }}</dd></div></dl>
-            <a class="customer-button" href="{% url 'customer_reservations:lookup' %}">Tra cứu đặt bàn</a>
+            <dl class="customer-booking-summary"><div><dt>{% translate "Trạng thái" %}</dt><dd>{{ success.status }}</dd></div><div><dt>{% translate "Thời gian" %}</dt><dd>{{ success.starts_at|slice:':16' }}</dd></div><div><dt>{% translate "Số khách" %}</dt><dd>{{ success.party_size }}</dd></div><div><dt>{% translate "Khu vực" %}</dt><dd>{{ success.area_name }}</dd></div></dl>
+            <a class="customer-button" href="{% url 'customer_reservations:lookup' %}">{% translate "Tra cứu đặt bàn" %}</a>
         </div>
 
 {% endblock %}

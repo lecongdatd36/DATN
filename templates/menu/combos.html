@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% load menu_money %}
+{% block title %}Quản lý combo · QLNH{% endblock %}
+{% block content %}<section class="container-fluid px-4 pb-5">
+{% include 'menu/includes/navigation.html' %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><p class="eyebrow">THỰC ĐƠN · BỮA ĂN TRỌN GÓI</p><h1 class="h3">Quản lý combo</h1><p class="text-secondary">Chọn món thành phần và giá combo. Bếp nhận từng món; thông tin của lịch đã đặt giữ nguyên.</p></div><a class="btn btn-primary" href="{% url 'menu:combo_create' %}">+ Tạo combo</a></div>
+<div class="row g-4">{% for combo in combos %}<div class="col-md-6 col-xl-4"><article class="card h-100 overflow-hidden">
+{% include 'customer/includes/dish_photo.html' with dish=combo.cover photo_class='card-img-top' %}
+<div class="card-body"><div class="d-flex justify-content-between"><small>{{ combo.code }} · {{ combo.people }} người</small><span class="badge {% if combo.is_orderable %}text-bg-success{% else %}text-bg-secondary{% endif %}">{% if not combo.is_active %}Ngừng bán{% elif combo.is_orderable %}Đang bán{% else %}Thiếu/hết thành phần{% endif %}</span></div><h2 class="h5 mt-3">{{ combo.name }}</h2><p class="text-secondary">{{ combo.description }}</p><ul>{% for part in combo.components %}<li>{{ part.quantity }} × {{ part.dish.name }}</li>{% endfor %}</ul><strong class="fs-5 text-danger">{{ combo.price|dong }}đ</strong> <small class="text-secondary">Giá lẻ {{ combo.regular_price|dong }}đ</small><div class="mt-3"><a class="btn btn-outline-primary" href="{% url 'menu:combo_update' combo.pk %}">Sửa món / giá / trạng thái</a></div></div></article></div>
+{% empty %}<div class="col-12"><div class="alert alert-info">Chưa có combo. Tạo combo từ các món trong thực đơn để hiện trên trang khách.</div></div>{% endfor %}</div>
+</section><style>.card-img-top{height:185px;object-fit:cover}</style>{% endblock %}

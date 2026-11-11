@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from datetime import timedelta
 from functools import wraps
 from uuid import UUID
@@ -73,12 +74,28 @@ def create(request):
     draft=request.session.get("reservation_draft",{})
     form=ReservationDetailsForm(request.POST if request.method=="POST" else None,
         initial=draft.get("details",{}),booking_flow="table")
+    if request.method=="GET":
+        # Homepage shortcuts only prefill the form. Holding a table still needs
+        # the existing POST, full validation, consent and transaction workflow.
+        day=request.GET.get("booking_date","")
+        clock=request.GET.get("booking_time","")
+        hints={"starts_at":f"{day}T{clock}" if day and clock else "",
+            "party_size":request.GET.get("party_size","")}
+        for name,value in hints.items():
+            if value:
+                try:
+                    form.initial[name]=form.fields[name].clean(value)
+                except ValidationError:
+                    pass
     if request.method=="POST" and form.is_valid():
         details={key:request.POST.get(key,"") for key in form.fields}
         details["mode"]=draft.get("details",{}).get("mode","TABLE")
-        request.session["reservation_draft"]={"flow":"undecided","details":details,"cart":draft.get("cart",{})}
-        return private_response(redirect("online_reservations:choice"))
-    return private_response(render(request,"reservations/create.html",{"form":form,"step":"details",**flow_context("undecided")}))
+        from_storefront=bool(draft.get("from_storefront") and any(str(value or "0")!="0" for key,value in draft.get("cart",{}).items() if key.startswith(("qty_","cqty_"))))
+        request.session["reservation_draft"]={"flow":"preorder" if from_storefront else "undecided","details":details,
+            "cart":draft.get("cart",{}),"from_storefront":from_storefront}
+        return private_response(redirect("online_reservations:review" if from_storefront else "online_reservations:choice"))
+    return private_response(render(request,"reservations/create.html",{"form":form,"step":"details",
+        "storefront_cart_ready":bool(draft.get("from_storefront") and draft.get("cart")),**flow_context("undecided")}))
 
 
 def flow_context(flow):
@@ -116,9 +133,9 @@ def submit_legacy(request,policy):
         response=save_reservation(request,form)
         if response:
             return response
-    flow="preorder" if request.POST.get("mode")=="READY" or any(request.POST.get(key) not in (None,"","0") for key in form.fields if key.startswith("qty_")) else "table"
+    flow="preorder" if request.POST.get("mode")=="READY" or any(request.POST.get(key) not in (None,"","0") for key in form.fields if key.startswith(("qty_","cqty_"))) else "table"
     request.session["reservation_draft"]={"flow":flow,"details":{key:request.POST.get(key,"") for key in ReservationDetailsForm().fields},
-        "cart":{key:request.POST.get(key,"") for key in form.fields if key.startswith(("qty_","note_"))}}
+        "cart":{key:request.POST.get(key,"") for key in form.fields if key.startswith(("qty_","note_","cqty_","cnote_"))}}
     return private_response(render(request,"reservations/review.html",{**review_context(form,policy),**flow_context(flow)}))
 
 
@@ -148,7 +165,7 @@ def draft_forms(request):
 def menu(request):
     draft,details=draft_forms(request)
     if not details.is_valid():
-        messages.info(request,"Vui lòng nhập lại thông tin đặt bàn trước khi chọn món.")
+        messages.info(request,_("Vui lòng nhập lại thông tin đặt bàn trước khi chọn món."))
         return private_response(redirect("online_reservations:create"))
     if draft.get("flow")=="table":
         return private_response(redirect("online_reservations:review"))
@@ -181,15 +198,22 @@ def review_context(form,policy):
             rows.append({**row,"count":quantity,"line_total":row["dish"].price*quantity,
                 "item_note":form.cleaned_data.get(row["note"].name,"")})
     total=sum(row["line_total"] for row in rows)
+    combo_rows=[]
+    for row in form.combo_rows:
+        quantity=form.cleaned_data.get(row["quantity"].name)
+        if quantity:
+            combo_rows.append({**row,"count":quantity,"line_total":row["combo"].price*quantity,
+                "item_note":form.cleaned_data.get(row["note"].name,"")})
+    total+=sum(row["line_total"] for row in combo_rows)
     return {"form":form,"policy":policy,"selected_rows":rows,"total":total,"step":"review","agree_checked":bool(form.cleaned_data.get("agree")),
-        "details":form.cleaned_data,"mode_label":dict(Reservation.Mode.choices).get(form.cleaned_data.get("mode"),"")}
+        "details":form.cleaned_data,"selected_combos":combo_rows,"mode_label":dict(Reservation.Mode.choices).get(form.cleaned_data.get("mode"),"")}
 
 
 @never_cache
 def review(request):
     draft,details=draft_forms(request)
     if not details.is_valid():
-        messages.info(request,"Thông tin đặt bàn cần được kiểm tra lại.")
+        messages.info(request,_("Thông tin đặt bàn cần được kiểm tra lại."))
         return private_response(redirect("online_reservations:create"))
     flow=draft.get("flow","preorder")
     if flow=="undecided":
@@ -197,7 +221,7 @@ def review(request):
     cart_data=draft.get("cart",{}) if flow=="preorder" else {}
     cart=PreorderCartForm(cart_data,mode=details.cleaned_data["mode"],require_items=flow=="preorder")
     if not cart.is_valid():
-        messages.info(request,"Vui lòng kiểm tra lại các món trong giỏ.")
+        messages.info(request,_("Vui lòng kiểm tra lại các món trong giỏ."))
         return private_response(redirect("online_reservations:menu"))
     data={**draft["details"],**cart_data,"mode":details.cleaned_data["mode"],
         "agree":request.POST.get("agree","") if request.method=="POST" else ""}
@@ -237,14 +261,14 @@ def lookup(request):
                 reservation=row
                 manage_url=reverse("online_reservations:manage_detail",args=[row.pk])
         else:
-            form.add_error(None,"Không tìm thấy lịch khớp mã và số điện thoại.")
+            form.add_error(None,_("Không tìm thấy lịch khớp mã và số điện thoại."))
     return private_response(render(request,"reservations/lookup.html",{"form":form,"result":result,
         "reservation":reservation,"detail_url":detail_url,"manage_url":manage_url}))
 
 
 def public_row(token):
     services.expire_holds()
-    return get_object_or_404(Reservation.objects.select_related("booking__table"),access_token=token)
+    return get_object_or_404(Reservation.objects.select_related("booking__table").prefetch_related("items__dish","items__order_item","deposits","refunds","allocations"),access_token=token)
 
 
 @never_cache
@@ -256,21 +280,21 @@ def detail(request,token):
             action=request.POST.get("action")
             if action=="accept":
                 if request.POST.get("agree")!="yes":
-                    raise ValidationError("Cần đồng ý bản chốt và điều kiện trước khi giữ chỗ.")
+                    raise ValidationError(_("Cần đồng ý bản chốt và điều kiện trước khi giữ chỗ."))
                 services.accept_offer(token=token,revision=int(request.POST.get("revision","0")))
             elif action=="pay":
                 if request.POST.get("agree")!="yes":
-                    raise ValidationError("Cần đồng ý điều kiện thanh toán/hủy trước khi trả cọc.")
+                    raise ValidationError(_("Cần đồng ý điều kiện thanh toán/hủy trước khi trả cọc."))
                 payment,url=services.checkout(token=token,revision=int(request.POST.get("revision","0")),
                     return_url=request.build_absolute_uri(reverse("online_reservations:payment_return")),ip_address=request.META.get("REMOTE_ADDR"))
                 return private_response(redirect(url))
             elif action in ("CHANGE","CANCEL"):
                 services.customer_message(token=token,kind=action,text=request.POST.get("text",""))
-                messages.success(request,"Đã gửi yêu cầu. Nhà hàng cần xác minh trước khi thay đổi lịch/tiền cọc.")
+                messages.success(request,_("Đã gửi yêu cầu. Nhà hàng cần xác minh trước khi thay đổi lịch/tiền cọc."))
             else:
-                raise ValidationError("Thao tác không hợp lệ.")
+                raise ValidationError(_("Thao tác không hợp lệ."))
         except ImproperlyConfigured:
-            messages.error(request,"Cổng thanh toán chưa sẵn sàng. Vui lòng liên hệ nhà hàng; không thanh toán lại nếu giao dịch trước chưa rõ kết quả.")
+            messages.error(request,_("Cổng thanh toán chưa sẵn sàng. Vui lòng liên hệ nhà hàng; không thanh toán lại nếu giao dịch trước chưa rõ kết quả."))
         except (ValidationError,ValueError) as error:
             error_message(request,error)
         return private_response(redirect("online_reservations:detail",token=token))
@@ -304,7 +328,7 @@ def payment_return(request):
     from apps.orders.vnpay import verify
     payment=DepositPayment.objects.select_related("reservation").filter(txn_ref=request.GET.get("vnp_TxnRef","")).first() if verify(request.GET.dict()) else None
     if payment:
-        messages.info(request,"Cổng thanh toán đã trả kết quả. Tiền cọc chỉ được xác nhận sau thông báo hợp lệ từ máy chủ VNPAY; hãy xem trạng thái bên dưới.")
+        messages.info(request,_("Cổng thanh toán đã trả kết quả. Tiền cọc chỉ được xác nhận sau thông báo hợp lệ từ máy chủ VNPAY; hãy xem trạng thái bên dưới."))
         return private_response(redirect("online_reservations:detail",token=payment.reservation.access_token))
     return render(request,"reservations/return.html",status=400)
 
@@ -355,11 +379,11 @@ def manage_detail(request,pk):
                 row.messages.filter(pk=int(request.POST.get("message_id","0"))).update(resolved=True)
                 services.log(row,"Đã xử lý yêu cầu khách",request.POST.get("reason","")[:1000],actor)
             else:
-                raise ValidationError("Thao tác không hợp lệ.")
+                raise ValidationError(_("Thao tác không hợp lệ."))
         except (ValidationError,ValueError) as error:
             error_message(request,error)
         else:
-            messages.success(request,"Đã lưu xử lý yêu cầu.")
+            messages.success(request,_("Đã lưu xử lý yêu cầu."))
         return redirect("online_reservations:manage_detail",pk=pk)
     return render(request,"reservations/manage_detail.html",{"reservation":row,"form":form,
         "archived_items":PreorderItem._base_manager.filter(reservation=row,is_active=False)})
@@ -387,7 +411,7 @@ def kitchen(request):
 def policy(request):
     if not can_manage_accounts(request.user):
         raise PermissionDenied
-    row,_=ReservationPolicy.objects.get_or_create(pk=1)
+    row,policy_created=ReservationPolicy.objects.get_or_create(pk=1)
     form=PolicyForm(request.POST or None,instance=row)
     if request.method=="POST" and form.is_valid():
         actor=services.actor_for(request.user,"manager")
@@ -396,6 +420,6 @@ def policy(request):
         from django.contrib.contenttypes.models import ContentType
         LogEntry.objects.create(user=actor,content_type=ContentType.objects.get_for_model(ReservationPolicy),object_id=str(row.pk),
             object_repr="Chính sách đặt bàn/cọc",action_flag=CHANGE,change_message="Cập nhật chính sách và món cho phép chuẩn bị trước; yêu cầu cũ giữ snapshot.")
-        messages.success(request,"Đã lưu chính sách; các yêu cầu cũ giữ nguyên chính sách đã chốt.")
+        messages.success(request,_("Đã lưu chính sách; các yêu cầu cũ giữ nguyên chính sách đã chốt."))
         return redirect("online_reservations:policy")
     return render(request,"reservations/policy.html",{"form":form})

@@ -1,19 +1,19 @@
-{% extends 'customer/base_customer.html' %}
+{% extends 'customer/base_customer.html' %}{% load i18n customer_language %}
 {% load static %}
 
-{% block title %}Trạng thái gọi món · CƠM QUÊ{% endblock %}
+{% block title %}{% translate "Trạng thái gọi món · CƠM QUÊ" %}{% endblock %}
 
 {% block content %}
 <section class="customer-form-page customer-qr-status-page" data-qr-status-page data-status-endpoint="{{ status_endpoint }}" aria-labelledby="qr-status-title">
     <div class="customer-container customer-narrow-content">
-        <div class="customer-status-page-heading"><div><span class="customer-section-label">Theo dõi tại bàn {{ table.code }}</span><h1 id="qr-status-title">Trạng thái gọi món</h1><p>Trạng thái sẽ tự cập nhật khi nhân viên xử lý yêu cầu.</p></div><span class="customer-qr-live"><i aria-hidden="true"></i> Đang cập nhật</span></div>
+        <div class="customer-status-page-heading"><div><span class="customer-section-label">{% translate "Theo dõi tại bàn" %} {{ table.code }}</span><h1 id="qr-status-title">{% translate "Trạng thái gọi món" %}</h1><p>{% translate "Trạng thái sẽ tự cập nhật khi nhân viên xử lý yêu cầu." %}</p></div><span class="customer-qr-live"><i aria-hidden="true"></i> {% translate "Đang cập nhật" %}</span></div>
         <div class="customer-qr-status-list" data-qr-status-list></div>
-        <div class="customer-qr-status-empty" data-qr-status-empty hidden><strong>Chưa có lượt gọi món.</strong><p>Chọn món trong menu tại bàn để gửi yêu cầu.</p><a class="customer-button" href="{% url 'customer_portal:qr_table' qr_token.token %}">Quay lại menu</a></div>
-        <section class="customer-qr-service-status"><div class="customer-status-page-heading"><div><span class="customer-section-label">Hỗ trợ tại bàn</span><h2>Yêu cầu phục vụ</h2></div></div><div class="customer-qr-status-list" data-service-status-list></div><p class="customer-qr-status-empty" data-service-status-empty>Chưa có yêu cầu phục vụ.</p></section>
-        <a class="customer-button customer-qr-back-menu" href="{% url 'customer_portal:qr_table' qr_token.token %}">Quay lại menu gọi món</a>
+        <div class="customer-qr-status-empty" data-qr-status-empty hidden><strong>{% translate "Chưa có lượt gọi món." %}</strong><p>{% translate "Chọn món trong menu tại bàn để gửi yêu cầu." %}</p><a class="customer-button" href="{% url 'customer_portal:qr_table' qr_token.token %}">{% translate "Quay lại menu" %}</a></div>
+        <section class="customer-qr-service-status"><div class="customer-status-page-heading"><div><span class="customer-section-label">{% translate "Hỗ trợ tại bàn" %}</span><h2>{% translate "Yêu cầu phục vụ" %}</h2></div></div><div class="customer-qr-status-list" data-service-status-list></div><p class="customer-qr-status-empty" data-service-status-empty>{% translate "Chưa có yêu cầu phục vụ." %}</p></section>
+        <a class="customer-button customer-qr-back-menu" href="{% url 'customer_portal:qr_table' qr_token.token %}">{% translate "Quay lại menu gọi món" %}</a>
     </div>
 </section>
 {{ status_data|json_script:"qr-status-data" }}
 {% endblock %}
 
-{% block extra_js %}<script src="{% static 'customer/js/qr-status.js' %}?v=2" defer></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'customer/js/qr-status.js' %}?v=3" defer></script>{% endblock %}

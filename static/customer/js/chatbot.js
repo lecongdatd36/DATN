@@ -1,8 +1,9 @@
+var cqTranslate_chatbot = window.gettext || (text => text);
 (() => {
     "use strict";
     const root = document.querySelector("[data-customer-chat]");
     if (!root) return;
-    const restaurantName = root.dataset.restaurantName || "nhà hàng";
+    const restaurantName = root.dataset.restaurantName || cqTranslate_chatbot("nhà hàng");
     const toggle = root.querySelector("[data-chat-toggle]");
     const panel = root.querySelector(".customer-chat-panel");
     const close = root.querySelector("[data-chat-close]");
@@ -33,7 +34,7 @@
         bubble.dataset.role = role;
         const label = document.createElement("span");
         label.className = "customer-chat-message-label";
-        label.textContent = role === "user" ? "Bạn" : `Trợ lý ${restaurantName}`;
+        label.textContent = role === "user" ? cqTranslate_chatbot("Bạn") : `${cqTranslate_chatbot('Trợ lý')} ${restaurantName}`;
         bubble.append(label, document.createTextNode(text));
         function addDish(dish) {
             const item = document.createElement("span");
@@ -50,7 +51,7 @@
         if (apriori.length) {
             const heading = document.createElement("strong");
             heading.className = "customer-chat-apriori";
-            heading.textContent = "Gợi ý gọi thêm từ Apriori";
+            heading.textContent = cqTranslate_chatbot("Gợi ý gọi thêm từ Apriori");
             bubble.append(heading);
             apriori.forEach(addDish);
         }
@@ -69,7 +70,7 @@
             });
             const data = response.headers.get("content-type")?.includes("application/json") ? await response.json() : {};
             if (!response.ok) {
-                throw new Error(data.error || (response.status === 403 ? "Phiên bảo mật đã đổi. Vui lòng tải lại trang." : "Chưa kết nối được trợ lý. Vui lòng thử lại sau."));
+                throw new Error(data.error || (response.status === 403 ? cqTranslate_chatbot("Phiên bảo mật đã đổi. Vui lòng tải lại trang.") : cqTranslate_chatbot("Chưa kết nối được trợ lý. Vui lòng thử lại sau.")));
             }
             return data;
         } finally {
@@ -79,33 +80,33 @@
 
     async function load(action = "state") {
         if (busy) return;
-        setBusy(true, "Đang mở cuộc trò chuyện…");
+        setBusy(true, cqTranslate_chatbot("Đang mở cuộc trò chuyện…"));
         try {
             const data = await post({ action });
             messages.replaceChildren();
             for (const item of data.history) addMessage(item.role, item.text);
             suggestions.hidden = data.history.length > 0;
             loaded = true;
-            setBusy(false, data.available ? "" : "Trợ lý đang chờ cấu hình API. Bạn vẫn có thể xem thực đơn và đặt bàn.");
+            setBusy(false, data.available ? "" : cqTranslate_chatbot("Trợ lý đang chờ cấu hình API. Bạn vẫn có thể xem thực đơn và đặt bàn."));
         } catch (error) {
-            setBusy(false, error.name === "AbortError" ? "Kết nối đang chậm. Vui lòng thử lại sau." : error.message);
+            setBusy(false, error.name === "AbortError" ? cqTranslate_chatbot("Kết nối đang chậm. Vui lòng thử lại sau.") : error.message);
         }
     }
 
     async function send(text) {
         if (busy || !text.trim()) return;
-        if (text.length > 1000) { status.textContent = "Câu hỏi tối đa 1.000 ký tự."; return; }
-        setBusy(true, "Trợ lý đang trả lời…");
+        if (text.length > 1000) { status.textContent = cqTranslate_chatbot("Câu hỏi tối đa 1.000 ký tự."); return; }
+        setBusy(true, cqTranslate_chatbot("Trợ lý đang trả lời…"));
         try {
             const data = await post({ action: "message", message: text.trim() });
             addMessage("user", text.trim());
             addMessage("assistant", data.answer, data.dishes, data.apriori);
             suggestions.hidden = true;
             input.value = "";
-            setBusy(false, data.attempts >= data.max_turns ? "Đã đạt giới hạn lượt. Bấm Trò chuyện mới để tiếp tục." : "");
+            setBusy(false, data.attempts >= data.max_turns ? cqTranslate_chatbot("Đã đạt giới hạn lượt. Bấm Trò chuyện mới để tiếp tục.") : "");
             input.focus();
         } catch (error) {
-            setBusy(false, error.name === "AbortError" ? "Kết nối đang chậm. Vui lòng chờ rồi thử lại." : error.message);
+            setBusy(false, error.name === "AbortError" ? cqTranslate_chatbot("Kết nối đang chậm. Vui lòng chờ rồi thử lại.") : error.message);
         }
     }
 

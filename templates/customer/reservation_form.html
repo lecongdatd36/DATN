@@ -1,17 +1,17 @@
-{% extends 'customer/reservation_base.html' %}
+{% extends 'customer/reservation_base.html' %}{% load i18n customer_language %}
 
-{% block title %}Đặt bàn · CƠM QUÊ{% endblock %}
+{% block title %}{% translate "Đặt bàn · CƠM QUÊ" %}{% endblock %}
 
 {% block reservation_content %}
 
-        <span class="customer-section-label">Hẹn bạn bên bàn ăn</span>
-        <h1 id="reservation-title">Đặt bàn trực tuyến</h1>
-        <p class="customer-form-intro">Yêu cầu của bạn sẽ ở trạng thái chờ xác nhận. Nhà hàng sẽ giữ chỗ phù hợp và phản hồi sớm.</p>
-        <p class="customer-form-helper">Chưa biết nhà hàng còn bàn? <a href="{% url 'customer_reservations:check' %}">Kiểm tra bàn trước</a>.</p>
+        <span class="customer-section-label">{% translate "Hẹn bạn bên bàn ăn" %}</span>
+        <h1 id="reservation-title">{% translate "Đặt bàn trực tuyến" %}</h1>
+        <p class="customer-form-intro">{% translate "Yêu cầu của bạn sẽ ở trạng thái chờ xác nhận. Nhà hàng sẽ giữ chỗ phù hợp và phản hồi sớm." %}</p>
+        <p class="customer-form-helper">{% translate "Chưa biết nhà hàng còn bàn?" %} <a href="{% url 'customer_reservations:check' %}">{% translate "Kiểm tra bàn trước" %}</a>.</p>
         <form class="customer-form-card cq-form-grid" method="post">
             {% csrf_token %}
             {% include 'customer/includes/form_fields.html' with form=form %}
-            <button class="customer-button" type="submit">Gửi yêu cầu đặt bàn <span aria-hidden="true">→</span></button>
+            <button class="customer-button" type="submit">{% translate "Gửi yêu cầu đặt bàn" %} <span aria-hidden="true">→</span></button>
         </form>
 
 {% endblock %}

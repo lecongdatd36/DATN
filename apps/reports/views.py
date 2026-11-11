@@ -3,6 +3,8 @@ from datetime import datetime, time, timedelta
 from django.contrib.auth.mixins import AccessMixin
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -51,6 +53,21 @@ class ReportDashboardView(ReportPermissionMixin, TemplateView):
         start_at, end_at = _period_bounds(date_from, date_to)
         context.update(report_data(start_at, end_at))
         context.update({"report_ready": True, "date_from": date_from, "date_to": date_to})
+        return context
+
+
+@method_decorator(never_cache, name='dispatch')
+class OrderForecastView(ReportPermissionMixin, TemplateView):
+    template_name = 'reports/order_forecast.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        forecast = get_order_forecast()
+        context['order_forecast'] = forecast
+        if forecast['ready']:
+            maximum = max(row['orders'] for row in forecast['rows'])
+            context['forecast_chart'] = [dict(row, percent=row['orders']/maximum*100 if maximum else 0) for row in forecast['rows']]
+            context['forecast_total'] = sum(row['orders'] for row in forecast['rows'])
         return context
 
 

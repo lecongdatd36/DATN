@@ -14,7 +14,12 @@
   const enrollment = root.hasAttribute('data-face-enrollment');
   let stream = null, busy = false, sequence = 0, frames = [];
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-  const say = (message, kind = '') => { status.textContent = message; status.className = `wf-camera-status ${kind}`; };
+  const say = (message, kind = '') => {
+    status.textContent = message; status.className = `wf-camera-status ${kind}`;
+    const notice=root.querySelector('[data-camera-notice]');if(notice){notice.textContent=message;notice.hidden=false;notice.className=`wf-camera-notice ${kind}`;}
+    const card=root.querySelector('[data-result-card]');
+    if(card){const state=kind==='wf-success'?'success':kind==='wf-error'?'error':busy?'loading':'idle';card.dataset.state=state;root.querySelector('[data-result-symbol]').textContent={success:'✓',error:'!',loading:'…',idle:'○'}[state];}
+  };
   const csrf = () => document.querySelector('[name=csrfmiddlewaretoken]')?.value || decodeURIComponent(document.cookie.split('; ').find(c => c.startsWith('csrftoken='))?.slice(10) || '');
   const post = async (url, body) => {
     const controller = new AbortController();
@@ -30,7 +35,10 @@
       throw error;
     } finally { clearTimeout(timer); }
   };
-  const stop = () => { stream?.getTracks().forEach(track => track.stop()); stream = null; video.srcObject = null; };
+  const stop = () => { stream?.getTracks().forEach(track => track.stop()); stream = null; video.srcObject = null;
+    const placeholder=root.querySelector('[data-camera-placeholder]');if(placeholder)placeholder.hidden=false;
+    const live=root.querySelector('[data-camera-state]');if(live){live.textContent='CAMERA CHƯA BẬT';live.classList.remove('is-active');}
+  };
   const start = async () => {
     if (stream?.active) return;
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) throw new Error('Camera cần HTTPS hoặc localhost. Hãy mở máy bằng địa chỉ phù hợp.');
@@ -38,6 +46,8 @@
       stream = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640}, height:{ideal:480}, facingMode:'user'}, audio:false});
       video.srcObject = stream;
       await video.play();
+      const placeholder=root.querySelector('[data-camera-placeholder]');if(placeholder)placeholder.hidden=true;
+      const live=root.querySelector('[data-camera-state]');if(live){live.textContent='CAMERA TRỰC TIẾP';live.classList.add('is-active');}
       if (!video.videoWidth) await new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error('Camera chưa có hình ảnh.')), 10000);
         video.addEventListener('loadeddata', () => { clearTimeout(timer); resolve(); }, {once:true});
@@ -97,6 +107,11 @@
   const poses = {CENTER:'Nhìn thẳng vào camera', LEFT:'Quay nhẹ mặt sang phải của bạn', RIGHT:'Quay nhẹ mặt sang trái của bạn'};
   const controls = active => { busy=active; buttons.forEach(button => {button.disabled=active;}); cancel.hidden=!active; };
   const steps = ['Bước 1/3 · Nhận diện và kiểm tra ca', 'Bước 2/3 · Quay đầu theo hướng dẫn', 'Bước 3/3 · Nhìn thẳng lại camera'];
+  const setText=(selector,text)=>{const node=root.querySelector(selector);if(node)node.textContent=text;};
+  const score=value=>typeof value==='number'?value.toLocaleString('vi-VN',{minimumFractionDigits:3,maximumFractionDigits:3}):'—';
+  const config=JSON.parse(document.querySelector('#attendance-config')?.textContent||'{}');
+  const showResult=()=>{if(window.matchMedia('(max-width:991px)').matches)root.querySelector('[data-result-card]')?.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});};
+  setText('[data-match-threshold]',score(config.threshold));
   const feedback = result => {
     if (result.name) person.textContent=result.name;
     if (identity) {
@@ -112,6 +127,11 @@
     if (movement) movement.value=result.movement || 0;
     if (movementPanel) movementPanel.hidden=result.pose==='CENTER' || !result.pose;
     if (shift && result.shift) shift.textContent=`Ca làm: ${result.shift}`;
+    if(result.employee_code)setText('[data-match-code]',result.employee_code);
+    setText('[data-match-score]',score(result.similarity));
+    if(result.action==='IN'||result.action==='OUT')setText('[data-action-label]',result.action==='IN'?'Vào ca':'Ra ca');
+    setText('[data-record-state]',result.recorded===true?'Đã ghi công thành công':result.identified?'Đã nhận diện · chưa ghi công':'Chưa ghi nhận công');
+    if(result.recorded_at)setText('[data-record-time]',new Date(result.recorded_at).toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}));
   };
   const reset = () => {
     sequence++; stop(); controls(false); progress.value=0; person.textContent='Chấm công bằng khuôn mặt'; pose.textContent=poses.CENTER;
@@ -119,12 +139,14 @@
     if(stage)stage.textContent='1. Nhận diện và kiểm tra ca → 2. Quay đầu → 3. Nhìn lại camera';
     if(shift)shift.textContent='';
     if(movementPanel)movementPanel.hidden=true;
+    setText('[data-match-code]','—');setText('[data-match-score]','—');setText('[data-record-time]','—');
+    setText('[data-action-label]','Tự xác định');setText('[data-record-state]','Chưa ghi nhận công');
   };
-  cancel.addEventListener('click', () => {reset(); say('Đã dừng. Chọn Vào ca hoặc Ra ca để bắt đầu lượt mới.');});
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { reset(); say('Đã dừng camera. Chọn thao tác để bắt đầu lại.'); } });
+  cancel.addEventListener('click', () => {reset(); say('Đã dừng. Bấm Chấm công để bắt đầu lượt mới. Nếu vừa gửi xác nhận, kiểm tra bảng công trước khi thử lại.');});
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { reset(); say('Đã dừng camera. Kiểm tra bảng công nếu lượt xác nhận đang được gửi.'); } });
   buttons.forEach(button => button.addEventListener('click', async () => {
     if (busy) return;
-    const current = ++sequence;
+    reset();const current = ++sequence;
     controls(true); progress.value=0; person.textContent='Đang xác minh khuôn mặt';
     if(identity)identity.textContent='Chưa ghi nhận công';
     if(shift)shift.textContent='';
@@ -133,6 +155,7 @@
       if (current !== sequence) { stop(); return; }
       say('Đang chuẩn bị lượt xác minh…');
       let result = await post(root.dataset.apiUrl, {operation:'start', action:button.dataset.clockAction});
+      if(current!==sequence)return;
       const id = result.id;
       feedback(result);
       for (let attempt=0; attempt<24 && current===sequence; attempt++) {
@@ -149,6 +172,7 @@
           if(stage)stage.textContent=recorded ? 'Hoàn tất · giờ công đã được lưu' : 'Dừng chấm công · không có bản ghi mới';
           if(movementPanel)movementPanel.hidden=true;
           stop(); controls(false);
+          showResult();
           const finished = sequence;
           if(recorded) setTimeout(() => { if (sequence===finished && !busy) { reset(); say('Sẵn sàng cho nhân viên tiếp theo.'); } }, 10000);
           return;
@@ -161,7 +185,8 @@
         say(result.identified ? 'Đã nhận diện nhưng chưa hoàn tất động tác, công chưa được ghi. Hãy thử lại và làm theo hướng dẫn quay đầu.' : (result.message || 'Chưa nhận diện được khuôn mặt. Hãy thử lại hoặc liên hệ quản lý.'), 'wf-error');
         if(stage)stage.textContent='Đã dừng · chưa ghi công';
         controls(false); stop();
+        showResult();
       }
-    } catch (error) { if (current===sequence) { say(error.message, 'wf-error'); controls(false); stop(); } }
+    } catch (error) { if (current===sequence) { say(error.message, 'wf-error'); controls(false); stop(); showResult(); } }
   }));
 })();

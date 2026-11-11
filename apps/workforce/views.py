@@ -4,6 +4,7 @@ from functools import wraps
 import json
 
 from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -173,6 +174,53 @@ def faces(request, pk=None):
         "ready": ready, "readiness_error": error})
 
 
+@management
+@ensure_csrf_cookie
+def face_test(request):
+    error, ready = readiness()
+    return render(request, "workforce/face_test.html", {
+        "ready": ready, "readiness_error": error,
+        "recognition_config": {"threshold": settings.ATTENDANCE_FACE_THRESHOLD,
+            "margin": settings.ATTENDANCE_FACE_MARGIN},
+    })
+
+
+@management
+@require_POST
+@sensitive_post_parameters()
+def face_test_api(request):
+    """Manager-only, transient recognition preview; never starts a clock challenge."""
+    from apps.employees.models import EmploymentStatus
+    from .face import MODEL_VERSION, best_match, extract_frame
+
+    error, ready = readiness()
+    if not ready:
+        return JsonResponse({"ok": False, "identified": False, "recorded": False,
+            "code": "not_ready", "message": error}, status=503)
+    try:
+        data = payload(request, maximum=700_000)
+        sample = extract_frame(data.get("frame"))
+    except ValidationError as error:
+        return JsonResponse({"ok": False, "identified": False, "recorded": False,
+            "code": "invalid_frame", "message": " ".join(error.messages)}, status=400)
+    profiles = FaceProfile.objects.select_related("employee").filter(model_version=MODEL_VERSION,
+        employee__employment_status=EmploymentStatus.WORKING,
+        employee__user__is_active=True, employee__job_position__is_active=True)
+    if not profiles.exists():
+        return JsonResponse({"ok": True, "identified": False, "recorded": False,
+            "code": "no_profiles", "message": "Chưa có mẫu khuôn mặt hợp lệ của nhân viên đang làm việc. Hãy đăng ký mẫu trước."})
+    match = best_match(sample["vector"], profiles)
+    if not match:
+        return JsonResponse({"ok": True, "identified": False, "recorded": False,
+            "code": "no_match", "message": "Chưa tìm thấy mẫu khớp đủ ngưỡng hoặc kết quả chưa phân biệt được giữa các nhân viên. Hãy nhìn thẳng, điều chỉnh ánh sáng và thử lại."})
+    profile, score = match
+    return JsonResponse({"ok": True, "identified": True, "recorded": False,
+        "code": "identified", "name": profile.employee.full_name,
+        "employee_code": profile.employee.employee_code, "similarity": round(score, 4),
+        "threshold": settings.ATTENDANCE_FACE_THRESHOLD,
+        "message": "Đã tìm thấy mẫu khuôn mặt phù hợp. Đây là kết quả kiểm thử, chưa ghi nhận công; mở trang chấm công và bấm Chấm công để xác minh động tác. Hệ thống tự xác định vào ca hoặc ra ca."})
+
+
 def payload(request, maximum=2_000_000):
     if request.content_type != "application/json" or len(request.body) > maximum:
         raise ValidationError("Yêu cầu không hợp lệ hoặc quá lớn.")
@@ -234,7 +282,8 @@ def point(request):
     # Anonymous shared page: the browser session binds each face challenge only.
     # It grants no HR, employee-account, or administration permissions.
     request.session["attendance_point"] = True
-    return render(request, "workforce/kiosk.html", {"shared_point": True})
+    return render(request, "workforce/kiosk.html", {"shared_point": True,
+        "recognition_config": {"threshold": settings.ATTENDANCE_FACE_THRESHOLD}})
 
 
 @never_cache
@@ -254,7 +303,8 @@ def kiosk(request):
         device = services.get_device(request.COOKIES.get(services.COOKIE_NAME))
     except PermissionDenied:
         return render(request, "workforce/kiosk.html", {"device": None}, status=403)
-    return render(request, "workforce/kiosk.html", {"device": device})
+    return render(request, "workforce/kiosk.html", {"device": device,
+        "recognition_config": {"threshold": settings.ATTENDANCE_FACE_THRESHOLD}})
 
 
 @never_cache

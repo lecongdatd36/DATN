@@ -1,33 +1,35 @@
-{% extends 'customer/base_customer.html' %}
+{% extends 'customer/base_customer.html' %}{% load i18n customer_language %}
 {% load menu_money %}
-{% block title %}Thực đơn · {{ restaurant_public.name }}{% endblock %}
+{% block title %}{% translate "Thực đơn ·" %} {{ restaurant_public|public_name }}{% endblock %}
+{% block body_class %}cq-menu-landing-page{% endblock %}
 {% block content %}
-{% include 'customer/includes/page_banner.html' with heading='Thực đơn CƠM QUÊ' kicker='TỪ GIAN BẾP THÂN QUEN' description='Chút đậm đà vị Việt, thêm tròn bữa cơm nhà.' %}
-<section class="cq-catalog customer-menu-page" aria-label="Chọn món ăn">
+{% include 'customer/includes/welcome_banner.html' with menu_banner=True %}
+<section id="menu-catalog" class="cq-catalog customer-menu-page" aria-label="{% translate "Chọn món ăn" %}">
     <div class="customer-container cq-catalog-layout">
         <aside class="cq-catalog-sidebar">
-            <div class="cq-sidebar-title"><span>THỰC ĐƠN</span><span aria-hidden="true">✳</span></div>
-            <nav class="customer-menu-filters" aria-label="Lọc theo danh mục">
-                <a class="{% if not selected_category %}is-selected{% endif %}" href="{% url 'customer_portal:menu' %}{% if query %}?q={{ query|urlencode }}{% endif %}">Tất cả món <span aria-hidden="true">→</span></a>
-                {% for category in categories %}<a class="{% if selected_category == category.pk|stringformat:'s' %}is-selected{% endif %}" href="?category={{ category.pk }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}">{{ category.name }} <span aria-hidden="true">→</span></a>{% endfor %}
+            <div class="cq-sidebar-title"><span>{% translate "THỰC ĐƠN" %}</span><span aria-hidden="true">✳</span></div>
+            <nav class="customer-menu-filters" aria-label="{% translate "Lọc theo danh mục" %}">
+                <a class="{% if not selected_category %}is-selected{% endif %}" href="{% url 'customer_portal:menu' %}{% if query %}?q={{ query|urlencode }}{% endif %}">{% translate "Tất cả món" %} <span aria-hidden="true">→</span></a>
+                {% for category in categories %}<a class="{% if selected_category == category.pk|stringformat:'s' %}is-selected{% endif %}" href="?category={{ category.pk }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}">{{ category|public_name }} <span aria-hidden="true">→</span></a>{% endfor %}
             </nav>
-            <div class="cq-catalog-note"><span aria-hidden="true">✳</span><h2>Bữa ngon,<br>thêm gắn kết.</h2><p>Để dành một chỗ ngồi cho người thương.</p><a class="cq-text-link" href="{% url 'customer_reservations:create' %}">Đặt bàn ngay ↗</a></div>
+            <div class="cq-catalog-note"><span aria-hidden="true">✳</span><h2>{% translate "Bữa ngon," %}<br>{% translate "thêm gắn kết." %}</h2><p>{% translate "Để dành một chỗ ngồi cho người thương." %}</p><a class="cq-text-link" href="{% url 'online_reservations:create' %}">{% translate "Đặt bàn ngay ↗" %}</a></div>
         </aside>
         <div class="cq-catalog-results">
-            <div class="cq-catalog-toolbar"><p>{% if query %}Kết quả cho “{{ query }}”{% else %}Tìm một hương vị thân quen{% endif %}<span>{{ dishes|length }} món trong thực đơn</span></p>
-                <form class="customer-search" method="get" role="search"><label class="customer-visually-hidden" for="dish-search">Tìm món ăn</label><input id="dish-search" name="q" type="search" value="{{ query }}" placeholder="Tìm món bạn thích...">{% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}<button type="submit">Tìm</button></form>
+            <div class="cq-catalog-toolbar"><p>{% if query %}{% translate "Kết quả cho “" %}{{ query }}”{% else %}{% translate "Tìm một hương vị thân quen" %}{% endif %}<span>{{ dishes|length }} {% translate "món trong thực đơn" %}</span></p>
+                <form class="customer-search" method="get" role="search"><label class="customer-visually-hidden" for="dish-search">{% translate "Tìm món ăn" %}</label><input id="dish-search" name="q" type="search" value="{{ query }}" placeholder="{% translate "Tìm món bạn thích..." %}">{% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}<button type="submit">{% translate "Tìm" %}</button></form>
             </div>
             {% if dishes %}
             <div class="cq-catalog-grid">
                 {% for dish in dishes %}
                 <article class="cq-dish-card customer-menu-card">
-                    <a class="cq-dish-image-link" href="{% url 'customer_portal:dish_detail' dish.pk %}" aria-label="Xem {{ dish.name }}">{% include 'customer/includes/dish_photo.html' with dish=dish photo_class='cq-dish-photo' %}{% if dish.status == 'SOLD_OUT' %}<span class="cq-stock-badge">Hết món</span>{% else %}<span class="cq-dish-image-arrow" aria-hidden="true">↗</span>{% endif %}</a>
-                    <div class="cq-dish-content"><span class="cq-dish-category">{{ dish.category.name }}</span><h2><a href="{% url 'customer_portal:dish_detail' dish.pk %}">{{ dish.name }}</a></h2><p>{{ dish.description|default:'Một hương vị thân quen, thêm tròn bữa cơm nhà.'|truncatewords:16 }}</p><div class="cq-dish-bottom"><strong>{{ dish.price|dong }}<small>đ</small></strong><span>/ {{ dish.unit.name }}</span><a href="{% url 'customer_portal:dish_detail' dish.pk %}" aria-label="Chi tiết {{ dish.name }}">→</a></div></div>
+                    <a class="cq-dish-image-link" href="{% url 'customer_portal:dish_detail' dish.pk %}" aria-label="Xem {{ dish|public_name }}">{% include 'customer/includes/dish_photo.html' with dish=dish photo_class='cq-dish-photo' %}{% if dish.status == 'SOLD_OUT' %}<span class="cq-stock-badge">{% translate "Hết món" %}</span>{% else %}<span class="cq-dish-image-arrow" aria-hidden="true">↗</span>{% endif %}</a>
+                    <div class="cq-dish-content"><span class="cq-dish-category">{{ dish.category|public_name }}</span><h2><a href="{% url 'customer_portal:dish_detail' dish.pk %}">{{ dish|public_name }}</a></h2><p>{{ dish|public_description|default:_('Một hương vị thân quen, thêm tròn bữa cơm nhà.')|truncatewords:16 }}</p><div class="cq-dish-bottom"><strong>{{ dish.price|dong }}<small>{% translate "đ" %}</small></strong><span>/ {{ dish.unit|public_name }}</span><button class="cq-catalog-add" type="button" data-basket-add="dish" data-item-id="{{ dish.pk }}" aria-label="{% translate "Thêm" %} {{ dish|public_name }} {% translate "vào giỏ" %}" {% if not dish.is_orderable %}disabled{% endif %}>+</button></div></div>
                 </article>
                 {% endfor %}
             </div>
-            {% else %}<div class="customer-empty-state"><strong>Chưa tìm thấy món phù hợp.</strong><p>Thử một từ khóa khác hoặc xem toàn bộ thực đơn.</p><a class="customer-button" href="{% url 'customer_portal:menu' %}">Xem tất cả món</a></div>{% endif %}
+            {% else %}<div class="customer-empty-state"><strong>{% translate "Chưa tìm thấy món phù hợp." %}</strong><p>{% translate "Thử một từ khóa khác hoặc xem toàn bộ thực đơn." %}</p><a class="customer-button" href="{% url 'customer_portal:menu' %}">{% translate "Xem tất cả món" %}</a></div>{% endif %}
         </div>
     </div>
 </section>
+<section class="customer-container cq-home-combos" id="combo-home"><div class="cq-heading-row"><div><span class="cq-kicker">{% translate "TRỌN VỊ CHO CẢ BÀN" %}</span><h2>{% translate "Combo Cơm Quê" %}</h2></div></div>{% include 'customer/includes/combo_cards.html' %}</section>
 {% endblock %}

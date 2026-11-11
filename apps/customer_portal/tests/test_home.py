@@ -34,7 +34,7 @@ class CustomerHomeTests(TestCase):
         self.assertContains(response, "Tạm hết món")
         self.assertNotContains(response, self.inactive.name)
         self.assertContains(response, reverse("customer_portal:dish_detail", args=[self.rice.pk]))
-        self.assertContains(response, reverse("customer_reservations:create"))
+        self.assertContains(response, reverse("online_reservations:create"))
         self.assertContains(response, 'data-restaurant-name="CƠM QUÊ"')
         self.assertEqual(response.context["menu_dish_count"], 2)
 

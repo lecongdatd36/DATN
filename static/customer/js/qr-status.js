@@ -1,3 +1,4 @@
+var cqTranslate_qr_status = window.gettext || (text => text);
 document.addEventListener("DOMContentLoaded", () => {
     const page = document.querySelector("[data-qr-status-page]");
     const orderList = document.querySelector("[data-qr-status-list]");
@@ -37,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (request.reject_reason) {
                 const reason = document.createElement("p");
                 reason.className = "customer-qr-status-reason";
-                reason.textContent = `Lý do: ${request.reject_reason}`;
+                reason.textContent = `${cqTranslate_qr_status('Lý do:')} ${request.reject_reason}`;
                 card.appendChild(reason);
             }
             orderList.appendChild(card);

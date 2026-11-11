@@ -1,42 +1,43 @@
+{% load i18n customer_language %}
 <aside class="customer-chat" data-customer-chat
-       data-restaurant-name="{{ restaurant_public.name }}"
+       data-restaurant-name="{{ restaurant_public|public_name }}"
        data-endpoint="{% url 'customer_portal:chat' %}"
        data-menu-url="{% url 'customer_portal:menu' %}"
-       data-reservation-url="{% url 'customer_reservations:create' %}">
+       data-reservation-url="{% url 'online_reservations:create' %}">
     <button class="customer-chat-launch" type="button" data-chat-toggle aria-expanded="false" aria-controls="customer-chat-panel">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-2 2V11.5a9.5 9.5 0 1 1 19 0Z"/><path d="M7 11h10M7 15h6"/></svg>
-        <span>Hỏi CƠM QUÊ</span>
+        <span>{% translate "Hỏi CƠM QUÊ" %}</span>
     </button>
-    <section class="customer-chat-panel" id="customer-chat-panel" role="dialog" aria-label="Trò chuyện với trợ lý CƠM QUÊ" hidden>
+    <section class="customer-chat-panel" id="customer-chat-panel" role="dialog" aria-label="{% translate "Trò chuyện với trợ lý CƠM QUÊ" %}" hidden>
         <header class="customer-chat-header">
-            <div><strong>Trợ lý CƠM QUÊ</strong><small>Hỏi đáp · Thực đơn · Ưu đãi</small></div>
-            <button type="button" class="customer-chat-icon" data-chat-close aria-label="Đóng trò chuyện">×</button>
+            <div><strong>{% translate "Trợ lý CƠM QUÊ" %}</strong><small>{% translate "Hỏi đáp · Thực đơn · Ưu đãi" %}</small></div>
+            <button type="button" class="customer-chat-icon" data-chat-close aria-label="{% translate "Đóng trò chuyện" %}">×</button>
         </header>
         <div class="customer-chat-scroll" data-chat-scroll>
-            <p class="customer-chat-welcome">Chào bạn! Mình có thể trò chuyện, giải đáp câu hỏi, tư vấn món, giải thích ưu đãi hạng thành viên và hướng dẫn đặt bàn.</p>
+            <p class="customer-chat-welcome">{% translate "Chào bạn! Mình có thể trò chuyện, giải đáp câu hỏi, tư vấn món, giải thích ưu đãi hạng thành viên và hướng dẫn đặt bàn." %}</p>
             <div class="customer-chat-suggestions" data-chat-suggestions>
-                <button type="button">Có món nào dưới 100.000 đồng?</button>
-                <button type="button">Nhà hàng có món gì?</button>
-                <button type="button">Tôi muốn đặt bàn.</button>
-                <button type="button">Nhà hàng mở cửa mấy giờ?</button>
-                <button type="button">Nhà hàng có những hạng khách hàng nào?</button>
+                <button type="button">{% translate "Có món nào dưới 100.000 đồng?" %}</button>
+                <button type="button">{% translate "Nhà hàng có món gì?" %}</button>
+                <button type="button">{% translate "Tôi muốn đặt bàn." %}</button>
+                <button type="button">{% translate "Nhà hàng mở cửa mấy giờ?" %}</button>
+                <button type="button">{% translate "Nhà hàng có những hạng khách hàng nào?" %}</button>
             </div>
-            <div class="customer-chat-messages" data-chat-messages role="log" aria-label="Lịch sử hội thoại" aria-live="polite" aria-relevant="additions"></div>
+            <div class="customer-chat-messages" data-chat-messages role="log" aria-label="{% translate "Lịch sử hội thoại" %}" aria-live="polite" aria-relevant="additions"></div>
         </div>
         <div class="customer-chat-navigation">
-            <a href="{% url 'customer_portal:menu' %}">Xem thực đơn ↗</a>
-            <a href="{% url 'customer_reservations:create' %}">Mở form đặt bàn ↗</a>
+            <a href="{% url 'customer_portal:menu' %}">{% translate "Xem thực đơn ↗" %}</a>
+            <a href="{% url 'online_reservations:create' %}">{% translate "Mở form đặt bàn ↗" %}</a>
         </div>
         <p class="customer-chat-status" data-chat-status role="status" aria-live="polite"></p>
         <form class="customer-chat-form" data-chat-form>
             {% csrf_token %}
-            <label class="customer-chat-sr" for="customer-chat-input">Câu hỏi cho trợ lý CƠM QUÊ</label>
-            <textarea id="customer-chat-input" name="message" maxlength="1000" rows="2" placeholder="Bạn muốn hỏi điều gì?" required></textarea>
-            <button type="submit" aria-label="Gửi câu hỏi">Gửi</button>
+            <label class="customer-chat-sr" for="customer-chat-input">{% translate "Câu hỏi cho trợ lý CƠM QUÊ" %}</label>
+            <textarea id="customer-chat-input" name="message" maxlength="1000" rows="2" placeholder="{% translate "Bạn muốn hỏi điều gì?" %}" required></textarea>
+            <button type="submit" aria-label="{% translate "Gửi câu hỏi" %}">{% translate "Gửi" %}</button>
         </form>
         <footer class="customer-chat-footer">
-            <p>Tin nhắn được gửi tới {{ chat_provider_name|default:"nhà cung cấp AI" }} để xử lý. Không nhập thông tin nhạy cảm.</p>
-            <button type="button" data-chat-reset>Trò chuyện mới</button>
+            <p>{% translate "Tin nhắn được gửi tới" %} {{ chat_provider_name|default:_("nhà cung cấp AI") }} {% translate "để xử lý. Không nhập thông tin nhạy cảm." %}</p>
+            <button type="button" data-chat-reset>{% translate "Trò chuyện mới" %}</button>
         </footer>
     </section>
 </aside>

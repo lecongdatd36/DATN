@@ -1,5 +1,15 @@
 # ZaloPay Sandbox v2
 
+## Trang kết quả và quay lại đúng nghiệp vụ
+
+Thanh toán hóa đơn tại bàn dùng giao diện quản lý khi đang chờ, không dùng header/giỏ món của website khách. Sau khi trạng thái lưu trên máy chủ là PAID, trang kết quả trả về Bán hàng trên desktop, kèm thông báo hóa đơn đã thu, số tiền, bàn và tình trạng bàn. Điện thoại của người có quyền thu tiền trả về màn receipt của hóa đơn. Thanh toán cọc dùng giao diện khách và trả về liên kết lịch đặt riêng. Pending, thất bại và cần đối soát vẫn ở trang kết quả, có nút quay về đúng luồng và truy vấn lại.
+
+Frontend polling cũng dùng đích trả về do máy chủ tính từ giao dịch, không dùng `next`, trạng thái hay số tiền từ tham số redirect. Chỉ tự chuyển khi PAID đã được callback/query hợp lệ xác nhận. GET trang kết quả không gọi cổng hoặc ghi nhận tiền. Hóa đơn hoàn tất đã rời danh sách đơn đang mở, nên Bán hàng hiển thị chứng từ đã thu riêng qua `paid_order`, kiểm tra Invoice PAID trong database trước khi hiện; không lấy query string làm bằng chứng thu tiền.
+
+UI dùng nhãn “Kết quả thanh toán”, “ZaloPay” để trình diễn; API vẫn trả `sandbox: true`, endpoint/khóa và cơ chế chặn production giữ nguyên. Không cần migration hoặc sửa giao dịch cũ. Đổi nhãn không chuyển sang tiền thật.
+
+Kiểm tra: 200 test của Orders, Reservations và ngôn ngữ qua; gồm quay về POS/mobile/booking, pending không bị tham số URL đánh dấu paid, callback trùng không tạo thêm thanh toán, không hiện receipt cho đơn chưa thu. `scripts/verify_zalopay_return_browser.py` dùng PostgreSQL tạm và callback ký bằng khóa fixture, không gọi cổng bên ngoài; kiểm tra Chrome pending nội bộ, bố cục mobile, callback → tự về POS → chứng từ mobile. Check, migration consistency và production static manifest qua.
+
 Tích hợp dựa trên [API v2 chính thức](https://developer.zalopay.vn/v2/general/overview.html) và [callback Key2](https://docs.zalopay.vn/docs/developer-tools/knowledge-base/callback/). Chỉ kết nối Sandbox; client từ chối endpoint production và không theo HTTP redirect sang máy chủ khác.
 
 ## Cấu hình

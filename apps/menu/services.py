@@ -37,16 +37,18 @@ def _text(value):
 
 
 @transaction.atomic
-def save_catalog(*, actor, kind, name, is_active, object_id=None, expected_revision=None):
+def save_catalog(*, actor, kind, name, is_active, object_id=None, expected_revision=None, name_en=None):
     actor = _lock_actor(actor)
     model = CATALOG_MODELS[kind]
     obj = model.objects.select_for_update().get(pk=object_id) if object_id is not None else model()
     _check_revision(obj, expected_revision)
-    old = (obj.name, obj.is_active)
+    old = (obj.name, obj.is_active, obj.name_en)
     obj.name, obj.is_active = _text(name), is_active
+    if name_en is not None:
+        obj.name_en = _text(name_en)
     obj.full_clean()
     created = obj.pk is None
-    if created or old != (obj.name, obj.is_active):
+    if created or old != (obj.name, obj.is_active, obj.name_en):
         if not created:
             obj.revision += 1
         obj.save()
@@ -61,13 +63,13 @@ def _snapshot(dish):
     return f"{dish}; nhóm {dish.category.name}; đơn vị {dish.unit.name}; giá {dish.price} đồng; {dish.get_status_display()}; {inventory_label}; mô tả: {dish.description}; ảnh: {dish.image.name or 'chưa có'}"
 
 
-def save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks_inventory=False, description="", dish_id=None, expected_revision=None, image=None):
+def save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks_inventory=False, description="", dish_id=None, expected_revision=None, image=None, name_en=None, description_en=None):
     written = []
     try:
         with transaction.atomic():
             return _save_dish(actor=actor, code=code, name=name, category_id=category_id, unit_id=unit_id, price=price,
                 status=status, tracks_inventory=tracks_inventory, description=description, dish_id=dish_id,
-                expected_revision=expected_revision, image=image, written=written)
+                expected_revision=expected_revision, image=image, written=written, name_en=name_en, description_en=description_en)
     except Exception:
         # Files do not participate in DB rollback. Remove only this attempt's UUID files.
         storage = Dish._meta.get_field("image").storage
@@ -76,14 +78,14 @@ def save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks_
         raise
 
 
-def _save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks_inventory, description, dish_id, expected_revision, image, written):
+def _save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks_inventory, description, dish_id, expected_revision, image, written, name_en=None, description_en=None):
     actor = _lock_actor(actor)
     dish = Dish.objects.select_for_update().get(pk=dish_id) if dish_id is not None else Dish()
     _check_revision(dish, expected_revision)
     created = dish.pk is None
     previous_status = dish.status if not created else None
     old_images = (dish.image.name, dish.thumbnail.name)
-    old = None if created else (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.tracks_inventory, dish.description, *old_images)
+    old = None if created else (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.tracks_inventory, dish.description, dish.name_en, dish.description_en, *old_images)
     before = "" if created else _snapshot(dish)
     for field, model, pk in (("category", Category, category_id), ("unit", Unit, unit_id)):
         parent = model.objects.filter(pk=pk).first()
@@ -94,6 +96,10 @@ def _save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks
         setattr(dish, field, parent)
     dish.code = code.strip().upper() if isinstance(code, str) else ""
     dish.name, dish.description = _text(name), description.strip() if isinstance(description, str) else ""
+    if name_en is not None:
+        dish.name_en = _text(name_en)
+    if description_en is not None:
+        dish.description_en = description_en.strip()
     dish.price, dish.status, dish.tracks_inventory = price, status, bool(tracks_inventory)
     if not dish.tracks_inventory or (previous_status is not None and previous_status != status):
         dish.inventory_sold_out_at = None
@@ -106,7 +112,7 @@ def _save_dish(*, actor, code, name, category_id, unit_id, price, status, tracks
         for filename, content in prepared:
             written.append(storage.save(filename, content))
         dish.image, dish.thumbnail = written
-    new = (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.tracks_inventory, dish.description, dish.image.name, dish.thumbnail.name)
+    new = (dish.code, dish.name, dish.category_id, dish.unit_id, dish.price, dish.status, dish.tracks_inventory, dish.description, dish.name_en, dish.description_en, dish.image.name, dish.thumbnail.name)
     if created or old != new:
         if not created:
             dish.revision += 1

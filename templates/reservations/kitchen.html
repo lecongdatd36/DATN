@@ -8,6 +8,7 @@
     <article class="or-card" data-preorder-item="{{ item.pk }}" data-preorder-mode="{{ item.reservation.mode }}">
         <small>{{ item.reservation.code }} · {{ item.reservation.get_status_display }}</small>
         <h2>{{ item.dish_name }} × {{ item.quantity }}</h2>
+        {% if item.combo_name %}<p class="or-kicker">Trong combo {{ item.combo_name }}</p>{% endif %}
         <p>Khách {{ item.reservation.full_name }} · {{ item.reservation.party_size }} người<br>
         Giờ đến <strong>{{ item.reservation.starts_at|date:'d/m/Y H:i' }}</strong>{% if item.reservation.booking %} · Bàn {{ item.reservation.booking.table.code }}{% endif %}</p>
         {% if item.note %}<p>Ghi chú món: {{ item.note }}</p>{% endif %}

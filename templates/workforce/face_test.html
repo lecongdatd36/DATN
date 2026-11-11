@@ -1,0 +1,33 @@
+{% extends 'workforce/layout.html' %}{% load static %}
+{% block title %}Kiểm thử nhận diện khuôn mặt · Cơm Quê{% endblock %}
+{% block workforce_heading %}Kiểm thử nhận diện khuôn mặt{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/face-test.css' %}?v=1">{% endblock %}
+{% block workforce_content %}
+<div class="ft-intro"><div><span class="ft-eyebrow">CAMERA TRỰC TIẾP</span><p>Đứng một mình, giữ khuôn mặt trong khung và nhìn thẳng vào camera.</p></div><a href="{% url 'workforce:faces' %}">Quản lý mẫu khuôn mặt ↗</a></div>
+{% if not ready %}<div class="alert alert-warning" role="alert">{{ readiness_error }}</div>{% endif %}
+{{ recognition_config|json_script:'face-test-config' }}
+<section class="ft-workspace" data-face-test data-api-url="{% url 'workforce:face_test_api' %}">
+  {% csrf_token %}
+  <div class="ft-camera-panel">
+    <div class="ft-feed">
+      <video autoplay playsinline muted aria-label="Camera kiểm thử nhận diện khuôn mặt"></video>
+      <div class="ft-camera-placeholder" data-camera-placeholder><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg><strong>Camera của bạn</strong><span>Bật camera để bắt đầu kiểm thử</span></div>
+      <div class="ft-feed-top"><span class="ft-live" data-camera-state>CAMERA CHƯA BẬT</span><span>KIỂM THỬ · KHÔNG GHI CÔNG</span></div>
+      <span class="ft-face-outline" aria-hidden="true"></span>
+      <span class="ft-feed-status" data-feed-status>Chưa nhận diện</span>
+    </div>
+    <div class="ft-camera-metrics ft-preview-metrics">
+      <div class="ft-metric ft-match-metric"><div class="ft-metric-title" data-match-label>CHƯA NHẬN DIỆN</div><dl><div><dt>Nhân viên</dt><dd data-match-name>—</dd></div><div><dt>Độ tương đồng</dt><dd data-match-score>—</dd></div><div><dt>Ngưỡng nhận diện</dt><dd data-match-threshold>—</dd></div></dl><small>Cosine · ngưỡng tạm thời, chưa hiệu chuẩn</small></div>
+    </div>
+    <div class="ft-camera-toolbar"><div><span class="ft-camera-indicator" aria-hidden="true"></span><span data-camera-hint>Camera chưa được bật</span></div><div class="ft-camera-buttons"><button class="btn btn-outline-secondary" type="button" data-camera-start {% if not ready %}disabled{% endif %}>Bật camera</button><button class="btn btn-primary" type="button" data-face-detect disabled>Nhận diện thử</button><button class="btn btn-outline-secondary" type="button" data-camera-stop disabled>Dừng camera</button></div></div>
+  </div>
+  <aside class="ft-result-panel" aria-labelledby="face-result-heading">
+    <span class="ft-eyebrow">KẾT QUẢ XÁC THỰC</span><h2 id="face-result-heading">Nhận diện khuôn mặt</h2><p class="ft-result-intro">Giữ khuôn mặt thẳng trong lúc hệ thống thu mẫu và đối chiếu với mẫu đã đăng ký.</p>
+    <div class="ft-result-card" data-result-card data-state="idle" role="status" aria-live="polite" aria-atomic="true"><span class="ft-result-symbol" data-result-symbol aria-hidden="true">○</span><span class="ft-result-kicker">TRẠNG THÁI NHẬN DIỆN</span><h3 data-result-title>Chưa bắt đầu kiểm thử</h3><p data-result-message>Bật camera, sau đó chọn “Nhận diện thử” để xem kết quả.</p><dl class="ft-result-person" data-result-person hidden><div><dt>Họ tên</dt><dd data-person-name></dd></div><div><dt>Mã nhân viên</dt><dd data-person-code></dd></div></dl></div>
+    <div class="ft-guide"><h3>Để nhận diện tốt hơn</h3><ol><li><span>01</span><p>Đưa toàn bộ khuôn mặt vào khung, giữ camera ngang tầm mắt.</p></li><li><span>02</span><p>Chọn nơi đủ sáng, tránh ánh sáng mạnh chiếu từ phía sau.</p></li><li><span>03</span><p>Giữ yên và nhìn thẳng khi bấm nhận diện.</p></li></ol></div>
+    <div class="ft-attendance-note"><strong>Nhận diện thành công chưa phải đã chấm công.</strong><p>Trang này chỉ kiểm tra mẫu khuôn mặt. Để ghi công, mở trang chấm công và bấm Chấm công. Hệ thống tự xác định vào ca hoặc ra ca.</p><a href="{% url 'workforce:point' %}">Mở trang chấm công <span aria-hidden="true">→</span></a></div>
+    <p class="ft-privacy">Ảnh camera chỉ xử lý trong bộ nhớ, không lưu lại. Ngưỡng nhận diện đang dùng là ngưỡng thử nghiệm, chưa được hiệu chuẩn bằng dữ liệu kiểm định thực tế.</p>
+  </aside>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/face-test.js' %}?v=1" defer></script>{% endblock %}

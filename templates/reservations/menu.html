@@ -1,48 +1,50 @@
-{% extends 'reservations/flow_base.html' %}{% load static menu_money l10n %}
-{% block title %}Chọn món cho bàn · CƠM QUÊ{% endblock %}
+{% extends 'reservations/flow_base.html' %}{% load i18n customer_language %}{% load static menu_money l10n %}
+{% block title %}{% translate "Chọn món cho bàn · CƠM QUÊ" %}{% endblock %}
 {% block flow_content %}
-<header class="or-menu-heading"><div><p class="or-kicker">BƯỚC 03 · THỰC ĐƠN CHO CUỘC HẸN</p><h1>Chọn vị ngon, hẹn bữa vui.</h1><p class="or-intro">{% if mode == 'READY' %}Chọn món có thể chuẩn bị theo giờ. Nhà hàng sẽ gửi bạn bản chốt trước khi nhận cọc.{% else %}Thêm món bạn thích vào giỏ. Nhà hàng sẽ chế biến khi bạn đến.{% endif %}</p></div><a class="or-cart-link" href="#reservation-cart">Giỏ món <span data-cart-count>0</span></a></header>
+<header class="or-menu-heading"><div><p class="or-kicker">{% translate "BƯỚC 03 · THỰC ĐƠN CHO CUỘC HẸN" %}</p><h1>{% translate "Chọn vị ngon, hẹn bữa vui." %}</h1><p class="or-intro">{% if mode == 'READY' %}{% translate "Chọn món có thể chuẩn bị theo giờ. Nhà hàng sẽ gửi bạn bản chốt trước khi nhận cọc." %}{% else %}{% translate "Thêm món bạn thích vào giỏ. Nhà hàng sẽ chế biến khi bạn đến." %}{% endif %}</p></div><a class="or-cart-link" href="#reservation-cart">{% translate "Giỏ món" %} <span data-cart-count>0</span></a></header>
 <form method="post" data-preorder-cart class="or-menu-form">
     {% csrf_token %}
     {% if form.non_field_errors %}<div class="or-alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
     <div class="or-menu-layout">
         <div>
-            <div class="or-menu-tools"><div><label for="dish-search">Tìm món yêu thích</label><input id="dish-search" type="search" placeholder="Nhập tên món…" data-dish-search></div><div><label for="dish-category">Nhóm món</label><select id="dish-category" data-dish-category><option value="">Tất cả nhóm món</option>{% for id,name in categories.items %}<option value="{{ id }}">{{ name }}</option>{% endfor %}</select></div></div>
+            <div class="or-menu-tools"><div><label for="dish-search">{% translate "Tìm món yêu thích" %}</label><input id="dish-search" type="search" placeholder="{% translate "Nhập tên món…" %}" data-dish-search></div><div><label for="dish-category">{% translate "Nhóm món" %}</label><select id="dish-category" data-dish-category><option value="">{% translate "Tất cả nhóm món" %}</option>{% for id,name in categories.items %}<option value="{{ id }}">{{ name }}</option>{% endfor %}</select></div></div>
             <div class="or-catalog">
+                {% include 'reservations/_combo_products.html' %}
                 {% for row in form.item_rows %}
-                <article class="or-product" data-dish-id="{{ row.dish.pk }}" data-name="{{ row.dish.name }}" data-category="{{ row.dish.category_id }}" data-price="{{ row.dish.price|unlocalize }}">
-                    <div class="or-product-photo-wrap">{% include 'customer/includes/dish_photo.html' with dish=row.dish photo_class='or-product-photo' %}<span class="or-dish-badge">{% if row.dish.status != 'AVAILABLE' %}Tạm hết món{% elif row.advance_allowed %}Có thể chuẩn bị theo giờ{% else %}Đến mới chế biến{% endif %}</span></div>
-                    <div class="or-product-body"><small>{{ row.dish.category.name }}</small><h2>{{ row.dish.name }}</h2>{% if row.dish.description %}<p class="or-product-description">{{ row.dish.description|truncatechars:100 }}</p>{% endif %}<p class="or-product-price">{{ row.dish.price|dong }}đ <span>/ {{ row.dish.unit.name }}</span></p>
-                        <div class="or-product-controls"><label class="or-sr-only" for="{{ row.quantity.id_for_label }}">Số lượng {{ row.dish.name }}</label><div class="or-quantity"><button type="button" data-quantity-delta="-1" data-target="{{ row.dish.pk }}" aria-label="Bớt {{ row.dish.name }}">−</button>{{ row.quantity }}<button type="button" data-quantity-delta="1" data-target="{{ row.dish.pk }}" aria-label="Thêm {{ row.dish.name }}"{% if row.dish.status != 'AVAILABLE' or mode == 'READY' and not row.advance_allowed %} disabled{% endif %}>+</button></div><span>{% if row.dish.status != 'AVAILABLE' %}Tạm hết{% elif mode == 'READY' and not row.advance_allowed %}Chỉ làm khi đến{% else %}Thêm vào giỏ{% endif %}</span></div>
+                <article class="or-product" data-dish-id="{{ row.dish.pk }}" data-name="{{ row.dish|public_name }}" data-category="{{ row.dish.category_id }}" data-price="{{ row.dish.price|unlocalize }}">
+                    <div class="or-product-photo-wrap">{% include 'customer/includes/dish_photo.html' with dish=row.dish photo_class='or-product-photo' %}<span class="or-dish-badge">{% if row.dish.status != 'AVAILABLE' %}{% translate "Tạm hết món" %}{% elif row.advance_allowed %}{% translate "Có thể chuẩn bị theo giờ" %}{% else %}{% translate "Đến mới chế biến" %}{% endif %}</span></div>
+                    <div class="or-product-body"><small>{{ row.dish.category|public_name }}</small><h2>{{ row.dish|public_name }}</h2>{% if row.dish.description %}<p class="or-product-description">{{ row.dish|public_description|truncatechars:100 }}</p>{% endif %}<p class="or-product-price">{{ row.dish.price|dong }}{% translate "đ" %} <span>/ {{ row.dish.unit|public_name }}</span></p>
+                        <div class="or-product-controls"><label class="or-sr-only" for="{{ row.quantity.id_for_label }}">{% translate "Số lượng" %} {{ row.dish|public_name }}</label><div class="or-quantity"><button type="button" data-quantity-delta="-1" data-target="{{ row.dish.pk }}" aria-label="{% translate "Bớt" %} {{ row.dish|public_name }}">−</button>{{ row.quantity }}<button type="button" data-quantity-delta="1" data-target="{{ row.dish.pk }}" aria-label="{% translate "Thêm" %} {{ row.dish|public_name }}"{% if row.dish.status != 'AVAILABLE' or mode == 'READY' and not row.advance_allowed %} disabled{% endif %}>+</button></div><span>{% if row.dish.status != 'AVAILABLE' %}{% translate "Tạm hết" %}{% elif mode == 'READY' and not row.advance_allowed %}{% translate "Chỉ làm khi đến" %}{% else %}{% translate "Thêm vào giỏ" %}{% endif %}</span></div>
                         {{ row.quantity.errors }}
                     </div>
                 </article>
-                {% empty %}<p class="or-empty">Thực đơn đang được cập nhật. Bạn có thể quay lại để chỉ đặt bàn.</p>{% endfor %}
+                {% empty %}<p class="or-empty">{% translate "Thực đơn đang được cập nhật. Bạn có thể quay lại để chỉ đặt bàn." %}</p>{% endfor %}
             </div>
-            <p class="or-empty" data-no-results hidden>Không tìm thấy món phù hợp. Thử tên hoặc nhóm món khác nhé.</p>
+            <p class="or-empty" data-no-results hidden>{% translate "Không tìm thấy món phù hợp. Thử tên hoặc nhóm món khác nhé." %}</p>
         </div>
         <aside class="or-cart or-card" id="reservation-cart" aria-labelledby="cart-title">
-            <div class="or-cart-heading"><h2 id="cart-title">Giỏ món của bạn</h2><span data-cart-count>0</span></div>
-            <p class="or-cart-visit">{{ details.party_size }} khách · {{ details.starts_at|date:'H:i, d/m/Y' }}<br>{% if mode == 'READY' %}Chuẩn bị theo giờ hẹn{% else %}Đến mới chế biến{% endif %}</p>
-            <p class="or-empty" data-cart-empty>Giỏ món đang trống.<br>Chọn vài món ngon cho cuộc hẹn nhé.</p>
+            <div class="or-cart-heading"><h2 id="cart-title">{% translate "Giỏ món của bạn" %}</h2><span data-cart-count>0</span></div>
+            <p class="or-cart-visit">{{ details.party_size }} {% translate "khách ·" %} {{ details.starts_at|date:'H:i, d/m/Y' }}<br>{% if mode == 'READY' %}{% translate "Chuẩn bị theo giờ hẹn" %}{% else %}{% translate "Đến mới chế biến" %}{% endif %}</p>
+            <p class="or-empty" data-cart-empty>{% translate "Giỏ món đang trống." %}<br>{% translate "Chọn vài món ngon cho cuộc hẹn nhé." %}</p>
             <div class="or-cart-items">
+                {% include 'reservations/_combo_cart_lines.html' %}
                 {% for row in form.item_rows %}
                 <article class="or-cart-item" data-cart-item="{{ row.dish.pk }}" hidden>
-                    <div class="or-cart-item-top"><strong>{{ row.dish.name }}</strong><button type="button" class="or-remove" data-remove="{{ row.dish.pk }}" aria-label="Xóa {{ row.dish.name }} khỏi giỏ">Xóa</button></div>
-                    <div class="or-cart-item-bottom"><div class="or-cart-quantity"><button type="button" data-quantity-delta="-1" data-target="{{ row.dish.pk }}" aria-label="Bớt {{ row.dish.name }}">−</button><span data-item-count>0</span><button type="button" data-quantity-delta="1" data-target="{{ row.dish.pk }}" aria-label="Thêm {{ row.dish.name }}"{% if row.dish.status != 'AVAILABLE' or mode == 'READY' and not row.advance_allowed %} disabled{% endif %}>+</button></div><strong data-line-total>0đ</strong></div>
-                    <label class="or-sr-only" for="{{ row.note.id_for_label }}">Ghi chú {{ row.dish.name }}</label>{{ row.note }}{{ row.note.errors }}
+                    <div class="or-cart-item-top"><strong>{{ row.dish|public_name }}</strong><button type="button" class="or-remove" data-remove="{{ row.dish.pk }}" aria-label="{% translate "Xóa" %} {{ row.dish|public_name }} {% translate "khỏi giỏ" %}">{% translate "Xóa" %}</button></div>
+                    <div class="or-cart-item-bottom"><div class="or-cart-quantity"><button type="button" data-quantity-delta="-1" data-target="{{ row.dish.pk }}" aria-label="{% translate "Bớt" %} {{ row.dish|public_name }}">−</button><span data-item-count>0</span><button type="button" data-quantity-delta="1" data-target="{{ row.dish.pk }}" aria-label="{% translate "Thêm" %} {{ row.dish|public_name }}"{% if row.dish.status != 'AVAILABLE' or mode == 'READY' and not row.advance_allowed %} disabled{% endif %}>+</button></div><strong data-line-total>{% translate "0đ" %}</strong></div>
+                    <label class="or-sr-only" for="{{ row.note.id_for_label }}">{% translate "Ghi chú" %} {{ row.dish|public_name }}</label>{{ row.note }}{{ row.note.errors }}
                 </article>
                 {% endfor %}
             </div>
-            <div class="or-cart-total" aria-live="polite" aria-atomic="true"><span>Tạm tính tiền món</span><strong data-cart-total>0đ</strong></div>
-            <p class="or-muted">{% if mode == 'READY' %}Giá và tiền cọc sẽ được xác nhận trong bản chốt của nhà hàng.{% else %}Tiền món chưa bao gồm tiền cọc giữ bàn. Giá được kiểm tra lại khi tiếp nhận.{% endif %}</p>
-            <button type="submit" name="action" value="review" class="customer-button or-cart-submit">Kiểm tra & xác nhận →</button>
-            <p class="or-muted">Chọn ít nhất một món để tiếp tục đặt món trước.</p>
-            <button type="submit" name="action" value="back" formnovalidate class="or-text-button">← Sửa thông tin đặt bàn</button>
-            <button type="submit" name="action" value="choice" data-back-choice formnovalidate class="or-text-button">← Đổi lựa chọn đặt món trước</button>
+            <div class="or-cart-total" aria-live="polite" aria-atomic="true"><span>{% translate "Tạm tính tiền món" %}</span><strong data-cart-total>{% translate "0đ" %}</strong></div>
+            <p class="or-muted">{% if mode == 'READY' %}{% translate "Giá và tiền cọc sẽ được xác nhận trong bản chốt của nhà hàng." %}{% else %}{% translate "Tiền món chưa bao gồm tiền cọc giữ bàn. Giá được kiểm tra lại khi tiếp nhận." %}{% endif %}</p>
+            <button type="submit" name="action" value="review" class="customer-button or-cart-submit">{% translate "Kiểm tra & xác nhận →" %}</button>
+            <p class="or-muted">{% translate "Chọn ít nhất một món để tiếp tục đặt món trước." %}</p>
+            <button type="submit" name="action" value="back" formnovalidate class="or-text-button">{% translate "← Sửa thông tin đặt bàn" %}</button>
+            <button type="submit" name="action" value="choice" data-back-choice formnovalidate class="or-text-button">{% translate "← Đổi lựa chọn đặt món trước" %}</button>
         </aside>
     </div>
-    <noscript><p class="or-alert">Bạn vẫn có thể nhập số lượng trên từng món rồi tiếp tục để xem tổng tiền. Bật JavaScript để xem giỏ món cập nhật ngay.</p></noscript>
+    <noscript><p class="or-alert">{% translate "Bạn vẫn có thể nhập số lượng trên từng món rồi tiếp tục để xem tổng tiền. Bật JavaScript để xem giỏ món cập nhật ngay." %}</p></noscript>
 </form>
 {% endblock %}
-{% block extra_js %}<script src="{% static 'js/reservation-cart.js' %}?v=2" defer></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/reservation-cart.js' %}?v=4" defer></script>{% endblock %}

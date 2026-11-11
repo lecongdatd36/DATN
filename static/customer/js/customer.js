@@ -1,3 +1,4 @@
+var cqTranslate_customer = window.gettext || (text => text);
 document.addEventListener("DOMContentLoaded", () => {
     const mobileLogin = document.querySelector("[data-mobile-login]");
     if (mobileLogin) {
@@ -13,14 +14,14 @@ document.addEventListener("DOMContentLoaded", () => {
         toggle.addEventListener("click", () => {
             const isOpen = navigation.classList.toggle("is-open");
             toggle.setAttribute("aria-expanded", String(isOpen));
-            toggle.setAttribute("aria-label", isOpen ? "Đóng menu" : "Mở menu");
+            toggle.setAttribute("aria-label", isOpen ? cqTranslate_customer("Đóng menu") : cqTranslate_customer("Mở menu"));
         });
 
         navigation.querySelectorAll("a").forEach((link) => {
             link.addEventListener("click", () => {
                 navigation.classList.remove("is-open");
                 toggle.setAttribute("aria-expanded", "false");
-                toggle.setAttribute("aria-label", "Mở menu");
+                toggle.setAttribute("aria-label", cqTranslate_customer("Mở menu"));
             });
         });
     }

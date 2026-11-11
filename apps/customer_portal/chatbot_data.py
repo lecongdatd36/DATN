@@ -3,6 +3,8 @@ import unicodedata
 
 from django.conf import settings
 from django.urls import reverse
+from django.utils.translation import gettext as _
+from .localization import english
 
 from apps.customers.models import MembershipTier
 from apps.menu.models import Dish
@@ -21,8 +23,8 @@ def normalized(text):
 
 
 def navigation_links():
-    return [{"label": "Xem thực đơn", "url": reverse("customer_portal:menu")},
-            {"label": "Đặt bàn", "url": reverse("online_reservations:create")}]
+    return [{"label": _("Xem thực đơn"), "url": reverse("customer_portal:menu")},
+            {"label": _("Đặt bàn"), "url": reverse("online_reservations:create")}]
 
 
 def policy_reply(message):
@@ -55,10 +57,12 @@ def policy_reply(message):
 
 def public_context(message, history):
     # Reuse the public selector: active category + unit, AVAILABLE/SOLD_OUT only.
-    records = list(customer_dishes().values("pk", "name", "price", "category__name", "unit__name", "status", "description")[:101])
-    menu = [{"id": row["pk"], "name": row["name"], "price_vnd": str(row["price"]),
-             "category": row["category__name"], "unit": row["unit__name"],
-             "status": row["status"], "description": row["description"][:400]} for row in records[:100]]
+    records = list(customer_dishes().values("pk", "name", "name_en", "price", "category__name", "category__name_en", "unit__name", "unit__name_en", "status", "description", "description_en")[:101])
+    def localized(row,key):
+        return (row.get(key+"_en") or _(row[key])) if english() else row[key]
+    menu = [{"id": row["pk"], "name": localized(row,"name"), "price_vnd": str(row["price"]),
+             "category": localized(row,"category__name"), "unit": localized(row,"unit__name"),
+             "status": row["status"], "description": localized(row,"description")[:400]} for row in records[:100]]
     # Only tier definitions and benefits; never query Customer or its spending/history.
     tier_records = list(MembershipTier.objects.filter(is_active=True).order_by("minimum_spending", "pk")
                         .values("name", "minimum_spending", "discount_percent")[:51])

@@ -1,5 +1,7 @@
 # Dự báo số đơn tự cập nhật hằng ngày
 
+Mở trực tiếp **Dự báo số đơn** trong menu quản lý, hoặc `/bao-cao/du-bao-don/`. Trang tổng quan cũng có thẻ truy cập dưới các ô thống kê. Trang riêng có biểu đồ 7 ngày và cùng kết quả đã công bố như khung dự báo đầu `/bao-cao/`; quyền Báo cáo không thay đổi. GET chỉ đọc artifact, không sinh dữ liệu hay huấn luyện mô hình.
+
 Chức năng hiện tại là **demo dữ liệu mô phỏng**, chưa chứng minh chất lượng trên dữ liệu bán hàng thực tế. Không tạo đơn giả trong database. Không thay đổi phân quyền Báo cáo hoặc cách tính doanh thu.
 
 ## Luồng cập nhật

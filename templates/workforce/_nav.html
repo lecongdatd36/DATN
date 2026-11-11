@@ -3,5 +3,6 @@
   <a href="{% url 'workforce:shifts' %}" {% if request.resolver_match.url_name == 'shifts' or request.resolver_match.url_name == 'shift_edit' %}aria-current="page"{% endif %}>Ca làm</a>
   <a href="{% url 'workforce:timesheet' %}" {% if request.resolver_match.url_name == 'timesheet' or request.resolver_match.url_name == 'attendance' %}aria-current="page"{% endif %}>Bảng công</a>
   <a href="{% url 'workforce:faces' %}" {% if request.resolver_match.url_name == 'faces' or request.resolver_match.url_name == 'face_enroll' %}aria-current="page"{% endif %}>Khuôn mặt</a>
+  <a href="{% url 'workforce:face_test' %}" {% if request.resolver_match.url_name == 'face_test' %}aria-current="page"{% endif %}>Kiểm thử nhận diện</a>
   <a href="{% url 'workforce:point' %}">Mở trang chấm công</a>
 </nav>

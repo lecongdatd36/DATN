@@ -1,32 +1,32 @@
-{% extends 'customer/reservation_base.html' %}
+{% extends 'customer/reservation_base.html' %}{% load i18n customer_language %}
 
-{% block title %}Kiểm tra bàn · CƠM QUÊ{% endblock %}
+{% block title %}{% translate "Kiểm tra bàn · CƠM QUÊ" %}{% endblock %}
 
 {% block reservation_content %}
 
-        <span class="customer-section-label">Bắt đầu từ một chỗ ngồi</span>
-        <h1 id="table-check-title">Kiểm tra bàn phù hợp</h1>
-        <p class="customer-form-intro">Chọn thời gian và số khách. Chúng tôi sẽ gợi ý bàn vừa đủ chỗ, không trùng lịch cho cuộc hẹn của bạn.</p>
+        <span class="customer-section-label">{% translate "Bắt đầu từ một chỗ ngồi" %}</span>
+        <h1 id="table-check-title">{% translate "Kiểm tra bàn phù hợp" %}</h1>
+        <p class="customer-form-intro">{% translate "Chọn thời gian và số khách. Chúng tôi sẽ gợi ý bàn vừa đủ chỗ, không trùng lịch cho cuộc hẹn của bạn." %}</p>
         <form class="customer-form-card cq-form-grid" method="get">
             {% include 'customer/includes/form_fields.html' with form=form %}
-            <button class="customer-button" type="submit">Kiểm tra bàn <span aria-hidden="true">→</span></button>
+            <button class="customer-button" type="submit">{% translate "Kiểm tra bàn" %} <span aria-hidden="true">→</span></button>
         </form>
         {% if searched %}
         <div class="customer-result-card">
             {% if table_recommendations %}
-                <h2 class="customer-result-title">Bàn phù hợp cho bạn</h2>
-                <p>Điểm theo tỷ lệ số khách / số chỗ. Điểm cao hơn nghĩa là bàn vừa vặn hơn với nhóm của bạn.</p>
-                <ol class="cq-table-recommendations" aria-label="Bàn được đề xuất theo độ phù hợp">
+                <h2 class="customer-result-title">{% translate "Bàn phù hợp cho bạn" %}</h2>
+                <p>{% translate "Điểm theo tỷ lệ số khách / số chỗ. Điểm cao hơn nghĩa là bàn vừa vặn hơn với nhóm của bạn." %}</p>
+                <ol class="cq-table-recommendations" aria-label="{% translate "Bàn được đề xuất theo độ phù hợp" %}">
                 {% for recommendation in table_recommendations %}
                     <li class="cq-table-recommendation" data-table-recommendation>
-                        <div class="cq-table-recommendation-heading"><strong>Bàn {{ recommendation.table.code }} · {{ recommendation.table.area.name }}</strong><span>{{ recommendation.score|floatformat:2 }}/100</span></div>
+                        <div class="cq-table-recommendation-heading"><strong>{% translate "Bàn" %} {{ recommendation.table.code }} · {{ recommendation.table.area|public_name }}</strong><span>{{ recommendation.score|floatformat:2 }}/100</span></div>
                         <p>{{ recommendation.reason }}</p>
                     </li>
                 {% endfor %}
                 </ol>
-                <p class="customer-form-helper">Đây là gợi ý tại lúc kiểm tra. Nhà hàng sẽ xếp lại bàn phù hợp khi bạn gửi yêu cầu; chưa giữ chỗ ở bước này.</p>
-                <a class="customer-button" href="{{ reservation_url }}">Tiếp tục đặt bàn <span aria-hidden="true">→</span></a>
-            {% else %}<strong>Chưa có bàn phù hợp.</strong><p>Hãy thử một thời gian hoặc khu vực khác.</p>{% endif %}
+                <p class="customer-form-helper">{% translate "Đây là gợi ý tại lúc kiểm tra. Nhà hàng sẽ xếp lại bàn phù hợp khi bạn gửi yêu cầu; chưa giữ chỗ ở bước này." %}</p>
+                <a class="customer-button" href="{{ reservation_url }}">{% translate "Tiếp tục đặt bàn" %} <span aria-hidden="true">→</span></a>
+            {% else %}<strong>{% translate "Chưa có bàn phù hợp." %}</strong><p>{% translate "Hãy thử một thời gian hoặc khu vực khác." %}</p>{% endif %}
         </div>
         {% endif %}
 

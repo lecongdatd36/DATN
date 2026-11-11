@@ -1,1 +1,3 @@
 <div class="or-menu">{% for row in form.item_rows %}<article class="or-dish"><div><strong>{{ row.dish.name }}</strong><p>{{ row.dish.price|floatformat:0 }}đ / {{ row.dish.unit.name }}</p><small>{% if row.advance_allowed %}Có thể yêu cầu chuẩn bị theo giờ{% else %}Đến mới chế biến{% endif %}</small></div><div><label for="{{ row.quantity.id_for_label }}">Số lượng</label>{{ row.quantity }}{{ row.quantity.errors }}</div><div class="or-note"><label for="{{ row.note.id_for_label }}">Ghi chú món</label>{{ row.note }}{{ row.note.errors }}</div></article>{% empty %}<p>Thực đơn chưa có món để chọn.</p>{% endfor %}</div>
+
+{% include 'reservations/_combo_fields.html' %}

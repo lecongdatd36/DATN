@@ -1,6 +1,7 @@
+var cqTranslate_menu_recommendations = window.gettext || (text => text);
 (() => {
   const states = new WeakMap();
-  const money = new Intl.NumberFormat("vi-VN");
+  const money = new Intl.NumberFormat(document.documentElement.lang === "en" ? "en-US" : "vi-VN");
 
   const addButton = (widget, id) => {
     const mode = widget.dataset.recommendationMode;
@@ -22,7 +23,7 @@
       button.disabled = !available;
       const badge = button.querySelector("[data-recommendation-count]");
       badge.textContent = String(count); badge.hidden = !count;
-      button.setAttribute("aria-label", "Gợi ý ăn kèm: " + count + " món");
+      button.setAttribute("aria-label", cqTranslate_menu_recommendations("Gợi ý ăn kèm: ") + count + cqTranslate_menu_recommendations(" món"));
     });
     const status = widget.querySelector("[data-recommendation-status]");
     status.textContent = text; status.hidden = available;
@@ -40,7 +41,7 @@
     clearTimeout(state.timer);
     state.controller?.abort();
     if (widget.dataset.recommendationDisplay === "dialog") widget.querySelector("[data-recommendation-items]").replaceChildren();
-    presentation(widget, false, selected.length ? "Đang tìm gợi ý phù hợp…" : "Chọn món để xem gợi ý ăn kèm.");
+    presentation(widget, false, selected.length ? cqTranslate_menu_recommendations("Đang tìm gợi ý phù hợp…") : cqTranslate_menu_recommendations("Chọn món để xem gợi ý ăn kèm."));
     if (!selected.length) return;
     state.timer = setTimeout(async () => {
       if (!widget.isConnected) return;
@@ -61,9 +62,9 @@
           const card = document.createElement("article");
           card.className = "menu-recommendation-card";
           const name = document.createElement("strong"); name.textContent = item.name;
-          const price = document.createElement("small"); price.textContent = money.format(Number(item.price)) + "đ";
-          const button = document.createElement("button"); button.type = "button"; button.textContent = "＋ Thêm món";
-          button.setAttribute("aria-label", "Thêm " + item.name);
+          const price = document.createElement("small"); price.textContent = money.format(Number(item.price)) + cqTranslate_menu_recommendations("đ");
+          const button = document.createElement("button"); button.type = "button"; button.textContent = cqTranslate_menu_recommendations("＋ Thêm món");
+          button.setAttribute("aria-label", cqTranslate_menu_recommendations("Thêm ") + item.name);
           button.disabled = state.frozen;
           button.addEventListener("click", () => {
             const target = addButton(widget, item.id);
@@ -75,9 +76,9 @@
           });
           card.append(name, price, button); list.appendChild(card);
         }
-        presentation(widget, list.children.length > 0, "Chưa có gợi ý phù hợp với các món đã chọn.");
+        presentation(widget, list.children.length > 0, cqTranslate_menu_recommendations("Chưa có gợi ý phù hợp với các món đã chọn."));
       } catch (error) {
-        if (state.controller === controller && state.signature === signature) { presentation(widget, false, "Chưa tải được gợi ý. Bạn vẫn có thể chọn món bình thường."); state.signature = null; }
+        if (state.controller === controller && state.signature === signature) { presentation(widget, false, cqTranslate_menu_recommendations("Chưa tải được gợi ý. Bạn vẫn có thể chọn món bình thường.")); state.signature = null; }
       } finally { clearTimeout(timeout); }
     }, 160);
   };

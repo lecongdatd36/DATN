@@ -1,3 +1,5 @@
+from django.utils.translation import gettext as _
+from .localization import public_name
 import json
 
 from django.core.exceptions import ValidationError
@@ -35,7 +37,7 @@ def _active_qr_orders(table):
 
 def _validation_message(error):
     messages = error.messages if hasattr(error, "messages") else [str(error)]
-    return messages[0]
+    return _(messages[0])
 
 
 def _menu_version():
@@ -69,6 +71,8 @@ class CustomerMenuView(ListView):
         context["categories"] = customer_categories()
         context["query"] = self.request.GET.get("q", "").strip()
         context["selected_category"] = self.request.GET.get("category", "")
+        from apps.menu.combos import combo_catalog
+        context["home_combos"] = combo_catalog()
         return context
 
 
@@ -171,7 +175,7 @@ class CustomerQRCheckInRequestView(View):
         return JsonResponse({
             "request_id": check_in.pk,
             "request_code": str(check_in),
-            "status": check_in.get_status_display(),
+            "status": _(check_in.get_status_display()),
             "expires_at": check_in.expires_at.isoformat(),
         }, status=201)
 
@@ -204,7 +208,7 @@ class CustomerQRTableStateView(View):
             "request": ({
                 "code": str(check_in),
                 "status": check_in.status,
-                "status_label": check_in.get_status_display(),
+                "status_label": _(check_in.get_status_display()),
                 "reject_reason": check_in.reject_reason,
             } if check_in else None),
             "refresh_url": reverse("customer_portal:qr_table", args=[token]),
@@ -230,7 +234,7 @@ class CustomerQRRequestView(View):
         return JsonResponse({
             "request_id": qr_request.pk,
             "request_code": str(qr_request),
-            "status": qr_request.get_status_display(),
+            "status": _(qr_request.get_status_display()),
             "status_url": reverse("customer_portal:qr_status", args=[token]),
             "duplicate": not getattr(qr_request, "was_created", True),
         }, status=201 if getattr(qr_request, "was_created", True) else 200)
@@ -257,7 +261,7 @@ class CustomerQRServiceRequestView(View):
                 "request_id": service_request.pk,
                 "request_code": str(service_request),
                 "request_type": service_request.get_request_type_display(),
-                "status": service_request.get_status_display(),
+                "status": _(service_request.get_status_display()),
                 "duplicate": not getattr(service_request, "was_created", True),
                 "status_url": reverse("customer_portal:qr_status", args=[token]),
             },
@@ -293,14 +297,14 @@ class CustomerQRStatusMixin:
     def serialize_requests(requests):
         return [{
             "code": str(qr_request),
-            "status": qr_request.get_status_display(),
+            "status": _(qr_request.get_status_display()),
             "status_code": qr_request.status,
             "reject_reason": qr_request.reject_reason,
             "created_at": qr_request.created_at.isoformat(),
             "items": [{
-                "name": item.dish.name,
+                "name": public_name(item.dish),
                 "quantity": item.quantity,
-                "status": item.order_item.get_status_display() if item.order_item else qr_request.get_status_display(),
+                "status": _(item.order_item.get_status_display()) if item.order_item else _(qr_request.get_status_display()),
                 "status_code": item.order_item.status if item.order_item else qr_request.status,
             } for item in qr_request.items.all()],
         } for qr_request in requests]
@@ -310,7 +314,7 @@ class CustomerQRStatusMixin:
         return [{
             "code": str(service_request),
             "request_type": service_request.get_request_type_display(),
-            "status": service_request.get_status_display(),
+            "status": _(service_request.get_status_display()),
             "status_code": service_request.status,
             "note": service_request.note,
             "created_at": service_request.created_at.isoformat(),

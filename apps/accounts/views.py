@@ -78,6 +78,17 @@ class LogoutView(auth_views.LogoutView):
 class WorkspaceView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/workspace.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from apps.reports.permissions import has_report_permission
+        if has_report_permission(self.request.user):
+            from .dashboard import dashboard_data
+            days = self.request.GET.get('days', '7')
+            context['dashboard'] = dashboard_data(self.request.user, int(days) if days in ('7','14','30') else 7)
+            from apps.reports.forecast import get_order_forecast
+            context['order_forecast'] = get_order_forecast()
+        return context
+
 
 class PasswordChangeView(auth_views.PasswordChangeView):
     http_method_names = ["get", "post", "head", "options"]

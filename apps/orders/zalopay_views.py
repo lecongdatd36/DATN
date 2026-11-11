@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
@@ -9,13 +10,16 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.reservations.models import Reservation
+from core.devices import is_mobile_request
 from . import zalopay, zalopay_services
-from .models import Order, ZaloPayTransaction
+from .models import Invoice, Order, ZaloPayTransaction
+from .permissions import has_order_permission
 
 
 def _private(response):
@@ -34,9 +38,35 @@ def callback_url(request):
     return settings.ZALOPAY_CALLBACK_URL or request.build_absolute_uri(reverse("zalopay:callback"))
 
 
-def serialize(row):
+def payment_destination(row, request):
+    if row.deposit_payment_id:
+        return reverse('online_reservations:detail', args=[row.deposit_payment.reservation.access_token]), True
+    order_id = row.order_payment.order_id
+    invoice = Invoice.objects.filter(order_id=order_id, status=Invoice.Status.PAID).first() if row.status == 'PAID' else None
+    mobile = is_mobile_request(request)
+    if mobile and invoice and has_order_permission(request.user, 'collect_payment'):
+        return reverse('sales:mobile')+'?'+urlencode({'page':'receipt','invoice':invoice.pk}), True
+    if mobile:
+        params = {'page':'tables','paid_order':order_id} if invoice else {'page':'order','order':order_id}
+        target = reverse('sales:mobile')+'?'+urlencode(params)
+    elif invoice:
+        params = {'paid_order':order_id}
+        order = row.order_payment.order
+        table_id = order.table_id or (order.booking.table_id if order.booking_id else None)
+        if table_id:
+            params['table'] = table_id
+        target = reverse('sales:workspace')+'?'+urlencode(params)
+    else:
+        target = reverse('sales:workspace')+'?'+urlencode({'order':order_id})+'#sales-order'
+    permitted = has_order_permission(request.user, 'view_order')
+    return target if permitted else reverse('accounts:login')+'?'+urlencode({'next':target}), permitted
+
+
+def serialize(row, request=None):
+    return_url, auto_return = payment_destination(row, request) if request else ('', False)
     return {"app_trans_id": row.app_trans_id, "amount": str(row.amount), "status": row.status,
-        "status_label": row.get_status_display(), "sandbox": True, "message": row.last_error,
+        "status_label": _(row.get_status_display()), "sandbox": True, "message": row.last_error,
+        "return_url": return_url, "auto_return": auto_return,
         "order_url": row.order_url if row.status == "PENDING" and row.expires_at > timezone.now() else "",
         "result_url": reverse("zalopay:result", args=[row.token]),
         "query_url": reverse("zalopay:query", args=[row.token]),
@@ -67,7 +97,7 @@ def create(request):
         return JsonResponse({"error": "ZaloPay Sandbox chưa sẵn sàng."}, status=503)
     except (ValueError, TypeError, ValidationError, Order.DoesNotExist):
         return JsonResponse({"error": "Không thể tạo thanh toán. Kiểm tra đơn hàng và các giao dịch đang chờ."}, status=400)
-    return _private(JsonResponse(serialize(row), status=201))
+    return _private(JsonResponse(serialize(row, request), status=201))
 
 
 @never_cache
@@ -77,7 +107,7 @@ def deposit_create(request, token):
     try:
         data = _input(request)
         if data.get("agree") != "yes":
-            raise ValidationError("Cần đồng ý điều kiện thanh toán trước khi trả cọc.")
+            raise ValidationError(_("Cần đồng ý điều kiện thanh toán trước khi trả cọc."))
         row = zalopay_services.create_deposit_payment(token=token, revision=int(data.get("revision", "0")),
             base_url=base_url(request), callback_url=callback_url(request))
     except ImproperlyConfigured:
@@ -87,7 +117,7 @@ def deposit_create(request, token):
     except (ValueError, TypeError):
         error_message = "Thông tin thanh toán không hợp lệ. Vui lòng tải lại lịch đặt bàn rồi thử lại."
     else:
-        state_data = serialize(row)
+        state_data = serialize(row, request)
         if request.content_type == "application/json" or "application/json" in request.headers.get("Accept", ""):
             return _private(JsonResponse(state_data, status=201))
         return _private(redirect(state_data["order_url"] or state_data["result_url"]))
@@ -114,15 +144,21 @@ def callback(request):
 @never_cache
 @require_GET
 def result(request, token):
-    row = get_object_or_404(ZaloPayTransaction, token=token)
+    row = get_object_or_404(ZaloPayTransaction.objects.select_related('order_payment__order__table','deposit_payment__reservation'), token=token)
     # No provider query/settlement is performed from redirect parameters.
-    return _private(render(request, "staff/sales/zalopay_result.html", {"payment": row, "payment_state": serialize(row)}))
+    payment_state = serialize(row, request)
+    if row.status == 'PAID' and payment_state['auto_return']:
+        return _private(redirect(payment_state['return_url']))
+    return _private(render(request, "staff/sales/zalopay_result.html", {
+        "payment": row, "payment_state": payment_state,
+        "payment_base": 'customer/base_customer.html' if row.deposit_payment_id else 'base.html',
+    }))
 
 
 @never_cache
 @require_GET
 def state(request, token):
-    return _private(JsonResponse(serialize(get_object_or_404(ZaloPayTransaction, token=token))))
+    return _private(JsonResponse(serialize(get_object_or_404(ZaloPayTransaction, token=token), request)))
 
 
 @never_cache
@@ -133,4 +169,4 @@ def query(request, token):
         row = zalopay_services.query_transaction(token)
     except (ValidationError, ImproperlyConfigured, zalopay.GatewayUnavailable):
         return _private(JsonResponse({"error": "Chưa xác minh được giao dịch. Giữ mã hiện tại và thử truy vấn lại sau."}, status=503))
-    return _private(JsonResponse(serialize(row)))
+    return _private(JsonResponse(serialize(row, request)))

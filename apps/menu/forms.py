@@ -23,7 +23,7 @@ class RevisionForm(BootstrapFormMixin, forms.ModelForm):
 class CategoryForm(RevisionForm):
     class Meta:
         model = Category
-        fields = ("name", "is_active")
+        fields = ("name", "name_en", "is_active")
         labels = {"name": "Tên nhóm món"}
         help_texts = {"is_active": "Ngừng nhóm sẽ tạm ngừng phục vụ tất cả món thuộc nhóm. Mở lại giữ nguyên trạng thái riêng của từng món."}
 
@@ -31,7 +31,7 @@ class CategoryForm(RevisionForm):
 class UnitForm(RevisionForm):
     class Meta:
         model = Unit
-        fields = ("name", "is_active")
+        fields = ("name", "name_en", "is_active")
         labels = {"name": "Tên đơn vị tính"}
         help_texts = {"name": "Ví dụ: Phần, Đĩa, Ly, Chai.", "is_active": "Ngừng đơn vị sẽ tạm ngừng phục vụ các món dùng đơn vị này."}
 
@@ -43,7 +43,7 @@ class DishForm(RevisionForm):
 
     class Meta:
         model = Dish
-        fields = ("code", "name", "category", "unit", "price", "status", "tracks_inventory", "description", "image")
+        fields = ("code", "name", "name_en", "category", "unit", "price", "status", "tracks_inventory", "description", "description_en", "image")
         widgets = {"description": forms.Textarea(attrs={"rows": 3}), "price": forms.NumberInput(attrs={"min": 1, "max": 999999999, "step": 1})}
         help_texts = {"price": "Nhập số nguyên đồng, ví dụ 85000. Giá bán lớn hơn 0.", "code": "Mã duy nhất, ví dụ M001. Chữ thường được đổi thành chữ hoa.", "status": "Hết món: tạm hết, có thể mở lại. Ngừng bán: chỉ Quản lí được mở lại."}
 

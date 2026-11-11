@@ -1,26 +1,26 @@
-{% extends 'customer/base_customer.html' %}{% load static %}
-{% block title %}Tra cứu đặt bàn · CƠM QUÊ{% endblock %}
+{% extends 'customer/base_customer.html' %}{% load i18n customer_language %}{% load static %}
+{% block title %}{% translate "Tra cứu đặt bàn · CƠM QUÊ" %}{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/online-reservations.css' %}">{% endblock %}
 {% block content %}
 <section class="customer-container or-page">
-    <h1>Tra cứu đặt bàn</h1>
+    <h1>{% translate "Tra cứu đặt bàn" %}</h1>
     <div class="or-card">
         <form method="post">
             {% csrf_token %}{% include 'reservations/_public_fields.html' %}
-            <button class="customer-button">Tra cứu</button>
+            <button class="customer-button">{% translate "Tra cứu" %}</button>
         </form>
         {% if result %}
-            <p class="or-alert">{{ result.code }} · {{ result.status }}</p>
+            <p class="or-alert">{{ result.code }} · {{ result.status|public_text }}</p>
             {% if reservation %}
-                <h2>Thông tin cuộc hẹn</h2>
+                <h2>{% translate "Thông tin cuộc hẹn" %}</h2>
                 {% include 'reservations/_summary.html' %}
                 <div class="or-actions">
-                    {% if detail_url %}<a class="customer-button" href="{{ detail_url }}">Xem chi tiết / thanh toán / yêu cầu đổi hủy</a>{% endif %}
-                    {% if manage_url %}<a class="customer-button" href="{{ manage_url }}">Mở hồ sơ quản lý đặt bàn</a>{% endif %}
+                    {% if detail_url %}<a class="customer-button" href="{{ detail_url }}">{% translate "Xem chi tiết / thanh toán / yêu cầu đổi hủy" %}</a>{% endif %}
+                    {% if manage_url %}<a class="customer-button" href="{{ manage_url }}">{% translate "Mở hồ sơ quản lý đặt bàn" %}</a>{% endif %}
                 </div>
             {% else %}
-                <p>Để xem món, giờ hẹn và tiền cọc, hãy tra cứu trên trình duyệt đã dùng đặt bàn hoặc mở liên kết riêng đã nhận sau khi đặt. Mã và số điện thoại chỉ dùng kiểm tra trạng thái.</p>
-                <p>Nếu mất liên kết hoặc đổi thiết bị, liên hệ nhà hàng để xác minh và cấp lại.</p>
+                <p>{% translate "Để xem món, giờ hẹn và tiền cọc, hãy tra cứu trên trình duyệt đã dùng đặt bàn hoặc mở liên kết riêng đã nhận sau khi đặt. Mã và số điện thoại chỉ dùng kiểm tra trạng thái." %}</p>
+                <p>{% translate "Nếu mất liên kết hoặc đổi thiết bị, liên hệ nhà hàng để xác minh và cấp lại." %}</p>
             {% endif %}
         {% endif %}
     </div>

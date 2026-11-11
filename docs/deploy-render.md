@@ -46,12 +46,19 @@ Nguồn: [Render Environment](https://render.com/docs/configure-environment-vari
 Sao lưu database hosting theo quy trình đang dùng trước đợt migration. `build.sh` thực hiện cài `requirements.txt`, cài bộ nhận diện nếu bật, rồi chạy:
 
 ```sh
+python scripts/compile_translations.py
 python manage.py collectstatic --no-input
 python manage.py migrate
 python manage.py createcachetable qlnh_chatbot_cache
 ```
 
 Các migration mới: `orders/0021`, `orders/0022`, `reservations/0001`–`0004`, `workforce/0001`–`0002`. Chúng bổ sung schema; các đơn đặt/cọc ở máy local không tự chuyển lên hosting. Không chạy `flush`, nạp fixture mẫu hoặc reset database để deploy.
+
+Nhánh giao diện/giỏ/combo bổ sung `menu/0006` và `reservations/0005`, font cùng asset banner trong `static/customer/`. Chạy migrate/collectstatic theo `build.sh` khi triển khai nhánh này. Combo là dữ liệu riêng từng môi trường: quản lý tạo tại `/thuc-don/combo/` hoặc chạy `python manage.py seed_combos --actor <username-quan-ly>` để thêm ba combo khởi tạo nếu thực đơn có đủ món; lệnh giữ nguyên mã combo đã tồn tại. Xem [giỏ và combo](homepage-refresh.md).
+
+Chấm công một nút tự xác định vào/ra bổ sung migration `workforce/0003`; `migrate` giữ nguyên công và mẫu khuôn mặt cũ. Trang chấm công chung dùng bố cục camera / kết quả mới, bỏ GPS, chặn chấm lặp 60 giây. Dashboard quản lý `/tai-khoan/` và theme dùng static mới, không thêm biến môi trường. Xem [chấm công](attendance-kiosk.md) và [dashboard](management-dashboard.md).
+
+Tiếng Anh bổ sung `menu/0007`, nút VI / EN và catalog `locale/en/LC_MESSAGES/`. Build tự biên dịch `.po` thành `.mo`; không cần biến môi trường mới. Sau migrate, quản lý điền tên/giới thiệu tiếng Anh trong catalog hoặc chạy `python manage.py seed_menu_english` để điền những ô còn trống của các món/combo đã biết. Lệnh giữ nguyên bản dịch tùy chỉnh, tên Việt, giá và dữ liệu giao dịch. Kiểm tra chuyển VI / EN ở trang chủ, `/menu/`, giỏ món và form đặt bàn sau deploy.
 
 Ảnh trong `media/` local và dữ liệu đăng ký khuôn mặt không đi theo Git. Dùng dữ liệu/Cloudinary của đúng môi trường. Sau deploy, quản lý kiểm tra chính sách cọc, món được phép chuẩn bị trước, ca làm và cấu hình điểm chấm công; các cấu hình này lưu trong database của từng môi trường.
 

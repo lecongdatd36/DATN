@@ -1,21 +1,27 @@
+{% load i18n customer_language %}
 {% load static customer_site %}
 {% customer_site as storefront %}
+{% get_current_language as LANGUAGE_CODE %}
 <!doctype html>
-<html lang="vi">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="{{ restaurant_public.name }} — vị nhà, tình quê. Khám phá thực đơn món Việt và đặt bàn trực tuyến.">
-    <title>{% block title %}{{ restaurant_public.name }} · Nhà hàng Việt{% endblock %}</title>
+    <meta name="description" content="{{ restaurant_public|public_name }} — {% translate 'Vị nhà · Tình quê' %}. {% translate 'Khám phá thực đơn món Việt và đặt bàn trực tuyến.' %}">
+    <title>{% block title %}{{ restaurant_public|public_name }} {% translate "· Nhà hàng Việt" %}{% endblock %}</title>
     <link rel="icon" href="{% static 'customer/images/com-que-mark.svg' %}" type="image/svg+xml">
+    {% if request.resolver_match.url_name == 'home' or request.resolver_match.view_name == 'customer_portal:menu' %}<link rel="preload" href="{% static 'customer/fonts/DancingScript-variable.ttf' %}" as="font" type="font/ttf" crossorigin>{% endif %}
     <link rel="stylesheet" href="{% static 'customer/css/customer.css' %}?v=3">
     <link rel="stylesheet" href="{% static 'css/menu-recommendations.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'customer/css/home.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'customer/css/storefront.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'customer/css/refresh.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'customer/css/commerce.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'customer/css/language.css' %}?v=1">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="customer-layout cq-page {% block body_class %}{% endblock %}">
-    <a class="customer-skip-link" href="#customer-main">Chuyển đến nội dung chính</a>
+    <a class="customer-skip-link" href="#customer-main">{% translate "Chuyển đến nội dung chính" %}</a>
     {% block customer_header %}{% include 'customer/includes/site_header.html' %}{% endblock %}
 
     <main id="customer-main">
@@ -28,26 +34,31 @@
             <div>
                 <a class="customer-brand customer-brand-footer" href="{% url 'home' %}">
                     <img src="{% static 'customer/images/com-que-mark.svg' %}" width="46" height="46" alt="">
-                    <span class="customer-brand-copy"><strong>{{ restaurant_public.name }}</strong><small>Vị nhà · Tình quê</small></span>
+                    <span class="customer-brand-copy"><strong>{{ restaurant_public|public_name }}</strong><small>{% translate "Vị nhà · Tình quê" %}</small></span>
                 </a>
-                <p class="customer-footer-note">Một bữa ăn ngon bắt đầu từ sự chu đáo trong từng chi tiết.</p>
+                <p class="customer-footer-note">{% translate "Một bữa ăn ngon bắt đầu từ sự chu đáo trong từng chi tiết." %}</p>
             </div>
             <div class="customer-footer-column">
-                <h2>Ghé thăm</h2>
-                <p>{{ restaurant_public.address|default:"Địa chỉ chưa được cập nhật." }}</p>
+                <h2>{% translate "Ghé thăm" %}</h2>
+                <p>{% if restaurant_public.address %}{{ restaurant_public.address }}{% else %}{% translate "Một cuộc hẹn, một bữa cơm ngon." %}<br>{% translate "Hẹn bạn ở Cơm Quê." %}{% endif %}</p>
+                {% if restaurant_public.opening_hours %}<p>{{ restaurant_public.opening_hours }}</p>{% endif %}
             </div>
             <div class="customer-footer-column">
-                <h2>Liên hệ</h2>
-                <p>{{ restaurant_public.phone|default:"Số điện thoại chưa được cập nhật." }}<br>{{ restaurant_public.email|default:"Email chưa được cập nhật." }}</p>
+                <h2>{% translate "Liên hệ" %}</h2>
+                {% if restaurant_public.phone or restaurant_public.email %}<p>{% if restaurant_public.phone %}{{ restaurant_public.phone }}{% endif %}{% if restaurant_public.phone and restaurant_public.email %}<br>{% endif %}{% if restaurant_public.email %}{{ restaurant_public.email }}{% endif %}</p>
+                {% else %}<p><a href="{% url 'online_reservations:create' %}">{% translate "Hẹn một bữa cơm →" %}</a><br><a href="{% url 'online_reservations:lookup' %}">{% translate "Tra cứu lịch đặt" %}</a></p>{% endif %}
             </div>
         </div>
         <div class="customer-container customer-footer-bottom">
-            <span>© {% now 'Y' %} {{ restaurant_public.name }}</span>
-            <span>Ẩm thực Việt, kể bằng sự tử tế.</span>
+            <span>© {% now 'Y' %} {{ restaurant_public|public_name }}</span>
+            <span>{% translate "Ẩm thực Việt, kể bằng sự tử tế." %}</span>
         </div>
     </footer>
-    <script src="{% static 'customer/js/customer.js' %}?v=3" defer></script>
-    <script src="{% static 'js/menu-recommendations.js' %}?v=2" defer></script>
+    <script src="{% url 'javascript-catalog' %}?language={{ LANGUAGE_CODE }}" defer></script>
+    {% if request.resolver_match.namespace != 'online_reservations' %}{% include 'customer/includes/basket.html' %}{% endif %}
+    <script src="{% static 'customer/js/customer.js' %}?v=4" defer></script>
+    <script src="{% static 'customer/js/basket.js' %}?v=2" defer></script>
+    <script src="{% static 'js/menu-recommendations.js' %}?v=3" defer></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
