@@ -3,7 +3,7 @@
 .cq-refresh{max-width:none;padding:0}
 .cq-refresh>.cq-home-columns,.cq-refresh>.cq-home-combos,.cq-refresh>.cq-story-refresh,.cq-refresh>.cq-last-invite{width:min(1440px,calc(100% - 80px));margin-inline:auto}
 .cq-refresh>.cq-benefits{width:min(1398px,calc(100% - 110px));max-width:none}
-.cq-welcome{border-radius:0;min-height:calc(100svh - 97px);grid-template-columns:minmax(0,1fr) 340px;gap:60px;padding:55px max(40px,calc((100vw - 1360px)/2))}
+.cq-welcome{border-radius:0;min-height:430px;grid-template-columns:minmax(0,1fr) 340px;gap:60px;padding:38px max(40px,calc((100vw - 1360px)/2))}
 .cq-welcome-copy{max-width:690px;padding-left:0}
 .cq-page .cq-welcome h1{font-family:"CQ Dancing Script",cursive;font-weight:600;font-size:clamp(72px,6.2vw,110px);line-height:1.13;letter-spacing:0;color:#f4d7a8;text-shadow:0 3px 24px #25120d30;margin:21px 0 26px}
 .cq-welcome h1 em{font-style:normal;font-weight:500;color:#ffe3b7}

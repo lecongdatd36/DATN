@@ -1,5 +1,5 @@
 {% extends 'customer/base_customer.html' %}{% load i18n customer_language %}
-{% load menu_money %}
+{% load static menu_money %}
 {% block title %}{% translate "Thực đơn ·" %} {{ restaurant_public|public_name }}{% endblock %}
 {% block body_class %}cq-menu-landing-page{% endblock %}
 {% block content %}
@@ -7,12 +7,12 @@
 <section id="menu-catalog" class="cq-catalog customer-menu-page" aria-label="{% translate "Chọn món ăn" %}">
     <div class="customer-container cq-catalog-layout">
         <aside class="cq-catalog-sidebar">
-            <div class="cq-sidebar-title"><span>{% translate "THỰC ĐƠN" %}</span><span aria-hidden="true">✳</span></div>
+            <div class="cq-sidebar-title"><span class="cq-sidebar-mark"><img src="{% static 'customer/images/com-que-mark.svg' %}" width="34" height="34" alt=""></span><span class="cq-sidebar-label">{% translate "THỰC ĐƠN" %}</span></div>
             <nav class="customer-menu-filters" aria-label="{% translate "Lọc theo danh mục" %}">
                 <a class="{% if not selected_category %}is-selected{% endif %}" href="{% url 'customer_portal:menu' %}{% if query %}?q={{ query|urlencode }}{% endif %}">{% translate "Tất cả món" %} <span aria-hidden="true">→</span></a>
                 {% for category in categories %}<a class="{% if selected_category == category.pk|stringformat:'s' %}is-selected{% endif %}" href="?category={{ category.pk }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}">{{ category|public_name }} <span aria-hidden="true">→</span></a>{% endfor %}
             </nav>
-            <div class="cq-catalog-note"><span aria-hidden="true">✳</span><h2>{% translate "Bữa ngon," %}<br>{% translate "thêm gắn kết." %}</h2><p>{% translate "Để dành một chỗ ngồi cho người thương." %}</p><a class="cq-text-link" href="{% url 'online_reservations:create' %}">{% translate "Đặt bàn ngay ↗" %}</a></div>
+            <div class="cq-catalog-note">{% include 'customer/includes/ui_icon.html' with icon='leaf' %}<h2>{% translate "Bữa ngon," %}<br>{% translate "thêm gắn kết." %}</h2><p>{% translate "Để dành một chỗ ngồi cho người thương." %}</p><a class="cq-text-link" href="{% url 'online_reservations:create' %}">{% translate "Đặt bàn ngay ↗" %}</a></div>
         </aside>
         <div class="cq-catalog-results">
             <div class="cq-catalog-toolbar"><p>{% if query %}{% translate "Kết quả cho “" %}{{ query }}”{% else %}{% translate "Tìm một hương vị thân quen" %}{% endif %}<span>{{ dishes|length }} {% translate "món trong thực đơn" %}</span></p>

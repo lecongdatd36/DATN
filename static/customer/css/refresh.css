@@ -1,6 +1,10 @@
 /* Cơm Quê — warm ivory, the original red, and a quieter restaurant layout. */
 .cq-page{--cq-red:#b71932;--cq-dark:#781c2c;--cq-cream:#fbf8f2;--cq-ink:#332b25;--cq-muted:#8a7b6c;--cq-line:#eadecf;background:var(--cq-cream)!important;color:var(--cq-ink);font-family:"Segoe UI",Arial,sans-serif}
 .cq-page #customer-main{background:var(--cq-cream)}
+.cq-home-page{background:linear-gradient(180deg,#24181199,#24181166),url("../images/restaurant-background.png") center/cover fixed!important;color:#493629}
+.cq-home-page #customer-main{background:transparent!important}
+.cq-home-page .cq-header-refresh{background:#fffaf0f5!important}
+.cq-home-page .cq-refresh{background:transparent}
 .cq-page .cq-header-refresh{border-top:3px solid var(--cq-red);background:#fffcf7;border-bottom:1px solid var(--cq-line);z-index:20}
 .cq-header-inner{width:min(1440px,calc(100% - 80px));min-height:94px;margin:auto;display:flex;align-items:center;gap:38px;position:relative}
 .cq-wordmark{display:flex;align-items:center;gap:11px;flex-shrink:0;text-decoration:none}
@@ -141,3 +145,87 @@
 @media(max-width:760px){.cq-page .cq-welcome h1{font-size:clamp(40px,11.2vw,52px)}.cq-welcome h1 em{white-space:nowrap}.cq-welcome-links>a{white-space:nowrap;flex-shrink:0}.cq-welcome-links{flex-wrap:wrap}.cq-quick-fields{grid-template-columns:1.25fr 1fr}.cq-quick-fields input,.cq-quick-fields select{font-size:16px}.cq-aside-photo-wrap{height:245px}}
 @media(max-width:380px){.cq-quick-fields{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.cq-refresh *{transition:none!important;scroll-behavior:auto!important}}
+
+.cq-home-page .cq-home-columns,
+.cq-home-page .cq-home-combos,
+.cq-home-page .cq-story-refresh,
+.cq-home-page .cq-last-invite{background:#fffaf2f2;border:1px solid #fffaf2;border-radius:20px;box-shadow:0 18px 45px #2b170d24}
+.cq-home-page .cq-home-columns{padding:28px}
+.cq-home-page .cq-home-combos{padding:28px;margin-top:24px}
+.cq-home-page .cq-story-refresh{padding:38px 28px;margin-top:24px}
+.cq-home-page .cq-last-invite{margin-top:24px;padding:31px 38px}
+.cq-home-page .cq-refresh{padding-bottom:38px}
+.cq-home-page .cq-heading-row h2,
+.cq-home-page .cq-story-refresh h2,
+.cq-home-page .cq-home-combos .cq-heading-row h2{color:#493629;text-shadow:none}
+.cq-home-page .cq-heading-row>.cq-quiet-link,
+.cq-home-page .cq-menu-bottom,
+.cq-home-page .cq-story-refresh p,
+.cq-home-page .cq-combo-heading-note{color:#806c5b}
+.cq-home-page .cq-home-filters button{border-color:#dbcbb8;color:#806c5b;background:#fffaf2}
+.cq-home-page .cq-home-filters button.is-active,
+.cq-home-page .cq-home-filters button:hover{color:#fff;background:var(--cq-red)}
+.cq-home-page,.cq-menu-landing-page{--cq-green:#536347;--cq-sage:#e9eddf}
+.cq-home-page .cq-aside-note{border-color:var(--cq-green);background:var(--cq-green);color:#fbf8f2;box-shadow:0 8px 22px #35422b1a}
+.cq-home-page .cq-aside-note>svg{color:#e7c38d}
+.cq-home-page .cq-aside-note>p{color:#eee8d8}
+.cq-home-page .cq-aside-note h3{color:#fbf8f2}
+.cq-home-page .cq-benefit:nth-child(2)>span:first-child{background:var(--cq-sage);color:var(--cq-green)}
+.cq-home-page .cq-food-category,
+.cq-menu-landing-page .cq-dish-category{color:var(--cq-green)}
+.cq-home-page .cq-moment-meal{color:#493526}
+.cq-home-page .cq-moment-sweet{color:#493526}
+.cq-home-page .cq-food-card,
+.cq-home-page .cq-combo-card{color:var(--cq-ink)}
+.cq-menu-landing-page{background:linear-gradient(180deg,#24181199,#24181166),url("../images/restaurant-background.png") center/cover fixed!important;color:#493629}
+.cq-menu-landing-page #customer-main{background:transparent!important}
+.cq-menu-landing-page .cq-header-refresh{background:#fffaf0f5!important}
+.cq-menu-landing-page .cq-catalog{background:transparent!important;padding-block:28px 42px!important}
+.cq-menu-landing-page .customer-container.cq-catalog-layout,
+.cq-menu-landing-page .customer-container.cq-home-combos{width:min(1600px,calc(100% - 64px))}
+.cq-menu-landing-page .cq-catalog-layout{padding:28px;border:1px solid #fffaf2;border-radius:20px;background:#fffaf2f2;box-shadow:0 18px 45px #2b170d24}
+.cq-menu-landing-page .cq-catalog-results{min-width:0}
+.cq-menu-landing-page .cq-catalog-toolbar>p,
+.cq-menu-landing-page .cq-catalog-toolbar>p>span{color:#493629}
+.cq-menu-landing-page .cq-catalog-sidebar{border-color:#e4d4c0;box-shadow:0 8px 20px #2b170d12}
+.cq-menu-landing-page .cq-home-combos{background:#fffaf2f2;border:1px solid #fffaf2;border-radius:20px;box-shadow:0 18px 45px #2b170d24;padding:28px;margin-top:24px}
+.cq-menu-landing-page .cq-catalog-sidebar .cq-sidebar-title{justify-content:flex-start;gap:10px;padding:18px 14px}
+.cq-menu-landing-page .cq-sidebar-title>.cq-sidebar-mark{display:grid;place-items:center;flex-shrink:0;width:44px;height:44px;border-radius:50%;background:#fff8eb;line-height:1}
+.cq-menu-landing-page .cq-sidebar-mark img{display:block;width:34px;height:34px}
+.cq-menu-landing-page .cq-sidebar-title>.cq-sidebar-label{font-size:18px;font-weight:800;line-height:1.3;letter-spacing:.03em;color:#fff8eb}
+.cq-menu-landing-page .cq-catalog-sidebar .customer-menu-filters a{font-size:15px;font-weight:600;color:#493629;padding:15px 10px;border-radius:8px}
+.cq-menu-landing-page .cq-catalog-sidebar .customer-menu-filters a:hover{color:var(--cq-green);background:var(--cq-sage)}
+.cq-menu-landing-page .cq-catalog-sidebar .customer-menu-filters a.is-selected{color:var(--cq-red);background:#f8e7e9;font-weight:750;border-bottom-color:transparent}
+.cq-menu-landing-page .cq-catalog-sidebar .customer-menu-filters a:focus-visible{outline:2px solid var(--cq-red);outline-offset:2px}
+.cq-menu-landing-page .cq-catalog-note>svg{display:block;width:28px;height:28px;color:var(--cq-green);margin-bottom:12px}
+.cq-menu-landing-page .cq-catalog-note h2{font-size:24px;font-weight:650;line-height:1.35;color:#332b25}
+.cq-menu-landing-page .cq-catalog-note p{font-size:13px;line-height:1.75;color:#63513e}
+.cq-menu-landing-page .cq-catalog-note .cq-text-link{font-size:13px;font-weight:700;color:var(--cq-red)}
+.cq-menu-landing-page .cq-catalog-toolbar>p{font-size:16px}
+.cq-menu-landing-page .cq-catalog-toolbar>p>span{font-size:12px}
+.cq-menu-landing-page .customer-search input,
+.cq-menu-landing-page .customer-search button{font-size:13px}
+.cq-menu-landing-page .cq-catalog-grid h2{font-size:20px}
+.cq-menu-landing-page .cq-catalog-grid .cq-dish-content>p{font-size:13px;line-height:1.65}
+.cq-menu-landing-page .cq-catalog-grid .cq-dish-category{font-size:10px;font-weight:700}
+.cq-menu-landing-page .cq-catalog-grid .cq-dish-bottom strong{font-size:18px}
+.cq-menu-landing-page .cq-catalog-grid .cq-dish-bottom span{font-size:11px}
+@media(max-width:1050px){
+    .cq-menu-landing-page .customer-container.cq-catalog-layout,
+    .cq-menu-landing-page .customer-container.cq-home-combos{width:calc(100% - 32px);padding:20px}
+}
+@media(max-width:760px){
+    .cq-menu-landing-page .customer-container.cq-catalog-layout,
+    .cq-menu-landing-page .customer-container.cq-home-combos{width:calc(100% - 24px);padding:16px}
+}
+.cq-home-page .cq-last-invite{color:#493629}
+.cq-home-page .cq-last-invite .cq-kicker{color:#a65b38}
+.cq-home-page .cq-last-invite h2{color:#493629;text-shadow:none}
+.cq-home-page .cq-last-invite .cq-pill{color:#493629!important}
+.cq-home-page .cq-story-refresh .cq-kicker,
+.cq-home-page .cq-home-combos .cq-kicker,
+.cq-home-page .cq-moment .cq-kicker{color:#a65b38}
+.cq-home-page .cq-food-copy h3 a,
+.cq-home-page .cq-combo-copy h3,
+.cq-home-page .cq-combo-copy p,
+.cq-home-page .cq-combo-copy li{color:#493629}

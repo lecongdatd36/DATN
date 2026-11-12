@@ -24,7 +24,7 @@
                 <button type="submit" aria-label="{% translate "Tìm món" %}">{% include 'customer/includes/ui_icon.html' with icon='search' %}</button>
             </form>
             <a class="cq-header-account" href="{% if user.is_authenticated %}{% url 'accounts:workspace' %}{% else %}{% url 'accounts:login' %}{% endif %}" aria-label="{% if user.is_authenticated %}{% translate "Mở trang quản lý" %}{% else %}{% translate "Đăng nhập" %}{% endif %}">{% include 'customer/includes/ui_icon.html' with icon='user' %}</a>
-            <a class="cq-pill cq-header-book" href="{% url 'online_reservations:create' %}">{% translate "Đặt bàn ngay" %}</a>
+            <a class="cq-pill cq-header-book" href="{% url 'online_reservations:create' %}">{% include 'customer/includes/ui_icon.html' with icon='calendar' %}{% translate "Đặt bàn ngay" %}</a>
             <button class="customer-menu-toggle cq-header-toggle" type="button" data-customer-menu-toggle aria-controls="customer-navigation" aria-expanded="false" aria-label="{% translate "Mở menu" %}"><span></span><span></span><span></span></button>
         </div>
     </div>
