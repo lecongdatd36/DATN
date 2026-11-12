@@ -1,4 +1,4 @@
-/* Staff mobile components use the shared white and red visual system. */
+/* Staff mobile components use the shared white and blue visual system. */
 :root {
   --m-green: var(--mobile-primary); --m-line: var(--mobile-border); --m-muted: var(--mobile-muted);
   --app-primary: var(--mobile-primary); --app-border: var(--mobile-border); --app-surface: var(--mobile-surface);

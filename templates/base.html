@@ -9,14 +9,15 @@
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}?v=7">
-    <link rel="stylesheet" href="{% static 'css/management-theme.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/staff-palette.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/management-theme.css' %}?v=3">
     <link rel="stylesheet" href="{% static 'css/sidebar-navigation.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/menu-recommendations.css' %}?v=2">
     {% block extra_css %}{% endblock %}
-    <link rel="stylesheet" href="{% static 'css/staff-mobile-theme.css' %}?v=4" media="(max-width: 767.98px)">
+    <link rel="stylesheet" href="{% static 'css/staff-mobile-theme.css' %}?v=5" media="(max-width: 767.98px)">
     <link rel="stylesheet" href="{% static 'css/mobile.css' %}?v=3" media="(max-width: 767.98px)">
-    <link rel="stylesheet" href="{% static 'css/staff-mobile-system.css' %}?v=4" media="(max-width: 767.98px)">
+    <link rel="stylesheet" href="{% static 'css/staff-mobile-system.css' %}?v=5" media="(max-width: 767.98px)">
     {% if mobile_tables_url %}<script>if (matchMedia('(max-width: 767.98px)').matches && new URLSearchParams(location.search).get('desktop') !== '1') location.replace('{{ mobile_tables_url|escapejs }}');</script>{% endif %}
 </head>
 <body class="{% if user.is_authenticated %}staff-layout{% else %}public-layout d-flex flex-column min-vh-100{% endif %}">

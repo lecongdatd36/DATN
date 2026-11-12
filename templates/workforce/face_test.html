@@ -1,7 +1,7 @@
 {% extends 'workforce/layout.html' %}{% load static %}
 {% block title %}Kiểm thử nhận diện khuôn mặt · Cơm Quê{% endblock %}
 {% block workforce_heading %}Kiểm thử nhận diện khuôn mặt{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/face-test.css' %}?v=1">{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/face-test.css' %}?v=2">{% endblock %}
 {% block workforce_content %}
 <div class="ft-intro"><div><span class="ft-eyebrow">CAMERA TRỰC TIẾP</span><p>Đứng một mình, giữ khuôn mặt trong khung và nhìn thẳng vào camera.</p></div><a href="{% url 'workforce:faces' %}">Quản lý mẫu khuôn mặt ↗</a></div>
 {% if not ready %}<div class="alert alert-warning" role="alert">{{ readiness_error }}</div>{% endif %}

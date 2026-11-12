@@ -1,0 +1,11 @@
+/* Shared brand accents for staff workspaces, the mobile app and attendance. */
+:root{
+  --staff-primary:#2563eb;
+  --staff-primary-hover:#1d4ed8;
+  --staff-primary-soft:#eff6ff;
+  --staff-primary-border:#bfdbfe;
+  --staff-primary-rgb:37,99,235;
+  --staff-primary-hover-rgb:29,78,216;
+}
+.staff-login-page .cq-login-form .customer-button{background:var(--staff-primary);border-color:var(--staff-primary)}
+.staff-login-page .cq-login-form .customer-button:hover{background:var(--staff-primary-hover);border-color:var(--staff-primary-hover)}

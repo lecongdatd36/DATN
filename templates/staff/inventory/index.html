@@ -1,7 +1,7 @@
 {% extends 'staff/base_staff.html' %}
 {% load static menu_money %}
 {% block staff_title %}Kho · QLNH{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/staff-workspaces.css' %}?v=12"><link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=2">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/staff-workspaces.css' %}?v=12"><link rel="stylesheet" href="{% static 'css/inventory-workspace.css' %}?v=3">{% endblock %}
 {% block staff_content %}
 <section class="container-fluid px-3 pb-4 inventory-page">
   <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3"><div><p class="eyebrow mb-1">KHO</p><h1 class="h3 mb-1">Nguyên liệu, công thức và tồn kho</h1><p class="text-secondary mb-0">1. Tạo nguyên liệu → 2. Nhập hàng → 3. Khai báo công thức → 4. Gửi món xuống Bếp.</p></div><div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-primary" href="{% url 'inventory:purchase_list' %}">Phiếu nhập</a><a class="btn btn-outline-primary" href="{% url 'inventory:stocktake_list' %}">Kiểm kê</a><a class="btn btn-outline-danger" href="{% url 'inventory:waste' %}">Hao hụt</a>{% if can_manage %}<a class="btn btn-outline-secondary" href="{% url 'inventory:supplier_create' %}">+ Nhà cung cấp</a><a class="btn btn-primary" href="{% url 'inventory:ingredient_create' %}">+ Nguyên liệu</a>{% endif %}</div></div>

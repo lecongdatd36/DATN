@@ -2,6 +2,12 @@
 
 Đường dẫn thật: `/sales/mobile/`. Dùng cùng tài khoản, order, phân quyền và database với desktop; không phải bản mẫu trong `design/staff-mobile`.
 
+## Màu giao diện dùng chung
+
+App nhân viên đồng bộ xanh dương `#2563EB` với quản lý: gọi món, thu ngân/hóa đơn, bếp, kho, đăng nhập và chấm công. Token chung nằm ở `static/css/staff-palette.css`; theme mobile và management đọc cùng bộ màu, kể cả biến Bootstrap và trạng thái focus. Các nhãn lỗi/cảnh báo nghiệp vụ giữ ý nghĩa trạng thái. Website khách và QR khách giữ màu đỏ Cơm Quê.
+
+CSS được tăng phiên bản trên các layout để tải lại trên điện thoại. Kiểm tra Chrome với PostgreSQL tạm: **95 live checks qua**, gồm gọi món, gửi bếp, áp mã, thu tiền, hóa đơn, thông báo và tránh thêm trùng; chụp/kiểm tra màu ở app bán hàng, bếp, kho, quản lý và chấm công. QR khách được kiểm tra giữ màu đỏ. Không thay đổi nghiệp vụ hoặc dữ liệu thật.
+
 ## Luồng chung theo bàn
 
 1. **Bàn**: lọc khu vực/trạng thái, nhận khách ở bàn trống. Số khách bắt buộc; SĐT tùy chọn. Có SĐT thì tra cứu, chỉ hiện tên đăng ký khi chưa có hồ sơ. Không bắt nhân viên phân loại khách cũ/mới.

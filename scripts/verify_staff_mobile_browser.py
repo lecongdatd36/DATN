@@ -72,7 +72,12 @@ def main():
         PromotionCode.objects.create(code="MOBILE10", name="UI test discount", discount_type="PERCENT", value=10, minimum_order=0,
                                      starts_at=now-timedelta(days=1), ends_at=now+timedelta(days=1))
         sessions = {}
-        for role in ("CASHIER", "WAITER"):
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
+        warehouse_user=get_user_model().objects.create_user(username='palette_inventory')
+        warehouse_user.groups.add(Group.objects.get(name='INVENTORY'))
+        fixture.users['INVENTORY']=warehouse_user
+        for role in ("CASHIER", "WAITER", "KITCHEN", "MANAGER", "INVENTORY"):
             client = Client()
             client.force_login(fixture.users[role])
             sessions[role.lower()] = client.cookies[settings.SESSION_COOKIE_NAME].value
@@ -143,9 +148,14 @@ def main():
                 elif page == "open":
                     params += f"&table={fixture.table.pk}"
                 target_url = reverse("customer_portal:qr_table", args=[qr_token.token]) if page == "qr" else "/sales/mobile/?" + params
+                capture_role='cashier'
+                if page in ('kitchen','inventory','management','attendance'):
+                    target_url={'kitchen':reverse('kitchen:workspace'),'inventory':reverse('inventory:workspace'),
+                        'management':reverse('accounts:workspace'),'attendance':reverse('workforce:point')}[page]
+                    capture_role={'kitchen':'kitchen','inventory':'inventory','management':'manager','attendance':'cashier'}[page]
                 html = f'<!doctype html><meta charset="utf-8"><body style="margin:0;background:#e5ece6;display:grid;justify-content:center;padding:25px 0"><iframe title="Mobile thực tế" src="{target_url}" width="390" height="844" style="border:6px solid #204636;border-radius:18px;background:white"></iframe>'
                 connections.close_all()
-                return respond(start_response, html, role="cashier")
+                return respond(start_response, html, role=capture_role)
             if path.startswith("/static/"):
                 static_root = (BASE / "static").resolve()
                 target = (static_root / path.removeprefix("/static/")).resolve()

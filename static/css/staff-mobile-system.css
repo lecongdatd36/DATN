@@ -1,10 +1,10 @@
 /* Shared visual system for Order, management, kitchen and inventory mobile. */
 :root, :root[data-theme="dark"] {
     color-scheme: light;
-    --mobile-primary: #c8102e;
-    --mobile-primary-hover: #a60d26;
-    --mobile-primary-soft: #fff1f3;
-    --mobile-primary-border: #f2c6ce;
+    --mobile-primary: var(--staff-primary, #2563eb);
+    --mobile-primary-hover: var(--staff-primary-hover, #1d4ed8);
+    --mobile-primary-soft: var(--staff-primary-soft, #eff6ff);
+    --mobile-primary-border: var(--staff-primary-border, #bfdbfe);
     --mobile-surface: #ffffff;
     --mobile-subtle: #f6f7f9;
     --mobile-border: #e5e7eb;
@@ -32,18 +32,18 @@
     --m-line: var(--mobile-border);
     --m-muted: var(--mobile-muted);
     --bs-primary: var(--mobile-primary);
-    --bs-primary-rgb: 200, 16, 46;
+    --bs-primary-rgb: var(--staff-primary-rgb, 37, 99, 235);
     --bs-link-color: var(--mobile-primary);
-    --bs-link-color-rgb: 200, 16, 46;
+    --bs-link-color-rgb: var(--staff-primary-rgb, 37, 99, 235);
     --bs-link-hover-color: var(--mobile-primary-hover);
-    --bs-link-hover-color-rgb: 166, 13, 38;
+    --bs-link-hover-color-rgb: var(--staff-primary-hover-rgb, 29, 78, 216);
     --bs-body-bg: var(--mobile-surface);
     --bs-body-color: var(--mobile-text);
     --bs-secondary-color: var(--mobile-muted);
     --bs-secondary-bg: var(--mobile-subtle);
     --bs-tertiary-bg: var(--mobile-subtle);
     --bs-border-color: var(--mobile-border);
-    --bs-warning-rgb: 200, 16, 46;
+    --bs-warning-rgb: var(--staff-primary-rgb, 37, 99, 235);
     --bs-warning-text-emphasis: var(--mobile-primary-hover);
     --bs-warning-bg-subtle: var(--mobile-primary-soft);
     --bs-warning-border-subtle: var(--mobile-primary-border);
@@ -180,7 +180,7 @@ body.staff-layout, body.staff-mobile {
 :is(.staff-layout, .staff-mobile) textarea { color: var(--mobile-text); border-color: var(--mobile-border); background-color: var(--mobile-surface); border-radius: var(--mobile-control-radius); }
 .staff-layout :is(.form-control, .form-select):focus, .staff-mobile :is(input, select, textarea):focus {
     border-color: var(--mobile-primary);
-    box-shadow: 0 0 0 3px #c8102e14;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mobile-primary) 8%, transparent);
 }
 .staff-layout :is(.nav-pills .nav-link.active, .kitchen-mobile-tabs button.active, .inventory-nav a.active, .area-rail-item.is-active), .staff-mobile .m-chips button.active {
     color: #fff;

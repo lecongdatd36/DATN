@@ -29,8 +29,10 @@ async function waitUntil(callback,timeout=100000) {
   try{
     const port=await waitUntil(async()=>{try{return Number((await readFile(path.join(profile,'DevToolsActivePort'),'utf8')).split('\n')[0]);}catch{return null;}},10000);
     const info=await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();browser=await connect(info.webSocketDebuggerUrl);
-    const target=await (await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(baseUrl+'/__mobile_test__/')}`,{method:'PUT'})).json();
-    page=await connect(target.webSocketDebuggerUrl);await page.call('Page.enable');
+    const target=await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`,{method:'PUT'})).json();
+    page=await connect(target.webSocketDebuggerUrl);await page.call('Page.enable');await page.call('Network.enable');
+    await page.call('Network.setExtraHTTPHeaders',{headers:{'Accept-Language':'vi-VN,vi;q=0.9'}});
+    await page.call('Page.navigate',{url:baseUrl+'/__mobile_test__/'});
     const evaluate=async expression=>(await page.call('Runtime.evaluate',{expression,returnByValue:true})).result?.value;
     await page.call('Emulation.setDeviceMetricsOverride',{width:500,height:932,deviceScaleFactor:1,mobile:false});
     const report=await waitUntil(async()=>{
@@ -48,9 +50,11 @@ async function waitUntil(callback,timeout=100000) {
     await writeFile(path.join(output,'live-checks.txt'),report,'utf8');
     if(!report.includes('LIVE CHECKS PASSED'))throw Error(report);
     await page.call('Emulation.setDeviceMetricsOverride',{width:500,height:932,deviceScaleFactor:1,mobile:false});
-    for(const name of ['tables','payments','open','menu','order','checkout','receipt','tasks','personal','notifications','qr']){
+    for(const name of ['tables','payments','open','menu','order','checkout','receipt','tasks','personal','notifications','kitchen','inventory','management','attendance','qr']){
       await page.call('Page.navigate',{url:baseUrl+'/__mobile_test__/capture/'+name});
-      await waitUntil(()=>evaluate(`document.querySelector('iframe')?.contentDocument?.readyState==='complete' && Boolean(document.querySelector('iframe')?.contentDocument?.querySelector('${name==='qr'?'[data-qr-menu-page]':'.m-header'}'))`),10000);
+      await waitUntil(()=>evaluate(`document.querySelector('iframe')?.contentDocument?.readyState==='complete' && Boolean(document.querySelector('iframe')?.contentDocument?.querySelector('${name==='qr'?'[data-qr-menu-page]':name==='attendance'?'[data-face-kiosk]':'.m-header'}'))`),10000);
+      const expectedBlue=await evaluate(`(()=>{const d=document.querySelector('iframe').contentDocument,w=document.querySelector('iframe').contentWindow;if(${JSON.stringify(name)}==='qr')return w.getComputedStyle(d.body).getPropertyValue('--cq-red').trim()==='#b71932';const b=d.querySelector(${JSON.stringify(name==='attendance'?'[data-clock-action]':'.m-header')});return ${JSON.stringify(name)}==='attendance'?w.getComputedStyle(b).backgroundColor==='rgb(37, 99, 235)':w.getComputedStyle(b).borderTopColor==='rgb(37, 99, 235)'})()`);
+      if(!expectedBlue)throw Error('Unexpected palette on '+name);
       if(name==='notifications') await evaluate("document.querySelector('iframe').contentDocument.querySelector('[data-mobile-notification-open]').click()");
       if(name==='qr'){
         await evaluate(`(()=>{const doc=document.querySelector('iframe').contentDocument;doc.querySelector('[data-qr-cart-open]').click();const row=[...doc.querySelectorAll('.customer-qr-cart-item')].find(node=>node.textContent.includes('Trà chanh gợi ý'));row?.querySelector('[data-qr-decrease]').click();})()`);

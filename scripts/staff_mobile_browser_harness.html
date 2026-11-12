@@ -25,7 +25,7 @@
     await wait(()=>doc().querySelector('[data-mobile-notification-status]').textContent.includes('Đã đồng bộ'),'notification baseline');
     assert(doc().querySelectorAll('#mobile-notification-panel').length===1,'Exactly one persistent mobile notification panel');
     assert(!doc().querySelector('#mobile-page #mobile-notification-panel'),'Notification panel is outside replaceable content');
-    assert(frame.contentWindow.getComputedStyle(doc().querySelector('.m-button')).backgroundColor==='rgb(183, 25, 50)','Staff actions use the Com Que burgundy theme');
+    assert(frame.contentWindow.getComputedStyle(doc().querySelector('.m-button')).backgroundColor==='rgb(37, 99, 235)','Staff app actions use the shared management blue theme');
     const note=doc().querySelector('[data-inline-add] input[name=note]');
     note.closest('details').open=true; fill('[data-inline-add] input[name=note]','Notification must preserve this note');
     frame.contentWindow.__notificationSounds=[];
@@ -177,7 +177,7 @@
     click('.m-table.occupied a');await at('order');
     assert(doc().querySelector('.m-customer').textContent.includes('Khách kiểm thử mobile'),'Actual order shows linked customer');
     click('a[href*="page=checkout"]');await at('checkout');
-    assert(doc().querySelectorAll('[name=payment_method]').length===2,'Only cash and transfer are offered');
+    assert(doc().querySelectorAll('[data-payment-form] input[type=radio][name=payment_method]').length===2,'Manual collection offers cash and transfer; the gateway form is separate');
     click('[name=payment_method][value=BANK_TRANSFER]');
     assert(doc().querySelector('[name=received_transfer]').required,'Transfer requires funds received check');
     doc().querySelector('[data-payment-form]').requestSubmit();
