@@ -6,10 +6,10 @@ from apps.accounts.forms import BootstrapFormMixin
 from apps.customers.validators import normalize_phone
 from apps.seating.models import Area, DiningTable
 from .models import Booking, BookingSettings
-from .hours import booking_hours_help, validate_booking_hours
-from core.forms import add_service_errors
-from .duration import planned_end, MAX_DURATION_MINUTES
-from .selectors import available_transfer_tables, default_duration_minutes
+from .duration import MAX_DURATION_MINUTES
+from .selectors import available_transfer_tables
+from .scheduling import reservation_end
+from .hours import booking_hours_help
 
 
 class TableChoiceField(forms.ModelChoiceField):
@@ -21,38 +21,47 @@ def time_field(label):
     return forms.DateTimeField(label=label, input_formats=["%Y-%m-%dT%H:%M"], widget=forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"}))
 
 
-class SlotForm(BootstrapFormMixin, forms.Form):
+class ReservationScheduleMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.service_settings = BookingSettings.objects.get(pk=1)
+        self.default_minutes = self.service_settings.default_duration_minutes
+        if "duration_minutes" in self.fields:
+            self.initial.setdefault("duration_minutes", self.default_minutes)
+        self.fields["starts_at"].help_text = booking_hours_help(self.service_settings)
+
+    def clean(self):
+        data = super().clean()
+        start = data.get("starts_at")
+        if start and start < timezone.now() and start != getattr(self, "original_start", None):
+            self.add_error("starts_at", "Giờ đến phải ở tương lai.")
+        if start and "duration_minutes" not in self.errors:
+            try:
+                data["ends_at"] = reservation_end(start, data.get("duration_minutes"), settings=self.service_settings)
+            except forms.ValidationError as error:
+                for field, errors in error.error_dict.items():
+                    self.add_error(field if field in self.fields else None, errors)
+        return data
+
+
+class SlotForm(ReservationScheduleMixin, BootstrapFormMixin, forms.Form):
     starts_at = time_field("Giờ đến")
     duration_minutes = forms.IntegerField(label=_("Thời lượng dự kiến (phút)"), min_value=1, max_value=MAX_DURATION_MINUTES, required=False, help_text=_("Chỉ đổi khi khách dự kiến dùng bàn lâu hơn hoặc ngắn hơn thường lệ."))
     party_size = forms.IntegerField(label=_("Số khách"), min_value=1, max_value=100)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.default_minutes = default_duration_minutes()
-        self.initial.setdefault("duration_minutes", self.default_minutes)
-        self.fields["starts_at"].help_text = booking_hours_help(BookingSettings.objects.get(pk=1))
-
     def clean_duration_minutes(self):
         return self.cleaned_data["duration_minutes"] if self.cleaned_data["duration_minutes"] is not None else self.default_minutes
-
-    def clean(self):
-        data = super().clean()
-        if data.get("starts_at") and data.get("duration_minutes"):
-            try:
-                data["ends_at"] = planned_end(data["starts_at"], data["duration_minutes"])
-                validate_booking_hours(data["starts_at"], data["ends_at"])
-            except forms.ValidationError as error:
-                add_service_errors(self, error)
-        return data
 
 
 class BookingForm(SlotForm):
     expected_revision = forms.IntegerField(required=False, widget=forms.HiddenInput)
     customer_phone = forms.CharField(label=_("Số điện thoại khách hàng"), max_length=32, widget=forms.TextInput(attrs={"type": "tel"}))
+    customer_name = forms.CharField(label=_("Tên khách hàng mới"), max_length=150, required=False, help_text=_("Chỉ cần nhập nếu số điện thoại chưa có hồ sơ khách hàng."))
     table = TableChoiceField(label=_("Bàn"), queryset=DiningTable.objects.none())
-    field_order = ("customer_phone", "starts_at", "party_size", "table", "duration_minutes")
+    field_order = ("customer_phone", "customer_name", "starts_at", "party_size", "table", "duration_minutes")
 
     def __init__(self, *args, booking=None, **kwargs):
+        self.original_start = booking.starts_at if booking else None
         super().__init__(*args, **kwargs)
         if booking:
             self.fields["expected_revision"].required = True
@@ -103,8 +112,9 @@ class BookingFilterForm(BootstrapFormMixin, forms.Form):
 
 
 class BookingSettingsForm(BootstrapFormMixin, forms.Form):
-    opening_time = forms.TimeField(label=_("Giờ mở cửa"), widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
-    closing_time = forms.TimeField(label=_("Giờ đóng cửa"), widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
+    opening_time = forms.TimeField(label=_("Giờ mở cửa"), widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}), required=False)
+    closing_time = forms.TimeField(label=_("Giờ đóng cửa"), widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}), required=False)
+    last_booking_time = forms.TimeField(label=_("Giờ nhận khách đặt bàn cuối"), widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}), required=False)
     default_duration_minutes = forms.IntegerField(label=_("Thời lượng mặc định (phút)"), min_value=1, max_value=MAX_DURATION_MINUTES)
     no_show_grace_minutes = forms.IntegerField(
         label=_("Tự động ghi nhận không đến sau (phút)"), min_value=0, max_value=240, required=False,
@@ -119,20 +129,13 @@ class BookingSettingsForm(BootstrapFormMixin, forms.Form):
         return data
 
 
-class PublicReservationForm(forms.Form):
+class PublicReservationForm(ReservationScheduleMixin, forms.Form):
     full_name = forms.CharField(label=_("Họ và tên"), max_length=150)
     phone = forms.CharField(label=_("Số điện thoại"), max_length=20, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}))
     starts_at = time_field("Ngày và giờ đến")
     party_size = forms.IntegerField(label=_("Số khách"), min_value=1, max_value=100)
     area = forms.ModelChoiceField(label=_("Khu vực mong muốn"), queryset=Area.objects.filter(is_active=True), required=False, empty_label=_("Không chọn khu vực"))
-    duration_minutes = forms.IntegerField(label=_("Thời lượng dự kiến (phút)"), min_value=1, max_value=MAX_DURATION_MINUTES, required=False)
-    note = forms.CharField(label=_("Ghi chú"), max_length=500, required=False, widget=forms.Textarea(attrs={"rows": 3, "placeholder": _("Ví dụ: cần ghế trẻ em hoặc bàn yên tĩnh")}))
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.default_minutes = default_duration_minutes()
-        self.initial.setdefault("duration_minutes", self.default_minutes)
-        self.fields["starts_at"].help_text = booking_hours_help(BookingSettings.objects.get(pk=1))
+    note = forms.CharField(label=_("Ghi chú"), max_length=500, required=False, widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Ví dụ: cần ghế trẻ em hoặc bàn yên tĩnh"}))
 
     def clean_full_name(self):
         name = " ".join(self.cleaned_data["full_name"].split())
@@ -142,20 +145,6 @@ class PublicReservationForm(forms.Form):
 
     def clean_phone(self):
         return normalize_phone(self.cleaned_data["phone"])
-
-    def clean(self):
-        data = super().clean()
-        starts_at = data.get("starts_at")
-        duration = data.get("duration_minutes") or self.default_minutes
-        if starts_at and starts_at < timezone.now():
-            self.add_error("starts_at", "Giờ đến phải ở tương lai.")
-        if starts_at and duration:
-            try:
-                data["ends_at"] = planned_end(starts_at, duration)
-                validate_booking_hours(starts_at, data["ends_at"])
-            except forms.ValidationError as error:
-                add_service_errors(self, error)
-        return data
 
 
 class PublicReservationLookupForm(forms.Form):
@@ -172,28 +161,7 @@ class PublicReservationLookupForm(forms.Form):
         return normalize_phone(self.cleaned_data["phone"])
 
 
-class PublicAvailabilityForm(forms.Form):
+class PublicAvailabilityForm(ReservationScheduleMixin, forms.Form):
     starts_at = time_field("Ngày và giờ đến")
     party_size = forms.IntegerField(label=_("Số khách"), min_value=1, max_value=100)
     area = forms.ModelChoiceField(label=_("Khu vực mong muốn"), queryset=Area.objects.filter(is_active=True), required=False, empty_label=_("Tất cả khu vực"))
-    duration_minutes = forms.IntegerField(label=_("Thời lượng dự kiến (phút)"), min_value=1, max_value=MAX_DURATION_MINUTES, required=False)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.default_minutes = default_duration_minutes()
-        self.initial.setdefault("duration_minutes", self.default_minutes)
-        self.fields["starts_at"].help_text = booking_hours_help(BookingSettings.objects.get(pk=1))
-
-    def clean(self):
-        data = super().clean()
-        starts_at = data.get("starts_at")
-        duration = data.get("duration_minutes") or self.default_minutes
-        if starts_at and starts_at < timezone.now():
-            self.add_error("starts_at", "Giờ đến phải ở tương lai.")
-        if starts_at and duration:
-            try:
-                data["ends_at"] = planned_end(starts_at, duration)
-                validate_booking_hours(starts_at, data["ends_at"])
-            except forms.ValidationError as error:
-                add_service_errors(self, error)
-        return data

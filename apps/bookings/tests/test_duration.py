@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.bookings.forms import BookingForm, SlotForm
+from apps.bookings.duration import planned_end
 from apps.bookings.models import Booking, BookingSettings, BookingSettingsLog
 from apps.bookings.services import save_booking, transition_booking, update_booking_settings
 from apps.customers.models import Customer
@@ -90,6 +91,9 @@ class BookingDurationTests(TestCase):
     def test_derived_end_conflict_and_adjacent_boundary(self):
         first = self.create(duration_minutes=120)
         self.assertEqual(timezone.localtime(first.starts_at).date(), timezone.localtime(first.ends_at).date())
+        # Raw duration arithmetic supports midnight; reservation hours are checked separately.
+        midnight_start = self.start.replace(hour=23)
+        self.assertNotEqual(midnight_start.date(), planned_end(midnight_start, 120).date())
         with self.assertRaises(ValidationError):
             self.create(starts_at=self.start + timedelta(minutes=119), duration_minutes=90)
         second = self.create(starts_at=first.ends_at, duration_minutes=60)

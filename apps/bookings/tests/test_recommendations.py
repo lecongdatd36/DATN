@@ -167,7 +167,7 @@ class TableRecommendationTests(TestCase):
         next_page = self.client.get(response.context["reservation_url"])
         form = next_page.context["form"]
         self.assertEqual(str(form["party_size"].value()), "3")
-        self.assertEqual(str(form["duration_minutes"].value()), "120")
+        self.assertNotIn("duration_minutes", form.fields)
         self.assertEqual(str(form["area"].value()), str(self.area.pk))
         self.assertEqual(form["starts_at"].value(), self.params()["starts_at"])
         self.assertFalse(Booking.objects.exists())

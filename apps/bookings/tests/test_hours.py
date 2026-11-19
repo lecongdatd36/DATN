@@ -37,7 +37,7 @@ class BookingHoursTests(TestCase):
 
     def test_services_reject_night_and_after_closing_without_writes(self):
         for service in (self.public, self.staff):
-            for hour, minute, duration in ((3, 0, 120), (8, 59, 120), (22, 0, 1), (21, 0, 61), (21, 30, 180)):
+            for hour, minute, duration in ((3, 0, 120), (8, 59, 120), (22, 0, 1), (21, 1, 61), (21, 30, 180)):
                 with self.subTest(service=service.__name__, hour=hour, minute=minute):
                     with self.assertRaisesMessage(ValidationError, "09:00–22:00"):
                         service(hour, minute, duration)
@@ -57,7 +57,7 @@ class BookingHoursTests(TestCase):
 
     def test_all_slot_forms_validate_hours_without_javascript(self):
         for form_class in (SlotForm, PublicAvailabilityForm, PublicReservationForm):
-            for hour, duration, field in ((3, 120, "starts_at"), (21, 120, "duration_minutes")):
+            for hour, duration, field in ((3, 120, "starts_at"), (22, 120, "starts_at")):
                 form = form_class(data={"starts_at": self.at(hour).strftime("%Y-%m-%dT%H:%M"),
                                         "party_size": 2, "duration_minutes": duration,
                                         "full_name": self.customer.full_name, "phone": self.customer.phone})
@@ -67,7 +67,7 @@ class BookingHoursTests(TestCase):
     def test_configured_hours_are_logged_and_used_by_service_and_form(self):
         current = BookingSettings.objects.get(pk=1)
         updated = update_booking_settings(actor=self.manager, default_duration_minutes=120,
-                                          expected_revision=current.revision, opening_time=time(10), closing_time=time(21))
+                                          expected_revision=current.revision, opening_time=time(10), closing_time=time(21), last_booking_time=time(20))
         self.assertEqual(updated.revision, current.revision + 1)
         self.assertEqual(BookingSettingsLog.objects.get().new_hours["opening_time"], "10:00")
         with self.assertRaisesMessage(ValidationError, "10:00–21:00"):

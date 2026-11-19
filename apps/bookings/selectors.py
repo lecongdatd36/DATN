@@ -47,22 +47,22 @@ def protected_bookings():
         status="PENDING", online_reservation__status="WAITING", online_reservation__hold_expires_at__lte=timezone.now())
 
 
-def available_tables(*, starts_at, ends_at, party_size):
-    busy = overlapping_bookings(starts_at=starts_at, ends_at=ends_at).values("table_id")
+def available_tables(*, starts_at, ends_at, party_size, exclude_id=None):
+    busy = overlapping_bookings(starts_at=starts_at, ends_at=ends_at, exclude_id=exclude_id).values("table_id")
     result = DiningTable.objects.select_related("area").filter(is_active=True, area__is_active=True, capacity__gte=party_size).exclude(pk__in=busy)
     if starts_at <= timezone.now():
         result = result.exclude(bookings__status=Booking.Status.SEATED)
     return result
 
 
-def recommended_tables(*, starts_at, ends_at, party_size, area_id=None):
+def recommended_tables(*, starts_at, ends_at, party_size, area_id=None, exclude_id=None):
     """Read-only snapshot; booking services must recheck while holding the seating lock."""
     if (starts_at is None or ends_at is None or timezone.is_naive(starts_at)
             or timezone.is_naive(ends_at) or starts_at >= ends_at):
         raise ValidationError("Khoảng thời gian tìm bàn không hợp lệ.")
     # An overdue seated visit still occupies its table until staff close it.
     occupied = Booking.objects.filter(status=Booking.Status.SEATED).values("table_id")
-    tables = available_tables(starts_at=starts_at, ends_at=ends_at, party_size=party_size).filter(
+    tables = available_tables(starts_at=starts_at, ends_at=ends_at, party_size=party_size, exclude_id=exclude_id).filter(
         status__in=(DiningTable.Status.AVAILABLE, DiningTable.Status.RESERVED),
     ).exclude(pk__in=occupied)
     if area_id is not None:

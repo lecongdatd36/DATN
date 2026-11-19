@@ -1,4 +1,4 @@
-{% extends 'customer/reservation_base.html' %}{% load i18n customer_language %}
+{% extends 'customer/reservation_base.html' %}{% load static i18n customer_language %}
 
 {% block title %}{% translate "Kiểm tra bàn · CƠM QUÊ" %}{% endblock %}
 
@@ -9,6 +9,7 @@
         <p class="customer-form-intro">{% translate "Chọn thời gian và số khách. Chúng tôi sẽ gợi ý bàn vừa đủ chỗ, không trùng lịch cho cuộc hẹn của bạn." %}</p>
         <form class="customer-form-card cq-form-grid" method="get">
             {% include 'customer/includes/form_fields.html' with form=form %}
+            {% include 'bookings/includes/duration_preview.html' %}
             <button class="customer-button" type="submit">{% translate "Kiểm tra bàn" %} <span aria-hidden="true">→</span></button>
         </form>
         {% if searched %}
@@ -31,3 +32,4 @@
         {% endif %}
 
 {% endblock %}
+{% block extra_js %}<script src="{% static 'js/booking-duration.js' %}" defer></script>{% endblock %}

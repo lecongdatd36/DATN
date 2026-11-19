@@ -12,7 +12,7 @@ from apps.seating.models import DiningTable
 from core.seating_lock import lock_seating_schedule
 from .models import Booking, BookingActivityLog, BookingSettings, BookingSettingsLog
 from .duration import planned_end
-from .hours import validate_booking_hours
+from .scheduling import hours_snapshot, reservation_end, validate_reservation_period
 from .permissions import has_booking_permission
 from .selectors import available_tables, available_transfer_tables, overlapping_bookings, default_duration_minutes, recommended_tables
 
@@ -173,7 +173,7 @@ def _log(actor, booking, action, description):
 
 
 @transaction.atomic
-def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends_at=None, duration_minutes=None, booking_id=None, expected_revision=None):
+def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends_at=None, duration_minutes=None, booking_id=None, expected_revision=None, customer_name=""):
     actor = _lock_actor(actor)
     booking = Booking.objects.select_for_update().get(pk=booking_id) if booking_id is not None else Booking()
     created = booking_id is None
@@ -186,13 +186,13 @@ def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends
     if duration_minutes is not None:
         if ends_at is not None:
             raise ValidationError("Chỉ truyền thời lượng hoặc giờ kết thúc, không truyền cả hai.")
-        ends_at = planned_end(starts_at, duration_minutes)
+        ends_at = reservation_end(starts_at, duration_minutes)
     elif ends_at is None:
         # Existing schedules retain their own duration when defaults change.
         duration_minutes = default_duration_minutes() if created else booking.duration_minutes
-        ends_at = planned_end(starts_at, duration_minutes)
+        ends_at = reservation_end(starts_at, duration_minutes)
     validate_period(starts_at, ends_at)
-    validate_booking_hours(starts_at, ends_at)
+    validate_reservation_period(starts_at, ends_at)
     now = timezone.now()
     if (created or starts_at != booking.starts_at) and starts_at < now:
         raise ValidationError({"starts_at": "Giờ đến mới phải ở tương lai."})
@@ -203,8 +203,18 @@ def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends
     except ValidationError as error:
         raise ValidationError({"customer_phone": error.messages}) from error
     customer = Customer.objects.select_for_update().filter(phone=phone).first()
+    if customer is None and customer_name.strip():
+        from apps.customers.services import create_customer
+        if not actor.has_perm("customers.add_customer"):
+            raise ValidationError({"customer_phone": "Bạn cần quyền thêm khách hàng để tạo hồ sơ mới tại đây."})
+        try:
+            customer = create_customer(actor=actor, full_name=customer_name, phone=phone)
+        except ValidationError:
+            customer = Customer.objects.select_for_update().filter(phone=phone).first()
+            if customer is None:
+                raise
     if customer is None:
-        raise ValidationError({"customer_phone": "Chưa có khách hàng với số điện thoại này. Hãy thêm khách hàng trước."})
+        raise ValidationError({"customer_phone": "Chưa có khách hàng với số điện thoại này. Nhập tên khách hàng mới để tạo hồ sơ cùng lịch đặt."})
     table = DiningTable.objects.select_for_update().select_related("area").filter(pk=table_id).first()
     if table is None:
         raise ValidationError({"table": "Bàn không còn tồn tại."})
@@ -249,12 +259,9 @@ def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=No
         raise ValidationError({"party_size": "Số khách phải từ 1 đến 100."})
     if starts_at is None or timezone.is_naive(starts_at) or starts_at < timezone.now():
         raise ValidationError({"starts_at": "Giờ đến phải ở tương lai."})
-    try:
-        ends_at = planned_end(starts_at, duration_minutes or default_duration_minutes())
-    except ValidationError as error:
-        raise ValidationError({"duration_minutes": error.messages}) from error
+    ends_at = reservation_end(starts_at, duration_minutes)
 
-    validate_booking_hours(starts_at, ends_at)
+    validate_reservation_period(starts_at, ends_at)
 
     customer = Customer.objects.select_for_update().filter(phone=phone).first()
     if customer is None:
@@ -298,7 +305,7 @@ def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=No
 
 
 @transaction.atomic
-def update_booking_settings(*, actor, default_duration_minutes, expected_revision, no_show_grace_minutes=None, opening_time=None, closing_time=None):
+def update_booking_settings(*, actor, default_duration_minutes, expected_revision, no_show_grace_minutes=None, opening_time=None, closing_time=None, last_booking_time=None):
     actor = _lock_actor(actor, "configure_bookings")
     settings = BookingSettings.objects.select_for_update().get(pk=1)
     if settings.revision != expected_revision:
@@ -310,25 +317,26 @@ def update_booking_settings(*, actor, default_duration_minutes, expected_revisio
         raise ValidationError({"no_show_grace_minutes": "Thời gian chờ phải từ 0 đến 240 phút."})
     previous = settings.default_duration_minutes
     previous_grace = settings.no_show_grace_minutes
-    previous_opening, previous_closing = settings.opening_time, settings.closing_time
-    settings.opening_time = opening_time if opening_time is not None else previous_opening
-    settings.closing_time = closing_time if closing_time is not None else previous_closing
-    if settings.closing_time <= settings.opening_time:
-        raise ValidationError({"closing_time": "Giờ đóng cửa phải sau giờ mở cửa trong cùng ngày."})
-    if (previous != default_duration_minutes or previous_grace != no_show_grace_minutes
-            or previous_opening != settings.opening_time or previous_closing != settings.closing_time):
+    previous_hours = hours_snapshot(settings)
+    changes = {"opening_time": opening_time, "closing_time": closing_time, "last_booking_time": last_booking_time}
+    for name, value in changes.items():
+        if value is not None:
+            setattr(settings, name, value)
+    if not settings.opening_time <= settings.last_booking_time < settings.closing_time:
+        raise ValidationError("Giờ mở cửa phải không sau giờ nhận khách cuối; giờ nhận khách cuối phải trước giờ đóng cửa trong cùng ngày.")
+    if previous != default_duration_minutes or previous_grace != no_show_grace_minutes or previous_hours != hours_snapshot(settings):
         settings.default_duration_minutes = default_duration_minutes
         settings.no_show_grace_minutes = no_show_grace_minutes
         settings.revision += 1
         settings.full_clean()
         settings.save()
         BookingSettingsLog.objects.create(
-            previous_hours={"opening_time": previous_opening.strftime("%H:%M"), "closing_time": previous_closing.strftime("%H:%M")},
-            new_hours={"opening_time": settings.opening_time.strftime("%H:%M"), "closing_time": settings.closing_time.strftime("%H:%M")},
             previous_minutes=previous,
             new_minutes=default_duration_minutes,
             previous_no_show_grace_minutes=previous_grace,
             new_no_show_grace_minutes=no_show_grace_minutes,
+            previous_hours=previous_hours,
+            new_hours=hours_snapshot(settings),
             performed_by=actor,
             actor_snapshot=actor.username,
         )

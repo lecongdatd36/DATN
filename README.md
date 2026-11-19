@@ -404,6 +404,14 @@ Từ **Bàn → Thanh toán bàn**, Thu ngân hoặc Quản lí có thể lọc 
 
 ## Kiểm tra và chạy ứng dụng
 
+### Giờ phục vụ và đặt bàn
+
+Trong **Đặt bàn → Cấu hình**, giờ mặc định là mở cửa **09:00**, đóng cửa **22:00**, nhận khách đặt bàn cuối **21:00**, thời lượng **120 phút**. Các giờ tính theo múi giờ Việt Nam và trong cùng ngày; giờ nhận khách cuối phải trước giờ đóng cửa.
+
+Khách online chỉ nhập ngày/giờ đến, số khách, tên và số điện thoại; không nhập thời lượng. Hệ thống tính giờ kết thúc bằng thời lượng mặc định, giới hạn đến giờ đóng cửa: đến **21:00** được dự kiến **60 phút**, đến **20:30** được **90 phút**. Form thông báo khoảng giờ và thời lượng trước khi gửi. Giờ đến ngoài khung nhận khách bị từ chối ở cả form và service, kể cả khi gửi request trực tiếp. Khách đã nhận bàn không bị tự hoàn tất khi đến giờ đóng cửa.
+
+Form nhân viên tra tên theo số điện thoại, cho phép người có quyền thêm khách nhập tên để tạo hồ sơ cùng lúc lưu lịch, tự lọc bàn theo thời gian/số khách và hiển thị thông tin để đối chiếu trước khi lưu. Tra khách yêu cầu quyền quản lý đặt bàn; trang online không công khai tên hồ sơ qua số điện thoại. Nhân viên vẫn có thể điều chỉnh thời lượng; giờ kết thúc được giới hạn theo giờ đóng cửa. Cấu hình mới không tự sửa thời gian đã lưu của các lịch cũ. Thay đổi giờ phục vụ được ghi vào lịch sử cấu hình.
+
 ### Tự động xử lý khách không đến
 
 Trong **Đặt bàn → Cấu hình**, đặt số phút chờ khách kể từ giờ hẹn (mặc định 15 phút). Khi quá hạn mà lượt chưa được nhận, hệ thống chuyển lịch sang **Không đến** và trả bàn về **Trống**; màn hình Bán hàng/Bàn đang mở sẽ tự quét cùng nhịp cập nhật trạng thái.

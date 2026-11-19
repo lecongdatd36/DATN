@@ -1,4 +1,4 @@
-{% extends 'customer/reservation_base.html' %}{% load i18n customer_language %}
+{% extends 'customer/reservation_base.html' %}{% load static i18n customer_language %}
 
 {% block title %}{% translate "Đặt bàn · CƠM QUÊ" %}{% endblock %}
 
@@ -11,7 +11,9 @@
         <form class="customer-form-card cq-form-grid" method="post">
             {% csrf_token %}
             {% include 'customer/includes/form_fields.html' with form=form %}
+            {% include 'bookings/includes/duration_preview.html' %}
             <button class="customer-button" type="submit">{% translate "Gửi yêu cầu đặt bàn" %} <span aria-hidden="true">→</span></button>
         </form>
 
 {% endblock %}
+{% block extra_js %}<script src="{% static 'js/booking-duration.js' %}" defer></script>{% endblock %}

@@ -7,7 +7,8 @@ from .models import BookingSettings
 
 
 def booking_hours_help(settings):
-    return _("Giờ phục vụ: %(opening)s–%(closing)s. Thời gian dùng bàn phải kết thúc chậm nhất vào giờ đóng cửa.") % {
+    return _("Giờ phục vụ: %(opening)s–%(closing)s. Nhận khách đặt bàn đến %(last)s. Thời gian dùng bàn phải kết thúc chậm nhất vào giờ đóng cửa.") % {
+        "last":settings.last_booking_time.strftime("%H:%M"),
         "opening":settings.opening_time.strftime("%H:%M"),"closing":settings.closing_time.strftime("%H:%M")}
 
 
@@ -16,7 +17,7 @@ def validate_booking_hours(starts_at, ends_at, *, settings=None):
     if timezone.is_naive(starts_at) or timezone.is_naive(ends_at):
         raise ValidationError({"starts_at": _("Thời gian đặt bàn phải có múi giờ.")})
     start, end = timezone.localtime(starts_at), timezone.localtime(ends_at)
-    if not settings.opening_time <= start.time() < settings.closing_time:
+    if not settings.opening_time <= start.time() <= settings.last_booking_time:
         raise ValidationError({"starts_at": booking_hours_help(settings)})
     if end <= start or end.date() != start.date() or end.time() > settings.closing_time:
         raise ValidationError({"duration_minutes": booking_hours_help(settings)})
