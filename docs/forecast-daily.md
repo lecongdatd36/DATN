@@ -4,6 +4,9 @@ Mở trực tiếp **Dự báo số đơn** trong menu quản lý, hoặc `/bao-
 
 Chức năng hiện tại là **demo dữ liệu mô phỏng**, chưa chứng minh chất lượng trên dữ liệu bán hàng thực tế. Không tạo đơn giả trong database. Không thay đổi phân quyền Báo cáo hoặc cách tính doanh thu.
 
+Để trình diễn huấn luyện và phân tích kết quả độc lập trên Colab, xem [notebook Random Forest](forecast-colab.md).
+Notebook dùng lại mã huấn luyện, chỉ tạo bộ kết quả offline; không tự công bố lên Dashboard.
+
 ## Luồng cập nhật
 
 Một điểm chạy duy nhất: `scripts/update_forecast_daily.py`, dùng cho cả thủ công và lịch.
