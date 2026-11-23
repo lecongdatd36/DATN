@@ -1,3 +1,4 @@
+from core.db_locks import row_lock_options
 from django.utils.translation import gettext_lazy as _
 """Online reservations use the same seating -> menu -> actor lock order as POS.
 
@@ -408,7 +409,7 @@ def deposit_ipn(params):
         return "97","Invalid signature"
     locks()
     expire_holds()
-    payment=DepositPayment.objects.select_for_update(of=("self",)).filter(txn_ref=str(params.get("vnp_TxnRef","")),zalopay_transaction__isnull=True).first()
+    payment=DepositPayment.objects.select_for_update(**row_lock_options()).filter(txn_ref=str(params.get("vnp_TxnRef","")),zalopay_transaction__isnull=True).first()
     if not payment:
         return "01","Order not found"
     try:

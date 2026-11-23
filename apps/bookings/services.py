@@ -1,3 +1,4 @@
+from core.db_locks import row_lock_options
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -83,7 +84,7 @@ def expire_overdue_bookings(*, at=None):
     grace_minutes = BookingSettings.objects.only("no_show_grace_minutes").get(pk=1).no_show_grace_minutes
     cutoff = now - timedelta(minutes=grace_minutes)
     expired = list(
-        Booking.objects.select_for_update(of=("self",))
+        Booking.objects.select_for_update(**row_lock_options())
         .filter(
             status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED),
             starts_at__lte=cutoff,

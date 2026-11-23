@@ -1,7 +1,6 @@
-from django.db import connection
+from core.db_locks import transaction_lock
 
 
 def lock_menu():
     """Inside atomic, before actor/row locks; after seating lock if both are used."""
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [81723003])
+    transaction_lock(81723003)

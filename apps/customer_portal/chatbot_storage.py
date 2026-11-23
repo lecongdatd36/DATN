@@ -1,11 +1,12 @@
-"""Shared PostgreSQL cache and locks; never trust forwarded IP headers."""
+"""Shared database cache and locks; never trust forwarded IP headers."""
+from core.db_locks import transaction_lock, session_lock
 from contextlib import contextmanager
 import hashlib
 import time
 
 from django.conf import settings
 from django.core.cache import caches
-from django.db import connection, transaction
+from django.db import transaction
 from django.utils.crypto import salted_hmac
 
 from .chatbot_contract import ChatUnavailable
@@ -23,19 +24,11 @@ def lock_number(value):
 
 @contextmanager
 def conversation_lock(identity):
-    if connection.vendor != "postgresql":
-        raise ChatUnavailable("storage", "Trợ lý tạm chưa sẵn sàng. Vui lòng xem thực đơn hoặc mở form đặt bàn.")
     key = lock_number("conversation:" + identity)
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT pg_try_advisory_lock(%s)", [key])
-        acquired = cursor.fetchone()[0]
-    if not acquired:
-        raise ChatUnavailable("busy", "Trợ lý đang xử lý tin nhắn trước. Vui lòng chờ trả lời rồi gửi tiếp.", 409)
-    try:
+    with session_lock(key) as acquired:
+        if not acquired:
+            raise ChatUnavailable("busy", "Trợ lý đang xử lý tin nhắn trước. Vui lòng chờ trả lời rồi gửi tiếp.", 409)
         yield
-    finally:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT pg_advisory_unlock(%s)", [key])
 
 
 def enforce_rate(identity, remote_address, *, api=False):
@@ -47,10 +40,9 @@ def enforce_rate(identity, remote_address, *, api=False):
         budgets += [(f"global-minute:{now // 60}", settings.CHATBOT_GLOBAL_RPM, 120),
                     (f"global-day:{now // 86400}", settings.CHATBOT_GLOBAL_RPD, 172800)]
     # DatabaseCache.incr() is not atomic. Serialize counters across all workers
-    # with a short PostgreSQL transaction; never hold this transaction during HTTP.
+    # with a short database transaction; never hold this transaction during HTTP.
     with transaction.atomic():
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT pg_advisory_xact_lock(%s)", [lock_number("rate-budgets")])
+        transaction_lock(lock_number("rate-budgets"))
         values = [("chat-rate:" + ("api:" if api else "ui:") + key, limit, ttl) for key, limit, ttl in budgets]
         current = [(key, int(cache().get(key, 0)), limit, ttl) for key, limit, ttl in values]
         if any(count >= limit for _, count, limit, _ in current):

@@ -1,9 +1,10 @@
 """Cross-worker request budgets. Store HMAC identifiers, never passwords or raw IPs."""
+from core.db_locks import transaction_lock
 from datetime import datetime, timedelta
 from ipaddress import ip_address, ip_network
 import unicodedata
 from django.conf import settings
-from django.db import DatabaseError, connection, transaction
+from django.db import DatabaseError, transaction
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -42,8 +43,7 @@ def consume_budgets(budgets, *, at=None):
     with transaction.atomic():
         rows = []
         for key, limit, expires in sorted(keys):
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT pg_advisory_xact_lock(%s)", [int.from_bytes(bytes.fromhex(key)[:8], "big", signed=True)])
+            transaction_lock(int.from_bytes(bytes.fromhex(key)[:8], "big", signed=True))
             row, _ = SecurityRateBucket.objects.select_for_update().get_or_create(key=key, defaults={"expires_at": expires})
             rows.append((row, limit))
         blocked = [max(1, int((row.expires_at - now).total_seconds()) + 1) for row, limit in rows if row.hits >= limit]

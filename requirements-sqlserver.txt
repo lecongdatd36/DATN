@@ -1,0 +1,3 @@
+-r requirements.txt
+mssql-django==2.0.0
+mssql-python==1.18.0

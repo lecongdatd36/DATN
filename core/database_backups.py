@@ -1,4 +1,4 @@
-"""PostgreSQL custom-format backup and restoration checks into a disposable database."""
+"""Database backups and restoration checks into a disposable database."""
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -54,6 +54,9 @@ def run(args, *, database=None):
 
 
 def create_backup(directory=None):
+    if connection.vendor == "microsoft":
+        from .sqlserver_backups import create_backup as sqlserver_backup
+        return sqlserver_backup(directory)
     directory = Path(directory or settings.BASE_DIR / "artifacts/backups").resolve()
     directory.mkdir(parents=True, exist_ok=True)
     name = datetime.now(timezone.utc).strftime("qlnh_%Y%m%dT%H%M%SZ_") + uuid4().hex[:8] + ".dump"
@@ -79,6 +82,9 @@ def create_backup(directory=None):
 
 
 def verify_restore(backup):
+    if connection.vendor == "microsoft":
+        from .sqlserver_backups import verify_restore as sqlserver_restore
+        return sqlserver_restore(backup)
     backup = Path(backup).resolve()
     manifest_path = backup.with_suffix(".manifest.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))

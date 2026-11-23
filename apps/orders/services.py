@@ -1,3 +1,4 @@
+from core.db_locks import row_lock_options
 from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from uuid import UUID, uuid4
@@ -1098,7 +1099,7 @@ def process_vnpay_ipn(*, params):
     lock_seating_schedule()
     lock_menu()
     txn_ref = str(params.get("vnp_TxnRef", ""))
-    online_payment = OnlinePayment.objects.select_for_update(of=("self",)).select_related("order").filter(txn_ref=txn_ref, zalopay_transaction__isnull=True).first()
+    online_payment = OnlinePayment.objects.select_for_update(**row_lock_options()).select_related("order").filter(txn_ref=txn_ref, zalopay_transaction__isnull=True).first()
     if online_payment is None:
         return "01", "Order not found"
     if online_payment.status == OnlinePayment.Status.PAID:

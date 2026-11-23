@@ -1,11 +1,11 @@
-"""Chạy test trên database PostgreSQL mới, tên riêng cho mỗi lần chạy."""
+"""Chạy test trên database UUID riêng; mặc định SQL Server ở nhánh này."""
 import os
 from pathlib import Path
 import sys
 from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.test_settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.sqlserver_test_settings")
 
 import django
 

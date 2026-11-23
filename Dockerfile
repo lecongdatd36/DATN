@@ -10,14 +10,17 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
+    libltdl7 \
+    libkrb5-3 \
+    libgssapi-krb5-2 \
     python3-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Sao chép và cài đặt dependencies
-COPY requirements.txt /app/
+COPY requirements.txt requirements-sqlserver.txt /app/
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements-sqlserver.txt
 
 # Sao chép mã nguồn dự án
 COPY . /app/

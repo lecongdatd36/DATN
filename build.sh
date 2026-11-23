@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -o errexit
 
-pip install -r requirements.txt
+pip install -r requirements-sqlserver.txt
 if [ "${ENABLE_FACE_ATTENDANCE:-0}" = "1" ]; then
     pip install -r requirements-attendance.txt
     python scripts/setup_attendance_models.py --root "${ATTENDANCE_MODEL_ROOT:-artifacts/attendance/models}"

@@ -1,4 +1,5 @@
 """Mobile staff screens. All mutations reuse the restaurant's existing services."""
+from core.db_locks import row_lock_options
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 
@@ -206,7 +207,7 @@ class MobileActionView(SalesAccessMixin, View):
         return redirect(mobile_url())
 
     def locked_order(self, request):
-        order = Order.objects.select_for_update(of=("self",)).select_related("customer", "invoice").get(pk=int(request.POST["order_id"]))
+        order = Order.objects.select_for_update(**row_lock_options()).select_related("customer", "invoice").get(pk=int(request.POST["order_id"]))
         if order.revision != int(request.POST["expected_revision"]):
             raise ValidationError("Order vừa được cập nhật từ thiết bị khác. Hãy cập nhật và kiểm tra lại trước khi xác nhận.")
         return order

@@ -1,5 +1,9 @@
 # QLNH — Ứng dụng quản lý nhà hàng tích hợp AI
 
+**Nhánh `feature/sqlserver`:** ứng dụng local mặc định dùng SQL Server. Cài `requirements-sqlserver.txt`, cấu hình `.env.sqlserver`, rồi chạy `python manage.py runserver`. Xem [hướng dẫn SQL Server](docs/sqlserver.md) để chuyển dữ liệu, kiểm thử và sao lưu. Web Render trên `master` vẫn dùng PostgreSQL; các phần PostgreSQL bên dưới mô tả cấu hình gốc.
+
+**Nhánh `feature/sqlserver`:** ứng dụng local mặc định dùng SQL Server. Cài `requirements-sqlserver.txt`, cấu hình `.env.sqlserver`, rồi chạy `python manage.py runserver`. Xem [hướng dẫn SQL Server](docs/sqlserver.md) để chuyển dữ liệu, kiểm thử và sao lưu. Web Render trên `master` vẫn dùng PostgreSQL; các phần PostgreSQL bên dưới mô tả cấu hình gốc.
+
 **Nâng cấp 15/11/2026:** đã bổ sung [ca thu ngân, hoàn tiền hóa đơn và đối soát ZaloPay](docs/financial-operations.md), [giới hạn truy cập, HTTPS và sao lưu/kiểm chứng phục hồi](docs/operations-security-backup.md), cùng [đánh giá chất lượng và công bố gợi ý AI](docs/ai-quality-publication.md). Bộ kiểm thử mặc định đã gồm kho, báo cáo và các kiểm tra AI không cần thư viện huấn luyện; CI dùng PostgreSQL riêng.
 
 **Đặt bàn online, món trước và cọc:** khách chọn đến mới chế biến hoặc yêu cầu chuẩn bị theo giờ, nhận liên kết riêng, trả cọc VNPAY; nhà hàng chốt yêu cầu, bếp chuẩn bị trước, nhận khách và khấu trừ cọc vào hóa đơn. Trang khách `/reservations/online/`, quản lý `/reservations/online/quan-ly/`. Xem [hướng dẫn cấu hình, quy trình và giới hạn](docs/online-reservations.md); cần cấu hình merchant/secret sandbox trước khi trả cọc trực tiếp.

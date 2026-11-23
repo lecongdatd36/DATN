@@ -1,4 +1,5 @@
 """Refunds, verified provider reconciliation and cashier handover, serialized with POS writes."""
+from core.db_locks import row_lock_options
 from decimal import Decimal, InvalidOperation
 from uuid import UUID, uuid4
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -193,7 +194,7 @@ def complete_refund(*, actor, refund_id, revision, reference, note, verified=Fal
 @transaction.atomic
 def reconcile_zalopay(*, actor, transaction_id, outcome, reference, reason, verified=False):
     actor = actor_for(actor, manager=True)
-    row = ZaloPayTransaction.objects.select_for_update(of=("self",)).select_related("order_payment__order").get(pk=transaction_id)
+    row = ZaloPayTransaction.objects.select_for_update(**row_lock_options()).select_related("order_payment__order").get(pk=transaction_id)
     if hasattr(row, "reconciliation"):
         raise ValidationError("Giao dịch đã có kết quả đối soát.")
     if row.status != "REVIEW" or not row.order_payment_id or not row.zp_trans_id or not row.paid_at or verified is not True:

@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.sqlserver.example
 
 # Python
 .venv/
@@ -20,6 +21,10 @@ artifacts/reservations/
 artifacts/zalopay/
 artifacts/deploy/
 artifacts/backups/
+artifacts/sqlserver/
+*.bak
+artifacts/sqlserver/
+*.bak
 artifacts/staff-mobile/
 artifacts/ai/
 artifacts/homepage-preview/

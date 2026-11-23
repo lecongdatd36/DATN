@@ -1,4 +1,5 @@
 """Serialize workforce writes with the existing HR lock; re-read every actor/device."""
+from core.db_locks import transaction_lock
 from datetime import datetime, timedelta
 import hashlib
 import secrets
@@ -8,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import connection, transaction, models
+from django.db import transaction, models
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
@@ -20,8 +21,7 @@ COOKIE_NAME = "qlnh_attendance_device"
 
 
 def workforce_lock():
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [81723001])
+    transaction_lock(81723001)
 
 
 def manager(actor):
