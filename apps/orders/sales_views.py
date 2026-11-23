@@ -134,7 +134,6 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
                 qr_service_requests=[],
                 can_manage_order=has_order_permission(self.request.user, "manage_order"),
                 can_collect_payment=can_collect_payment,
-                vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
                 zalopay_enabled=zalopay_enabled(),
                 available_tables=DiningTable.objects.select_related("area").filter(
                     status=DiningTable.Status.AVAILABLE,
@@ -200,7 +199,6 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
             qr_service_requests=qr_service_requests,
             can_manage_order=has_order_permission(self.request.user, "manage_order"),
             can_collect_payment=can_collect_payment,
-            vnpay_enabled=bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
             zalopay_enabled=zalopay_enabled(),
             is_manager=can_manage_accounts(self.request.user),
             available_tables=DiningTable.objects.select_related("area").filter(status=DiningTable.Status.AVAILABLE, is_active=True, area__is_active=True).exclude(pk=selected_order.table_id if selected_order else None),
@@ -463,17 +461,10 @@ class PaymentActionView(SalesAccessMixin, View):
                     base_url=base_url(request), callback_url=callback_url(request), promotion_code=promotion_code,
                     quick_payment=bool(request.POST.get("quick_payment")))
                 return redirect(payment.order_url or reverse("zalopay:result", args=[payment.token]))
+            if request.POST.get("payment_method") == "VNPAY":
+                raise ValidationError("VNPAY đã ngừng sử dụng. Vui lòng chọn ZaloPay, tiền mặt hoặc chuyển khoản.")
             if request.POST.get("quick_payment"):
                 services.prepare_quick_payment(actor=request.user, order_id=int(order_id))
-            if request.POST.get("payment_method") == "VNPAY":
-                _, gateway_url = services.create_vnpay_payment(
-                    actor=request.user,
-                    order_id=int(order_id),
-                    return_url=request.build_absolute_uri(reverse("sales:vnpay_return")),
-                    ip_address=request.META.get("REMOTE_ADDR", "127.0.0.1"),
-                    promotion_code=promotion_code,
-                )
-                return redirect(gateway_url)
             invoice = services.process_payment(
                 actor=request.user,
                 order_id=int(order_id),

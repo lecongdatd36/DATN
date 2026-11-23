@@ -285,9 +285,13 @@ def detail(request,token):
             elif action=="pay":
                 if request.POST.get("agree")!="yes":
                     raise ValidationError(_("Cần đồng ý điều kiện thanh toán/hủy trước khi trả cọc."))
-                payment,url=services.checkout(token=token,revision=int(request.POST.get("revision","0")),
-                    return_url=request.build_absolute_uri(reverse("online_reservations:payment_return")),ip_address=request.META.get("REMOTE_ADDR"))
-                return private_response(redirect(url))
+                revision=int(request.POST.get("revision","0"))
+                if revision != row.revision:
+                    raise ValidationError(_("Thông tin đặt bàn đã thay đổi. Vui lòng tải lại trước khi thanh toán."))
+                # The ZaloPay endpoint also rechecks consent, revision and hold
+                # expiry in the deposit service, including for existing tabs.
+                from apps.orders.zalopay_views import deposit_create
+                return deposit_create(request, token)
             elif action in ("CHANGE","CANCEL"):
                 services.customer_message(token=token,kind=action,text=request.POST.get("text",""))
                 messages.success(request,_("Đã gửi yêu cầu. Nhà hàng cần xác minh trước khi thay đổi lịch/tiền cọc."))
@@ -302,7 +306,6 @@ def detail(request,token):
     pending_zalopay=ZaloPayTransaction.objects.filter(deposit_payment__reservation=row,status="PENDING").first()
     remaining=(row.hold_expires_at-timezone.now()).total_seconds() if row.hold_expires_at else 0
     return private_response(render(request,"reservations/detail.html",{"reservation":row,
-        "payment_ready":bool(settings.VNPAY_TMN_CODE and settings.VNPAY_HASH_SECRET),
         "zalopay_enabled":zalopay_enabled(),"zalopay_can_create":remaining>=MIN_EXPIRE_SECONDS,
         "zalopay_pending":pending_zalopay}))
 

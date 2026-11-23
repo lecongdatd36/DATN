@@ -2179,3 +2179,12 @@ msgstr "Keep your payment reference. The result updates automatically; pay only 
 
 msgid "ZaloPay (chưa cấu hình)"
 msgstr "ZaloPay (not configured)"
+
+msgid "Thanh toán cọc qua ZaloPay"
+msgstr "Pay deposit with ZaloPay"
+
+msgid "Thông tin đặt bàn đã thay đổi. Vui lòng tải lại trước khi thanh toán."
+msgstr "Your reservation has changed. Please reload before paying."
+
+msgid "Giờ phục vụ: %(opening)s–%(closing)s. Nhận khách đặt bàn đến %(last)s. Thời gian dùng bàn phải kết thúc chậm nhất vào giờ đóng cửa."
+msgstr "Opening hours: %(opening)s–%(closing)s. Last reservation arrival: %(last)s. Your visit must finish by closing time."

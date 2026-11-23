@@ -52,6 +52,22 @@ class ZaloPayOrderTests(FakeGatewayMixin, TestCase):
     revision = order_fixtures.IntegratedRestaurantFlowTests.revision
     ready_order_for_payment = order_fixtures.IntegratedRestaurantFlowTests.ready_order_for_payment
 
+    @override_settings(VNPAY_TMN_CODE="OLD", VNPAY_HASH_SECRET="old-test-key")
+    def test_retired_vnpay_is_not_offered_or_created_from_stale_pos(self):
+        order = self.ready_order_for_payment()
+        self.client.force_login(self.users["CASHIER"])
+        page = self.client.get(reverse("sales:workspace"), {"order": order.pk})
+        self.assertNotContains(page, 'value="VNPAY"')
+        self.assertContains(page, 'value="ZALOPAY"')
+        with patch("apps.orders.services.create_vnpay_payment") as old_gateway:
+            result = self.client.post(reverse("sales:payment"), {
+                "order_id": order.pk, "payment_method": "VNPAY", "quick_payment": "1"})
+        self.assertEqual(result.status_code, 302)
+        old_gateway.assert_not_called()
+        self.gateway.assert_not_called()
+        self.assertFalse(OnlinePayment.objects.exists())
+        self.assertFalse(Invoice.objects.exists())
+
     def create(self, order=None):
         self.order = order or self.ready_order_for_payment()
         return zalopay_services.create_order_payment(actor=self.users["CASHIER"], order_id=self.order.pk,
@@ -328,6 +344,39 @@ class ZaloPayDepositTests(FakeGatewayMixin, TestCase):
 
     at = reservation_fixtures.ReservationTests.at
     create_row = reservation_fixtures.ReservationTests.create_row
+
+    @override_settings(VNPAY_TMN_CODE="OLD", VNPAY_HASH_SECRET="old-test-key")
+    def test_booking_uses_zalopay_and_old_pay_action_keeps_validation(self):
+        with self.at(self.now):
+            reservation = self.create_row()
+            url = reverse("online_reservations:detail", args=[reservation.access_token])
+            page = self.client.get(url)
+            self.assertNotContains(page, "VNPAY")
+            self.assertContains(page, reverse("zalopay:deposit_create", args=[reservation.access_token]))
+            for data in (
+                {"action": "pay", "revision": reservation.revision},
+                {"action": "pay", "revision": reservation.revision + 1, "agree": "yes"},
+            ):
+                self.assertEqual(self.client.post(url, data).status_code, 302)
+                self.gateway.assert_not_called()
+                self.assertFalse(DepositPayment.objects.exists())
+            result = self.client.post(url, {
+                "action": "pay", "revision": reservation.revision, "agree": "yes"})
+        self.assertEqual(result.status_code, 302)
+        self.assertTrue(result.url.startswith("https://qcgateway.zalopay.vn/"))
+        self.assertEqual(self.gateway.call_count, 1)
+        self.assertEqual(ZaloPayTransaction.objects.count(), 1)
+
+    @override_settings(ZALOPAY_KEY1="", VNPAY_TMN_CODE="OLD", VNPAY_HASH_SECRET="old-test-key")
+    def test_missing_zalopay_config_does_not_fall_back_to_vnpay(self):
+        with self.at(self.now):
+            reservation = self.create_row()
+            page = self.client.get(reverse("online_reservations:detail", args=[reservation.access_token]))
+        self.assertContains(page, "đang thiết lập thanh toán online")
+        self.assertContains(page, "ZaloPay (chưa cấu hình)")
+        self.assertNotContains(page, "VNPAY")
+        self.assertNotContains(page, "ZALOPAY_KEY1")
+        self.gateway.assert_not_called()
 
     def create(self):
         with self.at(self.now):
