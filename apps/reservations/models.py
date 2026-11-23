@@ -2,11 +2,16 @@ from decimal import Decimal
 from uuid import uuid4
 from django.conf import settings
 from django.db import models
+from .deposit_policy import SEATING_NEEDS, DEPOSIT_RULES
 
 
 class ReservationPolicy(models.Model):
     allowed_dishes = models.ManyToManyField("menu.Dish", blank=True, verbose_name="Món cho phép chuẩn bị trước")
-    table_deposit = models.PositiveIntegerField("Cọc giữ bàn (đồng)", default=100000)
+    table_deposit = models.PositiveIntegerField("Cọc giữ chỗ khi thuộc diện yêu cầu cọc (đồng)", default=100000)
+    deposit_min_guests = models.PositiveSmallIntegerField("Ngưỡng số khách phải cọc giữ chỗ", default=6)
+    require_group_deposit = models.BooleanField("Yêu cầu cọc nhóm từ ngưỡng số khách", default=True)
+    require_multiple_tables_deposit = models.BooleanField("Yêu cầu cọc khi ghép nhiều bàn", default=True)
+    require_private_room_deposit = models.BooleanField("Yêu cầu cọc khi đặt phòng riêng", default=True)
     ready_percent = models.PositiveSmallIntegerField("Cọc món chuẩn bị trước (%)", default=50)
     hold_minutes = models.PositiveSmallIntegerField("Phút giữ chỗ chờ cọc", default=10)
     offer_minutes = models.PositiveSmallIntegerField("Phút hiệu lực bản chốt", default=30)
@@ -14,7 +19,8 @@ class ReservationPolicy(models.Model):
     free_cancel_hours = models.PositiveSmallIntegerField("Hủy giữ bàn miễn phí trước (giờ)", default=2)
 
     class Meta:
-        constraints = [models.CheckConstraint(condition=models.Q(pk=1), name="reservation_policy_singleton"), models.CheckConstraint(condition=models.Q(ready_percent__gte=1, ready_percent__lte=100, hold_minutes__gte=1, offer_minutes__gte=1, table_deposit__gte=1), name="reservation_policy_ranges")]
+        constraints = [models.CheckConstraint(condition=models.Q(pk=1), name="reservation_policy_singleton"), models.CheckConstraint(condition=models.Q(ready_percent__gte=1, ready_percent__lte=100, hold_minutes__gte=1, offer_minutes__gte=1, table_deposit__gte=1), name="reservation_policy_ranges"),
+            models.CheckConstraint(condition=models.Q(deposit_min_guests__gte=1, deposit_min_guests__lte=100), name="reservation_deposit_guest_threshold")]
 
 
 class Reservation(models.Model):
@@ -43,6 +49,7 @@ class Reservation(models.Model):
     full_name = models.CharField(max_length=150)
     phone = models.CharField(max_length=20)
     party_size = models.PositiveSmallIntegerField()
+    seating_need = models.CharField("Nhu cầu bố trí bàn", max_length=10, choices=SEATING_NEEDS, default="STANDARD")
     starts_at = models.DateTimeField()
     duration_minutes = models.PositiveSmallIntegerField(default=120)
     area = models.ForeignKey("seating.Area", on_delete=models.SET_NULL, null=True, blank=True)
@@ -53,6 +60,11 @@ class Reservation(models.Model):
     policy_snapshot = models.JSONField(default=dict)
     subtotal = models.DecimalField(max_digits=14, decimal_places=0, default=0)
     deposit_required = models.DecimalField(max_digits=14, decimal_places=0, default=0)
+    deposit_rule = models.CharField(max_length=16, choices=DEPOSIT_RULES, default="LEGACY")
+    deposit_waived_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="waived_reservation_deposits")
+    deposit_waived_at = models.DateTimeField(null=True, blank=True)
+    deposit_waiver_reason = models.CharField(max_length=1000, blank=True)
+    deposit_waived_amount = models.DecimalField(max_digits=14, decimal_places=0, default=0)
     prep_starts_at = models.DateTimeField(null=True, blank=True)
     ready_by = models.DateTimeField(null=True, blank=True)
     offer_expires_at = models.DateTimeField(null=True, blank=True)
@@ -65,7 +77,9 @@ class Reservation(models.Model):
 
     class Meta:
         ordering = ("-created_at", "-pk")
-        constraints = [models.CheckConstraint(condition=models.Q(party_size__gte=1, party_size__lte=100, subtotal__gte=0, deposit_required__gte=0), name="reservation_amount_party_ranges")]
+        constraints = [models.CheckConstraint(condition=models.Q(party_size__gte=1, party_size__lte=100, subtotal__gte=0, deposit_required__gte=0), name="reservation_amount_party_ranges"),
+            models.CheckConstraint(condition=models.Q(seating_need__in=("STANDARD", "MULTIPLE", "PRIVATE")), name="reservation_seating_need_valid"),
+            models.CheckConstraint(condition=models.Q(deposit_waived_by__isnull=True, deposit_waived_at__isnull=True, deposit_waived_amount=0, deposit_waiver_reason="") | models.Q(deposit_waived_by__isnull=False, deposit_waived_at__isnull=False, deposit_waived_amount__gt=0, deposit_required=0, deposit_waiver_reason__regex=r"\S"), name="reservation_waiver_complete")]
 
     @property
     def code(self):

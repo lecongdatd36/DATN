@@ -36,6 +36,10 @@ class ReservationTests(TestCase):
         cls.ingredient=Ingredient.objects.create(code="OLTHIT",name="Thịt OL",unit="kg",stock_quantity=10,average_unit_cost=100000)
         RecipeIngredient.objects.create(dish=cls.dish,ingredient=cls.ingredient,quantity=Decimal(".5"))
         policy,_=ReservationPolicy.objects.get_or_create(pk=1)
+        # These tests exercise paid reservations; the threshold is configurable.
+        # The default six-guest/free-small-group policy has its own regression suite.
+        policy.deposit_min_guests = 1
+        policy.save(update_fields=("deposit_min_guests",))
         policy.allowed_dishes.add(cls.dish)
         cls.now=timezone.make_aware(datetime.combine(timezone.localdate()+timedelta(days=1),time(12)))
         cls.arrival=cls.now+timedelta(hours=3)

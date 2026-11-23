@@ -2,7 +2,7 @@
 {% load static %}<div data-storefront-cart data-cart-url="{% url 'online_reservations:cart' %}" data-placeholder="{% static 'images/dish-placeholder.svg' %}">
     <form hidden>{% csrf_token %}</form>
     <p class="cq-basket-toast" data-basket-message role="status" aria-live="polite" hidden></p>
-    <button class="cq-basket-float" data-basket-open data-basket-floating hidden type="button">{% include 'customer/includes/ui_icon.html' with icon='cart' %}<span>{% translate "Giỏ món" %} <b data-basket-count>0</b></span></button>
+    <button class="cq-basket-float" data-basket-open data-basket-floating hidden type="button">{% include 'customer/includes/ui_icon.html' with icon='cart' %}<span>{% translate "Giỏ món" %} <b data-basket-count>0</b></span><strong class="cq-basket-float-total" data-basket-floating-total>{% translate "0đ" %}</strong></button>
     <dialog class="cq-basket-dialog" data-basket-dialog aria-labelledby="basket-heading">
         <div class="cq-basket-head"><div><span class="cq-kicker">{% translate "CHỌN VỊ NGON CHO BỮA HẸN" %}</span><h2 id="basket-heading">{% translate "Giỏ món của bạn" %}</h2></div><button class="cq-basket-close" type="button" data-basket-close aria-label="{% translate "Đóng giỏ món" %}">×</button></div>
         <div class="cq-basket-content"><p class="cq-basket-empty" data-basket-empty>{% translate "Giỏ món đang trống." %}<br>{% translate "Thêm món lẻ hoặc một combo cho bữa hẹn nhé." %}</p><div data-basket-items></div><p class="cq-basket-error" data-basket-error role="alert" hidden></p></div>

@@ -119,3 +119,21 @@ class OrderStockFlowTests(TestCase):
         self.assertFalse(InventoryTransaction.objects.filter(transaction_type=InventoryTransaction.Type.SALE_RETURN).exists())
         item.refresh_from_db()
         self.assertIsNone(item.inventory_returned_at)
+
+    def test_shortage_message_uses_stock_after_preorder_holds(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from apps.reservations.models import Reservation, PreorderItem, IngredientHold
+        self.ingredient.stock_quantity = Decimal("1.000")
+        self.ingredient.save(update_fields=("stock_quantity",))
+        reservation = Reservation.objects.create(mode="READY", status="CONFIRMED", source_digest="stock-message",
+            full_name="Stock test", phone="0900000000", party_size=2, starts_at=timezone.now()+timedelta(days=1))
+        line = PreorderItem.objects.create(reservation=reservation, dish=self.dish, dish_name=self.dish.name,
+            dish_code=self.dish.code, unit_name="portion", quantity=4, unit_price=50000)
+        IngredientHold.objects.create(item=line, ingredient=self.ingredient, quantity=Decimal("0.800"))
+        order = self.open_order()
+        services.add_item(actor=self.users["WAITER"], order_id=order.pk, expected_revision=self.revision(order), dish_id=self.dish.pk, quantity=2)
+        with self.assertRaises(ValidationError) as caught:
+            services.send_to_kitchen(actor=self.users["WAITER"], order_id=order.pk, expected_revision=self.revision(order))
+        self.assertIn("thiếu 0.200 kg", " ".join(caught.exception.messages))
+        self.assertEqual(self.stock(), Decimal("1.000"))

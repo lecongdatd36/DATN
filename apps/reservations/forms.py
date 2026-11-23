@@ -108,7 +108,7 @@ class PreorderChoiceForm(forms.Form):
 
 
 class OnlineForm(ItemsMixin, ReservationDetailsForm):
-    agree=forms.BooleanField(label=_("Tôi đã đọc tiền cọc, thời hạn thanh toán và điều kiện đổi/hủy."))
+    agree=forms.BooleanField(label=_("Tôi đã đọc chính sách cọc áp dụng cho lịch này và điều kiện đổi/hủy."))
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -141,7 +141,7 @@ class OfferForm(ItemsMixin, BootstrapFormMixin, forms.Form):
 class PolicyForm(BootstrapFormMixin,forms.ModelForm):
     class Meta:
         model=ReservationPolicy
-        fields=("table_deposit","ready_percent","hold_minutes","offer_minutes","minimum_lead_minutes","free_cancel_hours","allowed_dishes")
+        fields=("table_deposit","deposit_min_guests","require_group_deposit","require_multiple_tables_deposit","require_private_room_deposit","ready_percent","hold_minutes","offer_minutes","minimum_lead_minutes","free_cancel_hours","allowed_dishes")
 
     def clean(self):
         data=super().clean()

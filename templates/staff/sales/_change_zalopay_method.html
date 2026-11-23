@@ -1,0 +1,12 @@
+{% load i18n %}
+<details class="{% if mobile %}m-options{% else %}mt-3{% endif %}" data-change-method-panel>
+    <summary>{% translate 'Đổi phương thức thanh toán' %}</summary>
+    <form method="post" action="{% url 'zalopay:change_method' transaction.token %}" class="{% if mobile %}m-form{% else %}mt-3{% endif %}" data-zalopay-change-method data-native-navigation>
+        {% csrf_token %}
+        {% if mobile %}<input type="hidden" name="return_mobile" value="1">{% endif %}
+        <p>{% translate 'Hệ thống sẽ kiểm tra ZaloPay một lần nữa trước khi đổi. Giao dịch cũ vẫn được giữ để đối soát nếu tiền về muộn.' %}</p>
+        <label class="{% if not mobile %}form-label d-block{% endif %}">{% translate 'Lý do đổi phương thức' %}<input class="{% if not mobile %}form-control{% endif %}" name="reason" required minlength="5" maxlength="255" autocomplete="off"></label>
+        <label class="{% if mobile %}m-check{% else %}d-flex gap-2 my-3{% endif %}"><input type="checkbox" name="confirm_unpaid" value="yes" required> {% translate 'Tôi đã kiểm tra và xác nhận chưa thu được tiền qua giao dịch ZaloPay này.' %}</label>
+        <button class="{% if mobile %}m-button full{% else %}btn btn-primary{% endif %}" type="submit">{% translate 'Kiểm tra và đổi phương thức' %}</button>
+    </form>
+</details>

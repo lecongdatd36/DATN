@@ -27,12 +27,15 @@ const click=async selector=>{
 
 const config=await(await fetch(base+'/__storefront_test__/config')).json();
 const press=async selector=>{
- const point=await js(`(()=>{const n=document.querySelector(${JSON.stringify(selector)});if(!n||n.disabled)throw Error('Control missing');n.scrollIntoView({block:'center',behavior:'instant'});const r=n.getBoundingClientRect();if(!r.width||!r.height)throw Error('Control hidden');const x=r.x+r.width/2,y=r.y+r.height/2;if(document.elementFromPoint(x,y)?.closest('button,a')!==n)throw Error('Control covered by '+document.elementFromPoint(x,y)?.className);return{x,y}})()`);
+ const point=await js(`(()=>{const n=[...document.querySelectorAll(${JSON.stringify(selector)})].find(node=>{const r=node.getBoundingClientRect();return r.width>0&&r.height>0});if(!n||n.disabled)throw Error('Visible control missing');n.scrollIntoView({block:'center',behavior:'instant'});const r=n.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;if(document.elementFromPoint(x,y)?.closest('button,a')!==n)throw Error('Control covered by '+document.elementFromPoint(x,y)?.className);return{x,y}})()`);
  await page.call('Input.dispatchMouseEvent',{type:'mousePressed',...point,button:'left',clickCount:1});
  await page.call('Input.dispatchMouseEvent',{type:'mouseReleased',...point,button:'left',clickCount:1});
 };
 const switchLanguage=async language=>{
  await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+ if(!await js(`Array.from(document.querySelectorAll('.cq-language-switch button[value="${language}"]')).some(node=>{const r=node.getBoundingClientRect();return r.width>0&&r.height>0})`)) {
+   await press('[data-customer-menu-toggle]');
+ }
  await press(`.cq-language-switch button[value="${language}"]`);
  await wait(()=>js(`document.readyState==='complete'&&document.documentElement.lang===${JSON.stringify(language)}`));
  await js('document.fonts.ready');

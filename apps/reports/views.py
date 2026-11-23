@@ -21,6 +21,45 @@ class ReportPermissionMixin(AccessMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
+@method_decorator(never_cache, name="dispatch")
+class AIQualityView(ReportPermissionMixin, TemplateView):
+    template_name = "reports/ai_quality.html"
+
+    def get_context_data(self, **kwargs):
+        from django.conf import settings
+        from django.db.models.functions import TruncDate
+        from apps.orders.models import Order
+        from ai_tools.inference import InvalidAprioriModel, load_model
+        from ai_tools.quality import assess_model_quality
+        try:
+            model = load_model(settings.APRIORI_MODEL_PATH)
+        except (OSError, InvalidAprioriModel):
+            model = {}
+        quality = assess_model_quality(model, min_train=settings.APRIORI_MIN_TRAIN_BASKETS,
+            min_eligible=settings.APRIORI_MIN_EVALUATION_BASKETS)
+        data = Order.objects.filter(status="COMPLETED", split_root__isnull=True,
+            invoice__status="PAID", invoice__refunded_amount=0)
+        days = data.annotate(day=TruncDate("invoice__closed_at")).values("day").distinct().count()
+        return super().get_context_data(model=model, quality=quality, paid_visit_count=data.count(), observed_days=days,
+            quality_gate_enabled=settings.APRIORI_QUALITY_GATE_ENABLED, **kwargs)
+
+
+@method_decorator(never_cache, name="dispatch")
+class AITransactionsExportView(ReportPermissionMixin, View):
+    def get(self, request):
+        from apps.orders.ai_export import transaction_rows
+        from ai_tools.schema import TRANSACTION_FIELDS
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="transactions-ai.csv"'
+        response["Cache-Control"] = "no-store"
+        response.write("\ufeff")
+        writer = csv.DictWriter(response, fieldnames=TRANSACTION_FIELDS)
+        writer.writeheader()
+        for row in transaction_rows(end_at=timezone.now()):
+            writer.writerow(row)
+        return response
+
+
 def _period_bounds(date_from, date_to):
     current_tz = timezone.get_current_timezone()
     start_at = timezone.make_aware(datetime.combine(date_from, time.min), current_tz)
@@ -85,7 +124,7 @@ class RevenueExportView(ReportPermissionMixin, View):
         response["Content-Disposition"] = f'attachment; filename="doanh-thu-{date_from:%Y%m%d}-{date_to:%Y%m%d}.csv"'
         response.write("\ufeff")
         writer = csv.writer(response)
-        writer.writerow(["Mã hóa đơn", "Mã thanh toán chung", "Mã đơn", "Bàn", "Khu vực", "Khách hàng", "Thời gian chốt", "Doanh thu", "Giá vốn", "Lãi gộp", "Phương thức thanh toán"])
+        writer.writerow(["Mã hóa đơn", "Mã thanh toán chung", "Mã đơn", "Bàn", "Khu vực", "Khách hàng", "Thời gian ghi nhận", "Doanh thu", "Giá vốn", "Lãi gộp", "Phương thức thanh toán", "Loại bút toán"])
         for invoice in paid_invoices_for_export(start_at, end_at):
             booking = invoice.order.booking
             table = invoice.order.table or (booking.table if booking else None)
@@ -104,5 +143,16 @@ class RevenueExportView(ReportPermissionMixin, View):
                 cost,
                 invoice.total - cost,
                 methods or invoice.payment_method,
+                "HOA_DON",
             ])
+        from apps.orders.models import InvoiceRefund
+        refunds = InvoiceRefund.objects.filter(status="COMPLETED", invoice__status="PAID",
+            completed_at__gte=start_at, completed_at__lt=end_at).select_related("invoice__order__table__area", "invoice__customer")
+        for refund in refunds.order_by("completed_at", "pk"):
+            invoice = refund.invoice
+            table = invoice.order.table
+            writer.writerow([invoice.invoice_code, "", invoice.order.order_code, table.code if table else "",
+                table.area.name if table else "", invoice.customer.full_name if invoice.customer_id else "Khách vãng lai",
+                timezone.localtime(refund.completed_at).strftime("%d/%m/%Y %H:%M"), -refund.amount, 0, -refund.amount,
+                refund.get_method_display(), f"HOAN_TIEN HT{refund.pk:06d}"])
         return response

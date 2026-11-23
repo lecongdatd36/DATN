@@ -13,7 +13,7 @@
 
     <nav class="cq-benefits" aria-label="{% translate "Khám phá Cơm Quê" %}">
         <a class="cq-benefit" href="{% url 'online_reservations:create' %}"><span>{% include 'customer/includes/ui_icon.html' with icon='calendar' %}</span><span><strong>{% translate "Hẹn một bữa ngon" %}</strong><small>{% translate "Đặt bàn thật dễ dàng" %}</small></span></a>
-        <a class="cq-benefit" href="{% url 'online_reservations:create' %}"><span>{% include 'customer/includes/ui_icon.html' with icon='bowl' %}</span><span><strong>{% translate "Chọn món bạn thích" %}</strong><small>{% translate "Đặt trước cho bữa hẹn" %}</small></span></a>
+        <a class="cq-benefit" href="{% url 'customer_portal:menu' %}#menu-catalog"><span>{% include 'customer/includes/ui_icon.html' with icon='bowl' %}</span><span><strong>{% translate "Chọn món bạn thích" %}</strong><small>{% translate "Đặt trước cho bữa hẹn" %}</small></span></a>
         <a class="cq-benefit" href="{% url 'online_reservations:lookup' %}"><span>{% include 'customer/includes/ui_icon.html' with icon='search' %}</span><span><strong>{% translate "Theo dõi lịch đặt" %}</strong><small>{% translate "Thông tin trong tầm tay" %}</small></span></a>
         <a class="cq-benefit" href="#cau-chuyen"><span>{% include 'customer/includes/ui_icon.html' with icon='people' %}</span><span><strong>{% translate "Ngồi lại cùng nhau" %}</strong><small>{% translate "Thêm một chút gắn kết" %}</small></span></a>
     </nav>
@@ -22,7 +22,7 @@
         <section class="cq-featured" id="thuc-don" aria-labelledby="featured-title">
             <div class="cq-heading-row">
                 <div><span class="cq-kicker">{% translate "CHÚT GỢI Ý TỪ GIAN BẾP" %}</span><h2 id="featured-title">{% translate "Hôm nay, mình ăn gì?" %}</h2></div>
-                <a class="cq-quiet-link" href="{% url 'customer_portal:menu' %}">{% translate "Xem thực đơn đầy đủ ↗" %}</a>
+                <a class="cq-quiet-link" href="{% url 'customer_portal:menu' %}#menu-catalog">{% translate "Xem thực đơn đầy đủ ↗" %}</a>
             </div>
             <div class="cq-home-filters" role="group" aria-label="{% translate "Lọc nhóm món" %}">
                 <button class="is-active" type="button" data-cq-category="all" aria-pressed="true"><span>{% translate "Tất cả món" %}</span><small>{{ menu_dish_count }}</small></button>

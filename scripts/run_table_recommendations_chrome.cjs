@@ -46,6 +46,8 @@ async function waitUntil(callback, timeout = 12000) {
     const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, {method: 'PUT'})).json();
     page = await connect(target.webSocketDebuggerUrl);
     await page.call('Page.enable');
+    await page.call('Network.enable');
+    await page.call('Network.setExtraHTTPHeaders', {headers: {'Accept-Language': 'vi-VN,vi;q=0.9'}});
     const evaluate = async expression => {
       const result = await page.call('Runtime.evaluate', {expression, returnByValue: true, awaitPromise: true});
       if (result.exceptionDetails) throw Error(result.exceptionDetails.text);
@@ -54,8 +56,10 @@ async function waitUntil(callback, timeout = 12000) {
     const check = (value, label) => {if (!value) throw Error(label); checks.push(label);};
     const viewport = width => page.call('Emulation.setDeviceMetricsOverride', {width, height: 900, deviceScaleFactor: 1, mobile: false});
     const navigate = async (name, selector) => {
+      const redirect = await fetch(baseUrl + '/__table_test__/' + name, {redirect: 'manual'});
+      const destination = new URL(redirect.headers.get('location'), baseUrl);
       await page.call('Page.navigate', {url: baseUrl + '/__table_test__/' + name});
-      await waitUntil(() => evaluate(`document.readyState === 'complete' && Boolean(document.querySelector(${JSON.stringify(selector)}))`));
+      await waitUntil(() => evaluate(`location.pathname + location.search === ${JSON.stringify(destination.pathname + destination.search)} && document.readyState === 'complete' && Boolean(document.querySelector(${JSON.stringify(selector)}))`));
       await evaluate('document.fonts.ready.then(() => true)');
     };
     const capture = async name => {
@@ -90,7 +94,7 @@ async function waitUntil(callback, timeout = 12000) {
     check(await evaluate(`document.querySelector('[data-duration-preview]').textContent.includes('60 phút') && document.querySelector('[data-duration-preview]').textContent.includes('22:00')`), 'Public 21:00 arrival previews 60 minutes and closing time');
     await capture('booking-public-late-mobile');
     await navigate('midnight', '.customer-field-error');
-    check(await evaluate(`document.querySelector('.customer-field-error').textContent.includes('08:00') && !document.querySelector('.customer-result-card')`), 'Midnight search is rejected by the server');
+    check(await evaluate(`document.querySelector('.customer-field-error').textContent.includes('09:00') && !document.querySelector('.customer-result-card')`), 'Midnight search is rejected by the server with the configured opening hour');
     await viewport(1440);
     await navigate('booking', '[data-booking-form]');
     await waitUntil(() => evaluate(`document.querySelector('[data-booking-customer-result]').textContent.includes('Private customer') && document.querySelector('[name="table"]').options.length === 3`));

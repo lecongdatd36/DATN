@@ -1,6 +1,7 @@
 """Cấu hình nền tảng QLNH; các app nghiệp vụ được thêm theo từng giai đoạn."""
 
 import os
+from ipaddress import ip_network
 from pathlib import Path
 import dj_database_url # deploy
 from django.contrib.messages import constants as message_constants
@@ -30,11 +31,38 @@ def positive_int_env(name, default):
     return value
 
 
+def bool_env(name, default):
+    value = os.environ.get(name, str(default)).strip().lower()
+    if value not in {"true", "false", "1", "0"}:
+        raise ImproperlyConfigured(f"{name} phải là True hoặc False.")
+    return value in {"true", "1"}
+
+
 SECRET_KEY = required_env("SECRET_KEY")
 debug_value = os.environ.get("DEBUG", "False").strip().lower()
 if debug_value not in {"true", "false", "1", "0"}:
     raise ImproperlyConfigured("DEBUG phải là True, False, 1 hoặc 0.")
 DEBUG = debug_value in {"true", "1"}
+SESSION_COOKIE_SECURE = bool_env("SESSION_COOKIE_SECURE", not DEBUG)
+CSRF_COOKIE_SECURE = bool_env("CSRF_COOKIE_SECURE", not DEBUG)
+SECURE_SSL_REDIRECT = bool_env("SECURE_SSL_REDIRECT", not DEBUG)
+SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "0" if DEBUG else "3600"))
+if SECURE_HSTS_SECONDS < 0:
+    raise ImproperlyConfigured("SECURE_HSTS_SECONDS không được âm.")
+SECURE_HSTS_INCLUDE_SUBDOMAINS = bool_env("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
+SECURE_HSTS_PRELOAD = False
+CASH_SHIFT_REQUIRED = bool_env("CASH_SHIFT_REQUIRED", False)
+SECURITY_RATE_LIMIT_ENABLED = bool_env("SECURITY_RATE_LIMIT_ENABLED", True)
+LOGIN_ACCOUNT_ATTEMPTS = positive_int_env("LOGIN_ACCOUNT_ATTEMPTS", 10)
+LOGIN_IP_ATTEMPTS = positive_int_env("LOGIN_IP_ATTEMPTS", 120)
+PUBLIC_BOOKING_ATTEMPTS = positive_int_env("PUBLIC_BOOKING_ATTEMPTS", 20)
+PUBLIC_LOOKUP_ATTEMPTS = positive_int_env("PUBLIC_LOOKUP_ATTEMPTS", 30)
+TRUSTED_PROXY_CIDRS = [item.strip() for item in os.environ.get("TRUSTED_PROXY_CIDRS", "").split(",") if item.strip()]
+try:
+    for proxy_network in TRUSTED_PROXY_CIDRS:
+        ip_network(proxy_network)
+except ValueError as error:
+    raise ImproperlyConfigured("TRUSTED_PROXY_CIDRS phải là danh sách mạng CIDR hợp lệ.") from error
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]").split(",")
@@ -94,6 +122,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.rate_limits.PublicRateLimitMiddleware",
 ]
 
 CACHES = {
@@ -137,6 +166,9 @@ except ValueError as error:
 if not 0.3 <= ATTENDANCE_FACE_THRESHOLD <= 0.95 or not 0.01 <= ATTENDANCE_FACE_MARGIN <= 0.3:
     raise ImproperlyConfigured("Ngưỡng nhận diện hoặc khoảng cách phân biệt không hợp lệ.")
 APRIORI_MODEL_PATH = Path(os.environ.get("APRIORI_MODEL_PATH", str(BASE_DIR / "fixtures/ai/apriori_model.json")))
+APRIORI_QUALITY_GATE_ENABLED = bool_env("APRIORI_QUALITY_GATE_ENABLED", True)
+APRIORI_MIN_TRAIN_BASKETS = positive_int_env("APRIORI_MIN_TRAIN_BASKETS", 100)
+APRIORI_MIN_EVALUATION_BASKETS = positive_int_env("APRIORI_MIN_EVALUATION_BASKETS", 30)
 
 # Public homepage chat. Keys remain on the server; never expose this configuration
 # through a template context processor or log it.

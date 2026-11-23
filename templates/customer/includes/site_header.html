@@ -14,9 +14,10 @@
             <a href="{% url 'home' %}#cau-chuyen">{% translate "Chuyện Cơm Quê" %}</a>
             <a href="#customer-footer">{% translate "Liên hệ" %}</a>
             <a class="cq-mobile-account-link" href="{% if user.is_authenticated %}{% url 'accounts:workspace' %}{% else %}{% url 'accounts:login' %}{% endif %}">{% if user.is_authenticated %}{% translate 'Mở trang quản lý' %}{% else %}{% translate 'Đăng nhập' %}{% endif %}</a>
+            <div class="cq-mobile-language"><span>{% translate 'Ngôn ngữ' %}</span>{% include 'customer/includes/language_switch.html' %}</div>
         </nav>
         <div class="cq-header-actions">
-            <form class="cq-language-switch" action="{% url 'set_language' %}" method="post" aria-label="{% translate 'Ngôn ngữ' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit" name="language" value="vi" lang="vi" aria-label="Tiếng Việt" aria-pressed="{% if LANGUAGE_CODE == 'vi' %}true{% else %}false{% endif %}">VI</button><span aria-hidden="true">/</span><button type="submit" name="language" value="en" lang="en" aria-label="English" aria-pressed="{% if LANGUAGE_CODE == 'en' %}true{% else %}false{% endif %}">EN</button></form>
+            {% include 'customer/includes/language_switch.html' %}
             {% if request.resolver_match.namespace != 'online_reservations' %}<button class="cq-header-cart" data-basket-open type="button" aria-label="{% translate "Mở giỏ món" %}">{% include 'customer/includes/ui_icon.html' with icon='cart' %}<span data-basket-count>0</span></button>{% endif %}
             <form class="cq-header-search" action="{% url 'customer_portal:menu' %}" method="get" role="search">
                 <label class="customer-visually-hidden" for="header-dish-search">{% translate "Tìm món ăn" %}</label>

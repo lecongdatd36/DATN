@@ -1,8 +1,14 @@
 from django.urls import path
 from . import views
+from . import finance_views
 
 app_name = "orders"
 urlpatterns = [
+    path("thu-ngan/", finance_views.shifts, name="cash_shifts"),
+    path("thu-ngan/<int:pk>/", finance_views.shift_detail, name="cash_shift_detail"),
+    path("hoan-tien/", finance_views.refunds, name="refunds"),
+    path("hoan-tien/<int:pk>/", finance_views.refund_action, name="refund_action"),
+    path("doi-soat/", finance_views.reconciliation, name="reconciliation"),
     path("", views.OrderListView.as_view(), name="list"),
     path("hoa-don/", views.InvoiceListView.as_view(), name="invoice_list"),
     path("nhat-ky/", views.OrderActivityLogListView.as_view(), name="activity_logs"),

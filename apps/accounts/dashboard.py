@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db.models import Count, Sum, F, Q, DecimalField, ExpressionWrapper
 from django.db.models.functions import TruncDate
 from django.utils import timezone
-from apps.orders.models import Order, Invoice, OrderItem, OrderActivityLog
+from apps.orders.models import Order, Invoice, InvoiceRefund, OrderItem, OrderActivityLog
 from apps.bookings.models import Booking
 from apps.seating.models import DiningTable
 from apps.inventory.models import Ingredient, InventoryTransaction
@@ -20,8 +20,12 @@ def dashboard_data(user, days=7):
     result = {"days": days, "today": today, "now": now}
     invoices = Invoice.objects.filter(status=Invoice.Status.PAID)
     result['revenue'] = invoices.filter(closed_at__gte=start, closed_at__lt=end).aggregate(total=Sum('total'))['total'] or 0
+    refunds = InvoiceRefund.objects.filter(status='COMPLETED', invoice__status='PAID')
+    result['revenue'] -= refunds.filter(completed_at__gte=start, completed_at__lt=end).aggregate(total=Sum('amount'))['total'] or 0
     revenue_rows = {row['day']:row['total'] for row in invoices.filter(closed_at__gte=since, closed_at__lt=end)
         .annotate(day=TruncDate('closed_at')).values('day').annotate(total=Sum('total'))}
+    for row in refunds.filter(completed_at__gte=since, completed_at__lt=end).annotate(day=TruncDate('completed_at')).values('day').annotate(total=Sum('amount')):
+        revenue_rows[row['day']] = revenue_rows.get(row['day'], 0) - row['total']
     can_orders = user.has_perm('orders.view_order')
     orders = Order.objects.filter(created_at__gte=start, created_at__lt=end)
     result['order_count'] = orders.count() if can_orders else None

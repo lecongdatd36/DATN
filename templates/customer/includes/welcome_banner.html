@@ -1,6 +1,7 @@
 {% load i18n customer_language %}
 {% load static %}
     <section class="cq-welcome" aria-labelledby="welcome-title">
+        <div class="cq-welcome-scene">
         <div class="cq-welcome-visual"><img class="cq-welcome-photo" src="{% static 'customer/images/com-que-table-hero-v1.webp' %}" width="2048" height="768" alt="" fetchpriority="high" decoding="async"></div>
         <div class="cq-welcome-copy">
             <span class="cq-kicker">{% if menu_banner %}{% translate "THỰC ĐƠN CƠM QUÊ" %}{% else %}{% translate "TỪ GIAN BẾP CƠM QUÊ" %}{% endif %}</span>
@@ -11,7 +12,9 @@
                 <a class="cq-quiet-link" href="{% if menu_banner %}#combo-home{% else %}#cau-chuyen{% endif %}">{% if menu_banner %}{% translate "Khám phá combo ↗" %}{% else %}{% translate "Chuyện Cơm Quê ↗" %}{% endif %}</a>
             </div>
         </div>
-        <aside class="cq-quick-booking" aria-labelledby="quick-booking-title">
+        </div>
+        <details class="cq-quick-booking" aria-labelledby="quick-booking-title" data-quick-booking-panel open>
+            <summary class="cq-quick-summary">{% include 'customer/includes/ui_icon.html' with icon='calendar' %}<span>{% translate "Đặt bàn" %}</span>{% include 'customer/includes/ui_icon.html' with icon='arrow' %}</summary>
             <div class="cq-quick-title"><span>{% translate "ĐỂ DÀNH MỘT CHỖ NGỒI" %}</span>{% include 'customer/includes/ui_icon.html' with icon='calendar' %}</div>
             <h2 id="quick-booking-title">{% translate "Hẹn một bữa ngon." %}</h2>
             <p>{% translate "Bạn định ghé Cơm Quê khi nào?" %}</p>
@@ -27,5 +30,5 @@
                 <small class="cq-quick-note">{% translate "Chọn món trước sau khi điền thông tin đặt bàn." %}</small>
             </form>
             <a class="cq-quick-lookup" href="{% url 'online_reservations:lookup' %}">{% translate "Bạn đã có lịch hẹn? Tra cứu tại đây" %} {% include 'customer/includes/ui_icon.html' with icon='arrow' %}</a>
-        </aside>
+        </details>
     </section>

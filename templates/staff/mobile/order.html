@@ -18,6 +18,7 @@
 </section>
 <footer class="m-dock"><span>Tạm tính<strong>{{ mobile_quote.due|dong }}đ</strong></span>
 {% if selected_has_drafts and can_manage_order %}<form method="post" action="{% url 'sales:mobile_action' 'send' %}">{% include 'staff/mobile/order_fields.html' %}<button class="m-button" type="submit">Gửi bếp</button></form>
+{% elif zalopay_pending and can_collect_payment %}<a class="m-button" href="{% url 'zalopay:result' zalopay_pending.token %}">Kiểm tra ZaloPay</a>
 {% elif mobile_can_pay and can_collect_payment %}<a class="m-button" href="{% url 'sales:mobile' %}?page=checkout&amp;order={{ selected_order.pk }}" data-mobile-link>Thu tiền</a>
 {% elif selected_can_request_payment and can_manage_order and selected_order.status != 'PAYMENT_REQUESTED' %}<form method="post" action="{% url 'sales:mobile_action' 'request-payment' %}">{% include 'staff/mobile/order_fields.html' %}<button class="m-button" type="submit">Yêu cầu thanh toán</button></form>
 {% else %}<span class="m-help">{% if selected_order.status == 'PAYMENT_REQUESTED' %}Đang chờ thu ngân{% elif mobile_payment_pending %}Đang chờ kết quả giao dịch{% else %}Còn món cần phục vụ{% endif %}</span>{% endif %}</footer>

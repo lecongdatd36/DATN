@@ -86,7 +86,12 @@ class CustomerLanguageTests(TestCase):
                 "starts_at":self.arrival.strftime("%Y-%m-%dT%H:%M"),"duration_minutes":"120"})
         self.assertContains(response,"Full name")
         self.assertContains(response,"Phone number")
+        self.assertContains(response,"Arrival date and time")
         self.assertContains(response,"Opening hours:")
+        self.assertContains(response,"Last reservation arrival: 21:00")
+        self.assertContains(response,"Seating requirements")
+        self.assertContains(response,"Standard table")
+        self.assertContains(response,"Private room")
         self.assertContains(response,"Enter a Vietnamese phone number")
         self.assertFalse(Reservation.objects.exists())
 

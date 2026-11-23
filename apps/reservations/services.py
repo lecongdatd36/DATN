@@ -28,6 +28,7 @@ from apps.menu.models import Dish
 from apps.orders.permissions import has_order_permission
 from .models import (DepositAllocation, DepositPayment, DepositRefund, IngredientHold, PreorderItem,
                      Reservation, ReservationLog, ReservationMessage, ReservationPolicy)
+from .deposit_policy import deposit_quote
 
 
 def locks():
@@ -62,7 +63,10 @@ def money(value):
 
 def policy_snapshot():
     policy, policy_created = ReservationPolicy.objects.get_or_create(pk=1)
-    return {**{key:getattr(policy,key) for key in ("table_deposit", "ready_percent", "hold_minutes", "offer_minutes", "minimum_lead_minutes", "free_cancel_hours")},"allowed_dish_ids":list(policy.allowed_dishes.values_list("pk",flat=True))}
+    return {"deposit_policy_version": 2, **{key:getattr(policy,key) for key in (
+        "table_deposit", "deposit_min_guests", "require_group_deposit", "require_multiple_tables_deposit",
+        "require_private_room_deposit", "ready_percent", "hold_minutes", "offer_minutes", "minimum_lead_minutes", "free_cancel_hours")},
+        "allowed_dish_ids":list(policy.allowed_dishes.values_list("pk",flat=True))}
 
 
 def validate_request(*, full_name, phone, starts_at, duration_minutes, party_size, mode):
@@ -91,7 +95,10 @@ def capture_items(reservation, items):
             combo=data["combo"], combo_name=data["combo"].name if data["combo"] else "")
         total += line.total
     reservation.subtotal = total
-    reservation.deposit_required = (total*Decimal(reservation.policy_snapshot["ready_percent"])/100).quantize(Decimal(1), rounding=ROUND_HALF_UP) if reservation.mode == "READY" else Decimal(reservation.policy_snapshot["table_deposit"])
+    quote = deposit_quote(policy=reservation.policy_snapshot, party_size=reservation.party_size,
+        mode=reservation.mode, subtotal=total, seating_need=reservation.seating_need)
+    reservation.deposit_rule = quote["rule"]
+    reservation.deposit_required = Decimal(0) if reservation.deposit_waived_by_id else quote["amount"]
 
 
 def held_quantities(*, exclude_reservation=None):
@@ -133,11 +140,12 @@ def release_holds(reservation):
 
 def hold_table(reservation, already_funded=False):
     now = timezone.now()
-    lead=0 if already_funded else reservation.policy_snapshot["hold_minutes"]
+    lead=0 if already_funded or reservation.deposit_required == 0 else reservation.policy_snapshot["hold_minutes"]
     if reservation.mode == "READY" and (not reservation.prep_starts_at or reservation.prep_starts_at <= now+timedelta(minutes=lead)):
         raise ValidationError(_("Không còn đủ thời gian trả cọc và chuẩn bị. Nhà hàng cần chốt lại giờ mới."))
     booking = create_public_booking(full_name=reservation.full_name, phone=reservation.phone, starts_at=reservation.starts_at,
-        party_size=reservation.party_size, area_id=reservation.area_id, duration_minutes=reservation.duration_minutes, note=reservation.note)
+        party_size=reservation.party_size, area_id=reservation.area_id, duration_minutes=reservation.duration_minutes, note=reservation.note,
+        apply_deposit_policy=False)
     reservation.booking = booking
     reservation.status = "WAITING"
     reservation.hold_expires_at = min(now+timedelta(minutes=reservation.policy_snapshot["hold_minutes"]),reservation.starts_at)
@@ -146,6 +154,13 @@ def hold_table(reservation, already_funded=False):
         reserve_ingredients(reservation)
     reservation.accepted_at = now
     reservation.save()
+    if reservation.deposit_required == 0:
+        reservation.status = "CONFIRMED"
+        reservation.hold_expires_at = None
+        reservation.save(update_fields=("status", "hold_expires_at", "updated_at"))
+        booking.status = "CONFIRMED"
+        booking.save(update_fields=("status", "updated_at"))
+        log(reservation, "Xác nhận không cần cọc", "Giữ chỗ không yêu cầu thanh toán cọc; chưa mở đơn và chưa nhận khách.")
 
 
 @transaction.atomic
@@ -172,7 +187,7 @@ def expire_holds(*, now=None):
 
 
 @transaction.atomic
-def create_request(*, full_name, phone, starts_at, party_size, duration_minutes, mode, items, request_key, source_digest, area_id=None, note=""):
+def create_request(*, full_name, phone, starts_at, party_size, duration_minutes, mode, items, request_key, source_digest, area_id=None, note="", seating_need="STANDARD"):
     locks()
     expire_holds()
     existing = Reservation.objects.filter(request_key=request_key).first()
@@ -182,16 +197,17 @@ def create_request(*, full_name, phone, starts_at, party_size, duration_minutes,
         return existing
     name,phone = validate_request(full_name=full_name,phone=phone,starts_at=starts_at,duration_minutes=duration_minutes,party_size=party_size,mode=mode)
     policy = policy_snapshot()
+    deposit_quote(policy=policy, party_size=party_size, mode=mode, seating_need=seating_need)
     if mode == "READY" and starts_at < timezone.now()+timedelta(minutes=policy["minimum_lead_minutes"]):
         raise ValidationError(_("Yêu cầu món sẵn phải đặt trước ít nhất 60 phút và chờ nhà hàng xác nhận."))
     if len(note)>500:
         raise ValidationError(_("Ghi chú tối đa 500 ký tự."))
     reservation = Reservation.objects.create(full_name=name,phone=phone,starts_at=starts_at,party_size=party_size,
-        duration_minutes=duration_minutes,mode=mode,policy_snapshot=policy,request_key=request_key,source_digest=source_digest,area_id=area_id,note=note)
+        duration_minutes=duration_minutes,mode=mode,policy_snapshot=policy,request_key=request_key,source_digest=source_digest,area_id=area_id,note=note,seating_need=seating_need)
     capture_items(reservation,items)
     reservation.requested_snapshot={"starts_at":starts_at.isoformat(),"items":items,"subtotal":str(reservation.subtotal)}
     reservation.save()
-    if mode=="TABLE":
+    if mode=="TABLE" and seating_need=="STANDARD":
         hold_table(reservation)
     log(reservation,"Khách gửi yêu cầu",f"Chế độ {reservation.get_mode_display()}; {party_size} khách.")
     return reservation
@@ -204,19 +220,88 @@ def locked_reservation(pk,revision=None):
     return row
 
 
+def _mark_deposit_waived(row, actor, reason):
+    reason = reason.strip() if isinstance(reason, str) else ""
+    if not actor or not can_manage_accounts(actor):
+        raise PermissionDenied(_("Chỉ quản lý được miễn cọc."))
+    if not 5 <= len(reason) <= 1000 or row.deposit_required <= 0:
+        raise ValidationError(_("Nhập lý do miễn cọc từ 5 đến 1000 ký tự cho khoản cọc đang yêu cầu."))
+    row.deposit_waived_amount = row.deposit_required
+    row.deposit_required = Decimal(0)
+    row.deposit_waived_by = actor
+    row.deposit_waived_at = timezone.now()
+    row.deposit_waiver_reason = reason
+
+
+@transaction.atomic
+def link_booking_deposit(*, booking, actor=None, seating_need="STANDARD", waiver_reason=""):
+    """Called by booking writers while holding the seating lock; no menu/actor lock inversion."""
+    policy = policy_snapshot()
+    quote = deposit_quote(policy=policy, party_size=booking.party_size, seating_need=seating_need)
+    if waiver_reason and (not actor or not can_manage_accounts(actor)):
+        raise PermissionDenied(_("Chỉ quản lý được miễn cọc."))
+    if not quote["amount"] and seating_need == "STANDARD" and not waiver_reason:
+        return None
+    row = Reservation(booking=booking, full_name=booking.customer_name, phone=booking.customer_phone,
+        starts_at=booking.starts_at, party_size=booking.party_size, duration_minutes=booking.duration_minutes,
+        mode="TABLE", seating_need=seating_need, area=booking.table.area, policy_snapshot=policy,
+        source_digest=uuid4().hex + uuid4().hex, deposit_required=quote["amount"], deposit_rule=quote["rule"],
+        requested_snapshot={"channel": "STAFF" if actor else "PUBLIC", "booking_id": booking.pk, "seating_need": seating_need},
+        accepted_at=timezone.now(), free_cancel_until=booking.starts_at-timedelta(hours=policy["free_cancel_hours"]))
+    if waiver_reason:
+        _mark_deposit_waived(row, actor, waiver_reason)
+    row.status = "WAITING" if row.deposit_required else "CONFIRMED"
+    row.hold_expires_at = min(timezone.now()+timedelta(minutes=policy["hold_minutes"]), booking.starts_at) if row.deposit_required else None
+    row.save()
+    if row.status == "CONFIRMED":
+        booking.status = "CONFIRMED"
+        booking.revision += 1
+        booking.save(update_fields=("status", "revision", "updated_at"))
+    log(row, "Áp dụng chính sách cọc", f"Lịch {booking.booking_code}; {quote['label']}; yêu cầu {row.deposit_required} đồng.", actor)
+    if row.deposit_waived_by_id:
+        log(row, "Quản lý miễn cọc", f"Miễn {row.deposit_waived_amount} đồng. Lý do: {row.deposit_waiver_reason}", actor)
+    return row
+
+
+@transaction.atomic
+def waive_deposit(*, actor, reservation_id, revision, reason):
+    actor = actor_for(actor, "manager")
+    expire_holds()
+    row = locked_reservation(reservation_id, revision)
+    if row.status not in ("WAITING", "REVIEW", "OFFER") or row.received > 0 or row.deposits.filter(status="PENDING").exists():
+        raise ValidationError(_("Chỉ miễn cọc khi chưa nhận tiền, chưa có giao dịch đang chờ và lịch còn hiệu lực."))
+    _mark_deposit_waived(row, actor, reason)
+    if row.status == "WAITING":
+        if not row.booking_id or row.booking.status != "PENDING":
+            raise ValidationError(_("Bàn giữ chỗ đã thay đổi; cần kiểm tra lại trước khi miễn cọc."))
+        row.status = "CONFIRMED"
+        row.hold_expires_at = None
+        booking = row.booking
+        booking.status = "CONFIRMED"
+        booking.revision += 1
+        booking.save(update_fields=("status", "revision", "updated_at"))
+    row.revision += 1
+    row.save()
+    log(row, "Quản lý miễn cọc", f"Miễn {row.deposit_waived_amount} đồng. Lý do: {row.deposit_waiver_reason}", actor)
+    return row
+
+
 @transaction.atomic
 def review_request(*, actor, reservation_id, revision, action, note, starts_at=None, prep_starts_at=None, ready_by=None, items=None):
     actor = actor_for(actor)
     row = locked_reservation(reservation_id,revision)
-    if row.status not in ("REVIEW","OFFER") or row.received>0 or row.mode!="READY":
+    if row.status not in ("REVIEW","OFFER") or row.received>0:
         raise ValidationError(_("Không thể thay bản chốt của yêu cầu đã nhận tiền hoặc đang phục vụ."))
     if action=="reject":
         if not note.strip():
             raise ValidationError(_("Cần lý do từ chối."))
         row.status="REJECTED"
     elif action=="offer":
-        if not all((starts_at,prep_starts_at,ready_by)) or not timezone.now()+timedelta(minutes=row.policy_snapshot["hold_minutes"])<prep_starts_at<starts_at<=ready_by<=starts_at+timedelta(minutes=10):
+        payment_minutes = row.policy_snapshot["hold_minutes"] if row.deposit_required else 0
+        if row.mode=="READY" and (not all((starts_at,prep_starts_at,ready_by)) or not timezone.now()+timedelta(minutes=payment_minutes)<prep_starts_at<starts_at<=ready_by<=starts_at+timedelta(minutes=10)):
             raise ValidationError(_("Cần đủ thời gian cọc trước khi làm; giờ sẵn nằm trong 10 phút từ giờ hẹn."))
+        if not starts_at or starts_at <= timezone.now() or not note.strip():
+            raise ValidationError(_("Cần giờ hẹn hợp lệ và nội dung xác nhận bố trí với khách."))
         validate_booking_hours(starts_at,planned_end(starts_at,row.duration_minutes))
         if row.booking_id:
             Booking.objects.filter(pk=row.booking_id,status="PENDING").update(status="CANCELLED")
@@ -224,11 +309,14 @@ def review_request(*, actor, reservation_id, revision, action, note, starts_at=N
         release_holds(row)
         row.items.all().delete()
         row.starts_at=starts_at
-        row.prep_starts_at=prep_starts_at
-        row.ready_by=ready_by
-        capture_items(row,items)
+        row.prep_starts_at=prep_starts_at if row.mode=="READY" else None
+        row.ready_by=ready_by if row.mode=="READY" else None
+        capture_items(row,items or [])
         row.status="OFFER"
-        row.offer_expires_at=min(timezone.now()+timedelta(minutes=row.policy_snapshot["offer_minutes"]),prep_starts_at-timedelta(minutes=row.policy_snapshot["hold_minutes"]))
+        cutoff = prep_starts_at if row.mode=="READY" else starts_at
+        row.offer_expires_at=min(timezone.now()+timedelta(minutes=row.policy_snapshot["offer_minutes"]),cutoff-timedelta(minutes=row.policy_snapshot["hold_minutes"] if row.deposit_required else 0))
+        if row.offer_expires_at <= timezone.now():
+            raise ValidationError(_("Không còn đủ thời gian để khách xác nhận và trả cọc; cần chốt lại giờ hẹn."))
     else:
         raise ValidationError(_("Thao tác không hợp lệ."))
     row.staff_note=note.strip()
@@ -248,7 +336,7 @@ def accept_offer(*, token, revision):
     hold_table(row)
     row.revision+=1
     row.save()
-    log(row,"Khách đồng ý bản chốt","Bắt đầu giữ chỗ và nguyên liệu có hạn để thanh toán cọc.")
+    log(row,"Khách đồng ý bản chốt","Bắt đầu giữ chỗ chờ thanh toán cọc." if row.deposit_required else "Đã xác nhận giữ chỗ, không yêu cầu cọc.")
     return row
 
 
@@ -297,6 +385,8 @@ def checkout(*, token, revision, return_url, ip_address):
     locks()
     expire_holds()
     row=Reservation.objects.select_for_update().get(access_token=token)
+    if row.deposit_required <= 0:
+        raise ValidationError(_("Lịch này không yêu cầu thanh toán cọc."))
     if row.status!="WAITING" or row.revision!=revision or row.hold_expires_at<=timezone.now():
         raise ValidationError(_("Yêu cầu không còn trong thời gian thanh toán cọc."))
     if row.deposits.filter(status="PENDING",zalopay_transaction__isnull=False).exists():
@@ -578,7 +668,7 @@ def receive(*, actor, reservation_id, revision, accept_prices=False):
     actor=actor_for(actor)
     row=locked_reservation(reservation_id,revision)
     if row.status!="CONFIRMED" or not row.booking_id:
-        raise ValidationError(_("Chỉ nhận khách cho lịch đã cọc và xác nhận."))
+        raise ValidationError(_("Chỉ nhận khách cho lịch đã xác nhận và hoàn tất yêu cầu cọc nếu có."))
     if row.mode=="TABLE" and accept_prices:
         total=Decimal(0)
         for line in row.items.select_related("dish"):

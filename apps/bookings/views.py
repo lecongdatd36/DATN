@@ -146,6 +146,7 @@ class BookingFormView(BookingPermissionMixin, FormView):
         self.booking = get_object_or_404(Booking.objects.select_related("customer"), pk=self.kwargs["pk"]) if "pk" in self.kwargs else None
         kwargs = super().get_form_kwargs()
         kwargs["booking"] = self.booking
+        kwargs["actor"] = self.request.user
         if self.booking:
             kwargs["initial"] = {
                 "customer_phone": self.booking.customer.phone, "table": self.booking.table_id,
@@ -405,6 +406,22 @@ class PublicReservationCreateView(FormView):
 
     def form_valid(self, form):
         try:
+            if form.cleaned_data.get("seating_need", "STANDARD") != "STANDARD":
+                from uuid import uuid4
+                from django.utils.crypto import salted_hmac
+                from apps.reservations import services as online_services
+                from apps.reservations.views import remember_private_reservation
+                if not self.request.session.session_key:
+                    self.request.session.create()
+                data = form.cleaned_data
+                row = online_services.create_request(full_name=data["full_name"], phone=data["phone"],
+                    starts_at=data["starts_at"], party_size=data["party_size"],
+                    duration_minutes=int((data["ends_at"] - data["starts_at"]).total_seconds() // 60),
+                    mode="TABLE", items=[], request_key=uuid4(),
+                    source_digest=salted_hmac("reservation.source", self.request.session.session_key, algorithm="sha256").hexdigest(),
+                    area_id=data["area"].pk if data.get("area") else None, note=data.get("note", ""), seating_need=data["seating_need"])
+                remember_private_reservation(self.request, row)
+                return HttpResponseRedirect(reverse("online_reservations:detail", args=[row.access_token]))
             booking = create_public_booking(
                 full_name=form.cleaned_data["full_name"],
                 phone=form.cleaned_data["phone"],
@@ -412,10 +429,16 @@ class PublicReservationCreateView(FormView):
                 party_size=form.cleaned_data["party_size"],
                 area_id=form.cleaned_data["area"].pk if form.cleaned_data.get("area") else None,
                 note=form.cleaned_data.get("note", ""),
+                seating_need=form.cleaned_data.get("seating_need", "STANDARD"),
             )
         except ValidationError as error:
             add_service_errors(form, error)
             return self.form_invalid(form)
+        online = getattr(booking, "online_reservation", None)
+        if online:
+            from apps.reservations.views import remember_private_reservation
+            remember_private_reservation(self.request, online)
+            return HttpResponseRedirect(reverse("online_reservations:detail", args=[online.access_token]))
         self.request.session["public_booking_success"] = {
             "booking_id": booking.pk,
             "booking_code": booking.booking_code,

@@ -217,6 +217,7 @@ class Invoice(models.Model):
     total_amount = models.DecimalField("Cần thanh toán", max_digits=12, decimal_places=0, default=0)
     total = models.DecimalField("Tổng tiền", max_digits=12, decimal_places=0, default=0, validators=[MinValueValidator(0), MaxValueValidator(999999999999)])
     paid_amount = models.DecimalField("Đã thu", max_digits=12, decimal_places=0, default=0, validators=[MinValueValidator(0), MaxValueValidator(999999999999)])
+    refunded_amount = models.DecimalField("Đã hoàn", max_digits=12, decimal_places=0, default=0, validators=[MinValueValidator(0)])
     status = models.CharField("Trạng thái", max_length=20, choices=Status.choices, default=Status.UNPAID)
     payment_method = models.CharField("Phương thức thanh toán", max_length=20, blank=True, default="CASH")
     created_at = models.DateTimeField("Thời gian tạo", auto_now_add=True)
@@ -231,6 +232,7 @@ class Invoice(models.Model):
         ordering = ("-created_at", "-pk")
         verbose_name = "hóa đơn"
         verbose_name_plural = "hóa đơn"
+        constraints = [models.CheckConstraint(condition=models.Q(refunded_amount__gte=0, refunded_amount__lte=models.F("paid_amount")), name="invoice_refund_within_paid_amount")]
 
     @property
     def remaining(self):
@@ -275,6 +277,7 @@ class Payment(models.Model):
 
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name="payments")
     batch = models.ForeignKey(PaymentBatch, on_delete=models.PROTECT, related_name="payments", null=True, blank=True)
+    cash_shift = models.ForeignKey("orders.CashShift", on_delete=models.PROTECT, related_name="payments", null=True, blank=True, verbose_name="Ca thu ngân")
     amount = models.DecimalField("Số tiền", max_digits=12, decimal_places=0, validators=[MinValueValidator(1), MaxValueValidator(999999999999)])
     method = models.CharField("Phương thức", max_length=20, choices=Method.choices, default=Method.CASH)
     reference = models.CharField("Ghi chú / mã giao dịch", max_length=100, blank=True)
@@ -321,7 +324,7 @@ class OnlinePayment(models.Model):
     promotion_code = models.CharField("Mã giảm giá", max_length=30, blank=True)
     promotion_discount_amount = models.DecimalField("Giảm theo mã", max_digits=12, decimal_places=0, default=0)
     status = models.CharField("Trạng thái", max_length=12, choices=Status.choices, default=Status.PENDING, db_index=True)
-    provider_transaction_no = models.CharField("Mã giao dịch VNPAY", max_length=30, blank=True)
+    provider_transaction_no = models.CharField("Mã giao dịch cổng thanh toán", max_length=40, blank=True)
     bank_code = models.CharField("Ngân hàng", max_length=30, blank=True)
     response_code = models.CharField("Mã phản hồi", max_length=10, blank=True)
     raw_response = models.JSONField("Phản hồi cổng thanh toán", default=dict, blank=True)
@@ -344,6 +347,7 @@ class ZaloPayTransaction(models.Model):
         PAID = "PAID", "Đã thanh toán"
         FAILED = "FAILED", "Thất bại"
         REVIEW = "REVIEW", "Đã nhận tiền, cần đối soát"
+        ABANDONED = "ABANDONED", "Đã đổi phương thức thanh toán"
 
     token = models.UUIDField(default=uuid4, unique=True, editable=False)
     app_id = models.PositiveIntegerField()
@@ -559,3 +563,6 @@ class QROrderRequestItem(models.Model):
             models.CheckConstraint(condition=models.Q(quantity__gte=1, quantity__lte=100), name="qr_request_item_quantity_range"),
             models.CheckConstraint(condition=models.Q(unit_price_snapshot__gte=1), name="qr_request_item_price_positive"),
         ]
+
+
+from .finance_models import CashShift, InvoiceRefund, PaymentReconciliation, FinanceLog  # noqa: E402,F401

@@ -9,4 +9,5 @@ urlpatterns = [
     path("result/<uuid:token>/", views.result, name="result"),
     path("status/<uuid:token>/", views.state, name="state"),
     path("query/<uuid:token>/", views.query, name="query"),
+    path("change-method/<uuid:token>/", views.change_method, name="change_method"),
 ]

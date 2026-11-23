@@ -241,12 +241,32 @@
   });
   document.addEventListener("submit", event => {
     const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !form.closest("[data-mobile-app]") || form.hasAttribute("data-native-payment")) return;
+    if (!(form instanceof HTMLFormElement) || !form.closest("[data-mobile-app]")) return;
+    if (form.hasAttribute('data-native-payment') || form.hasAttribute('data-native-navigation')) {
+      if (form.dataset.submitting === 'true') {event.preventDefault();return;}
+      form.dataset.submitting='true';
+      const button=event.submitter || form.querySelector('[type=submit]');
+      if(button){button.dataset.gatewayLabel=button.textContent;button.textContent=form.hasAttribute('data-native-payment')?'Đang mở ZaloPay…':'Đang kiểm tra giao dịch…';button.setAttribute('aria-disabled','true');}
+      feedback('Đang kết nối ZaloPay. Vui lòng chờ, không bấm thanh toán lại.');
+      document.dispatchEvent(new CustomEvent('workspace:busy',{detail:true}));
+      return;
+    }
     event.preventDefault();
     if (form.method.toLowerCase() === "get") {
       const url = new URL(form.action);url.search = new URLSearchParams(new FormData(form)).toString();navigateSafely(url.href);return;
     }
     submit(form);
+  });
+  window.addEventListener('pageshow',event=>{
+    if(!event.persisted)return;
+    const forms=app.querySelectorAll('[data-native-payment][data-submitting=true], [data-native-navigation][data-submitting=true]');
+    if(!forms.length)return;
+    forms.forEach(form=>{
+      form.dataset.submitting='false';
+      form.querySelectorAll('[data-gateway-label]').forEach(button=>{button.textContent=button.dataset.gatewayLabel;button.removeAttribute('aria-disabled');delete button.dataset.gatewayLabel;});
+      document.dispatchEvent(new CustomEvent('workspace:busy',{detail:false}));
+    });
+    offerRefresh('Cập nhật order để kiểm tra giao dịch ZaloPay trước khi thanh toán tiếp.');
   });
   document.addEventListener("input", event => {
     const input = event.target;

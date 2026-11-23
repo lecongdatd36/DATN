@@ -13,6 +13,7 @@
         {% if report_ready %}<a class="btn btn-outline-primary" href="{% url 'reports:export_revenue' %}?date_from={{ date_from|date:'Y-m-d' }}&amp;date_to={{ date_to|date:'Y-m-d' }}"><svg class="app-icon me-1" aria-hidden="true"><use href="#icon-download"></use></svg> Xuất CSV</a>{% endif %}
     </div>
     <p class="mb-4"><a class="btn btn-outline-primary" href="{% url 'reports:order_forecast' %}">Mở trang dự báo số đơn riêng ↗</a></p>
+    <p><a href="{% url 'reports:ai_quality' %}">Xem chất lượng gợi ý món và dữ liệu huấn luyện</a></p>
     {% include "reports/includes/order_forecast.html" %}
     <form class="project-card report-filter p-3 p-md-4 mb-4" method="get">
         {% if filter_form.non_field_errors %}<div class="alert alert-danger py-2">{{ filter_form.non_field_errors }}</div>{% endif %}
@@ -25,6 +26,7 @@
 
     {% if report_ready %}
     <p class="small text-muted">Thu hóa đơn trong kỳ: {{ settlement_collected|dong }}đ · Cọc nhận: {{ deposit_collected|dong }}đ · Cọc hoàn thực tế: {{ deposit_refunded|dong }}đ. Khấu trừ cọc không được cộng vào tiền thu lần nữa.</p><div class="report-period mb-3">Số liệu từ <strong>{{ date_from|date:'d/m/Y' }}</strong> đến <strong>{{ date_to|date:'d/m/Y' }}</strong></div>
+    <div class="project-card p-3 mb-3 small">Hóa đơn chốt trước hoàn: {{ gross_revenue|dong }} đ · Hoàn hóa đơn trong kỳ: {{ invoice_refunded|dong }} đ · Khoản ZaloPay cần đối soát đã nhận: {{ review_received|dong }} đ · Khoản đối soát đã hoàn: {{ review_refunded|dong }} đ. Doanh thu và dòng tiền tổng hợp đã điều chỉnh các khoản hoàn tương ứng. Biểu đồ ngày/món giữ doanh số trước hoàn; cơ cấu phương thức chỉ tính phiếu thu hóa đơn trước hoàn.</div>
     <div class="metric-grid mb-4">
         <article class="metric-card metric-primary"><span class="metric-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-chart"></use></svg></span><div><span>Doanh thu đã chốt</span><strong>{{ revenue|dong }} đ</strong><small>{{ invoice_count }} hóa đơn đã thanh toán</small></div></article>
         <article class="metric-card metric-success"><span class="metric-icon"><svg class="app-icon" aria-hidden="true"><use href="#icon-wallet"></use></svg></span><div><span>Tiền thực thu</span><strong>{{ collected|dong }} đ</strong><small>Theo thời điểm ghi nhận phiếu thu</small></div></article>
