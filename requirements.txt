@@ -1,5 +1,8 @@
 # Python 3.12 - dependencies for the Django application.
 Django==5.2.17
+# Included here so existing Render build commands also install the SQL backend.
+mssql-django==2.0.0
+mssql-python==1.18.0
 psycopg[binary]==3.3.5
 python-dotenv==1.2.3
 google-genai==2.34.0

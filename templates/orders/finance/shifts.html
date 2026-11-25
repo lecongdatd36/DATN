@@ -1,0 +1,8 @@
+{% extends 'orders/finance/layout.html' %}{% load menu_money %}
+{% block finance_title %}Ca thu ngân{% endblock %}
+{% block finance_content %}
+<p class="text-secondary">Mở ca trước khi thu tiền để các phiếu thu mới được gắn vào ca. Tiền cọc đã khấu trừ không được cộng vào tiền mặt bàn giao.</p>
+{% if active_shift %}<div class="alert alert-info">Bạn đang có ca mở. <a href="{% url 'orders:cash_shift_detail' active_shift.pk %}">Xem và chốt ca</a>.</div>{% else %}<div class="project-card p-3 mb-4"><h2 class="h5">Mở ca mới</h2><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary" type="submit">Mở ca thu ngân</button></form></div>{% endif %}
+{% if unassigned_receipts %}<p class="small text-secondary">Có {{ unassigned_receipts }} phiếu thu của bạn chưa gắn ca (gồm dữ liệu trước khi sử dụng ca). Các khoản này không được tự cộng vào ca mới.</p>{% endif %}
+<div class="project-card table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Ca / Thu ngân</th><th>Mở ca</th><th>Trạng thái</th><th>Tiền đầu ca</th><th>Thực đếm</th><th>Chênh lệch</th></tr></thead><tbody>{% for row in shifts %}<tr><td><a href="{% url 'orders:cash_shift_detail' row.pk %}">CA{{ row.pk|stringformat:'06d' }}</a><br>{{ row.cashier.username }}</td><td>{{ row.opened_at|date:'d/m/Y H:i' }}</td><td>{{ row.get_status_display }}</td><td>{{ row.opening_amount|dong }} đ</td><td>{% if row.counted_amount != None %}{{ row.counted_amount|dong }} đ{% else %}—{% endif %}</td><td>{% if row.difference != None %}{{ row.difference|dong }} đ{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="6">Chưa có ca thu ngân.</td></tr>{% endfor %}</tbody></table></div><p class="small text-secondary mt-2">Hiển thị tối đa 50 ca gần nhất.</p>
+{% endblock %}

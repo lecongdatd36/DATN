@@ -187,7 +187,7 @@ def consume_order_items(*, actor, items):
             shortages.append(f"{ingredient.name} đã ngừng sử dụng")
         elif ingredient.stock_quantity-reserved.get(ingredient_id,0) < quantity:
             shortages.append(
-                f"{ingredient.name} thiếu {(quantity - ingredient.stock_quantity):.3f} {ingredient.unit}"
+                f"{ingredient.name} thiếu {(quantity - (ingredient.stock_quantity - reserved.get(ingredient_id, 0))):.3f} {ingredient.unit}"
             )
     if shortages:
         raise ValidationError("Không đủ tồn kho để gửi Bếp: " + "; ".join(shortages) + ".")

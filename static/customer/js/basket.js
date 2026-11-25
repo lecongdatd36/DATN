@@ -35,6 +35,8 @@ var cqTranslate_basket = window.gettext || (text => text);
     function render() {
         document.querySelectorAll('[data-basket-count]').forEach(node => { node.textContent = state.count; });
         root.querySelector('[data-basket-total]').textContent = money(state.total);
+        root.querySelector('[data-basket-floating-total]').textContent = money(state.total);
+        document.body.classList.toggle('cq-has-basket', state.count > 0);
         root.querySelector('[data-basket-floating]').hidden = state.count === 0;
         root.querySelector('[data-basket-empty]').hidden = state.count > 0;
         root.querySelector('[data-basket-clear]').hidden = state.count === 0;

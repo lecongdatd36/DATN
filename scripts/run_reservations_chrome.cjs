@@ -13,7 +13,7 @@ try{
 const port=await wait(async()=>{try{return Number((await readFile(path.join(profile,'DevToolsActivePort'),'utf8')).split('\n')[0]);}catch{return null;}});
 browser=await connect((await(await fetch(`http://127.0.0.1:${port}/json/version`)).json()).webSocketDebuggerUrl);
 const target=await(await fetch(`http://127.0.0.1:${port}/json/new?about:blank`,{method:'PUT'})).json();page=await connect(target.webSocketDebuggerUrl);await page.call('Page.enable');await page.call('Network.enable');await page.call('Network.setExtraHTTPHeaders',{headers:{'Accept-Language':'vi-VN,vi;q=0.9'}});
-const js=async expression=>{const result=await page.call('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(result.exceptionDetails)throw Error(result.exceptionDetails.text);return result.result?.value;};
+const js=async expression=>{const result=await page.call('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(result.exceptionDetails)throw Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);return result.result?.value;};
 const nav=async route=>{await page.call('Page.navigate',{url:base+route});await wait(()=>js(`document.readyState==='complete'&&location.pathname===${JSON.stringify(route.split('?')[0])}`));};
 const metrics=(width,height)=>page.call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
 const capture=async name=>{const result=await page.call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await writeFile(path.join(output,name+'.png'),Buffer.from(result.data,'base64'));};
@@ -27,7 +27,7 @@ const config=await(await fetch(base+'/__reservation_test__/config')).json();
 const create=async mode=>{
 await nav('/reservations/online/');
 await assert("!document.querySelector('[name^=qty_]')&&Boolean(document.querySelector('.or-booking-photo'))",'Booking must have a photo and separate dish selection');
-await js(`(()=>{const form=document.querySelector('#id_full_name').form;form.full_name.value='Khách thử trình duyệt ${mode}';form.phone.value='0912345688';form.starts_at.value=${JSON.stringify(config.arrival)};form.party_size.value='4';form.duration_minutes.value='120';form.requestSubmit(form.querySelector('button[data-details-submit]'));})()`);
+await js(`(()=>{const form=document.querySelector('#id_full_name').form;form.full_name.value='Khách thử trình duyệt ${mode}';form.phone.value='0912345688';form.starts_at.value=${JSON.stringify(config.arrival)};form.party_size.value='4';form.requestSubmit(form.querySelector('button[data-details-submit]'));})()`);
 await wait(()=>js("document.readyState==='complete'&&Boolean(document.querySelector('[data-preorder-question]'))"));
 await js(`document.querySelector('[name=mode]').value=${JSON.stringify(mode)}`);await click('button[value=yes]');
 await wait(()=>js("document.readyState==='complete'&&location.pathname.endsWith('/chon-mon/')"));
@@ -72,7 +72,7 @@ await metrics(1440,1050);await nav('/reservations/online/');await capture('guest
 await assert("Boolean(document.querySelector('[name=full_name]'))&&!document.querySelector('[data-booking-choice]')&&!document.querySelector('[name=mode]')",'Entry must directly show the single booking form');
 await assert("getComputedStyle(document.querySelector('.or-booking-content h2')).fontFamily.includes('Segoe UI')",'Booking headings must use a font with Vietnamese coverage');
 await metrics(1440,1050);await capture('guest-table-details-desktop');await metrics(390,844);await capture('guest-table-details-mobile');
-await js(`(()=>{const form=document.querySelector('#id_full_name').form;form.full_name.value='Khách chỉ đặt bàn';form.phone.value='0912345688';form.starts_at.value=${JSON.stringify(config.arrival)};form.party_size.value='4';form.duration_minutes.value='120';form.requestSubmit(form.querySelector('[data-details-submit]'));})()`);
+await js(`(()=>{const form=document.querySelector('#id_full_name').form;form.full_name.value='Khách chỉ đặt bàn';form.phone.value='0912345688';form.starts_at.value=${JSON.stringify(config.arrival)};form.party_size.value='4';form.requestSubmit(form.querySelector('[data-details-submit]'));})()`);
 await wait(()=>js("document.readyState==='complete'&&Boolean(document.querySelector('[data-preorder-question]'))"));
 await metrics(1440,1050);await capture('guest-preorder-question-desktop');await metrics(390,844);await capture('guest-preorder-question-mobile');
 await assert("document.body.textContent.includes('Bạn có muốn đặt món trước không?')",'Ask about preorder only after entering booking details');

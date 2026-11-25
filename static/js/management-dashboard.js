@@ -5,17 +5,20 @@
     const data=JSON.parse(source.textContent),svg=document.querySelector('[data-dashboard-chart]');
     const node=(tag,attrs={},text)=>{const n=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(text!==undefined)n.textContent=text;return n;};
     const revenueMax=Math.max(1000000,...data.revenue),orderMax=Math.max(1,...data.orders);
+    const revenueMin=Math.min(0,...data.revenue),revenueSpan=revenueMax-revenueMin;
     const width=620,height=155,left=48,top=20,step=width/data.labels.length;
+    const revenueY=value=>top+height-(value-revenueMin)/revenueSpan*height;
+    const zeroY=revenueY(0);
     for(let i=0;i<=4;i++){
         const y=top+height-height*i/4;
         svg.append(node('line',{x1:left,y1:y,x2:left+width,y2:y,stroke:'var(--cqd-chart-grid,#e0e8f2)','stroke-width':.7}));
-        svg.append(node('text',{x:left-8,y:y+3,'text-anchor':'end',fill:'var(--cqd-chart-axis,#7b90aa)','font-size':9},(revenueMax*i/4/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})));
+        svg.append(node('text',{x:left-8,y:y+3,'text-anchor':'end',fill:'var(--cqd-chart-axis,#7b90aa)','font-size':9},((revenueMin+revenueSpan*i/4)/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})));
         if(data.show_orders)svg.append(node('text',{x:left+width+9,y:y+3,fill:'var(--cqd-chart-orders,#1498ac)','font-size':9},(orderMax*i/4).toLocaleString('vi-VN',{maximumFractionDigits:1})));
     }
     const points=[];
     data.labels.forEach((label,i)=>{
-        const x=left+step*(i+.5),h=data.revenue[i]/revenueMax*height;
-        const bar=node('rect',{x:x-step*.21,y:top+height-h,width:Math.max(2,step*.42),height:Math.max(h,.8),rx:3,fill:'var(--cqd-chart-revenue,#2563eb)'});
+        const x=left+step*(i+.5),yRevenue=revenueY(data.revenue[i]);
+        const bar=node('rect',{x:x-step*.21,y:Math.min(zeroY,yRevenue),width:Math.max(2,step*.42),height:Math.max(Math.abs(zeroY-yRevenue),.8),rx:3,fill:data.revenue[i]<0?'var(--bs-danger,#dc3545)':'var(--cqd-chart-revenue,#2563eb)'});
         bar.append(node('title',{},`${label}: ${data.revenue[i].toLocaleString('vi-VN')}đ · ${data.orders[i]} đơn`));svg.append(bar);
         const y=top+height-data.orders[i]/orderMax*height;points.push([x,y]);
         if(data.labels.length<=14||i%5===0||i===data.labels.length-1)svg.append(node('text',{x,y:top+height+22,'text-anchor':'middle',fill:'var(--cqd-chart-axis,#7b90aa)','font-size':9},label));

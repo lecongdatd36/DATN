@@ -146,7 +146,7 @@ def save_reservation(request,form):
             row=services.create_request(full_name=data["full_name"],phone=data["phone"],starts_at=data["starts_at"],party_size=data["party_size"],
                 duration_minutes=data.get("duration_minutes") or form.default_minutes,mode=data["mode"],items=form.selected_items(),
                 request_key=data["request_key"],source_digest=salted_hmac("reservation.source",request.session.session_key,algorithm="sha256").hexdigest(),
-                area_id=data["area"].pk if data["area"] else None,note=data["note"])
+                area_id=data["area"].pk if data["area"] else None,note=data["note"],seating_need=data.get("seating_need", "STANDARD"))
         except ValidationError as error:
             form.add_error(None,error)
         else:
@@ -205,8 +205,12 @@ def review_context(form,policy):
             combo_rows.append({**row,"count":quantity,"line_total":row["combo"].price*quantity,
                 "item_note":form.cleaned_data.get(row["note"].name,"")})
     total+=sum(row["line_total"] for row in combo_rows)
+    quote = services.deposit_quote(policy=policy, party_size=form.cleaned_data.get("party_size", 1),
+        mode=form.cleaned_data.get("mode", "TABLE"), subtotal=total, seating_need=form.cleaned_data.get("seating_need", "STANDARD"))
     return {"form":form,"policy":policy,"selected_rows":rows,"total":total,"step":"review","agree_checked":bool(form.cleaned_data.get("agree")),
-        "details":form.cleaned_data,"selected_combos":combo_rows,"mode_label":dict(Reservation.Mode.choices).get(form.cleaned_data.get("mode"),"")}
+        "details":form.cleaned_data,"selected_combos":combo_rows,"deposit_quote":quote,
+        "seating_need_label":dict(Reservation._meta.get_field("seating_need").choices).get(form.cleaned_data.get("seating_need", "STANDARD")),
+        "mode_label":dict(Reservation.Mode.choices).get(form.cleaned_data.get("mode"),"")}
 
 
 @never_cache
@@ -367,6 +371,8 @@ def manage_detail(request,pk):
             elif action=="receive":
                 order=services.receive(actor=request.user,reservation_id=pk,revision=revision,accept_prices=request.POST.get("accept_prices")=="yes")
                 return redirect(reverse("sales:workspace")+f"?order={order.pk}")
+            elif action=="waive_deposit":
+                services.waive_deposit(actor=request.user,reservation_id=pk,revision=revision,reason=request.POST.get("reason",""))
             elif action=="amend":
                 if not form.is_valid():
                     return render(request,"reservations/manage_detail.html",{"reservation":row,"form":form})
@@ -389,6 +395,7 @@ def manage_detail(request,pk):
             messages.success(request,_("Đã lưu xử lý yêu cầu."))
         return redirect("online_reservations:manage_detail",pk=pk)
     return render(request,"reservations/manage_detail.html",{"reservation":row,"form":form,
+        "can_waive_deposit": can_manage_accounts(request.user) and row.deposit_required > 0 and row.status in ("WAITING", "REVIEW", "OFFER") and not row.received and not row.deposits.filter(status="PENDING").exists(),
         "archived_items":PreorderItem._base_manager.filter(reservation=row,is_active=False)})
 
 

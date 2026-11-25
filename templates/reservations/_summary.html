@@ -7,13 +7,16 @@
     <div><span>{% translate "Trạng thái" %}</span><strong>{{ reservation.get_status_display|public_text }}</strong></div>
     <div><span>{% translate "Khách / liên hệ" %}</span><strong>{{ reservation.full_name }} · {{ reservation.phone }}</strong></div>
     <div><span>{% translate "Giờ đến" %}</span><strong>{{ reservation.starts_at|date:'d/m/Y H:i' }} · {{ reservation.party_size }} {% translate "khách" %}</strong></div>
+    <div><span>{% translate "Nhu cầu bố trí bàn" %}</span><strong>{{ reservation.get_seating_need_display }}</strong></div>
     {% if reservation.booking %}<div><span>{% translate "Bàn đã giữ" %}</span><strong>{{ reservation.booking.table.code }}</strong></div>{% endif %}
     {% if reservation.prep_starts_at %}<div><span>{% translate "Bắt đầu chuẩn bị" %}</span><strong>{{ reservation.prep_starts_at|date:'d/m/Y H:i' }}</strong></div><div><span>{% translate "Sẵn sàng theo cam kết" %}</span><strong>{{ reservation.ready_by|date:'d/m/Y H:i' }}</strong></div>{% endif %}
     {% if preorder_items %}<div><span>{% translate "Tiền món" %} {% if reservation.mode == 'TABLE' %}{% translate "dự kiến" %}{% else %}{% translate "đã chốt" %}{% endif %}</span><strong>{{ reservation.subtotal|dong }}{% translate "đ" %}</strong></div>{% endif %}
-    <div><span>{% translate "Cọc yêu cầu" %}</span><strong>{{ reservation.deposit_required|dong }}{% translate "đ" %}</strong></div>
+    <div><span>{% translate "Cọc yêu cầu" %}</span><strong>{% if reservation.deposit_waived_by_id %}{% translate "Được nhà hàng miễn cọc" %}{% elif reservation.deposit_required %}{{ reservation.deposit_required|dong }}{% translate "đ" %}{% else %}{% translate "Không yêu cầu cọc" %}{% endif %}</strong></div>
+    {% if reservation.deposit_required or reservation.received %}
     <div><span>{% translate "Cọc đã nhận" %}</span><strong>{{ reservation.received|dong }}{% translate "đ" %}</strong></div>
     <div><span>{% translate "Đã hoàn / đã khấu trừ" %}</span><strong>{{ reservation.refunded|dong }}{% translate "đ /" %} {{ reservation.allocated|dong }}{% translate "đ" %}</strong></div>
     <div><span>{% translate "Số dư cọc" %}</span><strong>{{ reservation.balance|dong }}{% translate "đ" %}</strong></div>
+    {% endif %}
     {% if reservation.free_cancel_until %}<div><span>{% translate "Hạn hủy miễn phí" %}</span><strong>{{ reservation.free_cancel_until|date:'d/m/Y H:i' }}</strong></div>{% endif %}
 </div>
 {% if preorder_items and reservation.status == 'CONFIRMED' %}

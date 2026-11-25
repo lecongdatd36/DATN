@@ -1,0 +1,34 @@
+# Deploy the complete SQL Server integration from master.
+# Existing services need the same values in Dashboard unless managed by Blueprint.
+services:
+  - type: web
+    name: qlnh-web
+    runtime: python
+    region: oregon
+    repo: https://github.com/lecongdatd36/DATN
+    branch: master
+    buildCommand: bash build.sh
+    startCommand: bash start.sh
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: QLNH.sqlserver_settings
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        sync: false
+      - key: SQLSERVER_HOST
+        value: sql5106.site4now.net
+      - key: SQLSERVER_PORT
+        value: "1433"
+      - key: SQLSERVER_DB
+        value: db_ad182b_comque
+      - key: SQLSERVER_USER
+        value: db_ad182b_comque_admin
+      - key: SQLSERVER_PASSWORD
+        sync: false
+      - key: SQLSERVER_EXTRA_PARAMS
+        value: Encrypt=yes;TrustServerCertificate=no
+      - key: ENABLE_FACE_ATTENDANCE
+        value: "0"
+      - key: WEB_CONCURRENCY
+        value: "2"

@@ -1,0 +1,2 @@
+# Render executes these scripts with Bash on Linux.
+*.sh text eol=lf

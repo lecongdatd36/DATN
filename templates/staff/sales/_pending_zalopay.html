@@ -1,0 +1,6 @@
+<div class="{% if mobile %}m-card{% else %}alert alert-info{% endif %}" role="status" data-zalopay-pending>
+    <strong>{% if zalopay_pending_expired %}ZaloPay đã hết hạn mở cổng · Chờ xác minh{% else %}ZaloPay đang chờ kết quả{% endif %}</strong>
+    <p class="{% if mobile %}m-help{% else %}small mt-2{% endif %}">{% if zalopay_pending_expired %}Hạn mở cổng: {{ zalopay_pending.expires_at|date:'H:i, d/m/Y' }}. Chưa có kết quả cuối cùng từ ZaloPay. Kiểm tra lại hoặc liên hệ người quản lý để đối soát; chưa thu thêm tiền cho đơn này.{% else %}Giao dịch đã được tạo. Mở lại để tiếp tục thanh toán hoặc kiểm tra kết quả, không tạo khoản thu mới.{% endif %}</p>
+    <a class="{% if mobile %}m-button full{% else %}btn btn-primary{% endif %}" href="{% url 'zalopay:result' zalopay_pending.token %}"{% if mobile %} data-native-payment-link{% endif %}>{% if zalopay_pending_expired %}Kiểm tra giao dịch ZaloPay{% else %}Tiếp tục / Kiểm tra ZaloPay{% endif %} →</a>
+    {% if zalopay_pending_expired %}{% include 'staff/sales/_change_zalopay_method.html' with transaction=zalopay_pending %}{% endif %}
+</div>

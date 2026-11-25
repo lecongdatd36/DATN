@@ -1,0 +1,2 @@
+-r requirements.txt
+# SQL Server dependencies are included in the default deployment requirements.

@@ -64,10 +64,17 @@ def payment_destination(row, request):
 
 def serialize(row, request=None):
     return_url, auto_return = payment_destination(row, request) if request else ('', False)
+    pending = row.status == 'PENDING'
+    expired = pending and row.expires_at <= timezone.now()
     return {"app_trans_id": row.app_trans_id, "amount": str(row.amount), "status": row.status,
-        "status_label": _(row.get_status_display()), "sandbox": True, "message": row.last_error,
+        "status_label": _("Hết hạn mở cổng · Chờ xác minh") if expired else _(row.get_status_display()),
+        "sandbox": True,
+        "message": _("Đã hết thời gian mở cổng thanh toán. ZaloPay chưa trả kết quả cuối cùng. Kiểm tra lại giao dịch hoặc liên hệ người quản lý để đối soát; chưa thu thêm tiền cho đơn này.") if expired else row.last_error,
+        "checkout_expired": expired, "auto_poll": pending and not expired,
+        "expires_at": row.expires_at.isoformat(),
+        "can_change_method": bool(expired and row.order_payment_id and request and has_order_permission(request.user, 'collect_payment')),
         "return_url": return_url, "auto_return": auto_return,
-        "order_url": row.order_url if row.status == "PENDING" and row.expires_at > timezone.now() else "",
+        "order_url": row.order_url if pending and not expired else "",
         "result_url": reverse("zalopay:result", args=[row.token]),
         "query_url": reverse("zalopay:query", args=[row.token]),
         "state_url": reverse("zalopay:state", args=[row.token])}
@@ -170,3 +177,30 @@ def query(request, token):
     except (ValidationError, ImproperlyConfigured, zalopay.GatewayUnavailable):
         return _private(JsonResponse({"error": "Chưa xác minh được giao dịch. Giữ mã hiện tại và thử truy vấn lại sau."}, status=503))
     return _private(JsonResponse(serialize(row, request)))
+
+
+@login_required
+@never_cache
+@require_POST
+def change_method(request, token):
+    if not has_order_permission(request.user, 'collect_payment'):
+        raise PermissionDenied
+    get_object_or_404(ZaloPayTransaction, token=token)
+    try:
+        row = zalopay_services.abandon_order_payment(actor=request.user, token=token,
+            reason=request.POST.get('reason'), confirm_unpaid=request.POST.get('confirm_unpaid') == 'yes')
+    except (ValidationError, ImproperlyConfigured, zalopay.GatewayUnavailable) as error:
+        message = ' '.join(error.messages) if isinstance(error, ValidationError) else str(error)
+        messages.error(request, message)
+        return _private(redirect('zalopay:result', token=token))
+    target, _ = payment_destination(row, request)
+    if row.status in ('ABANDONED', 'FAILED'):
+        messages.success(request, 'Đã mở lại lựa chọn thanh toán. Chọn tiền mặt, chuyển khoản hoặc tạo giao dịch ZaloPay mới. Giao dịch cũ được giữ để đối soát.')
+        if is_mobile_request(request) or request.POST.get('return_mobile') == '1':
+            target = reverse('sales:mobile')+'?'+urlencode({'page':'checkout','order':row.order_payment.order_id})
+    elif row.status == 'REVIEW':
+        messages.error(request, 'ZaloPay đã ghi nhận tiền, cần đối soát. Kiểm tra khoản nhận trước khi thu thêm.')
+        target = reverse('zalopay:result', args=[row.token])
+    else:
+        messages.success(request, 'ZaloPay vừa xác nhận thanh toán thành công. Hóa đơn đã được cập nhật.')
+    return _private(redirect(target))

@@ -1,3 +1,4 @@
+from core.db_locks import row_lock_options
 from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from uuid import UUID, uuid4
@@ -49,6 +50,14 @@ def _log(actor, order, action, description, actor_snapshot=""):
     )
 
 
+def _create_receipt(**values):
+    from .finance_services import current_shift
+    shift = current_shift(values.get("performed_by")) if values.get("method") != Payment.Method.DEPOSIT else None
+    if values.get("method") == Payment.Method.CASH and getattr(settings, "CASH_SHIFT_REQUIRED", False) and shift is None:
+        raise ValidationError("Mở ca thu ngân trước khi thu tiền mặt.")
+    return Payment.objects.create(cash_shift=shift, **values)
+
+
 def _save(actor, order, action, description):
     order.revision += 1
     order.save(update_fields=("status", "subtotal", "discount_amount", "total_amount", "revision", "updated_at"))
@@ -62,6 +71,8 @@ def _invoice_code_for(order):
 
 
 def _check_pending_zalopay(order):
+    if order.online_payments.filter(zalopay_transaction__status='REVIEW', zalopay_transaction__reconciliation__isnull=True).exists():
+        raise ValidationError('ZaloPay đã nhận tiền cần đối soát. Kiểm tra khoản nhận trước khi thu thêm.')
     if order.online_payments.filter(status=OnlinePayment.Status.PENDING, zalopay_transaction__isnull=False).exists():
         raise ValidationError("Hóa đơn đang chờ kết quả ZaloPay. Truy vấn giao dịch đó trước khi thu bằng phương thức khác.")
 
@@ -964,10 +975,10 @@ def _complete_payment(*, order, subtotal, discount_percent, discount_amount, tot
     from apps.reservations.services import allocate_deposit
     credit = allocate_deposit(order, invoice, total, expected=expected_deposit)
     if credit > 0:
-        Payment.objects.create(invoice=invoice, amount=credit, method=Payment.Method.DEPOSIT,
+        _create_receipt(invoice=invoice, amount=credit, method=Payment.Method.DEPOSIT,
             reference="Khấu trừ cọc đã nhận trước", performed_by=actor, actor_snapshot=actor_snapshot)
     if total - credit > 0:
-        Payment.objects.create(
+        _create_receipt(
             invoice=invoice,
             amount=total-credit,
             method=payment_method,
@@ -1088,7 +1099,7 @@ def process_vnpay_ipn(*, params):
     lock_seating_schedule()
     lock_menu()
     txn_ref = str(params.get("vnp_TxnRef", ""))
-    online_payment = OnlinePayment.objects.select_for_update(of=("self",)).select_related("order").filter(txn_ref=txn_ref, zalopay_transaction__isnull=True).first()
+    online_payment = OnlinePayment.objects.select_for_update(**row_lock_options()).select_related("order").filter(txn_ref=txn_ref, zalopay_transaction__isnull=True).first()
     if online_payment is None:
         return "01", "Order not found"
     if online_payment.status == OnlinePayment.Status.PAID:
@@ -1365,7 +1376,7 @@ def record_payment(*, actor, order_id, expected_revision, payment_method="CASH",
     if not hasattr(invoice, "deposit_allocation"):
         credit = allocate_deposit(order, invoice, max(Decimal(0),invoice.total-invoice.paid_amount))
         if credit:
-            Payment.objects.create(invoice=invoice,amount=credit,method=Payment.Method.DEPOSIT,reference="Khấu trừ cọc",performed_by=actor,actor_snapshot=actor.username)
+            _create_receipt(invoice=invoice,amount=credit,method=Payment.Method.DEPOSIT,reference="Khấu trừ cọc",performed_by=actor,actor_snapshot=actor.username)
             invoice.paid_amount += credit
     remaining = invoice.total - invoice.paid_amount
     if remaining <= 0:
@@ -1382,7 +1393,7 @@ def record_payment(*, actor, order_id, expected_revision, payment_method="CASH",
         raise ValidationError({"amount": f"Hóa đơn phải thanh toán đủ một lần: {remaining:.0f} đồng."})
     amount_decimal = remaining
 
-    payment = Payment.objects.create(
+    payment = _create_receipt(
         invoice=invoice,
         amount=amount_decimal,
         method=payment_method,
@@ -1469,7 +1480,7 @@ def _cancel_locked_order(*, actor, order, table, reason, now):
     if order.status == Order.Status.CANCELLED:
         raise ValidationError("Đơn đã được hủy trước đó.")
     invoice = Invoice.objects.select_for_update().filter(order=order).first()
-    if invoice is not None and invoice.paid_amount > 0:
+    if invoice is not None and invoice.paid_amount > invoice.refunded_amount:
         raise ValidationError("Đơn đã thu một phần. Cần xử lý hoàn tiền trước khi hủy bàn.")
 
     items = list(order.items.select_for_update().exclude(status=OrderItem.Status.CANCELLED))

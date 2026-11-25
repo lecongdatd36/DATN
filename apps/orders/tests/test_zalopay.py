@@ -13,7 +13,7 @@ from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 
 from apps.orders import services, zalopay, zalopay_services
-from apps.orders.models import Invoice, OnlinePayment, Order, Payment, ZaloPayTransaction
+from apps.orders.models import Invoice, OnlinePayment, Order, OrderActivityLog, Payment, ZaloPayTransaction
 from apps.reservations.models import DepositPayment
 from apps.reservations.tests import test_reservations as reservation_fixtures
 from . import test_integrated_flow as order_fixtures
@@ -157,6 +157,28 @@ class ZaloPayOrderTests(FakeGatewayMixin, TestCase):
         self.gateway.assert_not_called()
         self.assertFalse(Invoice.objects.exists())
 
+    def test_pending_order_has_resume_action_on_mobile_and_pos_without_new_payment(self):
+        row = self.create()
+        self.client.force_login(self.users['CASHIER'])
+        target = reverse('zalopay:result',args=[row.token])
+        for url,params in [(reverse('sales:mobile'),{'page':'checkout','order':self.order.pk}),
+                (reverse('sales:mobile'),{'page':'order','order':self.order.pk}),
+                (reverse('sales:workspace'),{'order':self.order.pk})]:
+            page=self.client.get(url,params)
+            self.assertContains(page,target)
+            self.assertNotContains(page,'data-native-payment>')
+        self.assertEqual(ZaloPayTransaction.objects.count(),1)
+        self.assertEqual(OnlinePayment.objects.count(),1)
+        self.assertFalse(Payment.objects.exists())
+        self.assertFalse(Invoice.objects.exists())
+
+    def test_waiter_does_not_receive_cashier_pending_payment_capability(self):
+        row = self.create()
+        self.client.force_login(self.users['WAITER'])
+        page=self.client.get(reverse('sales:mobile'),{'page':'order','order':self.order.pk})
+        self.assertNotContains(page,reverse('zalopay:result',args=[row.token]))
+        self.assertFalse(Payment.objects.exists())
+
     def test_verified_paid_return_goes_back_to_pos_with_stored_receipt(self):
         row = self.create()
         zalopay_services.process_callback(receipt(row))
@@ -236,6 +258,142 @@ class ZaloPayOrderTests(FakeGatewayMixin, TestCase):
         self.assertEqual(row.order_payment.status, "FAILED")
         self.assertEqual(self.order.status, "PAYMENT_REQUESTED")
         self.assertFalse(Invoice.objects.exists())
+
+    def test_expired_checkout_explains_pending_and_stops_automatic_polling(self):
+        row = self.create()
+        expired_at = row.created_at - timedelta(seconds=1)
+        ZaloPayTransaction.objects.filter(pk=row.pk).update(expires_at=expired_at)
+        self.client.force_login(self.users['CASHIER'])
+        self.gateway.reset_mock()
+        state = self.client.get(reverse('zalopay:state', args=[row.token])).json()
+        self.assertTrue(state['checkout_expired'])
+        self.assertFalse(state['auto_poll'])
+        self.assertEqual(state['order_url'], '')
+        self.assertEqual(state['status'], 'PENDING')
+        self.assertIn('Hết hạn mở cổng', state['status_label'])
+        self.assertIn('ZaloPay chưa trả kết quả cuối cùng', state['message'])
+        page = self.client.get(reverse('zalopay:result', args=[row.token]))
+        self.assertContains(page, 'data-auto-poll="false"')
+        self.assertContains(page, 'Hạn mở cổng thanh toán')
+        self.assertContains(page, 'Đã dừng kiểm tra tự động')
+        pos = self.client.get(reverse('sales:workspace'), {'order':self.order.pk})
+        self.assertContains(pos, 'ZaloPay đã hết hạn mở cổng')
+        self.gateway.assert_not_called()
+        self.gateway.return_value = response({'return_code':3, 'is_processing':True})
+        query = self.client.post(reverse('zalopay:query', args=[row.token]))
+        self.assertEqual(query.json()['status'], 'PENDING')
+        self.assertEqual(self.gateway.call_count, 1)
+        self.assertEqual(self.create(self.order).pk, row.pk)
+        self.assertEqual(self.gateway.call_count, 1)
+        self.assertFalse(Invoice.objects.exists())
+        self.assertFalse(Payment.objects.exists())
+
+    def test_verified_payment_after_checkout_expiry_still_settles_once(self):
+        row = self.create()
+        ZaloPayTransaction.objects.filter(pk=row.pk).update(expires_at=row.created_at-timedelta(seconds=1))
+        self.gateway.return_value = response({'return_code':1, 'amount':int(row.amount), 'zp_trans_id':261110000000998})
+        state = self.client.post(reverse('zalopay:query', args=[row.token])).json()
+        self.assertEqual(state['status'], 'PAID')
+        self.assertFalse(state['checkout_expired'])
+        self.assertFalse(state['auto_poll'])
+        self.assertEqual(Payment.objects.count(), 1)
+
+    def expired_payment(self):
+        row = self.create()
+        ZaloPayTransaction.objects.filter(pk=row.pk).update(expires_at=row.created_at-timedelta(seconds=1))
+        self.gateway.reset_mock()
+        self.gateway.return_value = response({'return_code':3, 'is_processing':True})
+        return row
+
+    def change_method(self, row):
+        return zalopay_services.abandon_order_payment(actor=self.users['CASHIER'], token=row.token,
+            reason='Khach chua thanh toan, chuyen tien mat', confirm_unpaid=True)
+
+    def test_changed_method_releases_order_and_preserves_audit_and_old_transaction(self):
+        row = self.expired_payment()
+        self.assertEqual(self.change_method(row).status, 'ABANDONED')
+        self.assertEqual(self.gateway.call_count, 1)
+        row.order_payment.refresh_from_db()
+        self.assertEqual(row.order_payment.status, 'CANCELLED')
+        self.assertEqual(self.change_method(row).status, 'ABANDONED')
+        self.assertEqual(self.gateway.call_count, 1)
+        self.assertEqual(OrderActivityLog.objects.filter(order=self.order, action='Đổi phương thức thanh toán').count(), 1)
+        self.assertEqual(ZaloPayTransaction.objects.count(), 1)
+        self.assertFalse(Invoice.objects.exists())
+        self.client.force_login(self.users['CASHIER'])
+        for url,params in [(reverse('sales:workspace'),{'order':self.order.pk}),
+                (reverse('sales:mobile'),{'page':'checkout','order':self.order.pk})]:
+            page=self.client.get(url,params)
+            self.assertNotContains(page,'data-zalopay-pending')
+            self.assertContains(page,'name="payment_method"')
+        invoice=services.process_payment(actor=self.users['CASHIER'],order_id=self.order.pk,payment_method='CASH')
+        self.assertEqual(invoice.status,'PAID')
+        self.assertEqual(Payment.objects.count(),1)
+
+    def assert_late_money_review(self, collect_cash):
+        row=self.expired_payment()
+        self.change_method(row)
+        if collect_cash:
+            services.process_payment(actor=self.users['CASHIER'],order_id=self.order.pk,payment_method='CASH')
+        for _ in range(2):
+            self.assertEqual(zalopay_services.process_callback(receipt(row))['return_code'],1)
+        row.refresh_from_db()
+        self.assertEqual(row.status,'REVIEW')
+        self.assertEqual(Payment.objects.count(),int(collect_cash))
+        self.assertEqual(OrderActivityLog.objects.filter(order=self.order,action='ZaloPay về muộn, cần đối soát').count(),1)
+        if not collect_cash:
+            with self.assertRaises(ValidationError):
+                services.process_payment(actor=self.users['CASHIER'],order_id=self.order.pk,payment_method='CASH')
+
+    def test_changed_method_then_late_money_before_collection_goes_to_review(self):
+        self.assert_late_money_review(False)
+
+    def test_changed_method_then_late_money_never_pays_the_order_twice(self):
+        self.assert_late_money_review(True)
+
+    def test_change_method_requires_expiry_acknowledgement_permission_and_valid_response(self):
+        row=self.create()
+        self.gateway.reset_mock()
+        with self.assertRaises(ValidationError): self.change_method(row)
+        self.gateway.assert_not_called()
+        ZaloPayTransaction.objects.filter(pk=row.pk).update(expires_at=row.created_at-timedelta(seconds=1))
+        with self.assertRaises(ValidationError):
+            zalopay_services.abandon_order_payment(actor=self.users['CASHIER'],token=row.token,reason='valid reason')
+        self.client.force_login(self.users['WAITER'])
+        self.assertEqual(self.client.post(reverse('zalopay:change_method',args=[row.token]),{'reason':'valid reason','confirm_unpaid':'yes'}).status_code,403)
+        self.gateway.side_effect=httpx.ReadTimeout('provider unavailable')
+        with self.assertRaises(zalopay.GatewayUnavailable): self.change_method(row)
+        row.refresh_from_db()
+        row.order_payment.refresh_from_db()
+        self.assertEqual(row.status,'PENDING')
+        self.assertEqual(row.order_payment.status,'PENDING')
+        self.assertFalse(Payment.objects.exists())
+
+    def test_change_method_queries_fresh_even_if_recently_queried_and_stops_if_paid(self):
+        row=self.expired_payment()
+        zalopay_services.query_transaction(row.token)
+        self.gateway.return_value=response({'return_code':1,'amount':int(row.amount),'zp_trans_id':261110000000997})
+        self.assertEqual(self.change_method(row).status,'PAID')
+        self.assertEqual(self.gateway.call_count,2)
+        self.assertEqual(Payment.objects.count(),1)
+        with self.assertRaises(ValidationError):
+            services.process_payment(actor=self.users['CASHIER'],order_id=self.order.pk,payment_method='CASH')
+
+    def test_change_method_requires_post_and_csrf_and_accepts_definitive_failure(self):
+        row=self.expired_payment()
+        client=Client(enforce_csrf_checks=True)
+        client.force_login(self.users['CASHIER'])
+        url=reverse('zalopay:change_method',args=[row.token])
+        data={'reason':'Customer has not paid','confirm_unpaid':'yes'}
+        self.assertEqual(client.get(url).status_code,405)
+        self.assertEqual(client.post(url,data).status_code,403)
+        self.gateway.assert_not_called()
+        self.client.force_login(self.users['CASHIER'])
+        self.gateway.return_value=response({'return_code':2,'is_processing':False})
+        self.assertRedirects(self.client.post(url,data),reverse('sales:workspace')+f'?order={self.order.pk}#sales-order',fetch_redirect_response=False)
+        row.refresh_from_db()
+        self.assertEqual(row.status,'FAILED')
+        self.assertFalse(Payment.objects.exists())
 
     def test_create_rejected_is_saved_as_failed(self):
         self.gateway.return_value = response({"return_code": 2})

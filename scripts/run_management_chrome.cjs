@@ -50,7 +50,12 @@ async function until(fn, timeout=10000) {
       await go(routes['accounts:login']+(next?'?next='+encodeURIComponent(next):''));
       assert(await evaluate(`document.querySelector('[data-mobile-login]').value === '${width<768?1:0}'`), `${role} ${width}px login detects device`);
       if(width<768) {
-        assert(await evaluate(`getComputedStyle(document.body).backgroundColor === 'rgb(255, 255, 255)' && getComputedStyle(document.querySelector('.cq-login-form .customer-button')).backgroundColor === 'rgb(200, 16, 46)'`), `${role} login uses shared white and red theme`);
+        assert(await evaluate(`(() => {
+          const palette = getComputedStyle(document.documentElement).getPropertyValue('--staff-primary-rgb').trim();
+          const primary = 'rgb(' + palette.split(',').map(value => value.trim()).join(', ') + ')';
+          return Boolean(palette) && getComputedStyle(document.body).backgroundColor === 'rgb(255, 255, 255)'
+            && getComputedStyle(document.querySelector('.cq-login-form .customer-button')).backgroundColor === primary;
+        })()`), `${role} login uses the shared staff palette on white`);
         if(role==='manager') await capture('login-mobile');
       }
       await evaluate(`document.querySelector('[name=username]').value=${JSON.stringify('browser-'+role)};document.querySelector('[name=password]').value='Browser-test-only-123';document.querySelector('form.cq-login-form').requestSubmit();`);
@@ -65,8 +70,16 @@ async function until(fn, timeout=10000) {
         assert(await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), `${name} ${width}px fits viewport`);
         if(width<768 || name.startsWith('mobile:')) {
           assert(await evaluate(`(() => {const rect=document.querySelector('.m-header, .admin-topbar').getBoundingClientRect();return rect.top === 0 && rect.height === 80;})()`), `${name} ${width}px shares 80px header without top gap`);
-          assert(await evaluate(`getComputedStyle(document.body).backgroundColor === 'rgb(255, 255, 255)'`), `${name} ${width}px uses white background`);
-          assert(await evaluate(`getComputedStyle(document.documentElement).getPropertyValue('--app-primary').trim() === '#c8102e'`), `${name} ${width}px shares red primary color`);
+          assert(await evaluate(`(() => {
+            const style = getComputedStyle(document.body);
+            return style.backgroundColor === 'rgb(255, 255, 255)'
+              || (document.body.classList.contains('staff-layout') && style.backgroundImage.includes('rgb(231, 240, 255)'));
+          })()`), `${name} ${width}px uses the current staff surface`);
+          assert(await evaluate(`(() => {
+            const style = getComputedStyle(document.documentElement);
+            const primary = style.getPropertyValue('--staff-primary').trim();
+            return Boolean(primary) && style.getPropertyValue('--app-primary').trim() === primary;
+          })()`), `${name} ${width}px shares the staff primary color`);
           const warm = await evaluate(`(() => {
             const matches=[];
             for(const el of document.querySelectorAll('body *')) {

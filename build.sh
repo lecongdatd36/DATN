@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 set -o errexit
+set -o nounset
+set -o pipefail
 
-pip install -r requirements.txt
+export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-QLNH.sqlserver_settings}"
+
+pip install -r requirements-sqlserver.txt
 if [ "${ENABLE_FACE_ATTENDANCE:-0}" = "1" ]; then
     pip install -r requirements-attendance.txt
     python scripts/setup_attendance_models.py --root "${ATTENDANCE_MODEL_ROOT:-artifacts/attendance/models}"
 fi
 python scripts/compile_translations.py
+python manage.py check
 python manage.py collectstatic --no-input
-python manage.py migrate
+python manage.py check_sqlserver_connection
+python manage.py migrate --no-input
 # Chat history and rate limits use a shared database cache. This is idempotent.
 python manage.py createcachetable qlnh_chatbot_cache

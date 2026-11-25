@@ -226,3 +226,30 @@ msgstr "Keep your payment reference. The result updates automatically; pay only 
 
 msgid "ZaloPay (chưa cấu hình)"
 msgstr "ZaloPay (not configured)"
+
+msgid "Đang kiểm tra…"
+msgstr "Checking…"
+
+msgid "Máy chủ phản hồi quá chậm. Giữ mã giao dịch và kiểm tra lại; không thanh toán thêm."
+msgstr "The server is taking too long. Keep your reference and check again; do not make another payment."
+
+msgid "Đổi phương thức thanh toán"
+msgstr "Change payment method"
+
+msgid "Hệ thống sẽ kiểm tra ZaloPay một lần nữa trước khi đổi. Giao dịch cũ vẫn được giữ để đối soát nếu tiền về muộn."
+msgstr "The system will check ZaloPay once more before switching. The previous transaction is kept for reconciliation if a payment arrives later."
+
+msgid "Lý do đổi phương thức"
+msgstr "Reason for changing payment method"
+
+msgid "Tôi đã kiểm tra và xác nhận chưa thu được tiền qua giao dịch ZaloPay này."
+msgstr "I have checked and confirmed that payment has not been received through this ZaloPay transaction."
+
+msgid "Kiểm tra và đổi phương thức"
+msgstr "Check and change method"
+
+msgid "Đã đổi phương thức thanh toán"
+msgstr "Payment method changed"
+
+msgid "Đã đổi phương thức thanh toán. Trở về bàn để chọn cách thanh toán khác."
+msgstr "The payment method has been changed. Return to the table to select another payment method."

@@ -11,6 +11,7 @@ from django.db.models import Count, Exists, Max, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
@@ -26,7 +27,7 @@ from core.http import conditional_json_response
 from core.permissions import can_manage_accounts
 from .forms import PromotionCodeForm
 from .models import (
-    Invoice, OnlinePayment, Order, OrderItem, PaymentRequest, PromotionCode,
+    Invoice, OnlinePayment, Order, OrderItem, PaymentRequest, PromotionCode, ZaloPayTransaction,
     QRCheckInRequest, QROrderRequest, QRServiceRequest,
 )
 from .permissions import has_order_permission
@@ -93,6 +94,11 @@ class SalesWorkspaceView(SalesAccessMixin, TemplateView):
         elif table_id:
             selected_order = active_orders.filter(table_id=table_id).order_by("-opened_at", "-pk").first()
         if selected_order:
+            if has_order_permission(self.request.user, 'collect_payment'):
+                context['zalopay_pending'] = ZaloPayTransaction.objects.filter(
+                    order_payment__order=selected_order, status='PENDING').first()
+                pending = context['zalopay_pending']
+                context['zalopay_pending_expired'] = bool(pending and pending.expires_at <= timezone.now())
             preview = services.payment_preview(selected_order)
             selected_order.payment_subtotal = preview["subtotal"]
             selected_order.payment_tier = preview["tier"]

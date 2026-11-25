@@ -23,11 +23,12 @@ function setup() {
   const handlers = {}, timers = new Map(), requests = [], clicks = [];
   let sequence = 0;
   const document = {
+    documentElement: {lang: 'vi'},
     addEventListener(name, callback) { (handlers[name] ||= []).push(callback); },
     querySelectorAll(selector) { return selector === '[data-qr-dish]' ? cards : [widget]; },
     createElement(tag) { return new Element(tag); },
   };
-  runInNewContext(source, {document, location: {origin: 'http://localhost'}, URL, Intl, AbortController,
+  runInNewContext(source, {window: {}, document, location: {origin: 'http://localhost'}, URL, Intl, AbortController,
     setTimeout(fn, delay) { const id = ++sequence; timers.set(id, {fn, delay}); return id; },
     clearTimeout(id) { timers.delete(id); },
     fetch(url, options) { return new Promise((resolve, reject) => requests.push({url, options, resolve, reject})); },

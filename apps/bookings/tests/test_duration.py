@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, ProgrammingError, connection, transaction
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -167,7 +167,10 @@ class BookingDurationTests(TestCase):
             {"default_duration_minutes": 0}, {"default_duration_minutes": 1441},
             {"no_show_grace_minutes": 241}, {"id": 2},
         ):
-            with self.assertRaises(IntegrityError), transaction.atomic():
+            # SQL Server rejects changing an IDENTITY PK before evaluating the
+            # singleton CHECK; both paths must leave the row unchanged.
+            expected = ProgrammingError if "id" in changes and connection.vendor == "microsoft" else IntegrityError
+            with self.assertRaises(expected), transaction.atomic():
                 BookingSettings.objects.filter(pk=1).update(**changes)
 
     def test_overrun_alert_links_next_booking_without_auto_completion(self):

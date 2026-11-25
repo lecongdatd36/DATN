@@ -1,0 +1,6 @@
+{% load i18n %}
+<form class="cq-language-switch" action="{% url 'set_language' %}" method="post" aria-label="{% translate 'Ngôn ngữ' %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit" name="language" value="vi" lang="vi" aria-label="Tiếng Việt" aria-pressed="{% if LANGUAGE_CODE == 'vi' %}true{% else %}false{% endif %}">VI</button><span aria-hidden="true">/</span><button type="submit" name="language" value="en" lang="en" aria-label="English" aria-pressed="{% if LANGUAGE_CODE == 'en' %}true{% else %}false{% endif %}">EN</button>
+</form>

@@ -13,12 +13,12 @@ def transaction_rows(*, start_at=None, end_at=None):
     unfinished = (
         Order.objects.exclude(status=Order.Status.CANCELLED)
         .annotate(basket_root=Coalesce("split_root_id", "pk"))
-        .exclude(status=Order.Status.COMPLETED, invoice__status=Invoice.Status.PAID,
+        .exclude(status=Order.Status.COMPLETED, invoice__status=Invoice.Status.PAID, invoice__refunded_amount=0,
                  invoice__closed_at__isnull=False)
         .order_by().values("basket_root")
     )
     settled = (
-        Order.objects.filter(status=Order.Status.COMPLETED, invoice__status=Invoice.Status.PAID,
+        Order.objects.filter(status=Order.Status.COMPLETED, invoice__status=Invoice.Status.PAID, invoice__refunded_amount=0,
                              invoice__closed_at__isnull=False)
         .annotate(basket_root=Coalesce("split_root_id", "pk"))
         .exclude(basket_root__in=Subquery(unfinished))

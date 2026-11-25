@@ -6,6 +6,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ai_tools.apriori import run_experiment
+from ai_tools.quality import assess_model_quality
 
 
 def main():
@@ -15,14 +16,18 @@ def main():
     parser.add_argument("--min-support", type=float, default=0.04)
     parser.add_argument("--min-confidence", type=float, default=0.3)
     parser.add_argument("--min-lift", type=float, default=1.05)
+    parser.add_argument("--provenance", choices=("unverified", "test", "confirmed_business"), default="unverified")
     args = parser.parse_args()
     try:
         model = run_experiment(args.csv, args.output, min_support=args.min_support,
                                min_confidence=args.min_confidence, min_lift=args.min_lift)
+        model["data_provenance"] = {"kind": args.provenance, "note": "Phân loại do người vận hành xác nhận; không suy ra từ nhãn application_export."}
+        model["quality_gate"] = assess_model_quality(model)
+        (args.output / "apriori_model.json").write_text(json.dumps(model, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
     except (ValueError, OSError) as error:
         parser.error(str(error))
     print(json.dumps({"data_source": model["data_source"], "training": model["training"],
-                      "evaluation": model["evaluation"]}, ensure_ascii=False, indent=2))
+                      "evaluation": model["evaluation"], "quality_gate": model["quality_gate"]}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

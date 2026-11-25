@@ -16,6 +16,7 @@
     </div>
     {% endif %}
     {% if invoice or order.status == 'PAYMENT_REQUESTED' %}
+    {% if invoice.refunded_amount %}<div class="alert alert-info">Hóa đơn đã hoàn {{ invoice.refunded_amount|dong }} đ. Giá trị hóa đơn và phiếu thu gốc được giữ để tra cứu. {% if access.can_collect_payments %}<a href="{% url 'orders:refunds' %}?q={{ invoice.invoice_code|urlencode }}">Xem phiếu hoàn</a>{% endif %}</div>{% endif %}
     <div class="project-card p-3 mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><h2 class="h5 mb-0">Hóa đơn{% if invoice %} {{ invoice.invoice_code }}{% endif %}</h2><div class="d-flex gap-2">{% if invoice.status == 'PAID' and access.can_collect_payments %}<a class="btn btn-sm btn-outline-primary" href="{% url 'sales:invoice_print' invoice.pk %}" target="_blank" rel="noopener">In hóa đơn</a>{% endif %}{% if invoice %}<span class="badge {% if invoice.status == 'PAID' %}text-bg-success{% else %}text-bg-warning{% endif %}">{{ invoice.get_status_display }}</span>{% endif %}</div></div>
         <div class="row g-3">

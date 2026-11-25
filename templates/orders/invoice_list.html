@@ -5,7 +5,7 @@
 <div class="container-fluid px-3 px-md-4 pb-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div><p class="eyebrow mb-1">VẬN HÀNH</p><h1 class="h2 mb-0">Hóa đơn</h1></div>
-        <a class="btn btn-outline-secondary" href="{% url 'orders:list' %}">Đơn hàng</a>
+        <div class="d-flex gap-2">{% if access.can_collect_payments %}<a class="btn btn-outline-primary" href="{% url 'orders:refunds' %}">Hoàn tiền / đối soát</a>{% endif %}<a class="btn btn-outline-secondary" href="{% url 'orders:list' %}">Đơn hàng</a></div>
     </div>
     <form class="project-card p-3 mb-3" method="get">
         <div class="row g-2 align-items-end">
@@ -22,7 +22,7 @@
             <td>{{ invoice.customer.full_name|default:'Khách vãng lai' }}{% if invoice.customer %}<small class="d-block text-secondary">{{ invoice.customer.phone }}</small>{% endif %}</td>
             <td><span class="badge {% if invoice.status == 'PAID' %}text-bg-success{% elif invoice.status == 'CANCELLED' %}text-bg-secondary{% else %}text-bg-warning{% endif %}">{{ invoice.get_status_display }}</span></td>
             <td>{% for payment in invoice.payments.all %}{{ payment.get_method_display }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
-            <td class="text-end fw-semibold text-nowrap">{{ invoice.total_amount|default:invoice.total|dong }} đ</td>
+            <td class="text-end fw-semibold text-nowrap">{{ invoice.total_amount|default:invoice.total|dong }} đ{% if invoice.refunded_amount %}<small class="d-block text-secondary">Đã hoàn {{ invoice.refunded_amount|dong }} đ</small>{% endif %}</td>
         </tr>{% empty %}<tr><td class="text-center py-5 text-secondary" colspan="6">Không có hóa đơn phù hợp.</td></tr>{% endfor %}</tbody>
     </table></div></div>
     {% include 'includes/pagination.html' %}

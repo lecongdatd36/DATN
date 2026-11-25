@@ -1,5 +1,9 @@
 # QLNH — Ứng dụng quản lý nhà hàng tích hợp AI
 
+**SQL Server và Render:** ứng dụng mặc định dùng `QLNH.sqlserver_settings`. Local cài `requirements-sqlserver.txt`, cấu hình `.env.sqlserver`, rồi chạy `python manage.py runserver`. Service `qlnh-web` (Python 3/Oregon) kết nối SQL Server 2022 SmarterASP.NET bằng biến môi trường, build `bash build.sh`, start `bash start.sh`. Deploy toàn bộ bản tích hợp SQL Server trên `master`. Xem [hướng dẫn Render](docs/deploy-render.md) và [chuyển dữ liệu/kiểm thử SQL Server](docs/sqlserver.md). Các phần PostgreSQL bên dưới mô tả cấu hình gốc, vẫn có thể chọn bằng `QLNH.settings`.
+
+**Nâng cấp 15/11/2026:** đã bổ sung [ca thu ngân, hoàn tiền hóa đơn và đối soát ZaloPay](docs/financial-operations.md), [giới hạn truy cập, HTTPS và sao lưu/kiểm chứng phục hồi](docs/operations-security-backup.md), cùng [đánh giá chất lượng và công bố gợi ý AI](docs/ai-quality-publication.md). Bộ kiểm thử mặc định đã gồm kho, báo cáo và các kiểm tra AI không cần thư viện huấn luyện; CI dùng PostgreSQL riêng.
+
 **Đặt bàn online, món trước và cọc:** khách chọn đến mới chế biến hoặc yêu cầu chuẩn bị theo giờ, nhận liên kết riêng, trả cọc VNPAY; nhà hàng chốt yêu cầu, bếp chuẩn bị trước, nhận khách và khấu trừ cọc vào hóa đơn. Trang khách `/reservations/online/`, quản lý `/reservations/online/quan-ly/`. Xem [hướng dẫn cấu hình, quy trình và giới hạn](docs/online-reservations.md); cần cấu hình merchant/secret sandbox trước khi trả cọc trực tiếp.
 
 Phân hệ **Ca làm & chấm công khuôn mặt**: tạo ca, phân/công bố lịch, trang chấm công chung, điều chỉnh/duyệt và tổng hợp công. Trang cố định `/cham-cong/diem-cham-cong/` nhận diện mọi nhân viên đã đăng ký, không cần đăng nhập hoặc kích hoạt thiết bị; vẫn cần camera và lịch ca phù hợp. Xem [hướng dẫn cài đặt và giới hạn nhận diện](docs/attendance-kiosk.md). Quản lý `/cham-cong/`, lịch nhân viên `/cham-cong/lich-cua-toi/`.

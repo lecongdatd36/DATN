@@ -5,6 +5,8 @@
 <section class="container-fluid px-3 px-md-4 pb-5">
     <p class="eyebrow mb-2">ĐẶT BÀN</p><h1 class="h2 mb-3">{% if booking %}Sửa {{ booking.booking_code }}{% else %}Thêm đặt bàn{% endif %}</h1>
     <p class="text-secondary">Nhập số điện thoại khách, giờ đến, số khách và chọn bàn. Hệ thống tự tính thời gian dự kiến theo giờ Việt Nam.</p>
+    <p class="small text-secondary">Đặt qua nhân viên áp dụng cùng chính sách cọc như đặt online. Lịch thuộc diện cọc sẽ có liên kết thanh toán; chỉ quản lý được miễn cọc và phải ghi lý do.</p>
+    <div class="d-flex flex-wrap gap-3 mb-4">{% if access.can_add_customers %}<a href="{% url 'customers:customer_create' %}" target="_blank" rel="noopener">Thêm khách hàng mới (tab mới)</a>{% endif %}<a href="{% url 'bookings:availability' %}" target="_blank" rel="noopener">Tìm bàn phù hợp (tab mới)</a></div>
     {% if booking and not booking.can_edit %}<div class="alert alert-warning">Lịch này không còn được sửa thông tin. <a href="{{ booking.get_absolute_url }}">Trở về chi tiết</a>.</div>
     {% else %}
     <div class="row"><div class="col-lg-8 col-xl-6"><form method="post" class="project-card p-3 p-md-4" novalidate data-booking-form data-customer-url="{% url 'bookings:customer_lookup' %}" data-tables-url="{% url 'bookings:table_options' %}" data-booking-id="{{ booking.pk|default:'' }}" data-can-add-customer="{{ access.can_add_customers|yesno:'true,false' }}">

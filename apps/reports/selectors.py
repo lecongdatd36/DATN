@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from apps.bookings.models import Booking
 from apps.customers.models import Customer
-from apps.orders.models import Invoice, OrderItem, Payment
+from apps.orders.models import Invoice, InvoiceRefund, OrderItem, Payment, PaymentReconciliation, ZaloPayTransaction
 from apps.inventory.models import PurchaseReceipt, PurchaseReceiptLine, WasteRecord
 
 
@@ -28,6 +28,11 @@ def report_data(start_at, end_at):
         invoice_count=Count("pk"),
         average_bill=Coalesce(Avg("total"), Decimal("0"), output_field=MONEY_FIELD),
     )
+    completed_refunds = InvoiceRefund.objects.filter(status="COMPLETED", completed_at__gte=start_at, completed_at__lt=end_at)
+    invoice_refunded = completed_refunds.aggregate(total=_money_sum("amount"))["total"]
+    revenue_refunded = completed_refunds.filter(invoice__status=Invoice.Status.PAID).aggregate(total=_money_sum("amount"))["total"]
+    invoice_summary["gross_revenue"] = invoice_summary["revenue"]
+    invoice_summary["revenue"] -= revenue_refunded
     cost_of_goods = (
         OrderItem.objects.filter(
             order__invoice__status=Invoice.Status.PAID,
@@ -59,7 +64,9 @@ def report_data(start_at, end_at):
     deposit_collected = DepositPayment.objects.filter(status__in=("PAID","REVIEW"),paid_at__gte=start_at,paid_at__lt=end_at).aggregate(total=_money_sum("amount"))["total"]
     deposit_refunded = DepositRefund.objects.filter(status="COMPLETED",completed_at__gte=start_at,completed_at__lt=end_at).aggregate(total=_money_sum("amount"))["total"]
     settlement_collected = collected
-    collected += deposit_collected - deposit_refunded
+    review_received = ZaloPayTransaction.objects.filter(order_payment__isnull=False, status="REVIEW", paid_at__gte=start_at, paid_at__lt=end_at).exclude(reconciliation__outcome="MATCHED").aggregate(total=_money_sum("amount"))["total"]
+    review_refunded = PaymentReconciliation.objects.filter(outcome="REFUNDED", resolved_at__gte=start_at, resolved_at__lt=end_at).aggregate(total=_money_sum("amount"))["total"]
+    collected += deposit_collected - deposit_refunded - invoice_refunded + review_received - review_refunded
     preorder_waste = PreorderItem.objects.filter(status="CANCELLED",cancelled_at__gte=start_at,cancelled_at__lt=end_at,
         inventory_deducted_at__isnull=False,inventory_returned_at__isnull=True).aggregate(total=Coalesce(
             Sum(ExpressionWrapper(F("quantity")*F("unit_cost"),output_field=MONEY_FIELD)),Decimal(0),output_field=MONEY_FIELD))["total"]
@@ -100,7 +107,7 @@ def report_data(start_at, end_at):
     )
     for row in payment_methods:
         row["label"] = method_labels.get(row["method"], row["method"])
-        row["percent"] = float(row["total"] / collected * 100) if collected else 0
+        row["percent"] = float(row["total"] / settlement_collected * 100) if settlement_collected else 0
 
     item_revenue = ExpressionWrapper(F("unit_price") * F("quantity"), output_field=MONEY_FIELD)
     top_dishes = list(
@@ -143,6 +150,10 @@ def report_data(start_at, end_at):
         "collected": collected,
         "deposit_collected": deposit_collected,
         "deposit_refunded": deposit_refunded,
+        "invoice_refunded": invoice_refunded,
+        "revenue_refunded": revenue_refunded,
+        "review_received": review_received,
+        "review_refunded": review_refunded,
         "settlement_collected": settlement_collected,
         "preorder_waste_cost": preorder_waste,
         "outstanding": outstanding,

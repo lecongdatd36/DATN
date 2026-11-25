@@ -1,3 +1,4 @@
+from core.db_locks import row_lock_options
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -83,7 +84,7 @@ def expire_overdue_bookings(*, at=None):
     grace_minutes = BookingSettings.objects.only("no_show_grace_minutes").get(pk=1).no_show_grace_minutes
     cutoff = now - timedelta(minutes=grace_minutes)
     expired = list(
-        Booking.objects.select_for_update(of=("self",))
+        Booking.objects.select_for_update(**row_lock_options())
         .filter(
             status__in=(Booking.Status.PENDING, Booking.Status.CONFIRMED),
             starts_at__lte=cutoff,
@@ -173,7 +174,7 @@ def _log(actor, booking, action, description):
 
 
 @transaction.atomic
-def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends_at=None, duration_minutes=None, booking_id=None, expected_revision=None, customer_name=""):
+def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends_at=None, duration_minutes=None, booking_id=None, expected_revision=None, customer_name="", seating_need="STANDARD", waiver_reason=""):
     actor = _lock_actor(actor)
     booking = Booking.objects.select_for_update().get(pk=booking_id) if booking_id is not None else Booking()
     created = booking_id is None
@@ -241,11 +242,14 @@ def save_booking(*, actor, customer_phone, table_id, party_size, starts_at, ends
         booking.save()
         _reconcile_table_statuses(at=now, table_ids=(old_table_id, table.pk))
         _log(actor, booking, "Tạo đặt bàn" if created else "Sửa đặt bàn", (f"Trước: {before}\nSau: " if before else "") + _snapshot(booking))
+    if created or old != new or seating_need != "STANDARD" or waiver_reason:
+        from apps.reservations.services import link_booking_deposit
+        link_booking_deposit(booking=booking, actor=actor, seating_need=seating_need, waiver_reason=waiver_reason)
     return booking
 
 
 @transaction.atomic
-def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=None, duration_minutes=None, note=""):
+def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=None, duration_minutes=None, note="", seating_need="STANDARD", apply_deposit_policy=True):
     """Create a pending booking from the anonymous customer web flow."""
     lock_seating_schedule()
     try:
@@ -301,6 +305,9 @@ def create_public_booking(*, full_name, phone, starts_at, party_size, area_id=No
     recommendation = recommendations[0]
     description += f" Đề xuất bàn hạng 1, điểm {recommendation.score}/100: {recommendation.reason}"
     _log(None, booking, "Khách tạo đặt bàn online", description)
+    if apply_deposit_policy:
+        from apps.reservations.services import link_booking_deposit
+        link_booking_deposit(booking=booking, seating_need=seating_need)
     return booking
 
 
@@ -352,7 +359,7 @@ def transition_booking(*, actor, booking_id, target, expected_status, expected_r
         if target in (Booking.Status.CANCELLED, Booking.Status.NO_SHOW):
             raise ValidationError("Xử lý hủy/không đến tại Đặt bàn online để đối soát cọc và món đã chuẩn bị.")
         if target in (Booking.Status.CONFIRMED, Booking.Status.SEATED) and online.status != "CONFIRMED":
-            raise ValidationError("Lịch online chưa nhận cọc hợp lệ hoặc còn cần đối soát.")
+            raise ValidationError("Lịch chưa hoàn tất yêu cầu cọc hoặc chưa được xác nhận.")
     if booking.status != expected_status or booking.revision != expected_revision:
         raise ValidationError("Lịch hoặc trạng thái đã thay đổi. Hãy tải lại trang trước khi thao tác.")
     if target not in TRANSITIONS.get(booking.status, ()):

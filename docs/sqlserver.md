@@ -1,0 +1,75 @@
+# SQL Server trên nhánh feature/sqlserver
+
+Nhánh này dùng SQL Server 2022 cho ứng dụng local và đã bổ sung cấu hình Render → SmarterASP.NET. Service Render vẫn theo `master`; cần merge toàn bộ nhánh tương thích trước khi deploy. Xem [hướng dẫn Render](deploy-render.md). Snapshot mã local trước khi chuyển là commit `d046ea7`.
+
+## Chạy ứng dụng
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-sqlserver.txt
+# Chỉ copy khi chưa có file cấu hình thật:
+Copy-Item .env.sqlserver.example .env.sqlserver
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py createcachetable qlnh_chatbot_cache
+.\.venv\Scripts\python.exe manage.py runserver
+```
+
+Trên máy hiện tại đã có `.env.sqlserver`, schema và dữ liệu chuyển đổi; không cần copy lại hay nạp demo. Profile SQL Server là mặc định của manage.py/WSGI/ASGI trên nhánh này. Profile PostgreSQL vẫn có thể chọn bằng `--settings=QLNH.settings`. `.env` cũ tiếp tục cung cấp SECRET_KEY, ZaloPay, chatbot và cấu hình nguồn PostgreSQL.
+
+Cấu hình local: `SQLSERVER_HOST=localhost`, `SQLSERVER_DB=QLNH_SQLSERVER`, Windows Authentication (USER/PASSWORD trống). Python phải chạy bằng tài khoản Windows được cấp quyền SQL Server. Named instance dùng `SERVER\INSTANCE`; SQL Authentication cần điền cả `SQLSERVER_USER` và `SQLSERVER_PASSWORD`.
+
+`mssql-python` đi kèm driver native. `TrustServerCertificate=yes` chỉ dành cho Developer instance local; hosting dùng `Encrypt=yes;TrustServerCertificate=no`. Render chỉ đọc biến Environment, không đọc `.env` hoặc `.env.sqlserver`, và không cần thông tin PostgreSQL. Endpoint `sql5106.site4now.net:1433`, database `db_ad182b_comque` đã qua kiểm tra kết nối chỉ đọc từ máy phát triển; cần xác nhận riêng build, migration và web trên Render.
+
+## Chuyển dữ liệu
+
+Ngày 25/11/2026, theo yêu cầu chuyển lên hosting, đã sao chép bản SQL Server local mới hơn PostgreSQL sang `db_ad182b_comque` trên SmarterASP.NET: 2.092 bản ghi, 74 bảng, giữ cả ID của bảng trung gian, mật khẩu đã băm và timestamp. Đã so sánh số dòng và SHA-256 toàn bộ nội dung trước khi commit. Database hosting đã có dữ liệu; không chạy lại các lệnh copy dành cho database trống vào đó. Báo cáo được giữ local ở `artifacts/sqlserver/smarterasp-copy-report.json`.
+
+Tạo database SQL Server đích mới, migrate, rồi:
+
+```powershell
+.\.venv\Scripts\python.exe manage.py copy_postgres_to_sqlserver --confirm-target QLNH_SQLSERVER
+```
+
+Lệnh chỉ chấp nhận nguồn PostgreSQL local và đích chưa có dữ liệu nghiệp vụ. Nguồn được đọc bằng REPEATABLE READ/READ ONLY. Lệnh giữ PK, quan hệ, mật khẩu hash, UUID, tiền và timestamp đến microsecond. Nếu FK/CHECK, số dòng hoặc SHA256 toàn bộ bản ghi không khớp, giao dịch đích rollback. Fixture tạm tự xóa; báo cáo chỉ chứa số dòng/hash tại `artifacts/sqlserver/copy-report.json`. Không chạy lại trên database đang sử dụng; lệnh từ chối ghi đè dữ liệu nghiệp vụ.
+
+## Tương thích
+
+- Khóa giao dịch dùng `sp_getapplock` trên SQL Server, giữ thứ tự khóa và tự nhả khi commit/rollback. Khóa phiên chatbot cũng được hỗ trợ; PostgreSQL vẫn dùng advisory lock.
+- Khóa hàng được giữ; tùy chọn `of` chỉ gửi tới backend có hỗ trợ.
+- Ba regex kiểm tra dữ liệu của dự án được chuyển thành CHECK T-SQL, gồm whitespace Unicode, mã và SĐT. Pattern khác bị từ chối rõ ràng. Không bật CLR hay bỏ CHECK.
+- Unique `LOWER(name)` dùng computed column PERSISTED và UNIQUE INDEX. Điều kiện chỉ mục `NOT(x=y)` chuyển thành `x<>y`.
+- Giữ toàn bộ lịch sử migration; không fake migration hay bỏ FK.
+
+Các script ERD/tài liệu PostgreSQL và lệnh reset demo PostgreSQL vẫn dành cho PostgreSQL. Tài liệu đồ án/Word hiện có chưa được đổi nội dung sang SQL Server.
+
+## Kiểm thử
+
+Kiểm tra riêng cấu hình Render và preflight (không tạo database):
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest scripts.test_deploy_config
+.\.venv\Scripts\python.exe manage.py test apps.accounts.tests.test_deployment
+```
+
+Hồi quy đầy đủ dùng SQL Server local, không chạy bộ kiểm thử tạo database trên tài khoản shared hosting:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/run_tests.py
+# Đối chiếu PostgreSQL:
+$env:DJANGO_SETTINGS_MODULE='QLNH.test_settings'
+.\.venv\Scripts\python.exe scripts/run_tests.py
+Remove-Item Env:DJANGO_SETTINGS_MODULE
+```
+
+Mỗi lượt tạo database `test_qlnh_<uuid>` riêng và tự xóa sau khi xong. `scripts/run_sqlserver_tests.py` luôn chọn SQL Server dù terminal còn cấu hình settings PostgreSQL.
+
+Đã kiểm chứng ngày 23/11/2026: 719 test SQL Server qua, 408 test đối chiếu PostgreSQL qua (4 test riêng SQL Server được bỏ qua), thêm 6 kiểm tra riêng về CHECK/UNIQUE, session lock và microsecond qua. Kiểm tra lại copy từ database trống đối chiếu toàn bộ nội dung và chặn lần ghi đè thứ hai đều qua. Web SQL Server local trả 200 cho trang chủ, thực đơn, đặt bàn, tra cứu, đăng nhập và static. Django check, migration consistency, collectstatic và pip check đều qua.
+
+## Sao lưu
+
+```powershell
+.\.venv\Scripts\python.exe manage.py backup_database --directory D:/DOANTOTNGHIEP/artifacts/backups/sqlserver --verify-restore
+```
+
+SQL Server tạo `.bak` COPY_ONLY/CHECKSUM, kiểm tra VERIFYONLY, lưu SHA256 và thử RESTORE vào database UUID riêng. Kiểm chứng schema xong chỉ xóa database thử của lượt đó. SQL Server service và ứng dụng cần cùng truy cập được thư mục backup; máy chủ SQL Server ở nơi khác cần cấu hình đường dẫn dùng chung thích hợp.
+
+Nguồn: [Microsoft mssql-django](https://github.com/microsoft/mssql-django), [sp_getapplock](https://learn.microsoft.com/en-us/sql/relational-databases/system-stored-procedures/sp-getapplock-transact-sql).

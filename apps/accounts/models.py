@@ -4,6 +4,14 @@ from django.db import models
 from django.utils.crypto import salted_hmac
 
 from apps.accounts.managers import UserManager
+
+
+class SecurityRateBucket(models.Model):
+    key = models.CharField(max_length=64, primary_key=True)
+    hits = models.PositiveIntegerField(default=0)
+    expires_at = models.DateTimeField(db_index=True)
+
+
 class User(AbstractUser):
     created_at = models.DateTimeField("ngày tạo", auto_now_add=True)
     updated_at = models.DateTimeField("cập nhật lần cuối", auto_now=True)

@@ -2,4 +2,4 @@
 {% block title %}{% translate "Kết quả thanh toán" %} · CƠM QUÊ{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/payment-result.css' %}?v=1">{% endblock %}
 {% block content %}{% include 'staff/sales/_zalopay_result.html' %}{% endblock %}
-{% block extra_js %}{% if not payment.deposit_payment_id %}<script src="{% url 'javascript-catalog' %}" defer></script>{% endif %}<script src="{% static 'js/zalopay-status.js' %}?v=4" defer></script>{% endblock %}
+{% block extra_js %}{% if not payment.deposit_payment_id %}<script src="{% url 'javascript-catalog' %}" defer></script>{% endif %}<script src="{% static 'js/zalopay-status.js' %}?v=7" defer></script>{% endblock %}

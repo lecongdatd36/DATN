@@ -10,6 +10,8 @@ from .duration import MAX_DURATION_MINUTES
 from .selectors import available_transfer_tables
 from .scheduling import reservation_end
 from .hours import booking_hours_help
+from apps.reservations.deposit_policy import SEATING_NEEDS
+from core.permissions import can_manage_accounts
 
 
 class TableChoiceField(forms.ModelChoiceField):
@@ -18,7 +20,7 @@ class TableChoiceField(forms.ModelChoiceField):
 
 
 def time_field(label):
-    return forms.DateTimeField(label=label, input_formats=["%Y-%m-%dT%H:%M"], widget=forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"}))
+    return forms.DateTimeField(label=_(label), input_formats=["%Y-%m-%dT%H:%M"], widget=forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"}))
 
 
 class ReservationScheduleMixin:
@@ -34,7 +36,7 @@ class ReservationScheduleMixin:
         data = super().clean()
         start = data.get("starts_at")
         if start and start < timezone.now() and start != getattr(self, "original_start", None):
-            self.add_error("starts_at", "Giờ đến phải ở tương lai.")
+            self.add_error("starts_at", _("Giờ đến phải ở tương lai."))
         if start and "duration_minutes" not in self.errors:
             try:
                 data["ends_at"] = reservation_end(start, data.get("duration_minutes"), settings=self.service_settings)
@@ -58,11 +60,17 @@ class BookingForm(SlotForm):
     customer_phone = forms.CharField(label=_("Số điện thoại khách hàng"), max_length=32, widget=forms.TextInput(attrs={"type": "tel"}))
     customer_name = forms.CharField(label=_("Tên khách hàng mới"), max_length=150, required=False, help_text=_("Chỉ cần nhập nếu số điện thoại chưa có hồ sơ khách hàng."))
     table = TableChoiceField(label=_("Bàn"), queryset=DiningTable.objects.none())
-    field_order = ("customer_phone", "customer_name", "starts_at", "party_size", "table", "duration_minutes")
+    seating_need = forms.ChoiceField(label=_("Nhu cầu bố trí bàn"), choices=SEATING_NEEDS, required=False, initial="STANDARD",
+        help_text=_("Xác nhận khả năng bố trí với khách trước khi lưu lịch."))
+    waiver_reason = forms.CharField(label=_("Lý do miễn cọc (chỉ quản lý)"), required=False, min_length=5, max_length=1000,
+        widget=forms.Textarea(attrs={"rows":2}), help_text=_("Chỉ điền khi lịch thuộc diện yêu cầu cọc và quản lý đồng ý miễn."))
+    field_order = ("customer_phone", "customer_name", "starts_at", "party_size", "table", "seating_need", "waiver_reason", "duration_minutes")
 
-    def __init__(self, *args, booking=None, **kwargs):
+    def __init__(self, *args, booking=None, actor=None, **kwargs):
         self.original_start = booking.starts_at if booking else None
         super().__init__(*args, **kwargs)
+        if not can_manage_accounts(actor):
+            self.fields.pop("waiver_reason")
         if booking:
             self.fields["expected_revision"].required = True
             self.initial["duration_minutes"] = booking.duration_minutes
@@ -74,6 +82,9 @@ class BookingForm(SlotForm):
 
     def clean_customer_phone(self):
         return normalize_phone(self.cleaned_data["customer_phone"])
+
+    def clean_seating_need(self):
+        return self.cleaned_data.get("seating_need") or "STANDARD"
 
 
 class TransitionForm(BootstrapFormMixin, forms.Form):
@@ -134,8 +145,10 @@ class PublicReservationForm(ReservationScheduleMixin, forms.Form):
     phone = forms.CharField(label=_("Số điện thoại"), max_length=20, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}))
     starts_at = time_field("Ngày và giờ đến")
     party_size = forms.IntegerField(label=_("Số khách"), min_value=1, max_value=100)
+    seating_need = forms.ChoiceField(label=_("Nhu cầu bố trí bàn"), choices=SEATING_NEEDS, required=False, initial="STANDARD",
+        help_text=_("Yêu cầu ghép bàn hoặc phòng riêng cần nhà hàng xác nhận khả năng bố trí."))
     area = forms.ModelChoiceField(label=_("Khu vực mong muốn"), queryset=Area.objects.filter(is_active=True), required=False, empty_label=_("Không chọn khu vực"))
-    note = forms.CharField(label=_("Ghi chú"), max_length=500, required=False, widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Ví dụ: cần ghế trẻ em hoặc bàn yên tĩnh"}))
+    note = forms.CharField(label=_("Ghi chú"), max_length=500, required=False, widget=forms.Textarea(attrs={"rows": 3, "placeholder": _("Ví dụ: cần ghế trẻ em hoặc bàn yên tĩnh")}))
 
     def clean_full_name(self):
         name = " ".join(self.cleaned_data["full_name"].split())
@@ -145,6 +158,9 @@ class PublicReservationForm(ReservationScheduleMixin, forms.Form):
 
     def clean_phone(self):
         return normalize_phone(self.cleaned_data["phone"])
+
+    def clean_seating_need(self):
+        return self.cleaned_data.get("seating_need") or "STANDARD"
 
 
 class PublicReservationLookupForm(forms.Form):

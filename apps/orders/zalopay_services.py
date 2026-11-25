@@ -65,6 +65,8 @@ def create_order_payment(*, actor, order_id, base_url, callback_url=None, promot
         if quick_payment:
             services.prepare_quick_payment(actor=actor, order_id=order_id)
         order = Order.objects.select_for_update().get(pk=order_id)
+        if order.online_payments.filter(zalopay_transaction__status='REVIEW').exists():
+            raise ValidationError('ZaloPay đã nhận tiền cần đối soát. Kiểm tra khoản nhận trước khi thu thêm.')
         if order.status != Order.Status.PAYMENT_REQUESTED:
             raise ValidationError("Đơn chưa ở trạng thái yêu cầu thanh toán.")
         if Invoice.objects.filter(order=order, paid_amount__gt=0).exists():
@@ -99,6 +101,8 @@ def create_deposit_payment(*, token, revision, base_url, callback_url=None):
         _lock()
         reservations.expire_holds()
         reservation = Reservation.objects.select_for_update().get(access_token=token)
+        if reservation.deposit_required <= 0:
+            raise ValidationError("Lịch này không yêu cầu thanh toán cọc.")
         if (reservation.status != "WAITING" or reservation.revision != revision or
                 reservation.hold_expires_at <= timezone.now()):
             raise ValidationError("Yêu cầu không còn trong thời gian thanh toán cọc.")
@@ -203,6 +207,8 @@ def _settle(reference, data, *, callback):
             if row.order_payment_id:
                 payment = OnlinePayment.objects.select_for_update().get(pk=row.order_payment_id)
                 order = Order.objects.select_for_update().get(pk=payment.order_id)
+                if row.status == 'ABANDONED':
+                    raise ValidationError('Giao dịch đã đổi phương thức; khoản về muộn cần đối soát.')
                 if (payment.txn_ref != reference or payment.amount != row.amount or
                         order.status != Order.Status.PAYMENT_REQUESTED or order.revision != row.order_revision):
                     raise ValidationError("Đơn hàng đã thay đổi hoặc đã được thanh toán bằng giao dịch khác.")
@@ -227,6 +233,9 @@ def _settle(reference, data, *, callback):
                 row.status = "PAID" if accepted else "REVIEW"
     except ValidationError:
         # Preserve verified money for reconciliation; never alter the original invoice.
+        if row.status == 'ABANDONED' and row.order_payment_id:
+            services._log(None, order, 'ZaloPay về muộn, cần đối soát',
+                f'{reference}; đã nhận {row.amount:.0f} đồng sau khi đổi phương thức. Không ghi thêm phiếu thu; cần đối soát/hoàn tiền.')
         row.status = "REVIEW"
         row.last_error = "Đã nhận tiền Sandbox nhưng đơn/lịch đã thay đổi. Nhà hàng cần đối soát."
     row.response_data = _safe_response(data)
@@ -246,7 +255,7 @@ def process_callback(payload):
     return {"return_code": 1, "return_message": "success"}
 
 
-def query_transaction(token):
+def query_transaction(token, *, force=False):
     app_id, _, _ = zalopay.configuration()
     with transaction.atomic():
         _lock()
@@ -255,7 +264,7 @@ def query_transaction(token):
             return row
         if row.app_id != app_id:
             raise ValidationError("App giao dịch không khớp cấu hình Sandbox hiện tại.")
-        if row.last_queried_at and row.last_queried_at > timezone.now()-timedelta(seconds=30):
+        if not force and row.last_queried_at and row.last_queried_at > timezone.now()-timedelta(seconds=30):
             return row
         row.last_queried_at = timezone.now()
         row.save(update_fields=("last_queried_at", "updated_at"))
@@ -267,7 +276,49 @@ def query_transaction(token):
         current = ZaloPayTransaction.objects.select_for_update().get(pk=row.pk)
         if current.status not in ("PAID", "REVIEW"):
             current.response_data = _safe_response(result)
-            if result.get("return_code") == 2 and result.get("is_processing") is False:
+            if current.status == 'PENDING' and result.get("return_code") == 2 and result.get("is_processing") is False:
                 _fail(current)
             current.save()
         return current
+
+
+def abandon_order_payment(*, actor, token, reason, confirm_unpaid=False):
+    """Retire an expired local checkout, without claiming provider cancellation.
+
+    The fresh query is outside DB locks. A verified late payment is always put
+    into REVIEW, including before another method has actually been collected.
+    """
+    zalopay.configuration()  # This action is Sandbox-only too.
+    reason = (reason or '').strip()
+    if confirm_unpaid is not True or not 5 <= len(reason) <= 255:
+        raise ValidationError('Xác nhận chưa thu được tiền và nhập lý do từ 5 đến 255 ký tự.')
+    with transaction.atomic():
+        actor = services._lock_actor(actor, 'collect_payment')
+        row = ZaloPayTransaction.objects.select_for_update().get(token=token)
+        if not row.order_payment_id:
+            raise ValidationError('Chức năng đổi phương thức này chỉ áp dụng cho hóa đơn tại bàn.')
+        if row.status != 'PENDING':
+            return row
+        if row.expires_at > timezone.now():
+            raise ValidationError('Giao dịch còn thời gian thanh toán. Chỉ đổi phương thức khi đã hết hạn mở cổng.')
+    query_transaction(token, force=True)
+    with transaction.atomic():
+        actor = services._lock_actor(actor, 'collect_payment')
+        row = ZaloPayTransaction.objects.select_for_update().get(token=token)
+        if row.status != 'PENDING':
+            return row  # A callback/query may have settled it while checking.
+        if row.response_data.get('return_code') != 3:
+            raise ValidationError('Chưa lấy được trạng thái hợp lệ từ ZaloPay. Giữ giao dịch để kiểm tra lại.')
+        payment = OnlinePayment.objects.select_for_update().get(pk=row.order_payment_id)
+        order = Order.objects.select_for_update().get(pk=payment.order_id)
+        if order.status != Order.Status.PAYMENT_REQUESTED or payment.status != 'PENDING':
+            raise ValidationError('Đơn hoặc giao dịch đã thay đổi. Tải lại để kiểm tra.')
+        row.status = 'ABANDONED'
+        row.last_error = 'Thu ngân đã đổi phương thức sau khi hết hạn. Khoản về muộn sẽ được đối soát.'
+        row.save(update_fields=('status', 'last_error', 'updated_at'))
+        payment.status = OnlinePayment.Status.CANCELLED
+        payment.save(update_fields=('status', 'updated_at'))
+        services._log(actor, order, 'Đổi phương thức thanh toán',
+            f'{row.app_trans_id}; hết hạn {row.expires_at.isoformat()}; ZaloPay trả mã 3. '
+            f'Thu ngân xác nhận chưa thu được tiền. Lý do: {reason}. Giữ giao dịch để đối soát khoản về muộn.')
+        return row

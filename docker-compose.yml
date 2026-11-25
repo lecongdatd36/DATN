@@ -30,6 +30,8 @@ services:
       - "8000:8000"
     environment:
       DEBUG: "True"
+      # This existing compose stack remains the PostgreSQL compatibility profile.
+      DJANGO_SETTINGS_MODULE: QLNH.settings
       SECRET_KEY: ${SECRET_KEY:-django-insecure-docker-secret-key-qlnh-2026}
       DB_NAME: ${DB_NAME:-QLNH_DB}
       DB_USER: ${DB_USER:-postgres}
