@@ -1,4 +1,4 @@
-"""Verify workforce forms and kiosk rejection using an isolated PostgreSQL DB.
+"""Verify workforce forms and kiosk rejection using an isolated database.
 
 Chrome receives its own temporary profile and fake camera. No employee biometric
 data or real business database is used. Test session endpoints exist only here.
@@ -21,7 +21,7 @@ from socketserver import ThreadingMixIn
 BASE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE))
 sys.stdout.reconfigure(encoding="utf-8")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.test_settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.sqlserver_test_settings")
 import django
 django.setup()
 
@@ -47,7 +47,7 @@ class ThreadedServer(ThreadingMixIn, WSGIServer):
 def main():
     connection.settings_dict["TEST"]["NAME"] = "test_qlnh_attendance_ui_"+uuid4().hex
     runner = DiscoverRunner(verbosity=0, interactive=False)
-    old = runner.setup_databases()
+    old = runner.setup_databases(aliases={"default"})
     server = None
     try:
         connection.settings_dict["CONN_MAX_AGE"] = 0

@@ -12,7 +12,7 @@ from uuid import uuid4
 
 BASE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.test_settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.sqlserver_test_settings")
 import django
 django.setup()
 
@@ -37,7 +37,7 @@ from scripts.verify_staff_mobile_browser import QuietHandler, ThreadedServer, ma
 def main():
     connection.settings_dict["TEST"]["NAME"] = "test_qlnh_management_" + uuid4().hex
     runner = DiscoverRunner(verbosity=0, interactive=False)
-    old_config = runner.setup_databases()
+    old_config = runner.setup_databases(aliases={"default"})
     server = None
     try:
         connection.settings_dict["CONN_MAX_AGE"] = 0

@@ -13,7 +13,7 @@ from wsgiref.simple_server import make_server,WSGIRequestHandler,WSGIServer
 from socketserver import ThreadingMixIn
 BASE=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(BASE));sys.stdout.reconfigure(encoding="utf-8")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE","QLNH.test_settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE","QLNH.sqlserver_test_settings")
 import django
 django.setup()
 from django.conf import settings
@@ -40,7 +40,7 @@ class Server(ThreadingMixIn,WSGIServer):
 def main():
     connection.settings_dict["TEST"]["NAME"]="test_qlnh_reservations_ui_"+uuid4().hex
     runner=DiscoverRunner(verbosity=0,interactive=False)
-    old=runner.setup_databases();server=None
+    old=runner.setup_databases(aliases={"default"});server=None
     try:
         connection.settings_dict["CONN_MAX_AGE"]=0
         ReservationTests.setUpTestData()

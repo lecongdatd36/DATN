@@ -9,7 +9,7 @@ from wsgiref.simple_server import make_server, WSGIServer, WSGIRequestHandler
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE','QLNH.test_settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE','QLNH.sqlserver_test_settings')
 import django
 django.setup()
 from django.conf import settings
@@ -34,7 +34,7 @@ def main():
     name='test_zalopay_return_'+uuid4().hex
     connection.settings_dict['TEST']['NAME']=name
     runner=DiscoverRunner(verbosity=0,interactive=False)
-    old=runner.setup_databases();server=None
+    old=runner.setup_databases(aliases={'default'});server=None
     try:
         connection.settings_dict['CONN_MAX_AGE']=0
         ZaloPayOrderTests.setUpTestData()
@@ -98,7 +98,8 @@ def main():
     finally:
         if server:server.shutdown();server.server_close()
         connections.close_all()
-        with connection._nodb_cursor() as cursor:cursor.execute('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname=%s AND pid<>pg_backend_pid()',[name])
+        if connection.vendor == 'postgresql':
+            with connection._nodb_cursor() as cursor:cursor.execute('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname=%s AND pid<>pg_backend_pid()',[name])
         runner.teardown_databases(old)
 
 if __name__=='__main__':

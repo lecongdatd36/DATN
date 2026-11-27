@@ -101,6 +101,21 @@ class DeploymentConfigTests(unittest.TestCase):
         })
         self.assertEqual(data["aliases"], ["default", "postgres_source"])
 
+    def test_sqlserver_test_profile_excludes_postgres_copy_source(self):
+        data = self.settings({
+            "RENDER": None,
+            "DJANGO_SETTINGS_MODULE": "QLNH.sqlserver_test_settings",
+            "DATABASE_URL": "postgresql://unused:unused@localhost/must_not_create",
+        })
+        self.assertEqual(data["aliases"], ["default"])
+        self.assertEqual(data["engine"], "core.db.backends.sqlserver")
+
+    def test_sqlserver_test_profile_needs_no_postgres_credentials(self):
+        data = self.settings({"DJANGO_SETTINGS_MODULE": "QLNH.sqlserver_test_settings"})
+        self.assertEqual(data["aliases"], ["default"])
+        self.assertEqual(data["engine"], "core.db.backends.sqlserver")
+
+
 
 if __name__ == "__main__":
     unittest.main()

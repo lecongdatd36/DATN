@@ -20,7 +20,7 @@ def main():
     args = parser.parse_args()
     if args.start_date >= args.reference_date:
         parser.error("start-date must precede reference-date")
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.sqlserver_settings")
     import django
     django.setup()
     from apps.orders.models import Order

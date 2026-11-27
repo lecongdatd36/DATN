@@ -1,4 +1,4 @@
-"""Run the real mobile UI against a disposable PostgreSQL DB and local Chrome.
+"""Run the real mobile UI against a disposable database and local Chrome.
 
 The session/fixture endpoints below only exist in this temporary WSGI wrapper;
 they are never registered in the application URL configuration.
@@ -18,7 +18,7 @@ from socketserver import ThreadingMixIn
 
 BASE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.test_settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "QLNH.sqlserver_test_settings")
 import django
 django.setup()
 
@@ -49,7 +49,7 @@ class ThreadedServer(ThreadingMixIn, WSGIServer):
 def main():
     connection.settings_dict["TEST"]["NAME"] = "test_qlnh_mobile_ui_" + uuid4().hex
     runner = DiscoverRunner(verbosity=0, interactive=False)
-    old_config = runner.setup_databases()
+    old_config = runner.setup_databases(aliases={"default"})
     server = None
     try:
         connection.settings_dict["CONN_MAX_AGE"] = 0
